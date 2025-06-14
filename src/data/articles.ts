@@ -2,62 +2,62 @@
 export const articles = [
   {
     id: '1',
-    title: 'Revolutionary AI Technology Transforms Daily Life',
-    excerpt: 'Scientists have developed a groundbreaking artificial intelligence system that promises to revolutionize how we interact with technology in our everyday lives.',
-    author: 'Sarah Johnson',
+    title: 'Local Cat Elected as Honorary Mayor After Promising More Tuna for Everyone',
+    excerpt: 'In a stunning turn of events, Mr. Whiskers defeated all human candidates by a landslide margin of 12,000 votes. His campaign slogan "Purr-fect Leadership for a Purr-fect Tomorrow" resonated with voters across all demographics.',
+    author: 'Sarah Paws-Johnson',
     publishedAt: '2024-06-14T10:00:00Z',
-    category: 'Technology',
-    imageUrl: 'photo-1461749280684-dccba630e2f6',
-    views: 15420
+    category: 'Pets & Animals',
+    imageUrl: 'photo-1514888286974-6c03e2ca1dba',
+    views: 25420
   },
   {
     id: '2',
-    title: 'Climate Change Summit Reaches Historic Agreement',
-    excerpt: 'World leaders gather to sign the most comprehensive climate action plan in history, setting ambitious targets for carbon reduction.',
-    author: 'Michael Chen',
+    title: 'Man Discovers His Grandmother\'s Secret Recipe Was Just Ketchup and Love',
+    excerpt: 'After 30 years of trying to recreate his beloved grandmother\'s "world-famous" pasta sauce, local resident discovers the ingredients were simpler than expected. "The love part was definitely the secret ingredient," he tearfully admitted.',
+    author: 'Chef Michael Spatula',
     publishedAt: '2024-06-14T08:30:00Z',
-    category: 'Politics',
-    imageUrl: 'photo-1426604966848-d7adac402bff',
-    views: 12890
+    category: 'Food & Recipes',
+    imageUrl: 'photo-1551218808-94e220e084d2',
+    views: 18890
   },
   {
     id: '3',
-    title: 'Local Sports Team Wins Championship',
-    excerpt: 'After a thrilling season, our hometown heroes have claimed victory in the national championship, bringing pride to the entire community.',
-    author: 'David Rodriguez',
+    title: 'Tourist Gets Lost in Own Hotel, Discovers Secret Indoor Waterpark',
+    excerpt: 'What started as a simple search for the ice machine turned into the adventure of a lifetime. The lost tourist stumbled upon a hidden tropical paradise complete with slides, palm trees, and confused hotel staff.',
+    author: 'Adventure Reporter Tom Compass',
     publishedAt: '2024-06-13T20:15:00Z',
-    category: 'Sports',
-    imageUrl: 'photo-1493397212122-2b85dda8106b',
-    views: 9876
+    category: 'Travel Adventures',
+    imageUrl: 'photo-1544551763-46a013bb70d5',
+    views: 16876
   },
   {
     id: '4',
-    title: 'New Medical Breakthrough Offers Hope',
-    excerpt: 'Researchers announce a major breakthrough in treating rare diseases, offering new hope to thousands of patients worldwide.',
-    author: 'Dr. Emily Watson',
+    title: 'Local Comedy Club Bans Dad Jokes After Audience Groans Become Too Loud',
+    excerpt: 'The Laugh Track Comedy Club has implemented a strict "no puns, no dad jokes" policy after sound levels exceeded safety regulations. "We had to protect our patrons\' eardrums," said club owner. Emergency eye-roll stations have been installed.',
+    author: 'Humor Correspondent Jenny Giggles',
     publishedAt: '2024-06-13T14:20:00Z',
-    category: 'Health',
-    imageUrl: 'photo-1488590528505-98d2b5aba04b',
-    views: 8654
+    category: 'Comedy',
+    imageUrl: 'photo-1527224857830-43a7acc85260',
+    views: 14654
   },
   {
     id: '5',
-    title: 'Economic Markets Show Strong Growth',
-    excerpt: 'Financial experts report unprecedented growth in key economic sectors, signaling a robust recovery and positive outlook.',
-    author: 'Robert Kim',
+    title: 'Weather Forecast Predicts 100% Chance of People Complaining About Weather',
+    excerpt: 'Meteorologists have made their most accurate prediction yet: regardless of actual weather conditions, citizens will find something to complain about. "It\'s either too hot, too cold, too wet, or too dry," reports chief meteorologist.',
+    author: 'Weather Watcher Bob Clouds',
     publishedAt: '2024-06-13T11:45:00Z',
-    category: 'Business',
-    imageUrl: 'photo-1487058792275-0ad4aaf24ca7',
-    views: 7432
+    category: 'Weird News',
+    imageUrl: 'photo-1561553873-e8491a564fd0',
+    views: 12432
   },
   {
     id: '6',
-    title: 'Cultural Festival Celebrates Diversity',
-    excerpt: 'The annual cultural festival brings together communities from around the world, showcasing art, music, and traditions.',
-    author: 'Lisa Park',
+    title: 'Breaking: Dog Finally Catches Own Tail, Has No Idea What to Do Next',
+    excerpt: 'After three years of dedicated pursuit, Golden Retriever "Buddy" has achieved his life\'s ambition. Witnesses report the dog stood motionless for several minutes, apparently contemplating his next life goal. Squirrel-chasing is rumored to be next.',
+    author: 'Pet Reporter Lisa Barkington',
     publishedAt: '2024-06-12T16:30:00Z',
-    category: 'Culture',
-    imageUrl: 'photo-1466442929976-97f336a657be',
-    views: 6543
+    category: 'Pets & Animals',
+    imageUrl: 'photo-1552053831-71594a27632d',
+    views: 11543
   }
 ];
