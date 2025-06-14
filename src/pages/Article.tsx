@@ -1,13 +1,25 @@
 
 import { useParams, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, Eye, Calendar, User } from 'lucide-react';
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import { articles } from '../data/articles';
+import { incrementViews, getTotalViews } from '../utils/viewTracker';
 
 const Article = () => {
   const { id } = useParams();
   const article = articles.find(a => a.id === id);
+  const [currentViews, setCurrentViews] = useState(0);
+
+  useEffect(() => {
+    if (article) {
+      // Increment view count when article page loads
+      const newViewCount = incrementViews(article.id);
+      const totalViews = article.views + newViewCount;
+      setCurrentViews(totalViews);
+    }
+  }, [article]);
 
   if (!article) {
     return (
@@ -74,7 +86,7 @@ const Article = () => {
               </div>
               <div className="flex items-center">
                 <Eye className="h-4 w-4 mr-2" />
-                <span className="text-yellow-400 font-medium">{article.views.toLocaleString()} views</span>
+                <span className="text-yellow-400 font-medium">{currentViews.toLocaleString()} views</span>
               </div>
             </div>
 

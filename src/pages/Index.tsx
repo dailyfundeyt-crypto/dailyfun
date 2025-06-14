@@ -4,13 +4,19 @@ import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
 import { articles } from '../data/articles';
+import { getTotalViews } from '../utils/viewTracker';
 
 const Index = () => {
   const [mostViewedArticles, setMostViewedArticles] = useState(articles);
 
   useEffect(() => {
-    // Sort articles by views in descending order
-    const sorted = [...articles].sort((a, b) => b.views - a.views);
+    // Update articles with current view counts and sort by total views
+    const articlesWithUpdatedViews = articles.map(article => ({
+      ...article,
+      views: getTotalViews(article.id, article.views)
+    }));
+    
+    const sorted = articlesWithUpdatedViews.sort((a, b) => b.views - a.views);
     setMostViewedArticles(sorted);
   }, []);
 

@@ -1,6 +1,6 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { incrementViews, getTotalViews } from '../utils/viewTracker';
 
 interface Article {
   id: string;
@@ -20,9 +20,22 @@ interface ArticleCardProps {
 
 const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [currentViews, setCurrentViews] = useState(article.views);
+
+  useEffect(() => {
+    // Update view count on component mount
+    const totalViews = getTotalViews(article.id, article.views);
+    setCurrentViews(totalViews);
+  }, [article.id, article.views]);
+
+  const handleClick = () => {
+    const newViewCount = incrementViews(article.id);
+    const totalViews = article.views + newViewCount;
+    setCurrentViews(totalViews);
+  };
 
   return (
-    <Link to={`/article/${article.id}`}>
+    <Link to={`/article/${article.id}`} onClick={handleClick}>
       <article className={`bg-gray-900 rounded-lg shadow-sm border border-gray-700 overflow-hidden hover:shadow-md hover:border-yellow-400 transition-all duration-300 cursor-pointer ${featured ? 'md:flex' : ''}`}>
         <div className={`relative ${featured ? 'md:w-1/2' : ''}`}>
           <div className="aspect-video bg-gray-800 overflow-hidden">
@@ -61,7 +74,7 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
               <span className="font-medium text-gray-300">{article.author}</span>
               <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
             </div>
-            <span className="text-yellow-400 font-medium">{article.views.toLocaleString()} views</span>
+            <span className="text-yellow-400 font-medium">{currentViews.toLocaleString()} views</span>
           </div>
         </div>
       </article>
