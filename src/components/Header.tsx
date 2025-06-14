@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Search, Menu, X } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -21,7 +20,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <Link to="/" className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
-              Capton Daily Fun
+              Daily Fun
             </Link>
           </div>
 

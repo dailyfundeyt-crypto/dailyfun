@@ -56,7 +56,7 @@ const InstallSidebar = () => {
         
         <div className="mb-4">
           <p className="text-gray-600 text-sm mb-2">
-            Get the full Capton Daily Fun experience with our app!
+            Get the full Daily Fun experience with our app!
           </p>
           <ul className="text-xs text-gray-500 space-y-1">
             <li>• Read news offline</li>

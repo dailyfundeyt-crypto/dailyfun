@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
@@ -26,7 +27,7 @@ const Index = () => {
         <section className="mb-12">
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Welcome to Capton Daily Fun
+              Welcome to Daily Fun
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Your trusted source for the latest news, insights, and stories that matter most.
@@ -84,12 +85,12 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <h3 className="text-2xl font-bold mb-4">Capton Daily Fun</h3>
+              <h3 className="text-2xl font-bold mb-4">Daily Fun</h3>
               <p className="text-gray-400 mb-4">
                 Delivering reliable news and engaging stories to keep you informed and entertained.
               </p>
               <p className="text-gray-400 text-sm">
-                © 2024 Capton Daily Fun. All rights reserved.
+                © 2024 Daily Fun. All rights reserved.
               </p>
             </div>
             
