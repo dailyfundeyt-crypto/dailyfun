@@ -67,24 +67,28 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Stats Section */}
+        {/* Goals Section */}
         <section className="bg-gray-50 rounded-lg shadow-sm border border-gray-200 p-8 mb-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-black font-serif mb-2">Our Goals</h2>
+            <div className="w-24 h-1 bg-gradient-to-r from-red-accent to-blue-accent mx-auto"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-3xl font-bold text-red-accent mb-2 font-serif">50K+</div>
-              <div className="text-gray-700">Daily Readers</div>
+              <div className="text-3xl font-bold text-red-accent mb-2 font-serif">Inspire Millions</div>
+              <div className="text-gray-700 text-sm">Reach a vast audience with our unique blend of news.</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-blue-accent mb-2 font-serif">1.2M+</div>
-              <div className="text-gray-700">Funny Stories Published</div>
+              <div className="text-3xl font-bold text-blue-accent mb-2 font-serif">Endless Laughter</div>
+              <div className="text-gray-700 text-sm">Create countless stories that bring joy and insight.</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-red-accent mb-2 font-serif">25+</div>
-              <div className="text-gray-700">Comedy Reporters</div>
+              <div className="text-3xl font-bold text-red-accent mb-2 font-serif">Global Talent</div>
+              <div className="text-gray-700 text-sm">Build a diverse team of comedic journalists worldwide.</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-blue-accent mb-2 font-serif">24/7</div>
-              <div className="text-gray-700">Fun Coverage</div>
+              <div className="text-3xl font-bold text-blue-accent mb-2 font-serif">Uninterrupted Fun</div>
+              <div className="text-gray-700 text-sm">Deliver entertaining and trustworthy content around the clock.</div>
             </div>
           </div>
         </section>
