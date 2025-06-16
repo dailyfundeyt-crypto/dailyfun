@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
@@ -36,7 +37,7 @@ const Index = () => {
             </h1>
             <div className="w-32 h-1 bg-red-accent mx-auto mb-6"></div>
             <p className="text-xl text-black max-w-3xl mx-auto font-serif">
-              Where serious journalism meets seriously funny stories - Your trusted source for news that makes you smile.
+              Make News Fun Again. Your daily dose of trustworthy entertainment.
             </p>
           </div>
         </section>
