@@ -31,13 +31,13 @@ const Search = () => {
   }, [searchQuery, selectedCategory]);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-white text-black">
       <Header />
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-6 font-serif">Search Articles</h1>
+          <h1 className="text-3xl font-bold text-black mb-6 font-serif">Search Articles</h1>
           
           {/* Search Bar */}
           <div className="relative mb-6">
@@ -49,7 +49,7 @@ const Search = () => {
               placeholder="Search articles, authors, or topics..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-3 py-3 border border-gray-700 bg-gray-900 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-transparent text-lg"
+              className="block w-full pl-10 pr-3 py-3 border border-gray-300 bg-white text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-red-accent focus:border-transparent text-lg"
             />
           </div>
 
@@ -61,8 +61,8 @@ const Search = () => {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === category
-                    ? 'bg-yellow-400 text-black'
-                    : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-700'
+                    ? 'bg-red-accent text-white'
+                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
                 }`}
               >
                 {category === 'all' ? 'All Categories' : category}
@@ -71,7 +71,7 @@ const Search = () => {
           </div>
 
           {/* Results Count */}
-          <p className="text-gray-400 mb-6">
+          <p className="text-gray-600 mb-6">
             {filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''} found
             {searchQuery && ` for "${searchQuery}"`}
           </p>
@@ -87,8 +87,8 @@ const Search = () => {
         {filteredArticles.length === 0 && searchQuery && (
           <div className="text-center py-12">
             <SearchIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">No articles found</h3>
-            <p className="text-gray-400">Try adjusting your search terms or filters</p>
+            <h3 className="text-lg font-medium text-black mb-2">No articles found</h3>
+            <p className="text-gray-600">Try adjusting your search terms or filters</p>
           </div>
         )}
       </main>
