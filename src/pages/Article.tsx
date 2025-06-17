@@ -1,23 +1,20 @@
 
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Eye, Calendar, User } from 'lucide-react';
+import { useEffect } from 'react';
+import { ArrowLeft, Calendar, User } from 'lucide-react';
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import { articles } from '../data/articles';
-import { incrementViews, getTotalViews } from '../utils/viewTracker';
+import { incrementViews } from '../utils/viewTracker';
 
 const Article = () => {
   const { id } = useParams();
   const article = articles.find(a => a.id === id);
-  const [currentViews, setCurrentViews] = useState(0);
 
   useEffect(() => {
     if (article) {
-      // Increment view count when article page loads
-      const newViewCount = incrementViews(article.id);
-      const totalViews = article.views + newViewCount;
-      setCurrentViews(totalViews);
+      // Increment view count when article page loads (still track internally)
+      incrementViews(article.id);
     }
   }, [article]);
 
@@ -73,20 +70,14 @@ const Article = () => {
               {article.title}
             </h1>
 
-            <div className="flex items-center justify-between text-sm text-gray-600 mb-8 pb-6 border-b border-gray-200">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center">
-                  <User className="h-4 w-4 mr-2" />
-                  <span className="font-medium text-gray-800">{article.author}</span>
-                </div>
-                <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
-                </div>
-              </div>
+            <div className="flex items-center text-sm text-gray-600 mb-8 pb-6 border-b border-gray-200">
               <div className="flex items-center">
-                <Eye className="h-4 w-4 mr-2" />
-                <span className="text-blue-accent font-medium">{currentViews.toLocaleString()} views</span>
+                <User className="h-4 w-4 mr-2" />
+                <span className="font-medium text-gray-800">{article.author}</span>
+              </div>
+              <div className="flex items-center ml-6">
+                <Calendar className="h-4 w-4 mr-2" />
+                <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
               </div>
             </div>
 

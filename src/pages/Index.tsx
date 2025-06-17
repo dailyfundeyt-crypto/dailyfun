@@ -1,28 +1,22 @@
-
-
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
 import { articles } from '../data/articles';
-import { getTotalViews } from '../utils/viewTracker';
 
 const Index = () => {
-  const [mostViewedArticles, setMostViewedArticles] = useState(articles);
+  const [sortedArticles, setSortedArticles] = useState(articles);
 
   useEffect(() => {
-    // Update articles with current view counts and sort by total views
-    const articlesWithUpdatedViews = articles.map(article => ({
-      ...article,
-      views: getTotalViews(article.id, article.views)
-    }));
-    
-    const sorted = articlesWithUpdatedViews.sort((a, b) => b.views - a.views);
-    setMostViewedArticles(sorted);
+    // Sort articles by publication date (newest first) instead of views
+    const sorted = [...articles].sort((a, b) => 
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+    );
+    setSortedArticles(sorted);
   }, []);
 
-  const featuredArticle = mostViewedArticles[0];
-  const otherArticles = mostViewedArticles.slice(1);
+  const featuredArticle = sortedArticles[0];
+  const otherArticles = sortedArticles.slice(1);
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -45,10 +39,10 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Most Viewed Section */}
+        {/* Latest Articles Section */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-black font-serif">Most Viewed Today</h2>
+            <h2 className="text-3xl font-bold text-black font-serif">Latest Articles</h2>
             <div className="h-1 bg-gradient-to-r from-red-accent to-blue-accent rounded-full flex-1 ml-6 max-w-32"></div>
           </div>
 
@@ -59,7 +53,7 @@ const Index = () => {
             </div>
           )}
 
-          {/* Other Popular Articles */}
+          {/* Other Articles */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {otherArticles.map((article) => (
               <ArticleCard key={article.id} article={article} />
@@ -135,4 +129,3 @@ const Index = () => {
 };
 
 export default Index;
-

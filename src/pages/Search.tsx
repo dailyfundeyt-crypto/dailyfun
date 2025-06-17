@@ -27,7 +27,8 @@ const Search = () => {
       filtered = filtered.filter(article => article.category === selectedCategory);
     }
 
-    return filtered.sort((a, b) => b.views - a.views);
+    // Sort by publication date instead of views
+    return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
   }, [searchQuery, selectedCategory]);
 
   return (

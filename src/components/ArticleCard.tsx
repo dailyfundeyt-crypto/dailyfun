@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { incrementViews, getTotalViews } from '../utils/viewTracker';
+import { incrementViews } from '../utils/viewTracker';
 
 interface Article {
   id: string;
@@ -21,18 +21,9 @@ interface ArticleCardProps {
 
 const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [currentViews, setCurrentViews] = useState(article.views);
-
-  useEffect(() => {
-    // Update view count on component mount
-    const totalViews = getTotalViews(article.id, article.views);
-    setCurrentViews(totalViews);
-  }, [article.id, article.views]);
 
   const handleClick = () => {
-    const newViewCount = incrementViews(article.id);
-    const totalViews = article.views + newViewCount;
-    setCurrentViews(totalViews);
+    incrementViews(article.id);
   };
 
   return (
@@ -70,12 +61,9 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
             {article.excerpt}
           </p>
           
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <div className="flex items-center space-x-4">
-              <span className="font-medium text-gray-800">{article.author}</span>
-              <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
-            </div>
-            <span className="text-blue-accent font-medium">{currentViews.toLocaleString()} views</span>
+          <div className="flex items-center text-sm text-gray-600">
+            <span className="font-medium text-gray-800">{article.author}</span>
+            <span className="ml-4">{new Date(article.publishedAt).toLocaleDateString()}</span>
           </div>
         </div>
       </article>
