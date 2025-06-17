@@ -10,6 +10,7 @@ const Header = () => {
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Search', href: '/search' },
+    { name: 'About Us', href: '/about' },
     { name: 'Comedy', href: '/comedy' },
     { name: 'Pets & Animals', href: '/pets' },
     { name: 'Food & Recipes', href: '/food' },
