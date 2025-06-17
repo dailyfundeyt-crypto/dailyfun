@@ -41,9 +41,11 @@ const AboutUs = () => {
                 </p>
               </div>
               <div className="order-1 lg:order-2 flex justify-center">
-                <div className="w-64 h-64 bg-gradient-to-br from-red-accent/10 to-blue-accent/10 rounded-full flex items-center justify-center border-4 border-gradient-to-r from-red-accent to-blue-accent">
-                  <div className="text-6xl font-signature text-red-accent">SK</div>
-                </div>
+                <img 
+                  src="/lovable-uploads/dd996217-e9c4-456c-af16-469f05791ad2.png" 
+                  alt="Stefan Kunc" 
+                  className="w-64 h-64 rounded-lg object-cover border-4 border-gradient-to-r from-red-accent to-blue-accent shadow-lg"
+                />
               </div>
             </div>
           </div>
