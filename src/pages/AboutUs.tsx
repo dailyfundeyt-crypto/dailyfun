@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { Card, CardContent } from '../components/ui/card';
@@ -44,7 +43,7 @@ const AboutUs = () => {
                 <img 
                   src="/lovable-uploads/dd996217-e9c4-456c-af16-469f05791ad2.png" 
                   alt="Stefan Kunc" 
-                  className="w-64 h-64 rounded-lg object-cover border-4 border-gradient-to-r from-red-accent to-blue-accent shadow-lg"
+                  className="w-64 h-64 rounded-full object-cover border-4 border-gradient-to-r from-red-accent to-blue-accent shadow-lg"
                 />
               </div>
             </div>
