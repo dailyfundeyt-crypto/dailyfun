@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { Card, CardContent } from '../components/ui/card';
+import { Link } from 'react-router-dom';
 
 const AboutUs = () => {
   return (
@@ -195,20 +196,18 @@ const AboutUs = () => {
             <div>
               <h4 className="text-lg font-semibold mb-4 text-red-accent">Quick Links</h4>
               <ul className="space-y-2 text-gray-600">
-                <li><a href="#" className="hover:text-black transition-colors">About Us</a></li>
-                <li><a href="#" className="hover:text-black transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-black transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-black transition-colors">Terms of Service</a></li>
+                <li><Link to="/about" className="hover:text-black transition-colors">About Us</Link></li>
+                <li><Link to="/contact" className="hover:text-black transition-colors">Contact</Link></li>
+                <li><Link to="/privacy-policy" className="hover:text-black transition-colors">Privacy Policy</Link></li>
+                <li><Link to="/terms-of-service" className="hover:text-black transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
             
             <div>
               <h4 className="text-lg font-semibold mb-4 text-blue-accent">Fun Categories</h4>
               <ul className="space-y-2 text-gray-600">
-                <li><a href="#" className="hover:text-black transition-colors">Comedy</a></li>
-                <li><a href="#" className="hover:text-black transition-colors">Pets & Animals</a></li>
-                <li><a href="#" className="hover:text-black transition-colors">Food & Recipes</a></li>
-                <li><a href="#" className="hover:text-black transition-colors">Weird News</a></li>
+                <li><Link to="/weird" className="hover:text-black transition-colors">Weird News</Link></li>
+                <li><Link to="/products" className="hover:text-black transition-colors">Products</Link></li>
               </ul>
             </div>
           </div>
