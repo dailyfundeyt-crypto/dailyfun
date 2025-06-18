@@ -17,13 +17,13 @@ const Products = () => {
             className="inline-flex items-center text-red-accent hover:text-blue-accent mb-6 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Zurück zur Startseite
+            Back to Homepage
           </Link>
 
-          <h1 className="text-3xl font-bold text-black mb-6 font-serif">Unsere Produkte</h1>
+          <h1 className="text-3xl font-bold text-black mb-6 font-serif">Our Products</h1>
           
           <p className="text-gray-600 mb-8">
-            Entdecke unsere einzigartigen Produkte voller Humor und interessanter Fakten.
+            Discover our unique products full of humor and interesting facts.
           </p>
         </div>
 
@@ -35,7 +35,7 @@ const Products = () => {
             <div className="aspect-square bg-gray-100 overflow-hidden">
               <img
                 src="/lovable-uploads/d60c8951-db95-4a1b-bd2e-35466f8bb081.png"
-                alt="Schildkröte mit Kappe und Sonnenbrille"
+                alt="Turtle with cap and sunglasses"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -43,21 +43,21 @@ const Products = () => {
             {/* Produktinhalt */}
             <div className="p-6">
               <h2 className="text-xl font-bold text-black mb-4 font-serif">
-                Noch nicht Verfügbar
+                Not Yet Available
               </h2>
               
               {/* Produkt-Details */}
               <ul className="text-gray-700 mb-4 space-y-2">
                 <li className="flex items-center">
-                  <span className="font-medium">Kategorie:</span>
-                  <span className="ml-2">Buch</span>
+                  <span className="font-medium">Category:</span>
+                  <span className="ml-2">Book</span>
                 </li>
                 <li className="flex items-center">
-                  <span className="font-medium">Thema:</span>
-                  <span className="ml-2">Fakten</span>
+                  <span className="font-medium">Topic:</span>
+                  <span className="ml-2">Facts</span>
                 </li>
                 <li className="flex items-center">
-                  <span className="font-medium">Seiten:</span>
+                  <span className="font-medium">Pages:</span>
                   <span className="ml-2">200</span>
                 </li>
               </ul>
@@ -74,7 +74,7 @@ const Products = () => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-full bg-red-accent text-white px-6 py-3 rounded-md font-medium hover:bg-blue-accent transition-colors duration-300"
               >
-                <span>Mehr erfahren</span>
+                <span>Learn More</span>
                 <ExternalLink className="h-4 w-4 ml-2" />
               </a>
             </div>
@@ -83,10 +83,10 @@ const Products = () => {
 
         {/* Zusätzlicher Info-Bereich */}
         <div className="mt-12 bg-gray-50 rounded-lg p-8 border border-gray-200">
-          <h3 className="text-2xl font-bold text-black mb-4 font-serif">Bald verfügbar</h3>
+          <h3 className="text-2xl font-bold text-black mb-4 font-serif">Coming Soon</h3>
           <p className="text-gray-700 text-lg">
-            Wir arbeiten hart daran, dir bald unser erstes Produkt präsentieren zu können. 
-            Ein Buch voller unterhaltsamer Fakten, das Daily Fun direkt zu dir nach Hause bringt!
+            We're working hard to soon present you with our first product. 
+            A book full of entertaining facts that brings Daily Fun directly to your home!
           </p>
         </div>
       </main>
