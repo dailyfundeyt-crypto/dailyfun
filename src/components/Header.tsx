@@ -11,10 +11,7 @@ const Header = () => {
     { name: 'Home', href: '/' },
     { name: 'Search', href: '/search' },
     { name: 'About Us', href: '/about' },
-    { name: 'Comedy', href: '/comedy' },
-    { name: 'Pets & Animals', href: '/pets' },
-    { name: 'Food & Recipes', href: '/food' },
-    { name: 'Travel Adventures', href: '/travel' },
+    { name: 'Products', href: '/products' },
     { name: 'Weird News', href: '/weird' },
   ];
 

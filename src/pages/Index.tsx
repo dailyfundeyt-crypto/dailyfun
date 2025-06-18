@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
 import { articles } from '../data/articles';
+import { Link } from 'react-router-dom';
 
 const Index = () => {
   const [sortedArticles, setSortedArticles] = useState(articles);
@@ -61,6 +62,38 @@ const Index = () => {
           </div>
         </section>
 
+        {/* Neuestes Produkt Section */}
+        <section className="bg-gradient-to-r from-red-accent/10 to-blue-accent/10 rounded-lg shadow-sm border border-gray-200 p-8 mb-12">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            {/* Kleinerer Bild-Platzhalter */}
+            <div className="flex-shrink-0">
+              <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-lg overflow-hidden shadow-md">
+                <img
+                  src="/lovable-uploads/d60c8951-db95-4a1b-bd2e-35466f8bb081.png"
+                  alt="Unser neuestes Produkt"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Inhalt */}
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-2xl md:text-3xl font-bold text-black mb-4 font-serif">
+                Unser neuestes Produkt
+              </h3>
+              <p className="text-gray-700 text-lg mb-6 font-serif">
+                Bleib dran für unser spannendes Debüt: ein Buch voller unterhaltsamer Fakten!
+              </p>
+              <Link
+                to="/products"
+                className="inline-flex items-center bg-red-accent text-white px-6 py-3 rounded-md font-medium hover:bg-blue-accent transition-colors duration-300"
+              >
+                Zum Produkt
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* Goals Section */}
         <section className="bg-gray-50 rounded-lg shadow-sm border border-gray-200 p-8 mb-12">
           <div className="text-center mb-8">
@@ -115,10 +148,8 @@ const Index = () => {
             <div>
               <h4 className="text-lg font-semibold mb-4 text-blue-accent">Fun Categories</h4>
               <ul className="space-y-2 text-gray-600">
-                <li><a href="#" className="hover:text-black transition-colors">Comedy</a></li>
-                <li><a href="#" className="hover:text-black transition-colors">Pets & Animals</a></li>
-                <li><a href="#" className="hover:text-black transition-colors">Food & Recipes</a></li>
                 <li><a href="#" className="hover:text-black transition-colors">Weird News</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Products</a></li>
               </ul>
             </div>
           </div>
