@@ -1,9 +1,13 @@
+
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { Card, CardContent } from '../components/ui/card';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const AboutUs = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-white text-black">
       <Header />
@@ -12,7 +16,7 @@ const AboutUs = () => {
         {/* Main Headline */}
         <section className="text-center mb-12">
           <h1 className="text-4xl md:text-6xl font-bold text-black mb-6 font-serif">
-            Welcome to Daily Fun – The Team Behind Your Daily Laughs!
+            {t('about.main.title')}
           </h1>
           <div className="w-32 h-1 bg-gradient-to-r from-red-accent to-blue-accent mx-auto"></div>
         </section>
@@ -21,9 +25,7 @@ const AboutUs = () => {
         <section className="mb-16">
           <div className="max-w-4xl mx-auto text-center">
             <p className="text-lg md:text-xl leading-relaxed text-gray-700 font-serif">
-              In a world where news often feels overwhelming or depressing, Daily Fun steps in to change just that. 
-              We are your daily dose of <span className="text-red-accent font-bold">trustworthy entertainment</span> and 
-              <span className="text-blue-accent font-bold"> absurd insights</span>, proving that staying informed can actually be a blast!
+              {t('about.intro')}
             </p>
           </div>
         </section>
@@ -33,11 +35,9 @@ const AboutUs = () => {
           <div className="bg-gray-50 rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               <div className="order-2 lg:order-1">
-                <h2 className="text-3xl font-bold text-black font-serif mb-6">Stefan Kunc's Vision</h2>
+                <h2 className="text-3xl font-bold text-black font-serif mb-6">{t('about.stefan.vision.title')}</h2>
                 <p className="text-lg leading-relaxed text-gray-700 font-serif italic">
-                  "As Stefan Kunc, I launched Daily Fun because I firmly believe that information doesn't have to be dry and tedious. 
-                  My goal was to create a platform that masters the balance between serious reporting and genuine entertainment value – 
-                  with a passionate and dedicated team."
+                  {t('about.stefan.vision.quote')}
                 </p>
               </div>
               <div className="order-1 lg:order-2 flex justify-center">
@@ -54,7 +54,7 @@ const AboutUs = () => {
         {/* The Team Behind Daily Fun Section */}
         <section className="mb-16">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-black font-serif mb-4">The Team Behind Daily Fun</h2>
+            <h2 className="text-3xl font-bold text-black font-serif mb-4">{t('about.team.behind.title')}</h2>
             <div className="w-32 h-1 bg-gradient-to-r from-red-accent to-blue-accent mx-auto mb-6"></div>
           </div>
 
@@ -70,9 +70,7 @@ const AboutUs = () => {
           {/* Team Introduction */}
           <div className="max-w-4xl mx-auto text-center mb-12">
             <p className="text-lg leading-relaxed text-gray-700 font-serif">
-              We are the faces behind Daily Fun – a creative and dedicated team working tirelessly every day to present 
-              the news to you with a wink. Our team spirit and shared vision drive us to create humorous yet trustworthy content. 
-              We combine human expertise with cutting-edge technology to offer you a unique perspective on global events.
+              {t('about.team.intro')}
             </p>
           </div>
 
@@ -88,11 +86,10 @@ const AboutUs = () => {
                     className="w-32 h-32 rounded-full border-4 border-red-accent/20"
                   />
                 </div>
-                <h3 className="text-xl font-bold text-black font-serif mb-2">Dr. Elke Schneider (AI)</h3>
-                <p className="text-red-accent font-semibold mb-3">Head of Humour & Creativity</p>
+                <h3 className="text-xl font-bold text-black font-serif mb-2">{t('about.elke.name')}</h3>
+                <p className="text-red-accent font-semibold mb-3">{t('about.elke.role')}</p>
                 <p className="text-gray-700 text-sm leading-relaxed">
-                  Elke is our master of good vibes. With her sharp mind and unparalleled wit, she ensures that 
-                  every article and every video has that typical Daily Fun charm.
+                  {t('about.elke.desc')}
                 </p>
               </CardContent>
             </Card>
@@ -107,11 +104,10 @@ const AboutUs = () => {
                     className="w-32 h-32 rounded-full border-4 border-blue-accent/20"
                   />
                 </div>
-                <h3 className="text-xl font-bold text-black font-serif mb-2">Mr. Karl Bergmann (AI)</h3>
-                <p className="text-blue-accent font-semibold mb-3">Lead Story Weaver</p>
+                <h3 className="text-xl font-bold text-black font-serif mb-2">{t('about.karl.name')}</h3>
+                <p className="text-blue-accent font-semibold mb-3">{t('about.karl.role')}</p>
                 <p className="text-gray-700 text-sm leading-relaxed">
-                  Karl is our fact-checker and storyteller all in one. He dives deep into subjects, packaging 
-                  even complex topics into understandable, captivating, and often astonishing narratives.
+                  {t('about.karl.desc')}
                 </p>
               </CardContent>
             </Card>
@@ -126,11 +122,10 @@ const AboutUs = () => {
                     className="w-32 h-32 rounded-full border-4 border-red-accent/20"
                   />
                 </div>
-                <h3 className="text-xl font-bold text-black font-serif mb-2">Mr. Jonas Richter (AI)</h3>
-                <p className="text-red-accent font-semibold mb-3">Content Alchemist</p>
+                <h3 className="text-xl font-bold text-black font-serif mb-2">{t('about.jonas.name')}</h3>
+                <p className="text-red-accent font-semibold mb-3">{t('about.jonas.role')}</p>
                 <p className="text-gray-700 text-sm leading-relaxed">
-                  Jonas transforms ideas into visual magic. Whether it's designing our videos or preparing 
-                  infographics – he makes sure our content is not only funny but also visually impressive.
+                  {t('about.jonas.desc')}
                 </p>
               </CardContent>
             </Card>
@@ -141,16 +136,13 @@ const AboutUs = () => {
         <section className="mb-16">
           <div className="bg-gradient-to-r from-red-accent/5 to-blue-accent/5 rounded-lg shadow-sm border border-gray-200 p-8">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-black font-serif mb-4">Our Values</h2>
-              <h3 className="text-xl text-gray-600 font-serif italic">What Matters to Us</h3>
+              <h2 className="text-3xl font-bold text-black font-serif mb-4">{t('about.values.title')}</h2>
+              <h3 className="text-xl text-gray-600 font-serif italic">{t('about.values.subtitle')}</h3>
               <div className="w-24 h-1 bg-gradient-to-r from-red-accent to-blue-accent mx-auto mt-4"></div>
             </div>
             <div className="max-w-4xl mx-auto text-center">
               <p className="text-lg leading-relaxed text-gray-700 font-serif">
-                At Daily Fun, <span className="text-red-accent font-bold">trust</span>, 
-                <span className="text-blue-accent font-bold"> humor</span>, and 
-                <span className="text-red-accent font-bold"> innovation</span> are at the core of everything we do. 
-                We deliver facts that are accurate, but in a way that brings joy. We are curious and, above all: never boring!
+                {t('about.values.desc')}
               </p>
             </div>
           </div>
@@ -159,19 +151,18 @@ const AboutUs = () => {
         {/* Outlook / Call to Action Section */}
         <section className="mb-12">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-black font-serif mb-6">Join the Daily Fun Family</h2>
+            <h2 className="text-3xl font-bold text-black font-serif mb-6">{t('about.join.title')}</h2>
             <div className="w-32 h-1 bg-gradient-to-r from-red-accent to-blue-accent mx-auto mb-6"></div>
             <div className="max-w-4xl mx-auto">
               <p className="text-lg leading-relaxed text-gray-700 font-serif mb-8">
-                Dive into the world of Daily Fun! Discover our latest articles and videos and follow us on social media 
-                so you don't miss a thing. We look forward to making you smile!
+                {t('about.join.desc')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button className="bg-red-accent hover:bg-red-accent/90 text-white px-8 py-3 rounded-md font-semibold transition-colors">
-                  Explore Our Articles
+                  {t('about.explore.button')}
                 </button>
                 <button className="bg-blue-accent hover:bg-blue-accent/90 text-white px-8 py-3 rounded-md font-semibold transition-colors">
-                  Follow Us
+                  {t('about.follow.button')}
                 </button>
               </div>
             </div>
@@ -186,28 +177,28 @@ const AboutUs = () => {
             <div className="col-span-1 md:col-span-2">
               <h3 className="text-2xl font-bold mb-4 font-serif">Daily Fun</h3>
               <p className="text-gray-600 mb-4 font-serif italic">
-                "Delivering reliable news and engaging stories to keep you informed and entertained - because life's too short for boring headlines."
+                "{t('footer.quote')}"
               </p>
               <p className="text-gray-600 text-sm">
-                © 2024 Daily Fun. All rights reserved.
+                {t('footer.rights')}
               </p>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-red-accent">Quick Links</h4>
+              <h4 className="text-lg font-semibold mb-4 text-red-accent">{t('footer.quick')}</h4>
               <ul className="space-y-2 text-gray-600">
-                <li><Link to="/about" className="hover:text-black transition-colors">About Us</Link></li>
-                <li><Link to="/contact" className="hover:text-black transition-colors">Contact</Link></li>
-                <li><Link to="/privacy-policy" className="hover:text-black transition-colors">Privacy Policy</Link></li>
-                <li><Link to="/terms-of-service" className="hover:text-black transition-colors">Terms of Service</Link></li>
+                <li><Link to="/about" className="hover:text-black transition-colors">{t('header.about')}</Link></li>
+                <li><Link to="/contact" className="hover:text-black transition-colors">{t('common.contact')}</Link></li>
+                <li><Link to="/privacy-policy" className="hover:text-black transition-colors">{t('common.privacy')}</Link></li>
+                <li><Link to="/terms-of-service" className="hover:text-black transition-colors">{t('common.terms')}</Link></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-blue-accent">Fun Categories</h4>
+              <h4 className="text-lg font-semibold mb-4 text-blue-accent">{t('footer.categories')}</h4>
               <ul className="space-y-2 text-gray-600">
-                <li><Link to="/weird" className="hover:text-black transition-colors">Weird News</Link></li>
-                <li><Link to="/products" className="hover:text-black transition-colors">Products</Link></li>
+                <li><Link to="/weird" className="hover:text-black transition-colors">{t('header.weird')}</Link></li>
+                <li><Link to="/products" className="hover:text-black transition-colors">{t('header.products')}</Link></li>
               </ul>
             </div>
           </div>
