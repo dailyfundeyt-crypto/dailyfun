@@ -4,8 +4,11 @@ import InstallSidebar from '../components/InstallSidebar';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const PrivacyPolicy = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-white text-black">
       <Header />
@@ -18,10 +21,10 @@ const PrivacyPolicy = () => {
             className="inline-flex items-center text-red-accent hover:text-blue-accent mb-6 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
+            {t('common.back')}
           </Link>
 
-          <h1 className="text-3xl font-bold text-black mb-6 font-serif">Privacy Policy</h1>
+          <h1 className="text-3xl font-bold text-black mb-6 font-serif">{t('privacy.title')}</h1>
         </div>
 
         <div className="max-w-4xl mx-auto">
@@ -32,12 +35,11 @@ const PrivacyPolicy = () => {
               </div>
               
               <h2 className="text-4xl font-bold text-black mb-8 font-serif">
-                We do not collect any personal data.
+                {t('privacy.no.data')}
               </h2>
               
               <p className="text-lg text-gray-600 font-serif">
-                Your privacy is important to us. We are committed to protecting your personal information 
-                and maintaining transparency about our data practices.
+                {t('privacy.desc')}
               </p>
             </CardContent>
           </Card>
@@ -51,28 +53,28 @@ const PrivacyPolicy = () => {
             <div className="col-span-1 md:col-span-2">
               <h3 className="text-2xl font-bold mb-4 font-serif">Daily Fun</h3>
               <p className="text-gray-600 mb-4 font-serif italic">
-                "Delivering reliable news and engaging stories to keep you informed and entertained - because life's too short for boring headlines."
+                "{t('footer.quote')}"
               </p>
               <p className="text-gray-600 text-sm">
-                © 2024 Daily Fun. All rights reserved.
+                {t('footer.rights')}
               </p>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-red-accent">Quick Links</h4>
+              <h4 className="text-lg font-semibold mb-4 text-red-accent">{t('footer.quick')}</h4>
               <ul className="space-y-2 text-gray-600">
-                <li><Link to="/about" className="hover:text-black transition-colors">About Us</Link></li>
-                <li><Link to="/contact" className="hover:text-black transition-colors">Contact</Link></li>
-                <li><Link to="/privacy-policy" className="hover:text-black transition-colors">Privacy Policy</Link></li>
-                <li><Link to="/terms-of-service" className="hover:text-black transition-colors">Terms of Service</Link></li>
+                <li><Link to="/about" className="hover:text-black transition-colors">{t('header.about')}</Link></li>
+                <li><Link to="/contact" className="hover:text-black transition-colors">{t('common.contact')}</Link></li>
+                <li><Link to="/privacy-policy" className="hover:text-black transition-colors">{t('common.privacy')}</Link></li>
+                <li><Link to="/terms-of-service" className="hover:text-black transition-colors">{t('common.terms')}</Link></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-blue-accent">Fun Categories</h4>
+              <h4 className="text-lg font-semibold mb-4 text-blue-accent">{t('footer.categories')}</h4>
               <ul className="space-y-2 text-gray-600">
-                <li><Link to="/weird" className="hover:text-black transition-colors">Weird News</Link></li>
-                <li><Link to="/products" className="hover:text-black transition-colors">Products</Link></li>
+                <li><Link to="/weird" className="hover:text-black transition-colors">{t('header.weird')}</Link></li>
+                <li><Link to="/products" className="hover:text-black transition-colors">{t('header.products')}</Link></li>
               </ul>
             </div>
           </div>

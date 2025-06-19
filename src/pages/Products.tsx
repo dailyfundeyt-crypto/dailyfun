@@ -1,9 +1,13 @@
+
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Products = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-white text-black">
       <Header />
@@ -16,13 +20,13 @@ const Products = () => {
             className="inline-flex items-center text-red-accent hover:text-blue-accent mb-6 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Homepage
+            {t('common.back')}
           </Link>
 
-          <h1 className="text-3xl font-bold text-black mb-6 font-serif">Our Products</h1>
+          <h1 className="text-3xl font-bold text-black mb-6 font-serif">{t('products.title')}</h1>
           
           <p className="text-gray-600 mb-8">
-            Discover our unique products full of humor and interesting facts.
+            {t('products.subtitle')}
           </p>
         </div>
 
@@ -42,21 +46,21 @@ const Products = () => {
             {/* Produktinhalt */}
             <div className="p-6">
               <h2 className="text-xl font-bold text-black mb-4 font-serif">
-                Not Yet Available
+                {t('products.not.available')}
               </h2>
               
               {/* Produkt-Details */}
               <ul className="text-gray-700 mb-4 space-y-2">
                 <li className="flex items-center">
-                  <span className="font-medium">Category:</span>
-                  <span className="ml-2">Book</span>
+                  <span className="font-medium">{t('products.category')}</span>
+                  <span className="ml-2">{t('products.book')}</span>
                 </li>
                 <li className="flex items-center">
-                  <span className="font-medium">Topic:</span>
-                  <span className="ml-2">Facts</span>
+                  <span className="font-medium">{t('products.topic')}</span>
+                  <span className="ml-2">{t('products.facts')}</span>
                 </li>
                 <li className="flex items-center">
-                  <span className="font-medium">Pages:</span>
+                  <span className="font-medium">{t('products.pages')}</span>
                   <span className="ml-2">200</span>
                 </li>
               </ul>
@@ -73,7 +77,7 @@ const Products = () => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center w-full bg-red-accent text-white px-6 py-3 rounded-md font-medium hover:bg-blue-accent transition-colors duration-300"
               >
-                <span>Learn More</span>
+                <span>{t('products.learn.more')}</span>
                 <ExternalLink className="h-4 w-4 ml-2" />
               </a>
             </div>
@@ -82,10 +86,9 @@ const Products = () => {
 
         {/* Zusätzlicher Info-Bereich */}
         <div className="mt-12 bg-gray-50 rounded-lg p-8 border border-gray-200">
-          <h3 className="text-2xl font-bold text-black mb-4 font-serif">Coming Soon</h3>
+          <h3 className="text-2xl font-bold text-black mb-4 font-serif">{t('products.coming.soon')}</h3>
           <p className="text-gray-700 text-lg">
-            We're working hard to soon present you with our first product. 
-            A book full of entertaining facts that brings Daily Fun directly to your home!
+            {t('products.coming.desc')}
           </p>
         </div>
       </main>
@@ -97,28 +100,28 @@ const Products = () => {
             <div className="col-span-1 md:col-span-2">
               <h3 className="text-2xl font-bold mb-4 font-serif">Daily Fun</h3>
               <p className="text-gray-600 mb-4 font-serif italic">
-                "Delivering reliable news and engaging stories to keep you informed and entertained - because life's too short for boring headlines."
+                "{t('footer.quote')}"
               </p>
               <p className="text-gray-600 text-sm">
-                © 2024 Daily Fun. All rights reserved.
+                {t('footer.rights')}
               </p>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-red-accent">Quick Links</h4>
+              <h4 className="text-lg font-semibold mb-4 text-red-accent">{t('footer.quick')}</h4>
               <ul className="space-y-2 text-gray-600">
-                <li><Link to="/about" className="hover:text-black transition-colors">About Us</Link></li>
-                <li><Link to="/contact" className="hover:text-black transition-colors">Contact</Link></li>
-                <li><Link to="/privacy-policy" className="hover:text-black transition-colors">Privacy Policy</Link></li>
-                <li><Link to="/terms-of-service" className="hover:text-black transition-colors">Terms of Service</Link></li>
+                <li><Link to="/about" className="hover:text-black transition-colors">{t('header.about')}</Link></li>
+                <li><Link to="/contact" className="hover:text-black transition-colors">{t('common.contact')}</Link></li>
+                <li><Link to="/privacy-policy" className="hover:text-black transition-colors">{t('common.privacy')}</Link></li>
+                <li><Link to="/terms-of-service" className="hover:text-black transition-colors">{t('common.terms')}</Link></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-blue-accent">Fun Categories</h4>
+              <h4 className="text-lg font-semibold mb-4 text-blue-accent">{t('footer.categories')}</h4>
               <ul className="space-y-2 text-gray-600">
-                <li><Link to="/weird" className="hover:text-black transition-colors">Weird News</Link></li>
-                <li><Link to="/products" className="hover:text-black transition-colors">Products</Link></li>
+                <li><Link to="/weird" className="hover:text-black transition-colors">{t('header.weird')}</Link></li>
+                <li><Link to="/products" className="hover:text-black transition-colors">{t('header.products')}</Link></li>
               </ul>
             </div>
           </div>

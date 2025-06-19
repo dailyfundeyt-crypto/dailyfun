@@ -16,11 +16,13 @@ import {
   PaginationPrevious 
 } from '../components/ui/pagination';
 import { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const CategoryPage = () => {
   const { category } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 6;
+  const { t } = useLanguage();
   
   // For the /weird route, we want to show "Weird News" category
   // Map URL paths to actual category names
@@ -60,9 +62,9 @@ const CategoryPage = () => {
         <InstallSidebar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-black mb-4">Category Not Found</h1>
+            <h1 className="text-2xl font-bold text-black mb-4">{t('category.not.found')}</h1>
             <Link to="/" className="text-red-accent hover:text-blue-accent">
-              Return to Home
+              {t('category.return')}
             </Link>
           </div>
         </main>
@@ -82,13 +84,13 @@ const CategoryPage = () => {
             className="inline-flex items-center text-red-accent hover:text-blue-accent mb-6 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Home
+            {t('category.back')}
           </Link>
 
           <h1 className="text-3xl font-bold text-black mb-6 font-serif">{categoryName}</h1>
           
           <p className="text-gray-600 mb-6">
-            {filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''} in this category
+            {filteredArticles.length} {t('category.articles')}
           </p>
         </div>
 
@@ -102,8 +104,8 @@ const CategoryPage = () => {
         {filteredArticles.length === 0 && (
           <Card className="mx-auto max-w-md">
             <CardContent className="text-center py-12">
-              <h3 className="text-lg font-medium text-black mb-2">No articles found</h3>
-              <p className="text-gray-600">There are currently no articles in the {categoryName} category.</p>
+              <h3 className="text-lg font-medium text-black mb-2">{t('category.no.articles')}</h3>
+              <p className="text-gray-600">{t('category.no.articles.desc')} {categoryName} category.</p>
             </CardContent>
           </Card>
         )}

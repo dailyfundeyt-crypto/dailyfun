@@ -5,10 +5,12 @@ import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
 import { articles } from '../data/articles';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const { t } = useLanguage();
 
   const categories = ['all', 'Comedy', 'Pets & Animals', 'Food & Recipes', 'Travel Adventures', 'Weird News'];
 
@@ -38,7 +40,7 @@ const Search = () => {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black mb-6 font-serif">Search Articles</h1>
+          <h1 className="text-3xl font-bold text-black mb-6 font-serif">{t('search.title')}</h1>
           
           {/* Search Bar */}
           <div className="relative mb-6">
@@ -47,7 +49,7 @@ const Search = () => {
             </div>
             <input
               type="text"
-              placeholder="Search articles, authors, or topics..."
+              placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="block w-full pl-10 pr-3 py-3 border border-gray-300 bg-white text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-red-accent focus:border-transparent text-lg"
@@ -66,15 +68,15 @@ const Search = () => {
                     : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
                 }`}
               >
-                {category === 'all' ? 'All Categories' : category}
+                {category === 'all' ? t('search.all') : category}
               </button>
             ))}
           </div>
 
           {/* Results Count */}
           <p className="text-gray-600 mb-6">
-            {filteredArticles.length} article{filteredArticles.length !== 1 ? 's' : ''} found
-            {searchQuery && ` for "${searchQuery}"`}
+            {filteredArticles.length} {t('search.results')}
+            {searchQuery && ` ${t('search.results.for')} "${searchQuery}"`}
           </p>
         </div>
 
@@ -88,8 +90,8 @@ const Search = () => {
         {filteredArticles.length === 0 && searchQuery && (
           <div className="text-center py-12">
             <SearchIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-black mb-2">No articles found</h3>
-            <p className="text-gray-600">Try adjusting your search terms or filters</p>
+            <h3 className="text-lg font-medium text-black mb-2">{t('search.no.results')}</h3>
+            <p className="text-gray-600">{t('search.no.results.desc')}</p>
           </div>
         )}
       </main>
