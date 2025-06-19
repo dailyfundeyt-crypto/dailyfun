@@ -63,33 +63,33 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Neuestes Produkt Section */}
+        {/* Latest Product Section */}
         <section className="bg-gradient-to-r from-red-accent/10 to-blue-accent/10 rounded-lg shadow-sm border border-gray-200 p-8 mb-12">
           <div className="flex flex-col md:flex-row items-center gap-8">
-            {/* Kleinerer Bild-Platzhalter */}
+            {/* Product Image */}
             <div className="flex-shrink-0">
               <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-lg overflow-hidden shadow-md">
                 <img
                   src="/lovable-uploads/d60c8951-db95-4a1b-bd2e-35466f8bb081.png"
-                  alt="Unser neuestes Produkt"
+                  alt="Our latest product"
                   className="w-full h-full object-cover"
                 />
               </div>
             </div>
 
-            {/* Inhalt */}
+            {/* Content */}
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-2xl md:text-3xl font-bold text-black mb-4 font-serif">
-                Unser neuestes Produkt
+                Our Latest Product
               </h3>
               <p className="text-gray-700 text-lg mb-6 font-serif">
-                Bleib dran für unser spannendes Debüt: ein Buch voller unterhaltsamer Fakten!
+                Stay tuned for our exciting debut: a book full of entertaining facts!
               </p>
               <Link
                 to="/products"
                 className="inline-flex items-center bg-red-accent text-white px-6 py-3 rounded-md font-medium hover:bg-blue-accent transition-colors duration-300"
               >
-                Zum Produkt
+                View Product
               </Link>
             </div>
           </div>
