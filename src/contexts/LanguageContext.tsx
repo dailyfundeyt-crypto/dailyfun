@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface LanguageContextType {
@@ -131,7 +130,14 @@ const translations = {
     'common.back': 'Back to Home',
     'common.contact': 'Contact',
     'common.privacy': 'Privacy Policy',
-    'common.terms': 'Terms of Service'
+    'common.terms': 'Terms of Service',
+    
+    // Article Page
+    'article.not.found': 'Article Not Found',
+    'article.content.paragraph1': 'This remarkable story continues to unfold as our dedicated team of reporters investigates every angle. The implications of this development have sent ripples throughout the community, sparking conversations in coffee shops, social media, and dinner tables across the region.',
+    'article.content.paragraph2': 'Local residents have been both amused and amazed by the turn of events. "I never thought I\'d see the day," commented one longtime community member. "But here we are, and honestly, it\'s exactly the kind of thing that makes life interesting."',
+    'article.content.paragraph3': 'Our investigation revealed several fascinating details that shed light on how this situation came to be. Through extensive interviews and careful fact-checking, we\'ve pieced together a timeline that reads more like fiction than reality.',
+    'article.content.paragraph4': 'As this story continues to develop, we\'ll be following up with all the key players involved. Stay tuned to Daily Fun for the latest updates on this and other stories that prove truth really is stranger than fiction.'
   },
   de: {
     // Header
@@ -253,7 +259,14 @@ const translations = {
     'common.back': 'Zurück zur Startseite',
     'common.contact': 'Kontakt',
     'common.privacy': 'Datenschutzrichtlinie',
-    'common.terms': 'Nutzungsbedingungen'
+    'common.terms': 'Nutzungsbedingungen',
+    
+    // Article Page
+    'article.not.found': 'Artikel nicht gefunden',
+    'article.content.paragraph1': 'Diese bemerkenswerte Geschichte entwickelt sich weiter, während unser engagiertes Reporterteam jeden Winkel untersucht. Die Auswirkungen dieser Entwicklung haben Wellen in der gesamten Gemeinde geschlagen und Gespräche in Cafés, sozialen Medien und an Esstischen in der ganzen Region ausgelöst.',
+    'article.content.paragraph2': 'Die Anwohner waren sowohl amüsiert als auch erstaunt über die Wendung der Ereignisse. "Ich hätte nie gedacht, dass ich das noch erleben würde", kommentierte ein langjähriges Gemeindemitglied. "Aber hier sind wir, und ehrlich gesagt ist es genau die Art von Sache, die das Leben interessant macht."',
+    'article.content.paragraph3': 'Unsere Untersuchung ergab mehrere faszinierende Details, die Licht darauf werfen, wie diese Situation entstanden ist. Durch umfangreiche Interviews und sorgfältige Faktenprüfung haben wir eine Zeitleiste zusammengestellt, die eher wie Fiktion als Realität liest.',
+    'article.content.paragraph4': 'Da sich diese Geschichte weiterentwickelt, werden wir alle wichtigen Akteure weiter verfolgen. Bleiben Sie bei Daily Fun für die neuesten Updates zu dieser und anderen Geschichten, die beweisen, dass die Wahrheit wirklich seltsamer ist als die Fiktion.'
   }
 };
 

@@ -4,12 +4,15 @@ import { useEffect } from 'react';
 import { ArrowLeft, Calendar, User } from 'lucide-react';
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
+import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useLanguage } from '../contexts/LanguageContext';
 import { articles } from '../data/articles';
 import { incrementViews } from '../utils/viewTracker';
 
 const Article = () => {
   const { id } = useParams();
   const article = articles.find(a => a.id === id);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (article) {
@@ -25,9 +28,9 @@ const Article = () => {
         <InstallSidebar />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-black mb-4">Article Not Found</h1>
+            <h1 className="text-2xl font-bold text-black mb-4">{t('article.not.found')}</h1>
             <Link to="/" className="text-red-accent hover:text-blue-accent">
-              Return to Home
+              {t('common.back')}
             </Link>
           </div>
         </main>
@@ -41,13 +44,17 @@ const Article = () => {
       <InstallSidebar />
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Link
-          to="/"
-          className="inline-flex items-center text-red-accent hover:text-blue-accent mb-6 transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Home
-        </Link>
+        <div className="flex justify-between items-center mb-6">
+          <Link
+            to="/"
+            className="inline-flex items-center text-red-accent hover:text-blue-accent transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            {t('common.back')}
+          </Link>
+          
+          <LanguageSwitcher />
+        </div>
 
         <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="relative">
@@ -88,27 +95,19 @@ const Article = () => {
               
               <div className="text-gray-700 space-y-6 font-serif leading-relaxed">
                 <p>
-                  This remarkable story continues to unfold as our dedicated team of reporters investigates every angle. 
-                  The implications of this development have sent ripples throughout the community, sparking conversations 
-                  in coffee shops, social media, and dinner tables across the region.
+                  {t('article.content.paragraph1')}
                 </p>
                 
                 <p>
-                  Local residents have been both amused and amazed by the turn of events. "I never thought I'd see the day," 
-                  commented one longtime community member. "But here we are, and honestly, it's exactly the kind of thing 
-                  that makes life interesting."
+                  {t('article.content.paragraph2')}
                 </p>
                 
                 <p>
-                  Our investigation revealed several fascinating details that shed light on how this situation came to be. 
-                  Through extensive interviews and careful fact-checking, we've pieced together a timeline that reads 
-                  more like fiction than reality.
+                  {t('article.content.paragraph3')}
                 </p>
                 
                 <p>
-                  As this story continues to develop, we'll be following up with all the key players involved. 
-                  Stay tuned to Daily Fun for the latest updates on this and other stories that prove truth 
-                  really is stranger than fiction.
+                  {t('article.content.paragraph4')}
                 </p>
               </div>
             </div>
