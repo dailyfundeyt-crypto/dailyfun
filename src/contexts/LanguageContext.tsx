@@ -102,6 +102,15 @@ const translations = {
     'contact.love.to.hear': 'We\'d Love to Hear From You!',
     'contact.love.desc': 'Whether you have questions, feedback, or just want to say hello, don\'t hesitate to reach out. We typically respond within 24 hours.',
     
+    // Social Media Page
+    'social.title': 'Our YouTube Channels',
+    'social.description': 'Follow us on our YouTube channels for daily entertainment and fun content!',
+    'social.english.description': 'Our English channel featuring entertaining news and fun facts for global audiences.',
+    'social.german.description': 'Our German channel with local humor and entertaining content for German-speaking viewers.',
+    'social.visit.channel': 'Visit Channel',
+    'social.stay.connected': 'Stay Connected',
+    'social.stay.description': 'Don\'t miss out on our latest videos and updates. Subscribe to both channels for double the fun!',
+    
     // Privacy Policy Page
     'privacy.title': 'Privacy Policy',
     'privacy.no.data': 'We do not collect any personal data.',
@@ -245,6 +254,15 @@ const translations = {
     'contact.love.to.hear': 'Wir würden gerne von Ihnen hören!',
     'contact.love.desc': 'Egal ob Sie Fragen haben, Feedback geben möchten oder einfach nur hallo sagen wollen, zögern Sie nicht, uns zu kontaktieren. Wir antworten normalerweise innerhalb von 24 Stunden.',
     
+    // Social Media Page
+    'social.title': 'Unsere YouTube-Kanäle',
+    'social.description': 'Folgen Sie uns auf unseren YouTube-Kanälen für tägliche Unterhaltung und lustige Inhalte!',
+    'social.english.description': 'Unser englischer Kanal mit unterhaltsamen Nachrichten und lustigen Fakten für ein globales Publikum.',
+    'social.german.description': 'Unser deutscher Kanal mit lokalem Humor und unterhaltsamen Inhalten für deutschsprachige Zuschauer.',
+    'social.visit.channel': 'Kanal besuchen',
+    'social.stay.connected': 'Bleiben Sie verbunden',
+    'social.stay.description': 'Verpassen Sie nicht unsere neuesten Videos und Updates. Abonnieren Sie beide Kanäle für doppelten Spaß!',
+    
     // Privacy Policy Page
     'privacy.title': 'Datenschutzrichtlinie',
     'privacy.no.data': 'Wir sammeln keine persönlichen Daten.',
@@ -278,7 +296,7 @@ const translations = {
     // Article Page
     'article.not.found': 'Artikel nicht gefunden',
     'article.content.paragraph1': 'Diese bemerkenswerte Geschichte entwickelt sich weiter, während unser engagiertes Reporterteam jeden Winkel untersucht. Die Auswirkungen dieser Entwicklung haben Wellen in der gesamten Gemeinde geschlagen und Gespräche in Cafés, sozialen Medien und an Esstischen in der ganzen Region ausgelöst.',
-    'article.content.paragraph2': 'Die Anwohner waren sowohl amüsiert als auch erstaunt über die Wendung der Ereignisse. "Ich hätte nie gedacht, dass ich das noch erleben würde", kommentierte ein langjähriges Gemeindemitglied. "Aber hier sind wir, und ehrlich gesagt ist es genau die Art von Sache, die das Leben interessant macht."',
+    'article.content.paragraph2': 'Die Anwohner waren sowohl amüsiert als auch erstaunt über die Wendung der Ereignisse. "Ich hätte nie gedacht, dass ich das noch erleben würde", kommentierte ein langjähriges Gemeinsmitglied. "Aber hier sind wir, und ehrlich gesagt ist es genau die Art von Sache, die das Leben interessant macht."',
     'article.content.paragraph3': 'Unsere Untersuchung ergab mehrere faszinierende Details, die Licht darauf werfen, wie diese Situation entstanden ist. Durch umfangreiche Interviews und sorgfältige Faktenprüfung haben wir eine Zeitleiste zusammengestellt, die eher wie Fiktion als Realität liest.',
     'article.content.paragraph4': 'Da sich diese Geschichte weiterentwickelt, werden wir alle wichtigen Akteure weiter verfolgen. Bleiben Sie bei Daily Fun für die neuesten Updates zu dieser und anderen Geschichten, die beweisen, dass die Wahrheit wirklich seltsamer ist als die Fiktion.',
     
@@ -319,7 +337,7 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   // Translation function - returns the translated text or the key if not found
-  const t = (key: string): string => {
+  const t = (key: string):string => {
     return translations[language][key] || key;
   };
 
