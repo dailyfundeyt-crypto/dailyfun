@@ -12,6 +12,7 @@ import AboutUs from "./pages/AboutUs";
 import Products from "./pages/Products";
 import CategoryPage from "./pages/CategoryPage";
 import Contact from "./pages/Contact";
+import SocialMedia from "./pages/SocialMedia";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/about" element={<AboutUs />} />
             <Route path="/products" element={<Products />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/social-media" element={<SocialMedia />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/article/:id" element={<Article />} />

@@ -158,12 +158,18 @@ const AboutUs = () => {
                 {t('about.join.desc')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-red-accent hover:bg-red-accent/90 text-white px-8 py-3 rounded-md font-semibold transition-colors">
+                <Link 
+                  to="/search"
+                  className="bg-red-accent hover:bg-red-accent/90 text-white px-8 py-3 rounded-md font-semibold transition-colors"
+                >
                   {t('about.explore.button')}
-                </button>
-                <button className="bg-blue-accent hover:bg-blue-accent/90 text-white px-8 py-3 rounded-md font-semibold transition-colors">
+                </Link>
+                <Link 
+                  to="/social-media"
+                  className="bg-blue-accent hover:bg-blue-accent/90 text-white px-8 py-3 rounded-md font-semibold transition-colors"
+                >
                   {t('about.follow.button')}
-                </button>
+                </Link>
               </div>
             </div>
           </div>
