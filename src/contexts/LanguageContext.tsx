@@ -137,7 +137,21 @@ const translations = {
     'article.content.paragraph1': 'This remarkable story continues to unfold as our dedicated team of reporters investigates every angle. The implications of this development have sent ripples throughout the community, sparking conversations in coffee shops, social media, and dinner tables across the region.',
     'article.content.paragraph2': 'Local residents have been both amused and amazed by the turn of events. "I never thought I\'d see the day," commented one longtime community member. "But here we are, and honestly, it\'s exactly the kind of thing that makes life interesting."',
     'article.content.paragraph3': 'Our investigation revealed several fascinating details that shed light on how this situation came to be. Through extensive interviews and careful fact-checking, we\'ve pieced together a timeline that reads more like fiction than reality.',
-    'article.content.paragraph4': 'As this story continues to develop, we\'ll be following up with all the key players involved. Stay tuned to Daily Fun for the latest updates on this and other stories that prove truth really is stranger than fiction.'
+    'article.content.paragraph4': 'As this story continues to develop, we\'ll be following up with all the key players involved. Stay tuned to Daily Fun for the latest updates on this and other stories that prove truth really is stranger than fiction.',
+    
+    // Article specific translations
+    'article.1.title': 'Local Cat Elected as Honorary Mayor After Promising More Tuna for Everyone',
+    'article.1.excerpt': 'In a stunning turn of events, Mr. Whiskers defeated all human candidates by a landslide margin of 12,000 votes. His campaign slogan "Purr-fect Leadership for a Purr-fect Tomorrow" resonated with voters across all demographics.',
+    'article.2.title': 'Man Discovers His Grandmother\'s Secret Recipe Was Just Ketchup and Love',
+    'article.2.excerpt': 'After 30 years of trying to recreate his beloved grandmother\'s "world-famous" pasta sauce, local resident discovers the ingredients were simpler than expected. "The love part was definitely the secret ingredient," he tearfully admitted.',
+    'article.3.title': 'Tourist Gets Lost in Own Hotel, Discovers Secret Indoor Waterpark',
+    'article.3.excerpt': 'What started as a simple search for the ice machine turned into the adventure of a lifetime. The lost tourist stumbled upon a hidden tropical paradise complete with slides, palm trees, and confused hotel staff.',
+    'article.4.title': 'Local Comedy Club Bans Dad Jokes After Audience Groans Become Too Loud',
+    'article.4.excerpt': 'The Laugh Track Comedy Club has implemented a strict "no puns, no dad jokes" policy after sound levels exceeded safety regulations. "We had to protect our patrons\' eardrums," said club owner. Emergency eye-roll stations have been installed.',
+    'article.5.title': 'Weather Forecast Predicts 100% Chance of People Complaining About Weather',
+    'article.5.excerpt': 'Meteorologists have made their most accurate prediction yet: regardless of actual weather conditions, citizens will find something to complain about. "It\'s either too hot, too cold, too wet, or too dry," reports chief meteorologist.',
+    'article.6.title': 'Breaking: Dog Finally Catches Own Tail, Has No Idea What to Do Next',
+    'article.6.excerpt': 'After three years of dedicated pursuit, Golden Retriever "Buddy" has achieved his life\'s ambition. Witnesses report the dog stood motionless for several minutes, apparently contemplating his next life goal. Squirrel-chasing is rumored to be next.',
   },
   de: {
     // Header
@@ -266,7 +280,21 @@ const translations = {
     'article.content.paragraph1': 'Diese bemerkenswerte Geschichte entwickelt sich weiter, während unser engagiertes Reporterteam jeden Winkel untersucht. Die Auswirkungen dieser Entwicklung haben Wellen in der gesamten Gemeinde geschlagen und Gespräche in Cafés, sozialen Medien und an Esstischen in der ganzen Region ausgelöst.',
     'article.content.paragraph2': 'Die Anwohner waren sowohl amüsiert als auch erstaunt über die Wendung der Ereignisse. "Ich hätte nie gedacht, dass ich das noch erleben würde", kommentierte ein langjähriges Gemeindemitglied. "Aber hier sind wir, und ehrlich gesagt ist es genau die Art von Sache, die das Leben interessant macht."',
     'article.content.paragraph3': 'Unsere Untersuchung ergab mehrere faszinierende Details, die Licht darauf werfen, wie diese Situation entstanden ist. Durch umfangreiche Interviews und sorgfältige Faktenprüfung haben wir eine Zeitleiste zusammengestellt, die eher wie Fiktion als Realität liest.',
-    'article.content.paragraph4': 'Da sich diese Geschichte weiterentwickelt, werden wir alle wichtigen Akteure weiter verfolgen. Bleiben Sie bei Daily Fun für die neuesten Updates zu dieser und anderen Geschichten, die beweisen, dass die Wahrheit wirklich seltsamer ist als die Fiktion.'
+    'article.content.paragraph4': 'Da sich diese Geschichte weiterentwickelt, werden wir alle wichtigen Akteure weiter verfolgen. Bleiben Sie bei Daily Fun für die neuesten Updates zu dieser und anderen Geschichten, die beweisen, dass die Wahrheit wirklich seltsamer ist als die Fiktion.',
+    
+    // Article specific translations - German
+    'article.1.title': 'Lokale Katze zum Ehrenbürgermeister gewählt, nachdem sie mehr Thunfisch für alle versprach',
+    'article.1.excerpt': 'In einer verblüffenden Wendung der Ereignisse besiegte Herr Whiskers alle menschlichen Kandidaten mit einem erdrutschartigen Vorsprung von 12.000 Stimmen. Sein Wahlslogan "Purr-fekte Führung für eine Purr-fekte Zukunft" fand bei Wählern aller demografischen Gruppen Anklang.',
+    'article.2.title': 'Mann entdeckt, dass Großmutters Geheimrezept nur Ketchup und Liebe war',
+    'article.2.excerpt': 'Nach 30 Jahren des Versuchs, die geliebte "weltberühmte" Nudelsauce seiner Großmutter nachzukochen, entdeckt ein Anwohner, dass die Zutaten einfacher waren als erwartet. "Der Liebesanteil war definitiv die Geheimzutat", gab er unter Tränen zu.',
+    'article.3.title': 'Tourist verirrt sich im eigenen Hotel und entdeckt geheimen Indoor-Wasserpark',
+    'article.3.excerpt': 'Was als einfache Suche nach der Eismaschine begann, wurde zum Abenteuer seines Lebens. Der verirrte Tourist stieß auf ein verstecktes tropisches Paradies mit Rutschen, Palmen und verwirrtem Hotelpersonal.',
+    'article.4.title': 'Örtlicher Comedy-Club verbietet Vater-Witze, nachdem Publikums-Stöhnen zu laut wurde',
+    'article.4.excerpt': 'Der Laugh Track Comedy Club hat eine strenge "Keine Wortspiele, keine Vater-Witze"-Richtlinie eingeführt, nachdem die Lautstärke die Sicherheitsvorschriften überschritt. "Wir mussten die Trommelfelle unserer Gäste schützen", sagte der Clubbesitzer. Notfall-Augenroll-Stationen wurden installiert.',
+    'article.5.title': 'Wettervorhersage prognostiziert 100% Chance, dass Menschen über das Wetter klagen',
+    'article.5.excerpt': 'Meteorologen haben ihre bisher genaueste Vorhersage gemacht: Unabhängig von den tatsächlichen Wetterbedingungen werden Bürger etwas zum Beklagen finden. "Es ist entweder zu heiß, zu kalt, zu nass oder zu trocken", berichtet der Chefmeteorologe.',
+    'article.6.title': 'Eilmeldung: Hund fängt endlich seinen eigenen Schwanz, hat keine Ahnung was als nächstes zu tun ist',
+    'article.6.excerpt': 'Nach drei Jahren hingebungsvoller Verfolgung hat Golden Retriever "Buddy" sein Lebensziel erreicht. Zeugen berichten, dass der Hund mehrere Minuten regungslos dastand und offenbar über sein nächstes Lebensziel nachdachte. Eichhörnchen-Jagen soll als nächstes kommen.',
   }
 };
 

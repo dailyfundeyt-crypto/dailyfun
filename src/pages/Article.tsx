@@ -38,6 +38,10 @@ const Article = () => {
     );
   }
 
+  // Get translated title and excerpt
+  const translatedTitle = t(`article.${article.id}.title`);
+  const translatedExcerpt = t(`article.${article.id}.excerpt`);
+
   return (
     <div className="min-h-screen bg-white text-black">
       <Header />
@@ -61,7 +65,7 @@ const Article = () => {
             <div className="aspect-video bg-gray-100 overflow-hidden">
               <img
                 src={`https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=1200&q=80`}
-                alt={article.title}
+                alt={translatedTitle}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -74,7 +78,7 @@ const Article = () => {
 
           <div className="p-8">
             <h1 className="text-3xl md:text-4xl font-bold text-black mb-6 font-serif leading-tight">
-              {article.title}
+              {translatedTitle}
             </h1>
 
             <div className="flex items-center text-sm text-gray-600 mb-8 pb-6 border-b border-gray-200">
@@ -90,7 +94,7 @@ const Article = () => {
 
             <div className="prose prose-lg max-w-none">
               <p className="text-xl text-gray-700 mb-8 font-serif italic leading-relaxed">
-                {article.excerpt}
+                {translatedExcerpt}
               </p>
               
               <div className="text-gray-700 space-y-6 font-serif leading-relaxed">
