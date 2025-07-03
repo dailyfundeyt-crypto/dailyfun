@@ -1,7 +1,6 @@
-
 import { useParams, Link } from 'react-router-dom';
 import { useEffect } from 'react';
-import { ArrowLeft, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Bot } from 'lucide-react';
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -12,7 +11,7 @@ import { incrementViews } from '../utils/viewTracker';
 const Article = () => {
   const { id } = useParams();
   const article = articles.find(a => a.id === id);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     if (article) {
@@ -42,6 +41,11 @@ const Article = () => {
   const translatedTitle = t(`article.${article.id}.title`);
   const translatedExcerpt = t(`article.${article.id}.excerpt`);
 
+  const handleAIClick = () => {
+    const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
+    window.open(aiUrl, '_blank');
+  };
+
   return (
     <div className="min-h-screen bg-white text-black">
       <Header />
@@ -57,7 +61,16 @@ const Article = () => {
             {t('common.back')}
           </Link>
           
-          <LanguageSwitcher />
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleAIClick}
+              className="inline-flex items-center bg-blue-accent text-white px-4 py-2 rounded-md hover:bg-blue-accent/90 transition-colors"
+            >
+              <Bot className="h-4 w-4 mr-2" />
+              {language === 'de' ? 'Mit AI sprechen' : 'Ask AI'}
+            </button>
+            <LanguageSwitcher />
+          </div>
         </div>
 
         <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

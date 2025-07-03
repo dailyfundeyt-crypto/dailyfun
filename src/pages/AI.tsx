@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -42,6 +41,24 @@ const AI = () => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Check for article parameter in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const articleParam = urlParams.get('article');
+    
+    if (articleParam) {
+      const decodedArticle = decodeURIComponent(articleParam);
+      const aiQuestion = language === 'de' 
+        ? `Erzähl mir mehr über ${decodedArticle}`
+        : `Tell me more about ${decodedArticle}`;
+      setInputValue(aiQuestion);
+      
+      // Clear the URL parameter
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [language]);
 
   // Initialize welcome message based on language
   useEffect(() => {

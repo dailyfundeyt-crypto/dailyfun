@@ -1,7 +1,9 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Bot } from 'lucide-react';
 import { incrementViews } from '../utils/viewTracker';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Article {
   id: string;
@@ -21,10 +23,26 @@ interface ArticleCardProps {
 
 const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const { t, language } = useLanguage();
 
   const handleClick = () => {
     incrementViews(article.id);
   };
+
+  const handleAIClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Get translated title
+    const translatedTitle = language === 'de' ? t(`article.${article.id}.title`) : article.title;
+    
+    // Create URL with article title as query parameter
+    const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
+    window.open(aiUrl, '_blank');
+  };
+
+  // Get translated title for display
+  const translatedTitle = language === 'de' ? t(`article.${article.id}.title`) : article.title;
 
   return (
     <Link to={`/article/${article.id}`} onClick={handleClick}>
@@ -33,7 +51,7 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
           <div className="aspect-video bg-gray-100 overflow-hidden">
             <img
               src={`https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
-              alt={article.title}
+              alt={translatedTitle}
               className={`w-full h-full object-cover transform hover:scale-105 transition-transform duration-500 ${
                 imageLoaded ? 'opacity-100' : 'opacity-0'
               }`}
@@ -48,17 +66,26 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
               {article.category}
             </span>
           </div>
+          <div className="absolute top-3 right-3">
+            <button
+              onClick={handleAIClick}
+              className="bg-blue-accent text-white p-2 rounded-full hover:bg-blue-accent/90 transition-colors shadow-md"
+              title={language === 'de' ? 'Mit AI über diesen Artikel sprechen' : 'Ask AI about this article'}
+            >
+              <Bot className="w-4 h-4" />
+            </button>
+          </div>
         </div>
         
         <div className={`p-6 ${featured ? 'md:w-1/2 flex flex-col justify-center' : ''}`}>
           <h3 className={`font-bold text-black mb-3 hover:text-red-accent transition-colors font-serif ${
             featured ? 'text-xl md:text-2xl' : 'text-lg'
           }`}>
-            {article.title}
+            {translatedTitle}
           </h3>
           
           <p className="text-gray-700 mb-4 line-clamp-3 font-serif">
-            {article.excerpt}
+            {language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt}
           </p>
           
           <div className="flex items-center text-sm text-gray-600">
