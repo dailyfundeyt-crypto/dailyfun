@@ -16,7 +16,6 @@ const Header = () => {
     { name: t('header.about'), href: '/about' },
     { name: t('header.products'), href: '/products' },
     { name: t('header.weird'), href: '/weird' },
-    { name: 'AI', href: '/ai' },
   ];
 
   return (
@@ -49,9 +48,19 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Desktop Actions - Language Switcher and Search */}
+          {/* Desktop Actions - Language Switcher, AI, and Search */}
           <div className="hidden md:flex items-center space-x-4">
             <LanguageSwitcher />
+            <Link 
+              to="/ai" 
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                location.pathname === '/ai'
+                  ? 'text-red-accent bg-gray-100'
+                  : 'text-gray-700 hover:text-red-accent hover:bg-gray-50'
+              }`}
+            >
+              AI
+            </Link>
             <Link to="/search" className="p-2 text-gray-600 hover:text-blue-accent transition-colors">
               <Search className="h-5 w-5" />
             </Link>
@@ -86,6 +95,19 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Mobile AI Link */}
+              <Link
+                to="/ai"
+                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  location.pathname === '/ai'
+                    ? 'text-red-accent bg-gray-100'
+                    : 'text-gray-700 hover:text-red-accent hover:bg-gray-50'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                AI
+              </Link>
               
               {/* Mobile Language Switcher */}
               <div className="px-3 py-2">
