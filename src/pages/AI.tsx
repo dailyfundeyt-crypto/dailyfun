@@ -125,103 +125,113 @@ const AI = () => {
     <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-black mb-4">
-            Daily Fun <span className="text-red-accent">AI</span>
-          </h1>
-          <p className="text-gray-600">
-            Your intelligent assistant for Daily Fun articles and sources
-          </p>
-        </div>
-
-        <Card className="h-[600px] flex flex-col">
-          {/* Chat Header */}
-          <div className="p-4 border-b bg-gray-50 rounded-t-lg">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-black">Daily Fun AI</h3>
-                <p className="text-sm text-gray-500">Always here to help</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Chat Messages */}
-          <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                >
-                  {!message.isUser && (
-                    <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center flex-shrink-0">
-                      <Bot className="w-5 h-5 text-white" />
-                    </div>
-                  )}
-                  
-                  <div
-                    className={`max-w-[80%] p-3 rounded-lg whitespace-pre-wrap ${
-                      message.isUser
-                        ? 'bg-red-accent text-white rounded-br-none'
-                        : 'bg-gray-100 text-black rounded-bl-none'
-                    }`}
-                  >
-                    {message.text}
-                  </div>
-                  
-                  {message.isUser && (
-                    <div className="w-8 h-8 bg-red-accent rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="w-5 h-5 text-white" />
-                    </div>
-                  )}
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="flex gap-3 justify-start">
-                  <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center">
-                    <Bot className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="bg-gray-100 text-black p-3 rounded-lg rounded-bl-none">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-
-          {/* Input Area */}
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask me about article sources or for more information..."
-                className="flex-1"
-                disabled={isTyping}
-              />
-              <Button
-                onClick={sendMessage}
-                disabled={!inputValue.trim() || isTyping}
-                className="bg-red-accent hover:bg-red-accent/90 text-white"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Try: "Give me the sources for Local Cat Elected as Honorary Mayor" or "Tell me more about Man Discovers His Grandmother's Secret Recipe"
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8">
+        <div className="w-full max-w-4xl mx-auto">
+          {/* Welcome Section */}
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-bold text-black mb-4">
+              Daily Fun <span className="text-red-accent">AI</span>
+            </h1>
+            <p className="text-xl text-gray-600 mb-8">
+              Your intelligent assistant for articles, sources, and insights
             </p>
           </div>
-        </Card>
+
+          {/* Chat Container */}
+          <div className="w-full max-w-3xl mx-auto">
+            {/* Messages Area */}
+            <div className="mb-6">
+              <ScrollArea className="h-[500px] w-full rounded-xl border border-gray-200 bg-white shadow-sm" ref={scrollAreaRef}>
+                <div className="p-6 space-y-6">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex gap-4 ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {!message.isUser && (
+                        <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                          <Bot className="w-5 h-5 text-white" />
+                        </div>
+                      )}
+                      
+                      <div
+                        className={`max-w-[85%] p-4 rounded-2xl whitespace-pre-wrap leading-relaxed ${
+                          message.isUser
+                            ? 'bg-red-accent text-white rounded-br-md'
+                            : 'bg-gray-50 text-gray-900 rounded-bl-md border border-gray-100'
+                        }`}
+                      >
+                        {message.text}
+                      </div>
+                      
+                      {message.isUser && (
+                        <div className="w-8 h-8 bg-red-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                          <User className="w-5 h-5 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {isTyping && (
+                    <div className="flex gap-4 justify-start">
+                      <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center mt-1">
+                        <Bot className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="bg-gray-50 text-gray-900 p-4 rounded-2xl rounded-bl-md border border-gray-100">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Input Area - ChatGPT Style */}
+            <div className="relative">
+              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-200">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask me about article sources or for more information..."
+                  className="flex-1 border-0 bg-transparent text-gray-900 placeholder-gray-500 focus:ring-0 focus:outline-none text-base"
+                  disabled={isTyping}
+                />
+                <Button
+                  onClick={sendMessage}
+                  disabled={!inputValue.trim() || isTyping}
+                  className="bg-red-accent hover:bg-red-accent/90 text-white rounded-xl p-2.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  size="icon"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              {/* Suggestions */}
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-500 mb-3">Try asking:</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button 
+                    onClick={() => setInputValue("Give me the sources for Local Cat Elected as Honorary Mayor")}
+                    className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
+                  >
+                    Sources for cat mayor article
+                  </button>
+                  <button 
+                    onClick={() => setInputValue("Tell me more about Man Discovers His Grandmother's Secret Recipe")}
+                    className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
+                  >
+                    More about recipe story
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
