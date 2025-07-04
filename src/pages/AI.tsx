@@ -33,9 +33,51 @@ const createArticleDatabase = () => {
   return database;
 };
 
+// Company and team information database
+const createCompanyDatabase = () => {
+  return {
+    contact: {
+      german: 'dailyfunde.kontakt@gmail.com',
+      english: 'dailyfunen.contact@gmail.com'
+    },
+    company: {
+      name: 'Daily Fun',
+      mission: 'Your daily dose of trustworthy entertainment and absurd insights, proving that staying informed can actually be a blast!',
+      vision: 'Daily Fun steps in to change the overwhelming nature of news. We master the balance between serious reporting and genuine entertainment value.',
+      values: ['Trust', 'Humor', 'Innovation', 'Curiosity', 'Never boring']
+    },
+    founder: {
+      name: 'Stefan Kunc',
+      role: 'Founder & Vision Leader',
+      vision: 'I launched Daily Fun because I firmly believe that information doesn\'t have to be dry and tedious. My goal was to create a platform that masters the balance between serious reporting and genuine entertainment value – with a passionate and dedicated team.'
+    },
+    team: [
+      {
+        name: 'Dr. Elke Schneider',
+        role: 'Head of Humour & Creativity',
+        type: 'AI',
+        description: 'Elke is our master of good vibes. With her sharp mind and unparalleled wit, she ensures that every article and every video has that typical Daily Fun charm.'
+      },
+      {
+        name: 'Mr. Karl Bergmann', 
+        role: 'Lead Story Weaver',
+        type: 'AI',
+        description: 'Karl is our fact-checker and storyteller all in one. He dives deep into subjects, packaging even complex topics into understandable, captivating, and often astonishing narratives.'
+      },
+      {
+        name: 'Mr. Jonas Richter',
+        role: 'Content Alchemist', 
+        type: 'AI',
+        description: 'Jonas transforms ideas into visual magic. Whether it\'s designing our videos or preparing infographics – he makes sure our content is not only funny but also visually impressive.'
+      }
+    ]
+  };
+};
+
 const AI = () => {
   const { language, t } = useLanguage();
   const articleDatabase = createArticleDatabase();
+  const companyDatabase = createCompanyDatabase();
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -65,8 +107,8 @@ const AI = () => {
     const welcomeMessage = {
       id: '1',
       text: language === 'de' 
-        ? 'Hallo! Ich bin Daily Fun AI. Ich kann Ihnen dabei helfen, Quellen für unsere Artikel zu finden oder detailliertere Informationen bereitzustellen. Versuchen Sie zu fragen: "Gib mir die Quellen für [Artikeltitel]" oder "Erzähl mir mehr über [Artikeltitel]".'
-        : 'Hello! I\'m Daily Fun AI. I can help you find sources for our articles or provide more detailed information. Try asking me "Give me the sources for [article title]" or "Tell me more about [article title]".',
+        ? 'Hallo! Ich bin Daily Fun AI. Ich kann Ihnen bei Kontaktinformationen, Team-Details, Firmen-Informationen und Artikeln helfen. Fragen Sie mich zum Beispiel: "Wer ist Stefan Kunc?" oder "Wie kann ich euch kontaktieren?"'
+        : 'Hello! I\'m Daily Fun AI. I can help you with contact information, team details, company information and articles. Try asking me: "Who is Stefan Kunc?" or "How can I contact you?"',
       isUser: false,
       timestamp: new Date()
     };
@@ -81,6 +123,92 @@ const AI = () => {
 
   const processAIResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
+    
+    // Check for contact information requests
+    if (input.includes('contact') || input.includes('email') || input.includes('kontakt') || input.includes('mail')) {
+      if (language === 'de') {
+        return `Hier sind unsere Kontaktinformationen:\n\n📧 Für deutsche Anfragen: ${companyDatabase.contact.german}\n📧 Für englische Anfragen: ${companyDatabase.contact.english}\n\nWir freuen uns auf Ihre Nachricht!`;
+      } else {
+        return `Here is our contact information:\n\n📧 For German inquiries: ${companyDatabase.contact.german}\n📧 For English inquiries: ${companyDatabase.contact.english}\n\nWe look forward to hearing from you!`;
+      }
+    }
+    
+    // Check for team information requests
+    if (input.includes('team') || input.includes('staff') || input.includes('who') || input.includes('wer') || input.includes('mitarbeiter')) {
+      if (input.includes('stefan') || input.includes('kunc')) {
+        if (language === 'de') {
+          return `Stefan Kunc - Gründer & Visionär von Daily Fun:\n\n"${companyDatabase.founder.vision}"\n\nStefan ist der kreative Kopf hinter Daily Fun und hat die Plattform mit dem Ziel gegründet, Nachrichten unterhaltsam und vertrauenswürdig zu gestalten.`;
+        } else {
+          return `Stefan Kunc - Founder & Visionary of Daily Fun:\n\n"${companyDatabase.founder.vision}"\n\nStefan is the creative mind behind Daily Fun and founded the platform with the goal of making news entertaining and trustworthy.`;
+        }
+      }
+      
+      if (input.includes('elke') || input.includes('schneider')) {
+        const elke = companyDatabase.team[0];
+        if (language === 'de') {
+          return `${elke.name} (${elke.type}) - ${elke.role}:\n\n${elke.description}`;
+        } else {
+          return `${elke.name} (${elke.type}) - ${elke.role}:\n\n${elke.description}`;
+        }
+      }
+      
+      if (input.includes('karl') || input.includes('bergmann')) {
+        const karl = companyDatabase.team[1];
+        if (language === 'de') {
+          return `${karl.name} (${karl.type}) - ${karl.role}:\n\n${karl.description}`;
+        } else {
+          return `${karl.name} (${karl.type}) - ${karl.role}:\n\n${karl.description}`;
+        }
+      }
+      
+      if (input.includes('jonas') || input.includes('richter')) {
+        const jonas = companyDatabase.team[2];
+        if (language === 'de') {
+          return `${jonas.name} (${jonas.type}) - ${jonas.role}:\n\n${jonas.description}`;
+        } else {
+          return `${jonas.name} (${jonas.type}) - ${jonas.role}:\n\n${jonas.description}`;
+        }
+      }
+      
+      // General team overview
+      const teamList = companyDatabase.team.map((member, index) => 
+        `${index + 1}. ${member.name} (${member.type}) - ${member.role}`
+      ).join('\n');
+      
+      if (language === 'de') {
+        return `Unser Daily Fun Team:\n\n🧑‍💼 Stefan Kunc - Gründer & Visionär\n\n${teamList}\n\nJedes Teammitglied trägt mit einzigartigen Fähigkeiten dazu bei, Daily Fun zu der vertrauenswürdigen und unterhaltsamen Plattform zu machen, die sie heute ist!`;
+      } else {
+        return `Our Daily Fun Team:\n\n🧑‍💼 Stefan Kunc - Founder & Visionary\n\n${teamList}\n\nEach team member contributes unique skills to make Daily Fun the trustworthy and entertaining platform it is today!`;
+      }
+    }
+    
+    // Check for company information requests
+    if (input.includes('about') || input.includes('company') || input.includes('mission') || input.includes('vision') || 
+        input.includes('über') || input.includes('unternehmen') || input.includes('werte') || input.includes('values')) {
+      
+      if (input.includes('mission') || input.includes('what is daily fun')) {
+        if (language === 'de') {
+          return `Daily Fun Mission:\n\n${companyDatabase.company.mission}\n\nWir sind Ihre tägliche Dosis vertrauensvoller Unterhaltung und absurder Einblicke, die beweist, dass informiert bleiben tatsächlich ein Vergnügen sein kann!`;
+        } else {
+          return `Daily Fun Mission:\n\n${companyDatabase.company.mission}\n\nWe are your daily dose of trustworthy entertainment and absurd insights, proving that staying informed can actually be a blast!`;
+        }
+      }
+      
+      if (input.includes('values') || input.includes('werte')) {
+        const values = companyDatabase.company.values.join(', ');
+        if (language === 'de') {
+          return `Unsere Werte bei Daily Fun:\n\n🎯 ${values}\n\nBei Daily Fun stehen Vertrauen, Humor und Innovation im Mittelpunkt von allem, was wir tun. Wir liefern Fakten, die genau sind, aber auf eine Weise, die Freude bringt!`;
+        } else {
+          return `Our Values at Daily Fun:\n\n🎯 ${values}\n\nAt Daily Fun, trust, humor, and innovation are at the core of everything we do. We deliver facts that are accurate, but in a way that brings joy!`;
+        }
+      }
+      
+      if (language === 'de') {
+        return `Über Daily Fun:\n\n${companyDatabase.company.mission}\n\n${companyDatabase.company.vision}\n\nUnsere Werte: ${companyDatabase.company.values.join(', ')}\n\nDaily Fun wurde von Stefan Kunc gegründet, um zu beweisen, dass Nachrichten nicht langweilig sein müssen!`;
+      } else {
+        return `About Daily Fun:\n\n${companyDatabase.company.mission}\n\n${companyDatabase.company.vision}\n\nOur Values: ${companyDatabase.company.values.join(', ')}\n\nDaily Fun was founded by Stefan Kunc to prove that news doesn't have to be boring!`;
+      }
+    }
     
     // Check for sources request
     if (input.includes('sources') || input.includes('source') || input.includes('quellen') || input.includes('quelle')) {
@@ -159,9 +287,9 @@ const AI = () => {
     
     // Default response
     if (language === 'de') {
-      return 'Ich kann Ihnen dabei helfen, Quellen zu finden oder mehr Informationen über Daily Fun Artikel zu erhalten. Versuchen Sie zu fragen:\n\n• "Gib mir die Quellen für [Artikeltitel]"\n• "Erzähl mir mehr über [Artikeltitel]"\n• "Liste alle Artikel auf"\n\nZum Beispiel: "Gib mir die Quellen für Lokale Katze zum Ehrenbürgermeister gewählt"';
+      return 'Ich kann Ihnen helfen mit:\n\n• 📧 Kontaktinformationen\n• 👥 Team-Informationen (Stefan Kunc, Dr. Elke Schneider, Karl Bergmann, Jonas Richter)\n• 🏢 Über Daily Fun (Mission, Vision, Werte)\n• 📰 Artikel-Quellen und Details\n• 📋 Liste aller Artikel\n\nFragen Sie mich zum Beispiel: "Wer ist Stefan Kunc?" oder "Wie kann ich euch kontaktieren?"';
     } else {
-      return 'I can help you with finding sources or getting more information about Daily Fun articles. Try asking:\n\n• "Give me the sources for [article title]"\n• "Tell me more about [article title]"\n• "List all articles"\n\nFor example: "Give me the sources for Local Cat Elected as Honorary Mayor"';
+      return 'I can help you with:\n\n• 📧 Contact information\n• 👥 Team information (Stefan Kunc, Dr. Elke Schneider, Karl Bergmann, Jonas Richter)\n• 🏢 About Daily Fun (Mission, Vision, Values)\n• 📰 Article sources and details\n• 📋 List of all articles\n\nTry asking: "Who is Stefan Kunc?" or "How can I contact you?"';
     }
   };
 
