@@ -209,12 +209,12 @@ const AI = () => {
     <div className="min-h-screen bg-gray-900 text-white">
       <Header />
       
-      <div className="flex flex-col h-[calc(100vh-4rem)]">
+      <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)]">
         {/* Chat Messages Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-h-0">
           {messages.length === 1 ? (
             /* Welcome Screen - Similar to Gemini */
-            <div className="flex-1 flex flex-col items-center justify-center px-4">
+            <div className="flex-1 flex flex-col items-center justify-center px-4 max-h-full overflow-auto">
               <div className="text-center mb-8">
                 <div className="flex items-center justify-center mb-6">
                   <Sparkles className="w-8 h-8 text-blue-400 mr-3" />
@@ -289,53 +289,55 @@ const AI = () => {
             </div>
           ) : (
             /* Chat Messages View */
-            <ScrollArea className="flex-1 px-4 md:px-8" ref={scrollAreaRef}>
-              <div className="max-w-4xl mx-auto py-8 space-y-6">
-                {messages.slice(1).map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex gap-4 ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {!message.isUser && (
-                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+            <div className="flex-1 min-h-0">
+              <ScrollArea className="h-full px-4 md:px-8" ref={scrollAreaRef}>
+                <div className="max-w-4xl mx-auto py-8 space-y-6">
+                  {messages.slice(1).map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex gap-4 ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {!message.isUser && (
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                          <Sparkles className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                      
+                      <div
+                        className={`max-w-[80%] p-4 rounded-2xl whitespace-pre-wrap leading-relaxed ${
+                          message.isUser
+                            ? 'bg-gray-700 text-white'
+                            : 'bg-gray-800 text-gray-100'
+                        }`}
+                      >
+                        {message.text}
+                      </div>
+                      
+                      {message.isUser && (
+                        <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {isTyping && (
+                    <div className="flex gap-4 justify-start">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mt-1">
                         <Sparkles className="w-4 h-4 text-white" />
                       </div>
-                    )}
-                    
-                    <div
-                      className={`max-w-[80%] p-4 rounded-2xl whitespace-pre-wrap leading-relaxed ${
-                        message.isUser
-                          ? 'bg-gray-700 text-white'
-                          : 'bg-gray-800 text-gray-100'
-                      }`}
-                    >
-                      {message.text}
-                    </div>
-                    
-                    {message.isUser && (
-                      <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                        <User className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                {isTyping && (
-                  <div className="flex gap-4 justify-start">
-                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mt-1">
-                      <Sparkles className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="bg-gray-800 text-gray-100 p-4 rounded-2xl">
-                      <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="bg-gray-800 text-gray-100 p-4 rounded-2xl">
+                        <div className="flex gap-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
           )}
         </div>
 
