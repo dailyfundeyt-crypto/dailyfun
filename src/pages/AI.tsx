@@ -206,26 +206,26 @@ const AI = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-white text-black">
       <Header />
       
       <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)]">
         {/* Chat Messages Area */}
         <div className="flex-1 flex flex-col min-h-0">
           {messages.length === 1 ? (
-            /* Welcome Screen - Similar to Gemini */
+            /* Welcome Screen - Similar to Homepage */
             <div className="flex-1 flex flex-col items-center justify-center px-4 max-h-full overflow-auto">
               <div className="text-center mb-8">
                 <div className="flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-blue-400 mr-3" />
-                  <h1 className="text-3xl font-normal">
-                    {language === 'de' ? 'Hallo! Wie kann ich Ihnen heute helfen?' : 'Hello! How can I help you today?'}
+                  <Sparkles className="w-8 h-8 text-blue-accent mr-3" />
+                  <h1 className="text-4xl font-bold text-black font-serif">
+                    Daily Fun <span className="text-red-accent">AI</span>
                   </h1>
                 </div>
-                <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                <p className="text-xl text-gray-700 max-w-2xl mx-auto font-serif">
                   {language === 'de' 
-                    ? 'Ich bin Daily Fun AI und kann Ihnen dabei helfen, Quellen für unsere Artikel zu finden oder detailliertere Informationen bereitzustellen.'
-                    : 'I\'m Daily Fun AI and can help you find sources for our articles or provide more detailed information.'
+                    ? 'Ihr intelligenter Assistent für Artikel, Quellen und Einblicke'
+                    : 'Your intelligent assistant for articles, sources and insights'
                   }
                 </p>
               </div>
@@ -238,12 +238,12 @@ const AI = () => {
                       ? "Liste alle Artikel auf"
                       : "List all articles"
                   )}
-                  className="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-700"
+                  className="p-6 bg-white hover:bg-gray-50 rounded-lg text-left transition-colors border border-gray-200 shadow-sm hover:shadow-md"
                 >
-                  <div className="font-medium mb-1">
+                  <div className="font-bold mb-2 text-black font-serif">
                     {language === 'de' ? 'Alle Artikel anzeigen' : 'Show all articles'}
                   </div>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-gray-600">
                     {language === 'de' ? 'Sehen Sie alle verfügbaren Artikel' : 'View all available articles'}
                   </div>
                 </button>
@@ -257,12 +257,12 @@ const AI = () => {
                         : `Give me the sources for ${randomTitle}`
                     );
                   }}
-                  className="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-700"
+                  className="p-6 bg-white hover:bg-gray-50 rounded-lg text-left transition-colors border border-gray-200 shadow-sm hover:shadow-md"
                 >
-                  <div className="font-medium mb-1">
+                  <div className="font-bold mb-2 text-black font-serif">
                     {language === 'de' ? 'Artikel-Quellen' : 'Article sources'}
                   </div>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-gray-600">
                     {language === 'de' ? 'Quellen für einen zufälligen Artikel' : 'Sources for a random article'}
                   </div>
                 </button>
@@ -276,12 +276,12 @@ const AI = () => {
                         : `Tell me more about ${randomTitle}`
                     );
                   }}
-                  className="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-700"
+                  className="p-6 bg-white hover:bg-gray-50 rounded-lg text-left transition-colors border border-gray-200 shadow-sm hover:shadow-md"
                 >
-                  <div className="font-medium mb-1">
+                  <div className="font-bold mb-2 text-black font-serif">
                     {language === 'de' ? 'Mehr Informationen' : 'More information'}
                   </div>
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-gray-600">
                     {language === 'de' ? 'Details zu einem Artikel' : 'Details about an article'}
                   </div>
                 </button>
@@ -298,7 +298,7 @@ const AI = () => {
                       className={`flex gap-4 ${message.isUser ? 'justify-end' : 'justify-start'}`}
                     >
                       {!message.isUser && (
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                           <Sparkles className="w-4 h-4 text-white" />
                         </div>
                       )}
@@ -306,15 +306,15 @@ const AI = () => {
                       <div
                         className={`max-w-[80%] p-4 rounded-2xl whitespace-pre-wrap leading-relaxed ${
                           message.isUser
-                            ? 'bg-gray-700 text-white'
-                            : 'bg-gray-800 text-gray-100'
+                            ? 'bg-red-accent text-white'
+                            : 'bg-gray-50 text-black border border-gray-200'
                         }`}
                       >
                         {message.text}
                       </div>
                       
                       {message.isUser && (
-                        <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <div className="w-8 h-8 bg-red-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                           <User className="w-4 h-4 text-white" />
                         </div>
                       )}
@@ -323,10 +323,10 @@ const AI = () => {
                   
                   {isTyping && (
                     <div className="flex gap-4 justify-start">
-                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mt-1">
+                      <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center mt-1">
                         <Sparkles className="w-4 h-4 text-white" />
                       </div>
-                      <div className="bg-gray-800 text-gray-100 p-4 rounded-2xl">
+                      <div className="bg-gray-50 text-black p-4 rounded-2xl border border-gray-200">
                         <div className="flex gap-1">
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -342,10 +342,10 @@ const AI = () => {
         </div>
 
         {/* Input Area - Fixed at bottom */}
-        <div className="px-4 md:px-8 pb-6 pt-4 bg-gray-900">
+        <div className="px-4 md:px-8 pb-6 pt-4 bg-white border-t border-gray-200">
           <div className="max-w-4xl mx-auto">
             <div className="relative">
-              <div className="flex items-center gap-3 p-4 bg-gray-800 rounded-2xl border border-gray-700">
+              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-200">
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
@@ -355,13 +355,13 @@ const AI = () => {
                       ? "Daily Fun AI fragen"
                       : "Ask Daily Fun AI"
                   }
-                  className="flex-1 border-0 bg-transparent text-white placeholder-gray-400 focus:ring-0 focus:outline-none text-base"
+                  className="flex-1 border-0 bg-transparent text-black placeholder-gray-500 focus:ring-0 focus:outline-none text-base"
                   disabled={isTyping}
                 />
                 <Button
                   onClick={sendMessage}
                   disabled={!inputValue.trim() || isTyping}
-                  className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl p-2.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-red-accent hover:bg-red-accent/90 text-white rounded-xl p-2.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   size="icon"
                 >
                   <Send className="w-4 h-4" />
