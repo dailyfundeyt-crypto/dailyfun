@@ -182,9 +182,10 @@ const AI = () => {
       }
     }
     
-    // Check for company information requests
-    if (input.includes('about') || input.includes('company') || input.includes('mission') || input.includes('vision') || 
-        input.includes('über') || input.includes('unternehmen') || input.includes('werte') || input.includes('values')) {
+    // Check for company information requests (but not if it's about a specific article)
+    if ((input.includes('about') || input.includes('company') || input.includes('mission') || input.includes('vision') || 
+        input.includes('über daily fun') || input.includes('unternehmen') || input.includes('werte') || input.includes('values')) &&
+        !input.includes('wettervorhersage') && !input.includes('weather forecast')) {
       
       if (input.includes('mission') || input.includes('what is daily fun')) {
         if (language === 'de') {
