@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -206,146 +206,174 @@ const AI = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-900 text-white">
       <Header />
       
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-8">
-        <div className="w-full max-w-4xl mx-auto">
-          {/* Welcome Section */}
-          <div className="text-center mb-8">
-            <h1 className="text-5xl font-bold text-black mb-4">
-              Daily Fun <span className="text-red-accent">AI</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              {language === 'de' 
-                ? 'Ihr intelligenter Assistent für Artikel, Quellen und Einblicke'
-                : 'Your intelligent assistant for articles, sources, and insights'
-              }
-            </p>
-          </div>
-
-          {/* Chat Container */}
-          <div className="w-full max-w-3xl mx-auto">
-            {/* Messages Area */}
-            <div className="mb-6">
-              <ScrollArea className="h-[500px] w-full rounded-xl border border-gray-200 bg-white shadow-sm" ref={scrollAreaRef}>
-                <div className="p-6 space-y-6">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex gap-4 ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {!message.isUser && (
-                        <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                          <Bot className="w-5 h-5 text-white" />
-                        </div>
-                      )}
-                      
-                      <div
-                        className={`max-w-[85%] p-4 rounded-2xl whitespace-pre-wrap leading-relaxed ${
-                          message.isUser
-                            ? 'bg-red-accent text-white rounded-br-md'
-                            : 'bg-gray-50 text-gray-900 rounded-bl-md border border-gray-100'
-                        }`}
-                      >
-                        {message.text}
-                      </div>
-                      
-                      {message.isUser && (
-                        <div className="w-8 h-8 bg-red-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                          <User className="w-5 h-5 text-white" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  
-                  {isTyping && (
-                    <div className="flex gap-4 justify-start">
-                      <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center mt-1">
-                        <Bot className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="bg-gray-50 text-gray-900 p-4 rounded-2xl rounded-bl-md border border-gray-100">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+      <div className="flex flex-col h-[calc(100vh-4rem)]">
+        {/* Chat Messages Area */}
+        <div className="flex-1 flex flex-col">
+          {messages.length === 1 ? (
+            /* Welcome Screen - Similar to Gemini */
+            <div className="flex-1 flex flex-col items-center justify-center px-4">
+              <div className="text-center mb-8">
+                <div className="flex items-center justify-center mb-6">
+                  <Sparkles className="w-8 h-8 text-blue-400 mr-3" />
+                  <h1 className="text-3xl font-normal">
+                    {language === 'de' ? 'Hallo! Wie kann ich Ihnen heute helfen?' : 'Hello! How can I help you today?'}
+                  </h1>
                 </div>
-              </ScrollArea>
+                <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                  {language === 'de' 
+                    ? 'Ich bin Daily Fun AI und kann Ihnen dabei helfen, Quellen für unsere Artikel zu finden oder detailliertere Informationen bereitzustellen.'
+                    : 'I\'m Daily Fun AI and can help you find sources for our articles or provide more detailed information.'
+                  }
+                </p>
+              </div>
+              
+              {/* Quick Action Buttons */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 max-w-3xl w-full">
+                <button 
+                  onClick={() => setInputValue(
+                    language === 'de' 
+                      ? "Liste alle Artikel auf"
+                      : "List all articles"
+                  )}
+                  className="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-700"
+                >
+                  <div className="font-medium mb-1">
+                    {language === 'de' ? 'Alle Artikel anzeigen' : 'Show all articles'}
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {language === 'de' ? 'Sehen Sie alle verfügbaren Artikel' : 'View all available articles'}
+                  </div>
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    const randomTitle = getRandomArticleTitle();
+                    setInputValue(
+                      language === 'de' 
+                        ? `Gib mir die Quellen für ${randomTitle}`
+                        : `Give me the sources for ${randomTitle}`
+                    );
+                  }}
+                  className="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-700"
+                >
+                  <div className="font-medium mb-1">
+                    {language === 'de' ? 'Artikel-Quellen' : 'Article sources'}
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {language === 'de' ? 'Quellen für einen zufälligen Artikel' : 'Sources for a random article'}
+                  </div>
+                </button>
+                
+                <button 
+                  onClick={() => {
+                    const randomTitle = getRandomArticleTitle();
+                    setInputValue(
+                      language === 'de' 
+                        ? `Erzähl mir mehr über ${randomTitle}`
+                        : `Tell me more about ${randomTitle}`
+                    );
+                  }}
+                  className="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg text-left transition-colors border border-gray-700"
+                >
+                  <div className="font-medium mb-1">
+                    {language === 'de' ? 'Mehr Informationen' : 'More information'}
+                  </div>
+                  <div className="text-sm text-gray-400">
+                    {language === 'de' ? 'Details zu einem Artikel' : 'Details about an article'}
+                  </div>
+                </button>
+              </div>
             </div>
+          ) : (
+            /* Chat Messages View */
+            <ScrollArea className="flex-1 px-4 md:px-8" ref={scrollAreaRef}>
+              <div className="max-w-4xl mx-auto py-8 space-y-6">
+                {messages.slice(1).map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex gap-4 ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {!message.isUser && (
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <Sparkles className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    
+                    <div
+                      className={`max-w-[80%] p-4 rounded-2xl whitespace-pre-wrap leading-relaxed ${
+                        message.isUser
+                          ? 'bg-gray-700 text-white'
+                          : 'bg-gray-800 text-gray-100'
+                      }`}
+                    >
+                      {message.text}
+                    </div>
+                    
+                    {message.isUser && (
+                      <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                        <User className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {isTyping && (
+                  <div className="flex gap-4 justify-start">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mt-1">
+                      <Sparkles className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="bg-gray-800 text-gray-100 p-4 rounded-2xl">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          )}
+        </div>
 
-            {/* Input Area - ChatGPT Style */}
+        {/* Input Area - Fixed at bottom */}
+        <div className="px-4 md:px-8 pb-6 pt-4 bg-gray-900">
+          <div className="max-w-4xl mx-auto">
             <div className="relative">
-              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-200">
+              <div className="flex items-center gap-3 p-4 bg-gray-800 rounded-2xl border border-gray-700">
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={
                     language === 'de' 
-                      ? "Fragen Sie mich nach Artikelquellen oder weiteren Informationen..."
-                      : "Ask me about article sources or for more information..."
+                      ? "Daily Fun AI fragen"
+                      : "Ask Daily Fun AI"
                   }
-                  className="flex-1 border-0 bg-transparent text-gray-900 placeholder-gray-500 focus:ring-0 focus:outline-none text-base"
+                  className="flex-1 border-0 bg-transparent text-white placeholder-gray-400 focus:ring-0 focus:outline-none text-base"
                   disabled={isTyping}
                 />
                 <Button
                   onClick={sendMessage}
                   disabled={!inputValue.trim() || isTyping}
-                  className="bg-red-accent hover:bg-red-accent/90 text-white rounded-xl p-2.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-blue-500 hover:bg-blue-600 text-white rounded-xl p-2.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   size="icon"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
-              
-              {/* Suggestions */}
-              <div className="mt-4 text-center">
-                <p className="text-sm text-gray-500 mb-3">
-                  {language === 'de' ? 'Versuchen Sie zu fragen:' : 'Try asking:'}
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <button 
-                    onClick={() => setInputValue(
-                      language === 'de' 
-                        ? "Liste alle Artikel auf"
-                        : "List all articles"
-                    )}
-                    className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
-                  >
-                    {language === 'de' ? 'Alle Artikel auflisten' : 'List all articles'}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const randomTitle = getRandomArticleTitle();
-                      setInputValue(
-                        language === 'de' 
-                          ? `Gib mir die Quellen für ${randomTitle}`
-                          : `Give me the sources for ${randomTitle}`
-                      );
-                    }}
-                    className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
-                  >
-                    {language === 'de' ? 'Zufällige Quellen' : 'Random sources'}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const randomTitle = getRandomArticleTitle();
-                      setInputValue(
-                        language === 'de' 
-                          ? `Erzähl mir mehr über ${randomTitle}`
-                          : `Tell me more about ${randomTitle}`
-                      );
-                    }}
-                    className="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
-                  >
-                    {language === 'de' ? 'Mehr Infos' : 'More info'}
-                  </button>
-                </div>
-              </div>
+            </div>
+            
+            <div className="text-center mt-3">
+              <p className="text-xs text-gray-500">
+                {language === 'de' 
+                  ? 'Daily Fun AI kann Fehler machen, auch bei Informationen über Personen, solltest du die Antworten überprüfen.'
+                  : 'Daily Fun AI can make mistakes, including about people, so you should verify responses.'
+                }
+              </p>
             </div>
           </div>
         </div>
