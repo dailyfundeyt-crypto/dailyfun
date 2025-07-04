@@ -64,7 +64,7 @@ const Article = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={handleAIClick}
-              className="inline-flex items-center text-gray-600 hover:text-gray-800 px-4 py-2 rounded-md hover:bg-gray-100 transition-colors border border-gray-300"
+              className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors"
             >
               <Bot className="h-4 w-4 mr-2" />
               {language === 'de' ? 'Mit AI sprechen' : 'Ask AI'}
