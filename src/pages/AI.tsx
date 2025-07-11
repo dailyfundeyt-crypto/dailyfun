@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles } from 'lucide-react';
+import { Send, Bot, User, Sparkles, ChevronDown, Globe, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/articles';
 import Header from '@/components/Header';
@@ -82,6 +83,7 @@ const AI = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [searchMode, setSearchMode] = useState<'local' | 'internet'>('local');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Check for article parameter in URL
@@ -294,6 +296,20 @@ const AI = () => {
     }
   };
 
+  const extractKeywordsForSearch = (query: string): string => {
+    // Remove common question words and articles
+    const stopWords = ['wie', 'was', 'wer', 'wo', 'wann', 'warum', 'der', 'die', 'das', 'den', 'dem', 'des', 'eine', 'ein', 'einer', 'eines', 'and', 'or', 'but', 'the', 'a', 'an', 'is', 'are', 'was', 'were', 'will', 'would', 'could', 'should', 'what', 'who', 'where', 'when', 'why', 'how'];
+    
+    // Split the query into words and filter out stop words
+    const words = query.toLowerCase()
+      .replace(/[^\w\s]/g, ' ') // Remove punctuation
+      .split(/\s+/)
+      .filter(word => word.length > 2 && !stopWords.includes(word));
+    
+    // Take the most relevant words (limit to 6 for better search results)
+    return words.slice(0, 6).join('+');
+  };
+
   const sendMessage = async () => {
     if (!inputValue.trim()) return;
 
@@ -305,14 +321,40 @@ const AI = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
-    setIsTyping(true);
 
-    // Simulate AI thinking delay
+    // Handle internet search mode
+    if (searchMode === 'internet') {
+      const keywords = extractKeywordsForSearch(currentInput);
+      const googleSearchUrl = `https://www.google.com/search?q=${keywords}`;
+      
+      // Open Google search in new tab
+      window.open(googleSearchUrl, '_blank');
+      
+      // Add a response message
+      const responseMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: language === 'de' 
+          ? `🔍 Google-Suche wurde in einem neuen Tab geöffnet für: "${keywords.replace(/\+/g, ' ')}"`
+          : `🔍 Google search opened in new tab for: "${keywords.replace(/\+/g, ' ')}"`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      
+      setTimeout(() => {
+        setMessages(prev => [...prev, responseMessage]);
+      }, 500);
+      
+      return;
+    }
+
+    // Handle local search mode (existing functionality)
+    setIsTyping(true);
     setTimeout(() => {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: processAIResponse(inputValue),
+        text: processAIResponse(currentInput),
         isUser: false,
         timestamp: new Date()
       };
@@ -473,6 +515,59 @@ const AI = () => {
         {/* Input Area - Fixed at bottom */}
         <div className="px-4 md:px-8 pb-6 pt-4 bg-white border-t border-gray-200">
           <div className="max-w-4xl mx-auto">
+            {/* Search Mode Selector */}
+            <div className="mb-3">
+              <Select value={searchMode} onValueChange={(value: 'local' | 'internet') => setSearchMode(value)}>
+                <SelectTrigger className="w-64 bg-white border-gray-200 text-black">
+                  <div className="flex items-center gap-2">
+                    {searchMode === 'local' ? (
+                      <>
+                        <Home className="w-4 h-4 text-blue-accent" />
+                        <span className="text-sm font-medium">
+                          {language === 'de' ? 'Daily Fun (Lokal)' : 'Daily Fun (Local)'}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Globe className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium">
+                          {language === 'de' ? 'Daily Fun (Internet-Suche)' : 'Daily Fun (Internet Search)'}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="local" className="cursor-pointer">
+                    <div className="flex items-center gap-2 py-1">
+                      <Home className="w-4 h-4 text-blue-accent" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {language === 'de' ? 'Daily Fun (Lokal)' : 'Daily Fun (Local)'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {language === 'de' ? 'Interne Wissensbasis' : 'Internal knowledge base'}
+                        </span>
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="internet" className="cursor-pointer">
+                    <div className="flex items-center gap-2 py-1">
+                      <Globe className="w-4 h-4 text-green-600" />
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {language === 'de' ? 'Daily Fun (Internet-Suche)' : 'Daily Fun (Internet Search)'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {language === 'de' ? 'Google-Suche in neuem Tab' : 'Google search in new tab'}
+                        </span>
+                      </div>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="relative">
               <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-200">
                 <Input
@@ -480,9 +575,9 @@ const AI = () => {
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder={
-                    language === 'de' 
-                      ? "Daily Fun AI fragen"
-                      : "Ask Daily Fun AI"
+                    searchMode === 'local' 
+                      ? (language === 'de' ? "Daily Fun AI fragen" : "Ask Daily Fun AI")
+                      : (language === 'de' ? "Suchbegriffe für Google eingeben" : "Enter search terms for Google")
                   }
                   className="flex-1 border-0 bg-transparent text-black placeholder-gray-500 focus:ring-0 focus:outline-none text-base"
                   disabled={isTyping}
