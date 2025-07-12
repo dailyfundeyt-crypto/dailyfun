@@ -50,7 +50,7 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
         <div className={`relative ${featured ? 'md:w-1/2' : ''}`}>
           <div className="aspect-video bg-gray-100 overflow-hidden">
             <img
-              src={`https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
+              src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
               alt={translatedTitle}
               className={`w-full h-full object-cover transform hover:scale-105 transition-transform duration-500 ${
                 imageLoaded ? 'opacity-100' : 'opacity-0'
