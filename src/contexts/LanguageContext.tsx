@@ -161,6 +161,8 @@ const translations = {
     'article.5.excerpt': 'Meteorologists have made their most accurate prediction yet: regardless of actual weather conditions, citizens will find something to complain about. "It\'s either too hot, too cold, too wet, or too dry," reports chief meteorologist.',
     'article.6.title': 'Breaking: Dog Finally Catches Own Tail, Has No Idea What to Do Next',
     'article.6.excerpt': 'After three years of dedicated pursuit, Golden Retriever "Buddy" has achieved his life\'s ambition. Witnesses report the dog stood motionless for several minutes, apparently contemplating his next life goal. Squirrel-chasing is rumored to be next.',
+    'article.7.title': 'Childhood 2.0: Where Cardboard Tubes Become Telescopes and Beds Become Trampolines',
+    'article.7.excerpt': 'Ah, childhood! A time when reality was merely a suggestion and imagination was the only valid blueprint. Do you remember the other reality? The one our parents saw?',
   },
   de: {
     // Header
@@ -313,6 +315,8 @@ const translations = {
     'article.5.excerpt': 'Meteorologen haben ihre bisher genaueste Vorhersage gemacht: Unabhängig von den tatsächlichen Wetterbedingungen werden Bürger etwas zum Beklagen finden. "Es ist entweder zu heiß, zu kalt, zu nass oder zu trocken", berichtet der Chefmeteorologe.',
     'article.6.title': 'Eilmeldung: Hund fängt endlich seinen eigenen Schwanz, hat keine Ahnung was als nächstes zu tun ist',
     'article.6.excerpt': 'Nach drei Jahren hingebungsvoller Verfolgung hat Golden Retriever "Buddy" sein Lebensziel erreicht. Zeugen berichten, dass der Hund mehrere Minuten regungslos dastand und offenbar über sein nächstes Lebensziel nachdachte. Eichhörnchen-Jagen soll als nächstes kommen.',
+    'article.7.title': 'Kindheit 2.0: Wo Papprollen zu Fernrohren werden und Betten zu Trampolinen',
+    'article.7.excerpt': 'Ah, die Kindheit! Eine Zeit, in der die Realität eine reine Empfehlung war und die Fantasie der einzige gültige Bauplan. Erinnern Sie sich noch an die andere Realität? Die, die unsere Eltern sahen?',
   }
 };
 

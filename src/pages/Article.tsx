@@ -77,7 +77,7 @@ const Article = () => {
           <div className="relative">
             <div className="aspect-video bg-gray-100 overflow-hidden">
               <img
-                src={`https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=1200&q=80`}
+                src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=1200&q=80`}
                 alt={translatedTitle}
                 className="w-full h-full object-cover"
               />
@@ -111,21 +111,31 @@ const Article = () => {
               </p>
               
               <div className="text-gray-700 space-y-6 font-serif leading-relaxed">
-                <p>
-                  {t('article.content.paragraph1')}
-                </p>
-                
-                <p>
-                  {t('article.content.paragraph2')}
-                </p>
-                
-                <p>
-                  {t('article.content.paragraph3')}
-                </p>
-                
-                <p>
-                  {t('article.content.paragraph4')}
-                </p>
+                {article.content ? (
+                  // Use the article's content and format it properly
+                  article.content.split('\n\n').map((paragraph, index) => (
+                    <p key={index} dangerouslySetInnerHTML={{ __html: paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                  ))
+                ) : (
+                  // Fallback to generic content
+                  <>
+                    <p>
+                      {t('article.content.paragraph1')}
+                    </p>
+                    
+                    <p>
+                      {t('article.content.paragraph2')}
+                    </p>
+                    
+                    <p>
+                      {t('article.content.paragraph3')}
+                    </p>
+                    
+                    <p>
+                      {t('article.content.paragraph4')}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
