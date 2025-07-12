@@ -84,6 +84,7 @@ const AI = () => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [searchMode, setSearchMode] = useState<'local' | 'internet'>('local');
+  const [lastAIResponse, setLastAIResponse] = useState<string>('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Check for article parameter in URL
@@ -123,8 +124,87 @@ const AI = () => {
     }
   }, [messages]);
 
+  const detectLanguage = (text: string): 'de' | 'en' => {
+    const germanWords = ['der', 'die', 'das', 'und', 'ist', 'ein', 'eine', 'ich', 'sie', 'er', 'wir', 'für', 'auf', 'mit', 'von', 'zu', 'am', 'im', 'über', 'dass', 'können', 'haben', 'werden', 'sein', 'nicht'];
+    const englishWords = ['the', 'and', 'is', 'a', 'an', 'i', 'you', 'he', 'she', 'we', 'for', 'on', 'with', 'from', 'to', 'at', 'in', 'about', 'that', 'can', 'have', 'will', 'be', 'not'];
+    
+    const words = text.toLowerCase().split(/\s+/);
+    let germanScore = 0;
+    let englishScore = 0;
+    
+    words.forEach(word => {
+      if (germanWords.includes(word)) germanScore++;
+      if (englishWords.includes(word)) englishScore++;
+    });
+    
+    return germanScore > englishScore ? 'de' : 'en';
+  };
+
+  const translateResponse = (response: string, targetLanguage: 'de' | 'en'): string => {
+    // Simple translation logic for common response patterns
+    if (targetLanguage === 'de') {
+      return response
+        .replace(/Here is our contact information:/g, 'Hier sind unsere Kontaktinformationen:')
+        .replace(/For German inquiries:/g, 'Für deutsche Anfragen:')
+        .replace(/For English inquiries:/g, 'Für englische Anfragen:')
+        .replace(/We look forward to hearing from you!/g, 'Wir freuen uns auf Ihre Nachricht!')
+        .replace(/Here are all available articles:/g, 'Hier sind alle verfügbaren Artikel:')
+        .replace(/You can ask for sources or more information about any of these articles!/g, 'Sie können nach Quellen oder mehr Informationen zu jedem dieser Artikel fragen!')
+        .replace(/Here are the sources for/g, 'Hier sind die Quellen für')
+        .replace(/Here's more detailed information about/g, 'Hier sind detailliertere Informationen über')
+        .replace(/About Daily Fun:/g, 'Über Daily Fun:')
+        .replace(/Our Values:/g, 'Unsere Werte:')
+        .replace(/Our Daily Fun Team:/g, 'Unser Daily Fun Team:')
+        .replace(/Daily Fun Mission:/g, 'Daily Fun Mission:')
+        .replace(/Founder & Visionary of Daily Fun:/g, 'Gründer & Visionär von Daily Fun:')
+        .replace(/is the creative mind behind Daily Fun and founded the platform with the goal of making news entertaining and trustworthy./g, 'ist der kreative Kopf hinter Daily Fun und hat die Plattform mit dem Ziel gegründet, Nachrichten unterhaltsam und vertrauenswürdig zu gestalten.')
+        .replace(/Each team member contributes unique skills to make Daily Fun the trustworthy and entertaining platform it is today!/g, 'Jedes Teammitglied trägt mit einzigartigen Fähigkeiten dazu bei, Daily Fun zu der vertrauenswürdigen und unterhaltsamen Plattform zu machen, die sie heute ist!')
+        .replace(/I can help you with:/g, 'Ich kann Ihnen helfen mit:')
+        .replace(/Contact information/g, 'Kontaktinformationen')
+        .replace(/Team information/g, 'Team-Informationen')
+        .replace(/Article sources and details/g, 'Artikel-Quellen und Details')
+        .replace(/List of all articles/g, 'Liste aller Artikel')
+        .replace(/Try asking:/g, 'Fragen Sie mich zum Beispiel:');
+    } else {
+      return response
+        .replace(/Hier sind unsere Kontaktinformationen:/g, 'Here is our contact information:')
+        .replace(/Für deutsche Anfragen:/g, 'For German inquiries:')
+        .replace(/Für englische Anfragen:/g, 'For English inquiries:')
+        .replace(/Wir freuen uns auf Ihre Nachricht!/g, 'We look forward to hearing from you!')
+        .replace(/Hier sind alle verfügbaren Artikel:/g, 'Here are all available articles:')
+        .replace(/Sie können nach Quellen oder mehr Informationen zu jedem dieser Artikel fragen!/g, 'You can ask for sources or more information about any of these articles!')
+        .replace(/Hier sind die Quellen für/g, 'Here are the sources for')
+        .replace(/Hier sind detailliertere Informationen über/g, 'Here\'s more detailed information about')
+        .replace(/Über Daily Fun:/g, 'About Daily Fun:')
+        .replace(/Unsere Werte:/g, 'Our Values:')
+        .replace(/Unser Daily Fun Team:/g, 'Our Daily Fun Team:')
+        .replace(/Daily Fun Mission:/g, 'Daily Fun Mission:')
+        .replace(/Gründer & Visionär von Daily Fun:/g, 'Founder & Visionary of Daily Fun:')
+        .replace(/ist der kreative Kopf hinter Daily Fun und hat die Plattform mit dem Ziel gegründet, Nachrichten unterhaltsam und vertrauenswürdig zu gestalten./g, 'is the creative mind behind Daily Fun and founded the platform with the goal of making news entertaining and trustworthy.')
+        .replace(/Jedes Teammitglied trägt mit einzigartigen Fähigkeiten dazu bei, Daily Fun zu der vertrauenswürdigen und unterhaltsamen Plattform zu machen, die sie heute ist!/g, 'Each team member contributes unique skills to make Daily Fun the trustworthy and entertaining platform it is today!')
+        .replace(/Ich kann Ihnen helfen mit:/g, 'I can help you with:')
+        .replace(/Kontaktinformationen/g, 'Contact information')
+        .replace(/Team-Informationen/g, 'Team information')
+        .replace(/Artikel-Quellen und Details/g, 'Article sources and details')
+        .replace(/Liste aller Artikel/g, 'List of all articles')
+        .replace(/Fragen Sie mich zum Beispiel:/g, 'Try asking:');
+    }
+  };
+
   const processAIResponse = (userInput: string): string => {
     const input = userInput.toLowerCase();
+    const detectedLanguage = detectLanguage(userInput);
+    
+    // Check if user is requesting translation of the last response
+    const isTranslationRequest = (
+      (detectedLanguage === 'de' && lastAIResponse && language === 'en' && input.length < 50) ||
+      (detectedLanguage === 'en' && lastAIResponse && language === 'de' && input.length < 50)
+    ) && !input.includes('contact') && !input.includes('team') && !input.includes('article') && 
+        !input.includes('kontakt') && !input.includes('mitarbeiter') && !input.includes('artikel');
+    
+    if (isTranslationRequest && lastAIResponse) {
+      return translateResponse(lastAIResponse, detectedLanguage);
+    }
     
     // Check for contact information requests
     if (input.includes('contact') || input.includes('email') || input.includes('kontakt') || input.includes('mail')) {
@@ -352,9 +432,12 @@ const AI = () => {
     // Handle local search mode (existing functionality)
     setIsTyping(true);
     setTimeout(() => {
+      const responseText = processAIResponse(currentInput);
+      setLastAIResponse(responseText);
+      
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: processAIResponse(currentInput),
+        text: responseText,
         isUser: false,
         timestamp: new Date()
       };
