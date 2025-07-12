@@ -196,11 +196,21 @@ const AI = () => {
     const detectedLanguage = detectLanguage(userInput);
     
     // Check if user is requesting translation of the last response
-    const isTranslationRequest = (
-      (detectedLanguage === 'de' && lastAIResponse && language === 'en' && input.length < 50) ||
-      (detectedLanguage === 'en' && lastAIResponse && language === 'de' && input.length < 50)
-    ) && !input.includes('contact') && !input.includes('team') && !input.includes('article') && 
-        !input.includes('kontakt') && !input.includes('mitarbeiter') && !input.includes('artikel');
+    // Only treat as translation request if it's a very simple language switch without specific content requests
+    const simpleLanguageSwitchPatterns = [
+      /^(auf\s+)?deutsch(\s+bitte)?$/i,
+      /^(auf\s+)?englisch(\s+bitte)?$/i,
+      /^(in\s+)?english(\s+please)?$/i,
+      /^(in\s+)?german(\s+please)?$/i,
+      /^deutsch$/i,
+      /^englisch$/i,
+      /^english$/i,
+      /^german$/i
+    ];
+    
+    const isTranslationRequest = lastAIResponse && 
+      simpleLanguageSwitchPatterns.some(pattern => pattern.test(userInput.trim())) &&
+      detectedLanguage !== language;
     
     if (isTranslationRequest && lastAIResponse) {
       return translateResponse(lastAIResponse, detectedLanguage);
