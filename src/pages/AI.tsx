@@ -142,31 +142,8 @@ const AI = () => {
 
   const translateResponse = (response: string, targetLanguage: 'de' | 'en'): string => {
     // Simple translation logic for common response patterns
-    if (targetLanguage === 'de') {
-      return response
-        .replace(/Here is our contact information:/g, 'Hier sind unsere Kontaktinformationen:')
-        .replace(/For German inquiries:/g, 'Für deutsche Anfragen:')
-        .replace(/For English inquiries:/g, 'Für englische Anfragen:')
-        .replace(/We look forward to hearing from you!/g, 'Wir freuen uns auf Ihre Nachricht!')
-        .replace(/Here are all available articles:/g, 'Hier sind alle verfügbaren Artikel:')
-        .replace(/You can ask for sources or more information about any of these articles!/g, 'Sie können nach Quellen oder mehr Informationen zu jedem dieser Artikel fragen!')
-        .replace(/Here are the sources for/g, 'Hier sind die Quellen für')
-        .replace(/Here's more detailed information about/g, 'Hier sind detailliertere Informationen über')
-        .replace(/About Daily Fun:/g, 'Über Daily Fun:')
-        .replace(/Our Values:/g, 'Unsere Werte:')
-        .replace(/Our Daily Fun Team:/g, 'Unser Daily Fun Team:')
-        .replace(/Daily Fun Mission:/g, 'Daily Fun Mission:')
-        .replace(/Founder & Visionary of Daily Fun:/g, 'Gründer & Visionär von Daily Fun:')
-        .replace(/is the creative mind behind Daily Fun and founded the platform with the goal of making news entertaining and trustworthy./g, 'ist der kreative Kopf hinter Daily Fun und hat die Plattform mit dem Ziel gegründet, Nachrichten unterhaltsam und vertrauenswürdig zu gestalten.')
-        .replace(/Each team member contributes unique skills to make Daily Fun the trustworthy and entertaining platform it is today!/g, 'Jedes Teammitglied trägt mit einzigartigen Fähigkeiten dazu bei, Daily Fun zu der vertrauenswürdigen und unterhaltsamen Plattform zu machen, die sie heute ist!')
-        .replace(/I can help you with:/g, 'Ich kann Ihnen helfen mit:')
-        .replace(/Contact information/g, 'Kontaktinformationen')
-        .replace(/Team information/g, 'Team-Informationen')
-        .replace(/Article sources and details/g, 'Artikel-Quellen und Details')
-        .replace(/List of all articles/g, 'Liste aller Artikel')
-        .replace(/Try asking:/g, 'Fragen Sie mich zum Beispiel:');
-    } else {
-      return response
+    if (targetLanguage === 'en') {
+      let translatedResponse = response
         .replace(/Hier sind unsere Kontaktinformationen:/g, 'Here is our contact information:')
         .replace(/Für deutsche Anfragen:/g, 'For German inquiries:')
         .replace(/Für englische Anfragen:/g, 'For English inquiries:')
@@ -188,6 +165,45 @@ const AI = () => {
         .replace(/Artikel-Quellen und Details/g, 'Article sources and details')
         .replace(/Liste aller Artikel/g, 'List of all articles')
         .replace(/Fragen Sie mich zum Beispiel:/g, 'Try asking:');
+
+      // Translate German article titles to English
+      articles.forEach(article => {
+        const germanTitle = t(`article.${article.id}.title`);
+        translatedResponse = translatedResponse.replace(new RegExp(germanTitle, 'g'), article.title);
+      });
+
+      return translatedResponse;
+    } else {
+      let translatedResponse = response
+        .replace(/Here is our contact information:/g, 'Hier sind unsere Kontaktinformationen:')
+        .replace(/For German inquiries:/g, 'Für deutsche Anfragen:')
+        .replace(/For English inquiries:/g, 'Für englische Anfragen:')
+        .replace(/We look forward to hearing from you!/g, 'Wir freuen uns auf Ihre Nachricht!')
+        .replace(/Here are all available articles:/g, 'Hier sind alle verfügbaren Artikel:')
+        .replace(/You can ask for sources or more information about any of these articles!/g, 'Sie können nach Quellen oder mehr Informationen zu jedem dieser Artikel fragen!')
+        .replace(/Here are the sources for/g, 'Hier sind die Quellen für')
+        .replace(/Here\'s more detailed information about/g, 'Hier sind detailliertere Informationen über')
+        .replace(/About Daily Fun:/g, 'Über Daily Fun:')
+        .replace(/Our Values:/g, 'Unsere Werte:')
+        .replace(/Our Daily Fun Team:/g, 'Unser Daily Fun Team:')
+        .replace(/Daily Fun Mission:/g, 'Daily Fun Mission:')
+        .replace(/Founder & Visionary of Daily Fun:/g, 'Gründer & Visionär von Daily Fun:')
+        .replace(/is the creative mind behind Daily Fun and founded the platform with the goal of making news entertaining and trustworthy./g, 'ist der kreative Kopf hinter Daily Fun und hat die Plattform mit dem Ziel gegründet, Nachrichten unterhaltsam und vertrauenswürdig zu gestalten.')
+        .replace(/Each team member contributes unique skills to make Daily Fun the trustworthy and entertaining platform it is today!/g, 'Jedes Teammitglied trägt mit einzigartigen Fähigkeiten dazu bei, Daily Fun zu der vertrauenswürdigen und unterhaltsamen Plattform zu machen, die sie heute ist!')
+        .replace(/I can help you with:/g, 'Ich kann Ihnen helfen mit:')
+        .replace(/Contact information/g, 'Kontaktinformationen')
+        .replace(/Team information/g, 'Team-Informationen')
+        .replace(/Article sources and details/g, 'Artikel-Quellen und Details')
+        .replace(/List of all articles/g, 'Liste aller Artikel')
+        .replace(/Try asking:/g, 'Fragen Sie mich zum Beispiel:');
+
+      // Translate English article titles to German
+      articles.forEach(article => {
+        const germanTitle = t(`article.${article.id}.title`);
+        translatedResponse = translatedResponse.replace(new RegExp(article.title, 'g'), germanTitle);
+      });
+
+      return translatedResponse;
     }
   };
 
@@ -196,21 +212,21 @@ const AI = () => {
     const detectedLanguage = detectLanguage(userInput);
     
     // Check if user is requesting translation of the last response
-    // Only treat as translation request if it's a very simple language switch without specific content requests
     const simpleLanguageSwitchPatterns = [
       /^(auf\s+)?deutsch(\s+bitte)?$/i,
       /^(auf\s+)?englisch(\s+bitte)?$/i,
       /^(in\s+)?english(\s+please)?$/i,
+      /^(in\s+)?englsh$/i, // Common misspelling
       /^(in\s+)?german(\s+please)?$/i,
       /^deutsch$/i,
       /^englisch$/i,
       /^english$/i,
+      /^englsh$/i,
       /^german$/i
     ];
     
     const isTranslationRequest = lastAIResponse && 
-      simpleLanguageSwitchPatterns.some(pattern => pattern.test(userInput.trim())) &&
-      detectedLanguage !== language;
+      simpleLanguageSwitchPatterns.some(pattern => pattern.test(userInput.trim()));
     
     if (isTranslationRequest && lastAIResponse) {
       return translateResponse(lastAIResponse, detectedLanguage);
