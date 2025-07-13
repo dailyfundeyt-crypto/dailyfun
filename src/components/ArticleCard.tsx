@@ -8,10 +8,13 @@ import { useLanguage } from '../contexts/LanguageContext';
 interface Article {
   id: string;
   title: string;
+  titleEn?: string;
   excerpt: string;
+  excerptEn?: string;
   author: string;
   publishedAt: string;
   category: string;
+  categoryEn?: string;
   imageUrl: string;
   views: number;
 }
@@ -34,7 +37,7 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
     e.stopPropagation();
     
     // Get translated title
-    const translatedTitle = language === 'de' ? t(`article.${article.id}.title`) : article.title;
+    const translatedTitle = language === 'de' ? article.title : (article.titleEn || article.title);
     
     // Create URL with article title as query parameter
     const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
@@ -42,7 +45,7 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
   };
 
   // Get translated title for display
-  const translatedTitle = language === 'de' ? t(`article.${article.id}.title`) : article.title;
+  const translatedTitle = language === 'de' ? article.title : (article.titleEn || article.title);
 
   return (
     <Link to={`/article/${article.id}`} onClick={handleClick}>
@@ -85,7 +88,7 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
           </h3>
           
           <p className="text-gray-700 mb-4 line-clamp-3 font-serif">
-            {language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt}
+            {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
           </p>
           
           <div className="flex items-center text-sm text-gray-600">

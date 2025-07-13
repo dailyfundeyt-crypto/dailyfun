@@ -38,8 +38,8 @@ const Article = () => {
   }
 
   // Get translated title and excerpt
-  const translatedTitle = t(`article.${article.id}.title`);
-  const translatedExcerpt = t(`article.${article.id}.excerpt`);
+  const translatedTitle = language === 'de' ? article.title : (article.titleEn || article.title);
+  const translatedExcerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
 
   const handleAIClick = () => {
     const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
