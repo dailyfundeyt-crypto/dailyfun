@@ -74,8 +74,8 @@ export const articles = [
   },
   {
     id: '8',
-    title: 'Mein Traum um 3:94 Uhr: Wenn der Wau-Faktor zur Tragkraft wird!',
-    titleEn: 'My 3:94 AM Dream: When the Woof-Factor Becomes Lift-Off!',
+    title: 'My 3:94 AM Dream: When the Woof-Factor Becomes Lift-Off!',
+    titleDe: 'Mein Traum um 3:94 Uhr: Wenn der Wau-Faktor zur Tragkraft wird!',
     excerpt: 'Wer kennt es nicht? Man wälzt sich im Bett, der Wecker zeigt eine Zeit an, die in keinem uns bekannten Kalender existiert – 3:94 Uhr – und plötzlich findet man sich mitten in einem Traum, der so absurd ist, dass selbst Salvador Dalí neidisch würde.',
     excerptEn: 'Who hasn\'t experienced it? You toss and turn in bed, the alarm shows a time that doesn\'t exist in any calendar known to us – 3:94 AM – and suddenly you find yourself in the middle of a dream so absurd that even Salvador Dalí would be jealous.',
     author: 'Mr. Jonas Richter',
