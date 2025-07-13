@@ -12,10 +12,10 @@ const Index = () => {
   const { t } = useLanguage();
 
   useEffect(() => {
-    // Sort articles by publication date (newest first) instead of views
-    const sorted = [...articles].sort((a, b) => 
-      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
-    );
+    // Sort articles by publication date (newest first) and take only the latest 7
+    const sorted = [...articles]
+      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+      .slice(0, 7);
     setSortedArticles(sorted);
   }, []);
 
