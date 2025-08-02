@@ -41,7 +41,7 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
     
     // Create URL with article title as query parameter
     const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
-    window.open(aiUrl, '_blank');
+    window.open(aiUrl, '_blank', 'noopener,noreferrer');
   };
 
   // Get translated title for display

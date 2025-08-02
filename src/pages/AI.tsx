@@ -92,8 +92,8 @@ const AI = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const articleParam = urlParams.get('article');
     
-    if (articleParam) {
-      const decodedArticle = decodeURIComponent(articleParam);
+    if (articleParam && articleParam.length <= 500 && !/[<>\"'&]/.test(articleParam)) {
+      const decodedArticle = decodeURIComponent(articleParam).trim();
       const aiQuestion = language === 'de' 
         ? `Erzähl mir mehr über ${decodedArticle}`
         : `Tell me more about ${decodedArticle}`;

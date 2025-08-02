@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { ArrowLeft, Calendar, User, Bot } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -43,7 +44,7 @@ const Article = () => {
 
   const handleAIClick = () => {
     const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
-    window.open(aiUrl, '_blank');
+    window.open(aiUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -112,10 +113,17 @@ const Article = () => {
               
               <div className="text-gray-700 space-y-6 font-serif leading-relaxed">
                 {article.content ? (
-                  // Use the article's content and format it properly
-                  article.content.split('\n\n').map((paragraph, index) => (
-                    <p key={index} dangerouslySetInnerHTML={{ __html: paragraph.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
-                  ))
+                  // Use ReactMarkdown for safe rendering
+                  <div className="prose prose-lg max-w-none [&>p]:mb-6">
+                    <ReactMarkdown 
+                      components={{
+                        p: ({children}) => <p className="mb-6">{children}</p>,
+                        strong: ({children}) => <strong className="font-bold">{children}</strong>
+                      }}
+                    >
+                      {article.content}
+                    </ReactMarkdown>
+                  </div>
                 ) : (
                   // Fallback to generic content
                   <>
