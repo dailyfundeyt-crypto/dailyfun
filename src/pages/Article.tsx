@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import AnimatedParagraph from '../components/AnimatedParagraph';
 import { useLanguage } from '../contexts/LanguageContext';
 import { articles } from '../data/articles';
 import { incrementViews } from '../utils/viewTracker';
@@ -134,41 +135,43 @@ const Article = () => {
             </div>
 
             <div className="prose prose-lg max-w-none">
-              <p className="text-xl text-gray-700 mb-8 font-serif italic leading-relaxed">
+              <AnimatedParagraph className="text-xl text-[#1A1A1A] mb-8 sans-serif italic leading-relaxed">
                 {translatedExcerpt}
-              </p>
+              </AnimatedParagraph>
               
-              <div className="text-gray-700 space-y-6 font-serif leading-relaxed">
+              <div className="text-[#1A1A1A] space-y-6 sans-serif leading-relaxed">
                 {article.content ? (
-                  // Use ReactMarkdown for safe rendering
-                  <div className="prose prose-lg max-w-none [&>p]:mb-6">
-                    <ReactMarkdown 
-                      components={{
-                        p: ({children}) => <p className="mb-6">{children}</p>,
-                        strong: ({children}) => <strong className="font-bold">{children}</strong>
-                      }}
-                    >
-                      {article.content}
-                    </ReactMarkdown>
-                  </div>
+                  // Split content into paragraphs and animate each one
+                  (() => {
+                    const paragraphs = article.content.split('\n\n');
+                    return paragraphs.map((paragraph, index) => (
+                      <AnimatedParagraph 
+                        key={index} 
+                        className="mb-6 text-lg leading-relaxed"
+                        delay={index * 200}
+                      >
+                        {paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}
+                      </AnimatedParagraph>
+                    ));
+                  })()
                 ) : (
-                  // Fallback to generic content
+                  // Fallback to generic content with animation
                   <>
-                    <p>
+                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={0}>
                       {t('article.content.paragraph1')}
-                    </p>
+                    </AnimatedParagraph>
                     
-                    <p>
+                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={200}>
                       {t('article.content.paragraph2')}
-                    </p>
+                    </AnimatedParagraph>
                     
-                    <p>
+                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={400}>
                       {t('article.content.paragraph3')}
-                    </p>
+                    </AnimatedParagraph>
                     
-                    <p>
+                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={600}>
                       {t('article.content.paragraph4')}
-                    </p>
+                    </AnimatedParagraph>
                   </>
                 )}
               </div>
