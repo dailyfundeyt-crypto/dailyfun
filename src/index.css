@@ -49,6 +49,10 @@
     /* Custom accent colors */
     --red-accent: #E4002B;
     --blue-accent: #007BFF;
+    
+    /* Custom icon navigation colors */
+    --icon-default: 26 26% 10%; /* #1A1A1A */
+    --icon-hover: 177 88% 50%; /* #2EEAE0 */
   }
 
   .dark {

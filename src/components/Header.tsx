@@ -1,70 +1,80 @@
 
 import { useState } from 'react';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, Home, Info, ShoppingCart, Globe, Bot, Zap } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import LanguageSwitcher from './LanguageSwitcher';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  const { t } = useLanguage();
+  const { language, toggleLanguage } = useLanguage();
 
   const navigation = [
-    { name: t('header.home'), href: '/' },
-    { name: t('header.search'), href: '/search' },
-    { name: t('header.about'), href: '/about' },
-    { name: t('header.products'), href: '/products' },
-    { name: t('header.weird'), href: '/weird' },
+    { icon: Home, href: '/', label: 'Home' },
+    { icon: Search, href: '/search', label: 'Search' },
+    { icon: Info, href: '/about', label: 'About' },
+    { icon: ShoppingCart, href: '/products', label: 'Products' },
+    { icon: Zap, href: '/weird', label: 'Strange News' },
+    { icon: Globe, href: '#', label: 'Language', action: 'language' },
+    { icon: Bot, href: '/ai', label: 'AI Chat' },
   ];
+
+  const handleNavigation = (item: typeof navigation[0]) => {
+    if (item.action === 'language') {
+      toggleLanguage();
+    }
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          {/* Left side - Daily Fun logo */}
           <div className="flex items-center">
-            <Link to="/" className="font-serif text-xl text-black hover:text-red-accent transition-colors mr-8">
-              Stefan Kunc
-            </Link>
-            <Link to="/" className="text-2xl font-bold text-black hover:text-gray-600 transition-colors">
+            <Link to="/" className="text-2xl font-bold text-black hover:text-red-accent transition-colors">
               Daily Fun
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            {navigation.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  location.pathname === item.href
-                    ? 'text-red-accent bg-gray-100'
-                    : 'text-gray-700 hover:text-red-accent hover:bg-gray-50'
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+          {/* Desktop Navigation - Icons only */}
+          <nav className="hidden md:flex items-center space-x-6">
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              const isActive = location.pathname === item.href;
+              
+              if (item.action === 'language') {
+                return (
+                  <button
+                    key={item.label}
+                    onClick={() => handleNavigation(item)}
+                    className={`p-2 rounded-md transition-colors ${
+                      isActive
+                        ? 'text-[hsl(var(--icon-hover))]'
+                        : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
+                    }`}
+                    title={`${item.label} (${language === 'en' ? 'EN' : 'DE'})`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </button>
+                );
+              }
+              
+              return (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className={`p-2 rounded-md transition-colors ${
+                    isActive
+                      ? 'text-[hsl(var(--icon-hover))]'
+                      : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
+                  }`}
+                  title={item.label}
+                >
+                  <Icon className="h-5 w-5" />
+                </Link>
+              );
+            })}
           </nav>
-
-          {/* Desktop Actions - Language Switcher, AI, and Search */}
-          <div className="hidden md:flex items-center space-x-4">
-            <LanguageSwitcher />
-            <Link 
-              to="/ai" 
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                location.pathname === '/ai'
-                  ? 'text-red-accent bg-gray-100'
-                  : 'text-gray-700 hover:text-red-accent hover:bg-gray-50'
-              }`}
-            >
-              AI
-            </Link>
-            <Link to="/search" className="p-2 text-gray-600 hover:text-blue-accent transition-colors">
-              <Search className="h-5 w-5" />
-            </Link>
-          </div>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
@@ -80,38 +90,48 @@ const Header = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-gray-200">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                    location.pathname === item.href
-                      ? 'text-red-accent bg-gray-100'
-                      : 'text-gray-700 hover:text-red-accent hover:bg-gray-50'
-                  }`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              ))}
-              
-              {/* Mobile AI Link */}
-              <Link
-                to="/ai"
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors ${
-                  location.pathname === '/ai'
-                    ? 'text-red-accent bg-gray-100'
-                    : 'text-gray-700 hover:text-red-accent hover:bg-gray-50'
-                }`}
-                onClick={() => setIsMenuOpen(false)}
-              >
-                AI
-              </Link>
-              
-              {/* Mobile Language Switcher */}
-              <div className="px-3 py-2">
-                <LanguageSwitcher />
+            <div className="px-2 pt-2 pb-3 space-y-3 sm:px-3 bg-white border-t border-gray-200">
+              <div className="grid grid-cols-4 gap-4">
+                {navigation.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.href;
+                  
+                  if (item.action === 'language') {
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={() => {
+                          handleNavigation(item);
+                          setIsMenuOpen(false);
+                        }}
+                        className={`flex flex-col items-center p-3 rounded-md transition-colors ${
+                          isActive
+                            ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
+                            : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))] hover:bg-gray-50'
+                        }`}
+                      >
+                        <Icon className="h-6 w-6 mb-1" />
+                        <span className="text-xs font-medium">{language === 'en' ? 'EN' : 'DE'}</span>
+                      </button>
+                    );
+                  }
+                  
+                  return (
+                    <Link
+                      key={item.label}
+                      to={item.href}
+                      className={`flex flex-col items-center p-3 rounded-md transition-colors ${
+                        isActive
+                          ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
+                          : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))] hover:bg-gray-50'
+                      }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Icon className="h-6 w-6 mb-1" />
+                      <span className="text-xs font-medium">{item.label}</span>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </div>
