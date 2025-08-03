@@ -12,34 +12,26 @@ const AnimatedParagraph: React.FC<AnimatedParagraphProps> = ({
   delay = 0 
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [animatedWords, setAnimatedWords] = useState<number>(0);
+  const [isAnimating, setIsAnimating] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
-  
-  // Extract text content from React children
-  const getTextContent = (element: React.ReactNode): string => {
-    if (typeof element === 'string') return element;
-    if (typeof element === 'number') return element.toString();
-    if (React.isValidElement(element) && element.props.children) {
-      return getTextContent(element.props.children);
-    }
-    if (Array.isArray(element)) {
-      return element.map(getTextContent).join('');
-    }
-    return '';
-  };
-
-  const textContent = getTextContent(children);
-  const words = textContent.split(/(\s+)/).filter(word => word.length > 0);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
+          setTimeout(() => {
+            setIsVisible(true);
+            setIsAnimating(true);
+            
+            // End animation after short duration
+            setTimeout(() => {
+              setIsAnimating(false);
+            }, 800);
+          }, delay);
           observer.disconnect();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.2 }
     );
 
     if (elementRef.current) {
@@ -47,57 +39,25 @@ const AnimatedParagraph: React.FC<AnimatedParagraphProps> = ({
     }
 
     return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (isVisible) {
-      let currentIndex = 0;
-
-      const animateNextWord = () => {
-        if (currentIndex < words.length) {
-          setAnimatedWords(currentIndex + 1);
-          currentIndex++;
-          setTimeout(animateNextWord, 120);
-        }
-      };
-
-      setTimeout(animateNextWord, delay);
-    }
-  }, [isVisible, words.length, delay]);
-
-  const renderAnimatedContent = () => {
-    return words.map((word, index) => {
-      const isAnimated = index < animatedWords;
-      const isCurrentlyAnimating = index === animatedWords - 1;
-      
-      return (
-        <span
-          key={index}
-          className={`inline-block transition-all duration-500 ${
-            isAnimated
-              ? 'opacity-100 text-[#1A1A1A]'
-              : 'opacity-0'
-          } ${
-            isCurrentlyAnimating && !word.match(/\s/)
-              ? 'text-[#2EEAE0] animate-pulse'
-              : ''
-          }`}
-          style={{
-            textShadow: isCurrentlyAnimating && !word.match(/\s/) 
-              ? '0 0 15px #2EEAE0, 0 0 25px #2EEAE0' 
-              : 'none',
-            transition: 'all 0.3s ease-in-out'
-          }}
-        >
-          {word}
-        </span>
-      );
-    });
-  };
+  }, [delay]);
 
   return (
-    <div ref={elementRef} className={`sans-serif font-normal leading-relaxed ${className}`}>
-      {renderAnimatedContent()}
+    <div 
+      ref={elementRef} 
+      className={`sans-serif font-normal leading-relaxed transition-all duration-700 ease-out ${
+        isVisible 
+          ? 'opacity-100 translate-y-0' 
+          : 'opacity-0 translate-y-8'
+      } ${className}`}
+      style={{
+        textShadow: isAnimating 
+          ? '0 0 20px #2EEAE0, 0 0 40px #2EEAE0, 0 0 60px #2EEAE0' 
+          : 'none',
+        color: isAnimating ? '#2EEAE0' : '#1A1A1A',
+        transition: 'all 0.8s cubic-bezier(0.23, 1, 0.320, 1)'
+      }}
+    >
+      {children}
     </div>
   );
 };

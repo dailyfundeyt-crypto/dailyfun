@@ -148,7 +148,7 @@ const Article = () => {
                       <AnimatedParagraph 
                         key={index} 
                         className="mb-6 text-lg leading-relaxed"
-                        delay={index * 200}
+                        delay={index * 100}
                       >
                         {paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}
                       </AnimatedParagraph>
@@ -161,15 +161,15 @@ const Article = () => {
                       {t('article.content.paragraph1')}
                     </AnimatedParagraph>
                     
-                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={200}>
+                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={100}>
                       {t('article.content.paragraph2')}
                     </AnimatedParagraph>
                     
-                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={400}>
+                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={200}>
                       {t('article.content.paragraph3')}
                     </AnimatedParagraph>
                     
-                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={600}>
+                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={300}>
                       {t('article.content.paragraph4')}
                     </AnimatedParagraph>
                   </>
