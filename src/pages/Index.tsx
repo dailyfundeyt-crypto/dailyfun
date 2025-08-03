@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
+import PhoneHero from '../components/PhoneHero';
 import { articles } from '../data/articles';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -27,21 +28,10 @@ const Index = () => {
       <Header />
       <InstallSidebar />
       
+      {/* 3D Phone Hero Section */}
+      <PhoneHero />
+      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section */}
-        <section className="mb-12">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-6xl font-bold text-black mb-4 font-serif">
-              {t('home.welcome')}
-            </h1>
-            <div className="w-32 h-1 bg-red-accent mx-auto mb-6"></div>
-            <p className="text-2xl md:text-3xl font-bold max-w-4xl mx-auto font-serif leading-relaxed">
-              <span className="text-red-accent">Daily Fun:</span>{' '}
-              <span className="text-blue-accent">Make News Fun Again.</span>{' '}
-              <span className="text-black">{t('home.tagline').split('. ')[1]}</span>
-            </p>
-          </div>
-        </section>
 
         {/* Latest Articles Section */}
         <section className="mb-12">

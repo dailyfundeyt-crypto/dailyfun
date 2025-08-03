@@ -162,4 +162,25 @@
   .font-signature {
     font-family: 'Great Vibes', cursive;
   }
+
+  /* Liquid text animation */
+  .liquid-text {
+    background: linear-gradient(45deg, #5E40E3, #8B5CF6, #A855F7, #5E40E3);
+    background-size: 400% 400%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: liquidFlow 4s ease-in-out infinite;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+  }
+
+  @keyframes liquidFlow {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
 }
