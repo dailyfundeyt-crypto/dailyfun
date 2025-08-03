@@ -56,7 +56,7 @@ const Index = () => {
                     <div className="order-2 lg:order-1">
                       <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
                         <img
-                          src={article.imageUrl}
+                          src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
                           alt={article.title}
                           className="w-full h-full object-cover"
                         />
