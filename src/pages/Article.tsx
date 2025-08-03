@@ -9,6 +9,17 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { articles } from '../data/articles';
 import { incrementViews } from '../utils/viewTracker';
 
+// Professional images for article detail pages
+import article1Professional from '../assets/article-1-professional.jpg';
+import article2Professional from '../assets/article-2-professional.jpg';
+import article3Professional from '../assets/article-3-professional.jpg';
+import article4Professional from '../assets/article-4-professional.jpg';
+import article5Professional from '../assets/article-5-professional.jpg';
+import article6Professional from '../assets/article-6-professional.jpg';
+import article7Professional from '../assets/article-7-professional.jpg';
+import article8Professional from '../assets/article-8-professional.jpg';
+import article9Professional from '../assets/article-9-professional.jpg';
+
 const Article = () => {
   const { id } = useParams();
   const article = articles.find(a => a.id === id);
@@ -41,6 +52,22 @@ const Article = () => {
   // Get translated title and excerpt
   const translatedTitle = language === 'de' ? article.title : (article.titleEn || article.title);
   const translatedExcerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
+
+  // Get professional image for article detail page
+  const getProfessionalImage = (articleId: string) => {
+    const imageMap: { [key: string]: string } = {
+      '1': article1Professional,
+      '2': article2Professional,
+      '3': article3Professional,
+      '4': article4Professional,
+      '5': article5Professional,
+      '6': article6Professional,
+      '7': article7Professional,
+      '8': article8Professional,
+      '9': article9Professional,
+    };
+    return imageMap[articleId] || article.imageUrl;
+  };
 
   const handleAIClick = () => {
     const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
@@ -78,7 +105,7 @@ const Article = () => {
           <div className="relative">
             <div className="aspect-video bg-gray-100 overflow-hidden">
               <img
-                src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=1200&q=80`}
+                src={getProfessionalImage(article.id)}
                 alt={translatedTitle}
                 className="w-full h-full object-cover"
               />
