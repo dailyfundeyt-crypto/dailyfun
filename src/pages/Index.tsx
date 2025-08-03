@@ -35,22 +35,51 @@ const Index = () => {
 
         {/* Latest Articles Section */}
         <section className="mb-12">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <h2 className="text-3xl font-bold text-black font-serif">{t('home.latest')}</h2>
             <div className="h-1 bg-gradient-to-r from-red-accent to-blue-accent rounded-full flex-1 ml-6 max-w-32"></div>
           </div>
 
-          {/* Featured Article */}
-          {featuredArticle && (
-            <div className="mb-8">
-              <ArticleCard article={featuredArticle} featured={true} />
-            </div>
-          )}
-
-          {/* Other Articles */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {otherArticles.map((article) => (
-              <ArticleCard key={article.id} article={article} />
+          {/* Full-width Articles with alternating backgrounds */}
+          <div className="space-y-0">
+            {sortedArticles.map((article, index) => (
+              <Link
+                key={article.id}
+                to={`/article/${article.id}`}
+                className={`block w-full py-16 transition-all duration-300 hover:scale-[1.02] ${
+                  index % 2 === 0 ? 'bg-white' : 'bg-[#5E40E3]'
+                }`}
+              >
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    {/* Article Image - Left side */}
+                    <div className="order-2 lg:order-1">
+                      <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                        <img
+                          src={article.imageUrl}
+                          alt={article.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Article Content - Right side */}
+                    <div className={`order-1 lg:order-2 ${
+                      index % 2 === 0 ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]'
+                    }`}>
+                      <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
+                        {article.title}
+                      </h3>
+                      <p className="text-lg mb-6 opacity-90 line-clamp-3">
+                        {article.excerpt}
+                      </p>
+                      <div className="text-sm opacity-75">
+                        {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {article.category}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             ))}
           </div>
         </section>
