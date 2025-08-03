@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, ArrowLeft, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/articles';
@@ -505,7 +504,7 @@ const AI = () => {
 
   return (
     <div 
-      className="min-h-screen bg-[#F7F7F7]"
+      className="min-h-screen bg-white text-black"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -525,135 +524,139 @@ const AI = () => {
         </Button>
       </div>
       
-      <div className="pt-32 pb-8 px-4">
+      {/* Hero Section - Like on the image */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Daily Fun AI Logo */}
+        <div className="text-center mb-8 pt-20">
+          <div className="flex items-center justify-center mb-4">
+            <div className="text-blue-600 text-3xl mr-3">✨</div>
+            <h1 className="text-4xl md:text-5xl font-bold text-black font-serif">
+              Daily Fun <span className="text-red-accent">AI</span>
+            </h1>
+          </div>
+          <p className="text-lg text-gray-600 font-serif">
+            {language === 'de' 
+              ? 'Ihr intelligenter Assistent für Artikel, Quellen und Einblicke'
+              : 'Your intelligent assistant for articles, sources and insights'
+            }
+          </p>
+        </div>
+
+        {/* Chat Interface */}
         <div className="max-w-4xl mx-auto">
-          {/* Elegant AI Logo */}
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center mb-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2EEAE0] to-[#1A1A1A] flex items-center justify-center mr-4">
-                <Bot className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-3xl font-light text-[#1A1A1A] tracking-wide">
-                Daily Fun 
-                <span className="font-normal ml-2 text-[#2EEAE0]">AI</span>
-              </h1>
+          {/* Messages Container */}
+          <div 
+            className="h-[500px] overflow-y-auto mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200"
+            ref={scrollAreaRef}
+          >
+            <div className="space-y-4">
+              {messages.length === 0 && (
+                <div className="text-center text-gray-500 py-8">
+                  <p>{language === 'de' ? 'Stellen Sie eine Frage über Daily Fun oder unsere Artikel!' : 'Ask a question about Daily Fun or our articles!'}</p>
+                </div>
+              )}
+              
+              {messages.map((message) => (
+                <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[70%] p-3 rounded-2xl ${
+                    message.isUser 
+                      ? 'bg-[#2EEAE0] text-black ml-auto' 
+                      : 'bg-white text-black shadow-sm border border-gray-200'
+                  }`}>
+                    <div className="whitespace-pre-wrap text-sm">{message.text}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {message.timestamp.toLocaleTimeString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-200">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#2EEAE0] to-transparent mx-auto"></div>
           </div>
 
-          {/* Chat Container */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            {/* Chat Header */}
-            <div className="px-6 py-4 bg-white border-b border-gray-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-[#2EEAE0]/10 flex items-center justify-center mr-3">
-                    <Bot className="w-4 h-4 text-[#2EEAE0]" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-[#1A1A1A]">Daily Fun AI</h3>
-                    <p className="text-xs text-gray-500">
-                      {language === 'de' ? 'Ihr intelligenter Assistent' : 'Your intelligent assistant'}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Search Mode Toggle */}
-                <div className="flex bg-gray-50 rounded-lg p-1">
-                  <Button
-                    variant={searchMode === 'local' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setSearchMode('local')}
-                    className="text-xs px-3 py-1 h-7"
-                  >
-                    {language === 'de' ? 'Lokal' : 'Local'}
-                  </Button>
-                  <Button
-                    variant={searchMode === 'internet' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setSearchMode('internet')}
-                    className="text-xs px-3 py-1 h-7"
-                  >
-                    {language === 'de' ? 'Internet' : 'Internet'}
-                  </Button>
-                </div>
-              </div>
+          {/* Mode Selector */}
+          <div className="mb-4">
+            <Select value={searchMode} onValueChange={(value: 'local' | 'internet') => setSearchMode(value)}>
+              <SelectTrigger className="w-64 bg-white border border-gray-300 rounded-lg font-serif">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="local">
+                  {language === 'de' ? 'Daily Fun (Lokal)' : 'Daily Fun (Local)'}
+                </SelectItem>
+                <SelectItem value="internet">
+                  {language === 'de' ? 'Allgemein' : 'General'}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Input Field */}
+          <div className="relative">
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder={language === 'de' ? 'Daily Fun AI fragen' : 'Ask Daily Fun AI'}
+              className="w-full pr-16 py-4 text-lg border border-gray-300 rounded-lg bg-white font-serif"
+              disabled={isTyping}
+            />
+            <Button 
+              onClick={sendMessage}
+              disabled={!inputValue.trim() || isTyping}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-pink-500 hover:bg-[#2EEAE0] text-white rounded-lg p-2 transition-colors duration-300"
+            >
+              <Send className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer - Keep consistent with homepage */}
+      <footer className="bg-gray-50 text-black py-12 border-t border-gray-200 mt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="col-span-1 md:col-span-2">
+              <h3 className="text-2xl font-bold mb-4 font-serif">Daily Fun</h3>
+              <p className="text-gray-600 mb-4 font-serif italic">
+                "{t('footer.quote')}"
+              </p>
+              <p className="text-gray-600 text-sm">
+                {t('footer.rights')}
+              </p>
             </div>
             
-            {/* Messages Area */}
-            <ScrollArea className="h-[500px] px-6 py-4" ref={scrollAreaRef}>
-              <div className="space-y-6">
-                {messages.map((message) => (
-                  <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] ${message.isUser ? 'order-2' : ''}`}>
-                      <div className={`flex items-start gap-3 ${message.isUser ? 'flex-row-reverse' : ''}`}>
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          message.isUser ? 'bg-[#1A1A1A]' : 'bg-[#2EEAE0]/10'
-                        }`}>
-                          {message.isUser ? (
-                            <User className="w-4 h-4 text-white" />
-                          ) : (
-                            <Bot className="w-4 h-4 text-[#2EEAE0]" />
-                          )}
-                        </div>
-                        <div className={`rounded-2xl px-4 py-3 max-w-full ${
-                          message.isUser 
-                            ? 'bg-[#1A1A1A] text-white' 
-                            : 'bg-gray-50 text-[#1A1A1A]'
-                        }`}>
-                          <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.text}</div>
-                          <div className={`text-xs mt-2 ${
-                            message.isUser ? 'text-gray-300' : 'text-gray-400'
-                          }`}>
-                            {message.timestamp.toLocaleTimeString()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#2EEAE0]/10 flex items-center justify-center">
-                        <Bot className="w-4 h-4 text-[#2EEAE0]" />
-                      </div>
-                      <div className="bg-gray-50 rounded-2xl px-4 py-3">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-[#2EEAE0] rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-[#2EEAE0] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-[#2EEAE0] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </ScrollArea>
+            <div>
+              <h4 className="text-lg font-semibold mb-4 text-red-accent">{t('footer.quick')}</h4>
+              <ul className="space-y-2 text-gray-600">
+                <li><a href="/about" className="hover:text-black transition-colors">{t('header.about')}</a></li>
+                <li><a href="/contact" className="hover:text-black transition-colors">Contact</a></li>
+                <li><a href="/privacy-policy" className="hover:text-black transition-colors">Privacy Policy</a></li>
+                <li><a href="/terms-of-service" className="hover:text-black transition-colors">Terms of Service</a></li>
+              </ul>
+            </div>
             
-            {/* Input Area */}
-            <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-50">
-              <form onSubmit={e => { e.preventDefault(); sendMessage(); }} className="flex gap-3">
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder={language === 'de' ? 'Stellen Sie eine Frage...' : 'Ask a question...'}
-                  className="flex-1 border-gray-200 focus:border-[#2EEAE0] focus:ring-[#2EEAE0]/20 rounded-xl bg-white"
-                  disabled={isTyping}
-                />
-                <Button 
-                  type="submit" 
-                  disabled={!inputValue.trim() || isTyping}
-                  className="bg-[#2EEAE0] hover:bg-[#2EEAE0]/90 text-black rounded-xl px-6"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </form>
+            <div>
+              <h4 className="text-lg font-semibold mb-4 text-blue-accent">{t('footer.categories')}</h4>
+              <ul className="space-y-2 text-gray-600">
+                <li><a href="/weird" className="hover:text-black transition-colors">{t('header.weird')}</a></li>
+                <li><a href="/products" className="hover:text-black transition-colors">{t('header.products')}</a></li>
+              </ul>
             </div>
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 };
