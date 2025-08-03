@@ -216,27 +216,13 @@ const PhoneHero = () => {
           </div>
         </div>
         
-        {/* 3D Phone */}
-        <div className="w-full h-96 md:h-[500px]">
-          <Canvas
-            camera={{ position: [0, 0, 8], fov: 50 }}
-            style={{ background: 'transparent' }}
-          >
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[10, 10, 5]} intensity={1} />
-            <pointLight position={[-10, -10, -5]} intensity={0.5} />
-            
-            <AnimatedPhone />
-            
-            <OrbitControls
-              enablePan={false}
-              enableZoom={false}
-              maxPolarAngle={Math.PI / 2}
-              minPolarAngle={Math.PI / 2}
-              autoRotate
-              autoRotateSpeed={1}
-            />
-          </Canvas>
+        {/* Phone Image */}
+        <div className="w-full h-96 md:h-[500px] flex items-center justify-center">
+          <img 
+            src="/lovable-uploads/bc8dbf20-8877-42f8-8597-fa505f677ba7.png"
+            alt="Daily Fun Smartphone"
+            className="max-h-full w-auto animate-fade-in hover-scale"
+          />
         </div>
       </div>
     </section>
