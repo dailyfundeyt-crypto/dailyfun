@@ -44,17 +44,21 @@ const AnimatedParagraph: React.FC<AnimatedParagraphProps> = ({
   return (
     <div 
       ref={elementRef} 
-      className={`sans-serif font-normal leading-relaxed transition-all duration-700 ease-out ${
+      className={`sans-serif font-normal leading-relaxed transition-all duration-500 ease-out pointer-events-none select-none ${
         isVisible 
           ? 'opacity-100 translate-y-0' 
-          : 'opacity-0 translate-y-8'
+          : 'opacity-0 translate-y-4'
       } ${className}`}
       style={{
         textShadow: isAnimating 
-          ? '0 0 20px #2EEAE0, 0 0 40px #2EEAE0, 0 0 60px #2EEAE0' 
+          ? '0 0 8px #2EEAE0, 0 0 15px #2EEAE0' 
           : 'none',
         color: isAnimating ? '#2EEAE0' : '#1A1A1A',
-        transition: 'all 0.8s cubic-bezier(0.23, 1, 0.320, 1)'
+        transition: 'all 0.5s cubic-bezier(0.23, 1, 0.320, 1)',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none'
       }}
     >
       {children}

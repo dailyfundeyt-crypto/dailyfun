@@ -44,7 +44,7 @@ const AnimatedParagraphPink: React.FC<AnimatedParagraphPinkProps> = ({
   return (
     <div 
       ref={elementRef} 
-      className={`sans-serif font-normal leading-relaxed transition-all duration-500 ease-out ${
+      className={`sans-serif font-normal leading-relaxed transition-all duration-500 ease-out pointer-events-none select-none ${
         isVisible 
           ? 'opacity-100 translate-y-0' 
           : 'opacity-0 translate-y-4'
@@ -54,7 +54,11 @@ const AnimatedParagraphPink: React.FC<AnimatedParagraphPinkProps> = ({
           ? '0 0 8px #5E40E3, 0 0 15px #5E40E3' 
           : 'none',
         color: isAnimating ? '#5E40E3' : '#5E40E3',
-        transition: 'all 0.5s cubic-bezier(0.23, 1, 0.320, 1)'
+        transition: 'all 0.5s cubic-bezier(0.23, 1, 0.320, 1)',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none'
       }}
     >
       {children}
