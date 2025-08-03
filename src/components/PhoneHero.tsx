@@ -219,7 +219,7 @@ const PhoneHero = () => {
         {/* Phone Image */}
         <div className="w-full h-96 md:h-[500px] flex items-center justify-center">
           <img 
-            src="/lovable-uploads/bc8dbf20-8877-42f8-8597-fa505f677ba7.png"
+            src="/lovable-uploads/9337a300-032d-4b3f-a84b-f6e9dca5af00.png"
             alt="Daily Fun Smartphone"
             className="max-h-full w-auto animate-fade-in hover-scale"
           />
