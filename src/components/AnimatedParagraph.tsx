@@ -26,7 +26,7 @@ const AnimatedParagraph: React.FC<AnimatedParagraphProps> = ({
             // End animation after short duration
             setTimeout(() => {
               setIsAnimating(false);
-            }, 800);
+            }, 500);
           }, delay);
           observer.disconnect();
         }

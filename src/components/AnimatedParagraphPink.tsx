@@ -26,7 +26,7 @@ const AnimatedParagraphPink: React.FC<AnimatedParagraphPinkProps> = ({
             // End animation after short duration
             setTimeout(() => {
               setIsAnimating(false);
-            }, 800);
+            }, 500);
           }, delay);
           observer.disconnect();
         }
@@ -44,17 +44,17 @@ const AnimatedParagraphPink: React.FC<AnimatedParagraphPinkProps> = ({
   return (
     <div 
       ref={elementRef} 
-      className={`sans-serif font-normal leading-relaxed transition-all duration-700 ease-out ${
+      className={`sans-serif font-normal leading-relaxed transition-all duration-500 ease-out ${
         isVisible 
           ? 'opacity-100 translate-y-0' 
-          : 'opacity-0 translate-y-8'
+          : 'opacity-0 translate-y-4'
       } ${className}`}
       style={{
         textShadow: isAnimating 
-          ? '0 0 20px #5E40E3, 0 0 40px #5E40E3, 0 0 60px #5E40E3' 
+          ? '0 0 8px #5E40E3, 0 0 15px #5E40E3' 
           : 'none',
         color: isAnimating ? '#5E40E3' : '#5E40E3',
-        transition: 'all 0.8s cubic-bezier(0.23, 1, 0.320, 1)'
+        transition: 'all 0.5s cubic-bezier(0.23, 1, 0.320, 1)'
       }}
     >
       {children}

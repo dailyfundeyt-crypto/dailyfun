@@ -230,14 +230,18 @@ const PhoneHero = () => {
           
           {/* Text Content */}
           <div className="flex flex-col items-start lg:items-start space-y-8 lg:pl-8">
-            {/* Main Tagline */}
-            <AnimatedParagraphPink className="text-2xl md:text-4xl font-medium" delay={0}>
-              Ihre tägliche Dosis vertrauenswürdiger Unterhaltung.
-            </AnimatedParagraphPink>
+            {/* Main Tagline - Load separately */}
+            <div style={{ opacity: 1 }}>
+              <AnimatedParagraphPink className="text-2xl md:text-4xl font-medium" delay={200}>
+                Ihre tägliche Dosis vertrauenswürdiger Unterhaltung.
+              </AnimatedParagraphPink>
+            </div>
             
-            {/* Signature */}
-            <div className="text-3xl md:text-5xl font-signature" style={{ color: '#5E40E3' }}>
-              Stefan Kunc
+            {/* Signature - Load separately */}
+            <div style={{ opacity: 1 }}>
+              <div className="text-3xl md:text-5xl font-signature" style={{ color: '#5E40E3' }}>
+                Stefan Kunc
+              </div>
             </div>
           </div>
         </div>

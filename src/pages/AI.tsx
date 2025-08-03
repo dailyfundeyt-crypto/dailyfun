@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, ChevronDown, Globe, Home } from 'lucide-react';
+import { Send, Bot, User, Sparkles, ChevronDown, Globe, Home, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -85,6 +85,8 @@ const AI = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [searchMode, setSearchMode] = useState<'local' | 'internet'>('local');
   const [lastAIResponse, setLastAIResponse] = useState<string>('');
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Check for article parameter in URL
@@ -480,14 +482,49 @@ const AI = () => {
     }
   };
 
+  // Touch swipe detection for back navigation
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchEnd - touchStart;
+    const isRightSwipe = distance > minSwipeDistance;
+    if (isRightSwipe) {
+      window.history.back();
+    }
+  };
+
   const getRandomArticleTitle = () => {
     const randomArticle = articles[Math.floor(Math.random() * articles.length)];
     return language === 'de' ? t(`article.${randomArticle.id}.title`) : randomArticle.title;
   };
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div 
+      className="min-h-screen bg-white text-black"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       <Header />
+      
+      {/* Desktop Navigation Arrow */}
+      <button
+        onClick={() => window.history.back()}
+        className="hidden md:flex fixed left-4 top-1/2 transform -translate-y-1/2 z-10 bg-primary/10 hover:bg-primary/20 text-primary rounded-full p-3 transition-all duration-300 hover:scale-110 group"
+        title={language === 'de' ? 'Zurück zur vorherigen Seite' : 'Back to previous page'}
+      >
+        <ChevronLeft className="h-6 w-6 group-hover:animate-pulse" />
+      </button>
       
       <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)]">
         {/* Chat Messages Area */}
