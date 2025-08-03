@@ -236,7 +236,7 @@ const PhoneHero = () => {
             </AnimatedParagraphPink>
             
             {/* Signature */}
-            <div className="text-3xl md:text-5xl font-signature" style={{ color: '#FF1493' }}>
+            <div className="text-3xl md:text-5xl font-signature" style={{ color: '#5E40E3' }}>
               Stefan Kunc
             </div>
           </div>

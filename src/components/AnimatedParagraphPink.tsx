@@ -51,9 +51,9 @@ const AnimatedParagraphPink: React.FC<AnimatedParagraphPinkProps> = ({
       } ${className}`}
       style={{
         textShadow: isAnimating 
-          ? '0 0 20px #FF1493, 0 0 40px #FF1493, 0 0 60px #FF1493' 
+          ? '0 0 20px #5E40E3, 0 0 40px #5E40E3, 0 0 60px #5E40E3' 
           : 'none',
-        color: isAnimating ? '#FF1493' : '#FF1493',
+        color: isAnimating ? '#5E40E3' : '#5E40E3',
         transition: 'all 0.8s cubic-bezier(0.23, 1, 0.320, 1)'
       }}
     >
