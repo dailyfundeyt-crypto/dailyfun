@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Sparkles, ChevronDown, Globe, Home, ChevronLeft } from 'lucide-react';
+import { Send, Bot, User, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/articles';
 import Header from '@/components/Header';
@@ -94,7 +92,7 @@ const AI = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const articleParam = urlParams.get('article');
     
-    if (articleParam && articleParam.length <= 500 && !/[<>\"'&]/.test(articleParam)) {
+    if (articleParam && articleParam.length <= 500 && !/[<>"'&]/.test(articleParam)) {
       const decodedArticle = decodeURIComponent(articleParam).trim();
       const aiQuestion = language === 'de' 
         ? `Erzähl mir mehr über ${decodedArticle}`
@@ -503,249 +501,153 @@ const AI = () => {
     }
   };
 
-  const getRandomArticleTitle = () => {
-    const randomArticle = articles[Math.floor(Math.random() * articles.length)];
-    return language === 'de' ? t(`article.${randomArticle.id}.title`) : randomArticle.title;
-  };
-
   return (
     <div 
-      className="min-h-screen bg-white text-black"
+      className="min-h-screen bg-[#F7F7F7]"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
     >
       <Header />
       
-      {/* Desktop Navigation Arrow */}
-      <button
-        onClick={() => window.history.back()}
-        className="hidden md:flex fixed left-4 top-1/2 transform -translate-y-1/2 z-10 bg-primary/10 hover:bg-primary/20 text-primary rounded-full p-3 transition-all duration-300 hover:scale-110 group"
-        title={language === 'de' ? 'Zurück zur vorherigen Seite' : 'Back to previous page'}
-      >
-        <ChevronLeft className="h-6 w-6 group-hover:animate-pulse" />
-      </button>
+      {/* Back Button */}
+      <div className="fixed top-20 left-4 z-10">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-white/80 backdrop-blur-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm">{language === 'de' ? 'Zurück' : 'Back'}</span>
+        </Button>
+      </div>
       
-      <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100vh-4rem)]">
-        {/* Chat Messages Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {messages.length === 1 ? (
-            /* Welcome Screen - Similar to Homepage */
-            <div className="flex-1 flex flex-col items-center justify-center px-4 max-h-full overflow-auto">
-              <div className="text-center mb-8">
-                <div className="flex items-center justify-center mb-6">
-                  <Sparkles className="w-8 h-8 text-blue-accent mr-3" />
-                  <h1 className="text-4xl font-bold text-black font-serif">
-                    Daily Fun <span className="text-red-accent">AI</span>
-                  </h1>
-                </div>
-                <p className="text-xl text-gray-700 max-w-2xl mx-auto font-serif">
-                  {language === 'de' 
-                    ? 'Ihr intelligenter Assistent für Artikel, Quellen und Einblicke'
-                    : 'Your intelligent assistant for articles, sources and insights'
-                  }
-                </p>
+      <div className="pt-32 pb-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          {/* Elegant AI Logo */}
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center mb-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2EEAE0] to-[#1A1A1A] flex items-center justify-center mr-4">
+                <Bot className="w-5 h-5 text-white" />
               </div>
-              
-              {/* Quick Action Buttons */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 max-w-3xl w-full">
-                <button 
-                  onClick={() => setInputValue(
-                    language === 'de' 
-                      ? "Liste alle Artikel auf"
-                      : "List all articles"
-                  )}
-                  className="p-6 bg-white hover:bg-gray-50 rounded-lg text-left transition-colors border border-gray-200 shadow-sm hover:shadow-md"
-                >
-                  <div className="font-bold mb-2 text-black font-serif">
-                    {language === 'de' ? 'Alle Artikel anzeigen' : 'Show all articles'}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {language === 'de' ? 'Sehen Sie alle verfügbaren Artikel' : 'View all available articles'}
-                  </div>
-                </button>
-                
-                <button 
-                  onClick={() => {
-                    const randomTitle = getRandomArticleTitle();
-                    setInputValue(
-                      language === 'de' 
-                        ? `Gib mir die Quellen für ${randomTitle}`
-                        : `Give me the sources for ${randomTitle}`
-                    );
-                  }}
-                  className="p-6 bg-white hover:bg-gray-50 rounded-lg text-left transition-colors border border-gray-200 shadow-sm hover:shadow-md"
-                >
-                  <div className="font-bold mb-2 text-black font-serif">
-                    {language === 'de' ? 'Artikel-Quellen' : 'Article sources'}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {language === 'de' ? 'Quellen für einen zufälligen Artikel' : 'Sources for a random article'}
-                  </div>
-                </button>
-                
-                <button 
-                  onClick={() => {
-                    const randomTitle = getRandomArticleTitle();
-                    setInputValue(
-                      language === 'de' 
-                        ? `Erzähl mir mehr über ${randomTitle}`
-                        : `Tell me more about ${randomTitle}`
-                    );
-                  }}
-                  className="p-6 bg-white hover:bg-gray-50 rounded-lg text-left transition-colors border border-gray-200 shadow-sm hover:shadow-md"
-                >
-                  <div className="font-bold mb-2 text-black font-serif">
-                    {language === 'de' ? 'Mehr Informationen' : 'More information'}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    {language === 'de' ? 'Details zu einem Artikel' : 'Details about an article'}
-                  </div>
-                </button>
-              </div>
+              <h1 className="text-3xl font-light text-[#1A1A1A] tracking-wide">
+                Daily Fun 
+                <span className="font-normal ml-2 text-[#2EEAE0]">AI</span>
+              </h1>
             </div>
-          ) : (
-            /* Chat Messages View */
-            <div className="flex-1 min-h-0">
-              <ScrollArea className="h-full px-4 md:px-8" ref={scrollAreaRef}>
-                <div className="max-w-4xl mx-auto py-8 space-y-6">
-                  {messages.slice(1).map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex gap-4 ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {!message.isUser && (
-                        <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                          <Sparkles className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                      
-                      <div
-                        className={`max-w-[80%] p-4 rounded-2xl whitespace-pre-wrap leading-relaxed ${
-                          message.isUser
-                            ? 'bg-red-accent text-white'
-                            : 'bg-gray-50 text-black border border-gray-200'
-                        }`}
-                      >
-                        {message.text}
-                      </div>
-                      
-                      {message.isUser && (
-                        <div className="w-8 h-8 bg-red-accent rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                          <User className="w-4 h-4 text-white" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                  
-                  {isTyping && (
-                    <div className="flex gap-4 justify-start">
-                      <div className="w-8 h-8 bg-blue-accent rounded-full flex items-center justify-center mt-1">
-                        <Sparkles className="w-4 h-4 text-white" />
-                      </div>
-                      <div className="bg-gray-50 text-black p-4 rounded-2xl border border-gray-200">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </div>
-          )}
-        </div>
+            <div className="w-16 h-px bg-gradient-to-r from-transparent via-[#2EEAE0] to-transparent mx-auto"></div>
+          </div>
 
-        {/* Input Area - Fixed at bottom */}
-        <div className="px-4 md:px-8 pb-6 pt-4 bg-white border-t border-gray-200">
-          <div className="max-w-4xl mx-auto">
-            {/* Search Mode Selector */}
-            <div className="mb-3">
-              <Select value={searchMode} onValueChange={(value: 'local' | 'internet') => setSearchMode(value)}>
-                <SelectTrigger className="w-64 bg-white border-gray-200 text-black">
-                  <div className="flex items-center gap-2">
-                    {searchMode === 'local' ? (
-                      <>
-                        <Home className="w-4 h-4 text-blue-accent" />
-                        <span className="text-sm font-medium">
-                          {language === 'de' ? 'Daily Fun (Lokal)' : 'Daily Fun (Local)'}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <Globe className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium">
-                          {language === 'de' ? 'Daily Fun (Internet-Suche)' : 'Daily Fun (Internet Search)'}
-                        </span>
-                      </>
-                    )}
+          {/* Chat Container */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {/* Chat Header */}
+            <div className="px-6 py-4 bg-white border-b border-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-8 h-8 rounded-full bg-[#2EEAE0]/10 flex items-center justify-center mr-3">
+                    <Bot className="w-4 h-4 text-[#2EEAE0]" />
                   </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="local" className="cursor-pointer">
-                    <div className="flex items-center gap-2 py-1">
-                      <Home className="w-4 h-4 text-blue-accent" />
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {language === 'de' ? 'Daily Fun (Lokal)' : 'Daily Fun (Local)'}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {language === 'de' ? 'Interne Wissensbasis' : 'Internal knowledge base'}
-                        </span>
-                      </div>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="internet" className="cursor-pointer">
-                    <div className="flex items-center gap-2 py-1">
-                      <Globe className="w-4 h-4 text-green-600" />
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {language === 'de' ? 'Daily Fun (Internet-Suche)' : 'Daily Fun (Internet Search)'}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {language === 'de' ? 'Google-Suche in neuem Tab' : 'Google search in new tab'}
-                        </span>
-                      </div>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                  <div>
+                    <h3 className="font-medium text-[#1A1A1A]">Daily Fun AI</h3>
+                    <p className="text-xs text-gray-500">
+                      {language === 'de' ? 'Ihr intelligenter Assistent' : 'Your intelligent assistant'}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Search Mode Toggle */}
+                <div className="flex bg-gray-50 rounded-lg p-1">
+                  <Button
+                    variant={searchMode === 'local' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSearchMode('local')}
+                    className="text-xs px-3 py-1 h-7"
+                  >
+                    {language === 'de' ? 'Lokal' : 'Local'}
+                  </Button>
+                  <Button
+                    variant={searchMode === 'internet' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setSearchMode('internet')}
+                    className="text-xs px-3 py-1 h-7"
+                  >
+                    {language === 'de' ? 'Internet' : 'Internet'}
+                  </Button>
+                </div>
+              </div>
             </div>
             
-            <div className="relative">
-              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            {/* Messages Area */}
+            <ScrollArea className="h-[500px] px-6 py-4" ref={scrollAreaRef}>
+              <div className="space-y-6">
+                {messages.map((message) => (
+                  <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] ${message.isUser ? 'order-2' : ''}`}>
+                      <div className={`flex items-start gap-3 ${message.isUser ? 'flex-row-reverse' : ''}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          message.isUser ? 'bg-[#1A1A1A]' : 'bg-[#2EEAE0]/10'
+                        }`}>
+                          {message.isUser ? (
+                            <User className="w-4 h-4 text-white" />
+                          ) : (
+                            <Bot className="w-4 h-4 text-[#2EEAE0]" />
+                          )}
+                        </div>
+                        <div className={`rounded-2xl px-4 py-3 max-w-full ${
+                          message.isUser 
+                            ? 'bg-[#1A1A1A] text-white' 
+                            : 'bg-gray-50 text-[#1A1A1A]'
+                        }`}>
+                          <div className="whitespace-pre-wrap break-words text-sm leading-relaxed">{message.text}</div>
+                          <div className={`text-xs mt-2 ${
+                            message.isUser ? 'text-gray-300' : 'text-gray-400'
+                          }`}>
+                            {message.timestamp.toLocaleTimeString()}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#2EEAE0]/10 flex items-center justify-center">
+                        <Bot className="w-4 h-4 text-[#2EEAE0]" />
+                      </div>
+                      <div className="bg-gray-50 rounded-2xl px-4 py-3">
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-[#2EEAE0] rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-[#2EEAE0] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-[#2EEAE0] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+            
+            {/* Input Area */}
+            <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-50">
+              <form onSubmit={e => { e.preventDefault(); sendMessage(); }} className="flex gap-3">
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder={
-                    searchMode === 'local' 
-                      ? (language === 'de' ? "Daily Fun AI fragen" : "Ask Daily Fun AI")
-                      : (language === 'de' ? "Suchbegriffe für Google eingeben" : "Enter search terms for Google")
-                  }
-                  className="flex-1 border-0 bg-transparent text-black placeholder-gray-500 focus:ring-0 focus:outline-none text-base"
+                  placeholder={language === 'de' ? 'Stellen Sie eine Frage...' : 'Ask a question...'}
+                  className="flex-1 border-gray-200 focus:border-[#2EEAE0] focus:ring-[#2EEAE0]/20 rounded-xl bg-white"
                   disabled={isTyping}
                 />
-                <Button
-                  onClick={sendMessage}
+                <Button 
+                  type="submit" 
                   disabled={!inputValue.trim() || isTyping}
-                  className="bg-red-accent hover:bg-red-accent/90 text-white rounded-xl p-2.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  size="icon"
+                  className="bg-[#2EEAE0] hover:bg-[#2EEAE0]/90 text-black rounded-xl px-6"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
-              </div>
-            </div>
-            
-            <div className="text-center mt-3">
-              <p className="text-xs text-gray-500">
-                {language === 'de' 
-                  ? 'Daily Fun AI kann Fehler machen, auch bei Informationen über Personen, solltest du die Antworten überprüfen.'
-                  : 'Daily Fun AI can make mistakes, including about people, so you should verify responses.'
-                }
-              </p>
+              </form>
             </div>
           </div>
         </div>
