@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Home, Globe, Search, X } from 'lucide-react';
+import { Send, Home, Globe, Search, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -88,19 +88,26 @@ const AI = () => {
   const [showArticleSearch, setShowArticleSearch] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [articleContext, setArticleContext] = useState<string | null>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Check for article parameter in URL
+  // Check for article parameter in URL and initialize article context
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const articleParam = urlParams.get('article');
     
     if (articleParam && articleParam.length <= 500 && !/[<>"'&]/.test(articleParam)) {
       const decodedArticle = decodeURIComponent(articleParam).trim();
+      setArticleContext(decodedArticle);
+      
+      // Set contextual placeholder and auto-set local mode
       const aiQuestion = language === 'de' 
         ? `Erzähl mir mehr über ${decodedArticle}`
         : `Tell me more about ${decodedArticle}`;
       setInputValue(aiQuestion);
+      setSearchMode('local');
       
       // Clear the URL parameter
       const newUrl = window.location.pathname;
@@ -108,18 +115,51 @@ const AI = () => {
     }
   }, [language]);
 
-  // Initialize welcome message based on language
+  // Touch swipe detection for back navigation
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchEnd - touchStart;
+    const isRightSwipe = distance > minSwipeDistance;
+    if (isRightSwipe) {
+      window.history.back();
+    }
+  };
+
+  // Initialize welcome message based on language and context
   useEffect(() => {
-    const welcomeMessage = {
-      id: '1',
-      text: language === 'de' 
-        ? 'Hallo! Ich bin Daily Fun AI. Ich kann Ihnen bei Kontaktinformationen, Team-Details, Firmen-Informationen und Artikeln helfen. Fragen Sie mich zum Beispiel: "Wer ist Stefan Kunc?" oder "Wie kann ich euch kontaktieren?"'
-        : 'Hello! I\'m Daily Fun AI. I can help you with contact information, team details, company information and articles. Try asking me: "Who is Stefan Kunc?" or "How can I contact you?"',
-      isUser: false,
-      timestamp: new Date()
-    };
-    setMessages([welcomeMessage]);
-  }, [language]);
+    if (articleContext) {
+      const contextMessage = {
+        id: '1',
+        text: language === 'de' 
+          ? `👋 Hallo! Ich sehe, Sie kommen von einem Artikel. Ich bin im Kontext-Modus und kann spezielle Fragen zu "${articleContext}" beantworten. Fragen Sie mich alles über diesen Artikel!`
+          : `👋 Hello! I see you came from an article. I'm in context mode and can answer specific questions about "${articleContext}". Ask me anything about this article!`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages([contextMessage]);
+    } else {
+      const welcomeMessage = {
+        id: '1',
+        text: language === 'de' 
+          ? 'Hallo! Ich bin Daily Fun AI. Ich kann Ihnen bei Kontaktinformationen, Team-Details, Firmen-Informationen und Artikeln helfen. Fragen Sie mich zum Beispiel: "Wer ist Stefan Kunc?" oder "Wie kann ich euch kontaktieren?"'
+          : 'Hello! I\'m Daily Fun AI. I can help you with contact information, team details, company information and articles. Try asking me: "Who is Stefan Kunc?" or "How can I contact you?"',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+    }
+  }, [language, articleContext]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -233,6 +273,34 @@ const AI = () => {
     
     if (isTranslationRequest && lastAIResponse) {
       return translateResponse(lastAIResponse, detectedLanguage);
+    }
+
+    // Context-based AI responses when coming from an article
+    if (articleContext && (
+      input.includes('erzähl mir mehr über') || 
+      input.includes('tell me more about') || 
+      input.includes(articleContext.toLowerCase())
+    )) {
+      // Find the specific article being discussed
+      const contextArticle = articles.find(article => {
+        const titleDe = t(`article.${article.id}.title`);
+        const titleEn = article.title;
+        return titleDe.toLowerCase().includes(articleContext.toLowerCase()) ||
+               titleEn.toLowerCase().includes(articleContext.toLowerCase()) ||
+               articleContext.toLowerCase().includes(titleDe.toLowerCase()) ||
+               articleContext.toLowerCase().includes(titleEn.toLowerCase());
+      });
+
+      if (contextArticle) {
+        const title = language === 'de' ? t(`article.${contextArticle.id}.title`) : contextArticle.title;
+        const excerpt = language === 'de' ? t(`article.${contextArticle.id}.excerpt`) : contextArticle.excerpt;
+        
+        if (language === 'de') {
+          return `📰 **${title}**\n\n${excerpt}\n\n📊 **Artikel-Details:**\n• Autor: ${contextArticle.author}\n• Kategorie: ${contextArticle.category}\n• Veröffentlicht: ${new Date(contextArticle.publishedAt).toLocaleDateString('de-DE')}\n• Aufrufe: ${contextArticle.views.toLocaleString()}\n\n💡 **Fragen Sie mich gerne:**\n• "Wer ist der Autor?"\n• "Mehr Details zur Kategorie"\n• "Ähnliche Artikel"\n• "Quellen zu diesem Artikel"`;
+        } else {
+          return `📰 **${title}**\n\n${excerpt}\n\n📊 **Article Details:**\n• Author: ${contextArticle.author}\n• Category: ${contextArticle.category}\n• Published: ${new Date(contextArticle.publishedAt).toLocaleDateString('en-US')}\n• Views: ${contextArticle.views.toLocaleString()}\n\n💡 **Feel free to ask:**\n• "Who is the author?"\n• "More about this category"\n• "Similar articles"\n• "Sources for this article"`;
+        }
+      }
     }
     
     // Check for contact information requests
@@ -519,8 +587,26 @@ const AI = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div 
+      className="min-h-screen bg-white text-black"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       <Header />
+      
+      {/* Back Button - Visible on PC, Touch swipe on mobile */}
+      <div className="fixed top-20 left-4 z-20">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.history.back()}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-white/80 backdrop-blur-sm shadow-lg rounded-lg border border-gray-200"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm hidden sm:inline">{language === 'de' ? 'Zurück' : 'Back'}</span>
+        </Button>
+      </div>
       
       {/* Hero Section - Modern ChatGPT-like Design */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
