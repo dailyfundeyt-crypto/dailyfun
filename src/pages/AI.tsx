@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Home, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -511,17 +511,17 @@ const AI = () => {
     >
       <Header />
       
-      {/* Hero Section - Like on the image */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Hero Section - Modern ChatGPT-like Design */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Daily Fun AI Logo */}
-        <div className="text-center mb-8 pt-20">
-          <div className="flex items-center justify-center mb-4">
-            <div className="text-blue-600 text-3xl mr-3">✨</div>
-            <h1 className="text-4xl md:text-5xl font-bold text-black font-serif">
-              Daily Fun <span className="text-red-accent">AI</span>
+        <div className="text-center mb-12 pt-8">
+          <div className="flex items-center justify-center mb-6">
+            <div className="text-4xl mr-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">✨</div>
+            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent font-serif">
+              Daily Fun <span className="bg-gradient-to-r from-red-accent to-blue-accent bg-clip-text text-transparent">AI</span>
             </h1>
           </div>
-          <p className="text-lg text-gray-600 font-serif">
+          <p className="text-xl text-gray-600 font-serif max-w-2xl mx-auto">
             {language === 'de' 
               ? 'Ihr intelligenter Assistent für Artikel, Quellen und Einblicke'
               : 'Your intelligent assistant for articles, sources and insights'
@@ -529,42 +529,63 @@ const AI = () => {
           </p>
         </div>
 
-        {/* Chat Interface */}
+        {/* Chat Interface - Modern Design */}
         <div className="max-w-4xl mx-auto">
-          {/* Messages Container */}
+          {/* Messages Container - Modern ChatGPT-like */}
           <div 
-            className="h-[500px] overflow-y-auto mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200"
+            className="h-[600px] overflow-y-auto mb-6 bg-gradient-to-b from-gray-50 to-white rounded-2xl border border-gray-200 shadow-lg"
             ref={scrollAreaRef}
           >
-            <div className="space-y-4">
+            <div className="p-6 space-y-6">
               {messages.length === 0 && (
-                <div className="text-center text-gray-500 py-8">
-                  <p>{language === 'de' ? 'Stellen Sie eine Frage über Daily Fun oder unsere Artikel!' : 'Ask a question about Daily Fun or our articles!'}</p>
+                <div className="text-center text-gray-500 py-16">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
+                    <div className="text-2xl">🤖</div>
+                  </div>
+                  <p className="text-lg font-medium">{language === 'de' ? 'Wie kann ich Ihnen heute helfen?' : 'How can I help you today?'}</p>
+                  <p className="text-sm text-gray-400 mt-2">{language === 'de' ? 'Stellen Sie eine Frage über Daily Fun oder unsere Artikel!' : 'Ask a question about Daily Fun or our articles!'}</p>
                 </div>
               )}
               
               {messages.map((message) => (
-                <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[70%] p-3 rounded-2xl ${
-                    message.isUser 
-                      ? 'bg-[#2EEAE0] text-black ml-auto' 
-                      : 'bg-white text-black shadow-sm border border-gray-200'
-                  }`}>
-                    <div className="whitespace-pre-wrap text-sm">{message.text}</div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {message.timestamp.toLocaleTimeString()}
+                <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+                  <div className={`flex items-start gap-3 max-w-[85%] ${message.isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                    {/* Avatar */}
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      message.isUser 
+                        ? 'bg-gradient-to-r from-[#2EEAE0] to-cyan-400 text-white' 
+                        : 'bg-gradient-to-r from-gray-700 to-gray-900 text-white'
+                    }`}>
+                      {message.isUser ? '👤' : '🤖'}
+                    </div>
+                    
+                    {/* Message Bubble */}
+                    <div className={`relative px-4 py-3 rounded-2xl ${
+                      message.isUser 
+                        ? 'bg-gradient-to-r from-[#2EEAE0] to-cyan-400 text-white shadow-lg' 
+                        : 'bg-white text-gray-800 shadow-md border border-gray-100'
+                    }`}>
+                      <div className="whitespace-pre-wrap text-sm leading-relaxed">{message.text}</div>
+                      <div className={`text-xs mt-2 ${message.isUser ? 'text-cyan-100' : 'text-gray-500'}`}>
+                        {message.timestamp.toLocaleTimeString()}
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
               
               {isTyping && (
-                <div className="flex justify-start">
-                  <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-200">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="flex justify-start animate-fade-in">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-r from-gray-700 to-gray-900 text-white flex items-center justify-center text-sm">
+                      🤖
+                    </div>
+                    <div className="bg-white px-4 py-3 rounded-2xl shadow-md border border-gray-100">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -572,40 +593,55 @@ const AI = () => {
             </div>
           </div>
 
-          {/* Mode Selector */}
-          <div className="mb-4">
+          {/* Mode Selector - Modern with Icons */}
+          <div className="mb-6">
             <Select value={searchMode} onValueChange={(value: 'local' | 'internet') => setSearchMode(value)}>
-              <SelectTrigger className="w-64 bg-white border border-gray-300 rounded-lg font-serif">
-                <SelectValue />
+              <SelectTrigger className="w-80 bg-white border-2 border-gray-200 rounded-xl font-serif shadow-sm hover:border-gray-300 transition-colors">
+                <div className="flex items-center gap-3">
+                  {searchMode === 'local' ? (
+                    <Home className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <Globe className="w-5 h-5 text-blue-600" />
+                  )}
+                  <SelectValue />
+                </div>
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="local">
-                  {language === 'de' ? 'Daily Fun (Lokal)' : 'Daily Fun (Local)'}
+              <SelectContent className="z-50 bg-white border-2 border-gray-200 rounded-xl shadow-lg">
+                <SelectItem value="local" className="hover:bg-green-50">
+                  <div className="flex items-center gap-3">
+                    <Home className="w-5 h-5 text-green-600" />
+                    <span>{language === 'de' ? 'Daily Fun (Lokal)' : 'Daily Fun (Local)'}</span>
+                  </div>
                 </SelectItem>
-                <SelectItem value="internet">
-                  {language === 'de' ? 'Allgemein' : 'General'}
+                <SelectItem value="internet" className="hover:bg-blue-50">
+                  <div className="flex items-center gap-3">
+                    <Globe className="w-5 h-5 text-blue-600" />
+                    <span>{language === 'de' ? 'Daily Fun (Internet Search)' : 'Daily Fun (Internet Search)'}</span>
+                  </div>
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* Input Field */}
+          {/* Input Field - Modern ChatGPT-like */}
           <div className="relative">
-            <Input
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={language === 'de' ? 'Daily Fun AI fragen' : 'Ask Daily Fun AI'}
-              className="w-full pr-16 py-4 text-lg border border-gray-300 rounded-lg bg-white font-serif"
-              disabled={isTyping}
-            />
-            <Button 
-              onClick={sendMessage}
-              disabled={!inputValue.trim() || isTyping}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-pink-500 hover:bg-[#2EEAE0] text-white rounded-lg p-2 transition-colors duration-300"
-            >
-              <Send className="w-5 h-5" />
-            </Button>
+            <div className="relative bg-white rounded-2xl border-2 border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder={language === 'de' ? 'Daily Fun AI fragen...' : 'Ask Daily Fun AI...'}
+                className="w-full pr-16 py-4 px-6 text-lg border-0 rounded-2xl bg-transparent font-serif focus:ring-0 focus:outline-none"
+                disabled={isTyping}
+              />
+              <Button 
+                onClick={sendMessage}
+                disabled={!inputValue.trim() || isTyping}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-[#2EEAE0] hover:to-cyan-400 text-white rounded-xl p-3 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </main>
