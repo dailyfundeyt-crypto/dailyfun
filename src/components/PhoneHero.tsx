@@ -13,37 +13,148 @@ const PhoneScreen = () => {
         <meshBasicMaterial color="#ffffff" />
       </mesh>
       
-      {/* Status bar */}
-      <mesh position={[0, 1.3, 0.001]}>
-        <planeGeometry args={[1.5, 0.15]} />
-        <meshBasicMaterial color="#f8f9fa" />
-      </mesh>
-      
-      {/* Header with Daily Fun */}
-      <mesh position={[0, 1.1, 0.001]}>
-        <planeGeometry args={[1.5, 0.3]} />
-        <meshBasicMaterial color="#E4002B" />
-      </mesh>
-      
-      {/* Article content area */}
-      <mesh position={[0, 0, 0.001]}>
-        <planeGeometry args={[1.4, 1.8]} />
-        <meshBasicMaterial color="#ffffff" />
-      </mesh>
-      
-      {/* Article image placeholder */}
-      <mesh position={[0, 0.4, 0.002]}>
-        <planeGeometry args={[1.2, 0.8]} />
-        <meshBasicMaterial color="#f1f3f4" />
-      </mesh>
-      
-      {/* Article text lines */}
-      {[-0.2, -0.4, -0.6, -0.8].map((y, index) => (
-        <mesh key={index} position={[0, y, 0.002]}>
-          <planeGeometry args={[1.1, 0.08]} />
-          <meshBasicMaterial color="#e9ecef" />
+      {/* Top section with "Make News Fun Again" */}
+      <group position={[0, 1.2, 0.001]}>
+        <Text
+          fontSize={0.08}
+          color="#000000"
+          anchorX="center"
+          anchorY="middle"
+          fontWeight="bold"
+        >
+          Make News Fun Again
+        </Text>
+        
+        {/* Decorative waves */}
+        <mesh position={[0, -0.15, 0.001]}>
+          <planeGeometry args={[1.2, 0.08]} />
+          <meshBasicMaterial>
+            <canvasTexture 
+              attach="map" 
+              image={(() => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 200;
+                canvas.height = 20;
+                const ctx = canvas.getContext('2d')!;
+                
+                // Create wave gradient
+                const gradient = ctx.createLinearGradient(0, 0, 200, 0);
+                gradient.addColorStop(0, '#E4002B');
+                gradient.addColorStop(0.5, '#007BFF');
+                gradient.addColorStop(1, '#E4002B');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 200, 20);
+                
+                return canvas;
+              })()} 
+            />
+          </meshBasicMaterial>
         </mesh>
-      ))}
+      </group>
+      
+      {/* Daily Fun Channel Section */}
+      <group position={[0, 0.5, 0.001]}>
+        {/* Profile circle */}
+        <mesh position={[-0.4, 0, 0.001]}>
+          <circleGeometry args={[0.12]} />
+          <meshBasicMaterial color="#E4002B" />
+        </mesh>
+        
+        {/* Channel name */}
+        <Text
+          fontSize={0.08}
+          color="#666666"
+          anchorX="left"
+          anchorY="middle"
+          position={[-0.2, 0.05, 0.001]}
+        >
+          Daily Fun EN
+        </Text>
+        
+        {/* Channel handle */}
+        <Text
+          fontSize={0.06}
+          color="#999999"
+          anchorX="left"
+          anchorY="middle"
+          position={[-0.2, -0.05, 0.001]}
+        >
+          @DailyFunEN
+        </Text>
+      </group>
+      
+      {/* Description text */}
+      <group position={[0, 0.1, 0.001]}>
+        <Text
+          fontSize={0.05}
+          color="#666666"
+          anchorX="center"
+          anchorY="middle"
+          maxWidth={1.2}
+          textAlign="center"
+          lineHeight={1.2}
+        >
+          Daily Fun delivers news like you've never{'\n'}
+          seen before! Your daily dose of trustworthy{'\n'}
+          entertainment and absurd insights.
+        </Text>
+      </group>
+      
+      {/* Subscribe button */}
+      <group position={[0, -0.3, 0.001]}>
+        <mesh>
+          <planeGeometry args={[0.8, 0.15]} />
+          <meshBasicMaterial color="#f0f0f0" />
+        </mesh>
+        <Text
+          fontSize={0.06}
+          color="#000000"
+          anchorX="center"
+          anchorY="middle"
+          position={[0, 0, 0.001]}
+          fontWeight="bold"
+        >
+          Abonnieren
+        </Text>
+      </group>
+      
+      {/* Bottom graphic section */}
+      <group position={[0, -0.8, 0.001]}>
+        {/* Abstract graphic placeholder */}
+        <mesh position={[0, 0.1, 0.001]}>
+          <planeGeometry args={[0.8, 0.4]} />
+          <meshBasicMaterial color="#2a2a2a" />
+        </mesh>
+        
+        {/* Purple elements */}
+        <mesh position={[-0.1, 0.1, 0.002]}>
+          <circleGeometry args={[0.03]} />
+          <meshBasicMaterial color="#8B5CF6" />
+        </mesh>
+        
+        <mesh position={[0.15, 0.05, 0.002]}>
+          <circleGeometry args={[0.02]} />
+          <meshBasicMaterial color="#A855F7" />
+        </mesh>
+        
+        {/* Blue accent */}
+        <mesh position={[0.2, -0.05, 0.002]}>
+          <planeGeometry args={[0.15, 0.08]} />
+          <meshBasicMaterial color="#007BFF" />
+        </mesh>
+        
+        {/* Bottom text */}
+        <Text
+          fontSize={0.04}
+          color="#999999"
+          anchorX="center"
+          anchorY="middle"
+          position={[0, -0.25, 0.001]}
+        >
+          Auf diesem Kanal gibt es keine Inhalte
+        </Text>
+      </group>
     </group>
   );
 };
