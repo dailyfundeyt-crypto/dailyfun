@@ -27,6 +27,9 @@ const Article = () => {
   const { t, language } = useLanguage();
 
   useEffect(() => {
+    // Scroll to top when article loads
+    window.scrollTo(0, 0);
+    
     if (article) {
       // Increment view count when article page loads (still track internally)
       incrementViews(article.id);
