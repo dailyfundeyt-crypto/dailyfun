@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Home, Globe } from 'lucide-react';
+import { Send, Home, Globe, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/articles';
 import Header from '@/components/Header';
+import { Link } from 'react-router-dom';
 
 interface Message {
   id: string;
@@ -84,8 +85,9 @@ const AI = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [searchMode, setSearchMode] = useState<'local' | 'internet'>('local');
   const [lastAIResponse, setLastAIResponse] = useState<string>('');
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [showArticleSearch, setShowArticleSearch] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Check for article parameter in URL
@@ -481,34 +483,43 @@ const AI = () => {
     }
   };
 
-  // Touch swipe detection for back navigation
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchEnd - touchStart;
-    const isRightSwipe = distance > minSwipeDistance;
-    if (isRightSwipe) {
-      window.history.back();
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
+  }, [messages]);
+
+  // Article search functionality
+  const searchArticles = (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setShowArticleSearch(false);
+      return;
+    }
+
+    const filtered = articles.filter(article => {
+      const title = language === 'de' ? t(`article.${article.id}.title`) : article.title;
+      const excerpt = language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt;
+      const lowerQuery = query.toLowerCase();
+      
+      return title.toLowerCase().includes(lowerQuery) ||
+             excerpt.toLowerCase().includes(lowerQuery) ||
+             article.category.toLowerCase().includes(lowerQuery);
+    });
+
+    setSearchResults(filtered);
+    setShowArticleSearch(filtered.length > 0);
+  };
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    setSearchQuery(value);
+    searchArticles(value);
   };
 
   return (
-    <div 
-      className="min-h-screen bg-white text-black"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
+    <div className="min-h-screen bg-white text-black">
       <Header />
       
       {/* Hero Section - Modern ChatGPT-like Design */}
@@ -597,14 +608,7 @@ const AI = () => {
           <div className="mb-6">
             <Select value={searchMode} onValueChange={(value: 'local' | 'internet') => setSearchMode(value)}>
               <SelectTrigger className="w-80 bg-white border-2 border-gray-200 rounded-xl font-serif shadow-sm hover:border-gray-300 transition-colors">
-                <div className="flex items-center gap-3">
-                  {searchMode === 'local' ? (
-                    <Home className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <Globe className="w-5 h-5 text-blue-600" />
-                  )}
-                  <SelectValue />
-                </div>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent className="z-50 bg-white border-2 border-gray-200 rounded-xl shadow-lg">
                 <SelectItem value="local" className="hover:bg-green-50">
@@ -623,14 +627,100 @@ const AI = () => {
             </Select>
           </div>
 
+          {/* Article Search Results - Dynamic Previews */}
+          {showArticleSearch && (
+            <div className="mb-6 bg-white rounded-2xl border-2 border-gray-200 shadow-lg p-4 max-h-80 overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Search className="w-5 h-5 text-gray-500" />
+                  <h3 className="text-lg font-semibold text-gray-800">
+                    {language === 'de' ? 'Gefundene Artikel' : 'Found Articles'}
+                  </h3>
+                  <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-sm font-medium">
+                    {searchResults.length}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowArticleSearch(false);
+                    setSearchResults([]);
+                    setSearchQuery('');
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {searchResults.map((article) => {
+                  const title = language === 'de' ? t(`article.${article.id}.title`) : article.title;
+                  const excerpt = language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt;
+                  
+                  return (
+                    <Link
+                      key={article.id}
+                      to={`/article/${article.id}`}
+                      className="block p-3 rounded-xl hover:bg-gray-50 transition-all duration-200 hover:shadow-md border border-gray-100"
+                      onClick={() => {
+                        setShowArticleSearch(false);
+                        setSearchResults([]);
+                        setSearchQuery('');
+                        setInputValue('');
+                      }}
+                    >
+                      <div className="flex items-start gap-4">
+                        {/* Article Image Preview */}
+                        <div className="flex-shrink-0">
+                          <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden">
+                            <img
+                              src={article.imageUrl.startsWith('/') 
+                                ? article.imageUrl 
+                                : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=150&q=80`
+                              }
+                              alt={title}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = `https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=150&q=80`;
+                              }}
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Article Content */}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-2">
+                            {title}
+                          </h4>
+                          <p className="text-xs text-gray-600 line-clamp-2 mb-2">
+                            {excerpt}
+                          </p>
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <span className="bg-gray-100 px-2 py-1 rounded-full">
+                              {article.category}
+                            </span>
+                            <span>{new Date(article.publishedAt).toLocaleDateString('de-DE')}</span>
+                            <span>{article.views.toLocaleString()} Aufrufe</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Input Field - Modern ChatGPT-like */}
           <div className="relative">
             <div className="relative bg-white rounded-2xl border-2 border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <Input
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={handleSearchInputChange}
                 onKeyPress={handleKeyPress}
-                placeholder={language === 'de' ? 'Daily Fun AI fragen...' : 'Ask Daily Fun AI...'}
+                placeholder={language === 'de' ? 'Daily Fun AI fragen oder Artikel suchen...' : 'Ask Daily Fun AI or search articles...'}
                 className="w-full pr-16 py-4 px-6 text-lg border-0 rounded-2xl bg-transparent font-serif focus:ring-0 focus:outline-none"
                 disabled={isTyping}
               />
