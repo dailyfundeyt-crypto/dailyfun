@@ -511,19 +511,6 @@ const AI = () => {
     >
       <Header />
       
-      {/* Back Button */}
-      <div className="fixed top-20 left-4 z-10">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.history.back()}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-white/80 backdrop-blur-sm"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm">{language === 'de' ? 'Zurück' : 'Back'}</span>
-        </Button>
-      </div>
-      
       {/* Hero Section - Like on the image */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Daily Fun AI Logo */}
