@@ -2,6 +2,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, RoundedBox, Text } from '@react-three/drei';
 import { useRef } from 'react';
 import * as THREE from 'three';
+import AnimatedParagraphPink from './AnimatedParagraphPink';
 
 // Phone Screen Content Component
 const PhoneScreen = () => {
@@ -216,13 +217,29 @@ const PhoneHero = () => {
           </div>
         </div>
         
-        {/* Phone Image */}
-        <div className="w-full h-96 md:h-[500px] flex items-center justify-center">
-          <img 
-            src="/lovable-uploads/9337a300-032d-4b3f-a84b-f6e9dca5af00.png"
-            alt="Daily Fun Smartphone"
-            className="max-h-full w-auto animate-fade-in hover-scale"
-          />
+        {/* Phone and Text Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          {/* Phone Image */}
+          <div className="flex items-center justify-center lg:justify-end">
+            <img 
+              src="/lovable-uploads/9337a300-032d-4b3f-a84b-f6e9dca5af00.png"
+              alt="Daily Fun Smartphone"
+              className="max-h-96 md:max-h-[500px] w-auto animate-fade-in hover-scale"
+            />
+          </div>
+          
+          {/* Text Content */}
+          <div className="flex flex-col items-start lg:items-start space-y-8 lg:pl-8">
+            {/* Main Tagline */}
+            <AnimatedParagraphPink className="text-2xl md:text-4xl font-medium" delay={0}>
+              Ihre tägliche Dosis vertrauenswürdiger Unterhaltung.
+            </AnimatedParagraphPink>
+            
+            {/* Signature */}
+            <div className="text-3xl md:text-5xl font-signature" style={{ color: '#FF1493' }}>
+              Stefan Kunc
+            </div>
+          </div>
         </div>
       </div>
     </section>
