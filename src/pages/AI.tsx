@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, ArrowLeft } from 'lucide-react';
+import { Send, Bot, User, ArrowLeft, ThumbsUp, ThumbsDown, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/articles';
 import Header from '@/components/Header';
@@ -12,6 +13,7 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  feedback?: 'positive' | 'negative' | null;
 }
 
 // Create enhanced article database with sources and detailed info
