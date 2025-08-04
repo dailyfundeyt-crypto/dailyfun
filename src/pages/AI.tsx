@@ -118,6 +118,7 @@ const AI = () => {
   const [showArticleSearch, setShowArticleSearch] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [articleSearchInput, setArticleSearchInput] = useState('');
   const [articleContext, setArticleContext] = useState<string | null>(null);
   const [qrMode, setQrMode] = useState(false);
   const [visibleCopyButtons, setVisibleCopyButtons] = useState<string[]>([]);
@@ -368,16 +369,24 @@ const AI = () => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, newMessage]);
-    } else {
-      const prompt = language === 'de' ? card.promptDe : card.promptEn;
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: prompt,
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, newMessage]);
+    } else if (card.id === 'article-search') {
+      setShowArticleSearch(true);
     }
+  };
+
+  const handleArticleSearchInput = (query: string) => {
+    setArticleSearchInput(query);
+    if (query.trim()) {
+      const results = searchArticles(query);
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleArticleClick = (article: any) => {
+    // Navigate to article page
+    window.location.href = `/article/${article.id}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -503,6 +512,110 @@ const AI = () => {
           </div>
         </div>
       </div>
+
+      {/* Article Search Overlay */}
+      {showArticleSearch && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-800">
+                  {language === 'de' ? 'Artikel Suchen' : 'Search Articles'}
+                </h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowArticleSearch(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+              <div className="relative">
+                <Input
+                  type="text"
+                  value={articleSearchInput}
+                  onChange={(e) => handleArticleSearchInput(e.target.value)}
+                  placeholder={language === 'de' ? 'Stichwort oder Kategorie eingeben...' : 'Enter keyword or category...'}
+                  className="pl-10"
+                  autoFocus
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-96">
+              {searchResults.length > 0 ? (
+                <div className="space-y-4">
+                  {searchResults.map((article) => {
+                    const title = language === 'de' ? t(`article.${article.id}.title`) : article.title;
+                    const excerpt = language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt;
+                    const imageUrl = article.imageUrl?.startsWith('/') 
+                      ? article.imageUrl 
+                      : `https://images.unsplash.com/${article.imageUrl}?w=300&h=200&fit=crop`;
+                    
+                    return (
+                      <div
+                        key={article.id}
+                        onClick={() => handleArticleClick(article)}
+                        className="flex gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors"
+                      >
+                        <img
+                          src={imageUrl}
+                          alt={title}
+                          className="w-24 h-16 object-cover rounded-lg flex-shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder.svg';
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-800 text-sm line-clamp-2 mb-1">
+                            {title}
+                          </h3>
+                          <p className="text-gray-600 text-xs line-clamp-2 mb-2">
+                            {excerpt}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
+                            <span>{article.author}</span>
+                            <span>•</span>
+                            <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
+                            <span>•</span>
+                            <span>{article.category}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : articleSearchInput.trim() ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Search className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium mb-2">
+                    {language === 'de' ? 'Keine Artikel gefunden' : 'No articles found'}
+                  </p>
+                  <p className="text-sm">
+                    {language === 'de' 
+                      ? 'Versuchen Sie andere Suchbegriffe' 
+                      : 'Try different search terms'}
+                  </p>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p className="text-lg font-medium mb-2">
+                    {language === 'de' ? 'Artikel durchsuchen' : 'Search Articles'}
+                  </p>
+                  <p className="text-sm">
+                    {language === 'de' 
+                      ? 'Geben Sie ein Stichwort oder eine Kategorie ein' 
+                      : 'Enter a keyword or category to search'}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating bottom container with action cards, mode switcher and input */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50">
