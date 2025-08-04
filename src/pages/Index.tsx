@@ -85,30 +85,30 @@ const Index = () => {
         </section>
 
         {/* Latest Product Section */}
-        <section className="bg-gradient-to-r from-red-accent/10 to-blue-accent/10 rounded-lg shadow-sm border border-gray-200 p-8 mb-12">
+        <section className="bg-gradient-to-r from-[#5E40E3] to-[#FFFFFF] rounded-lg shadow-sm border border-gray-200 p-8 mb-12">
           <div className="flex flex-col md:flex-row items-center gap-8">
             {/* Product Image */}
             <div className="flex-shrink-0">
-              <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-lg overflow-hidden shadow-md">
+              <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-lg overflow-hidden shadow-md border border-gray-100">
                 <img
                   src="/lovable-uploads/d60c8951-db95-4a1b-bd2e-35466f8bb081.png"
                   alt="Our latest product"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain p-2"
                 />
               </div>
             </div>
 
             {/* Content */}
             <div className="flex-1 text-center md:text-left">
-              <h3 className="text-2xl md:text-3xl font-bold text-black mb-4 font-serif">
+              <h3 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-4 font-sans">
                 {t('home.product.title')}
               </h3>
-              <p className="text-gray-700 text-lg mb-6 font-serif">
+              <p className="text-[#1A1A1A] text-lg mb-6 font-sans">
                 {t('home.product.description')}
               </p>
               <Link
                 to="/products"
-                className="inline-flex items-center bg-red-accent text-white px-6 py-3 rounded-md font-medium hover:bg-blue-accent transition-colors duration-300"
+                className="inline-flex items-center bg-[#5E40E3] text-[#FFFFFF] px-6 py-3 rounded-md font-medium hover:shadow-[0_0_15px_rgba(46,234,224,0.5)] transition-all duration-300"
               >
                 {t('home.product.button')}
               </Link>
