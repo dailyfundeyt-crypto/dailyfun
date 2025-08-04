@@ -26,7 +26,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className="bg-white shadow-sm border-b border-gray-200 relative z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left side - Daily Fun logo */}
@@ -89,7 +89,7 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden">
+          <div className="md:hidden absolute top-full left-0 right-0 z-40 shadow-lg">
             <div className="px-2 pt-2 pb-3 space-y-3 sm:px-3 bg-white border-t border-gray-200">
               <div className="grid grid-cols-4 gap-4">
                 {navigation.map((item) => {
