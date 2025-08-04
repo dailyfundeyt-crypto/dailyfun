@@ -122,7 +122,7 @@ const Search = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Employee Profiles Section */}
         <div className="mb-8 lg:mb-12">
-          <div className="flex justify-center items-center space-x-4 sm:space-x-6 lg:space-x-8 mb-6 lg:mb-8 overflow-x-auto pb-2">
+          <div className="flex items-center space-x-4 sm:space-x-6 lg:space-x-8 mb-6 lg:mb-8 overflow-x-auto pb-2 px-4 sm:px-6 lg:justify-center" style={{scrollSnapType: 'x mandatory'}}>
             {/* All Articles Profile */}
             <div 
               className="flex flex-col items-center cursor-pointer group flex-shrink-0"
