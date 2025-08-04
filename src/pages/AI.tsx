@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download } from 'lucide-react';
+import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/articles';
 import Header from '@/components/Header';
@@ -121,6 +121,7 @@ const AI = () => {
   const [articleContext, setArticleContext] = useState<string | null>(null);
   const [qrMode, setQrMode] = useState(false);
   const [visibleCopyButtons, setVisibleCopyButtons] = useState<string[]>([]);
+  const [showModeDropdown, setShowModeDropdown] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Check for article parameter in URL and initialize article context
