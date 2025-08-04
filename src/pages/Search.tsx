@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
+import ProfileShareMenu from '../components/ProfileShareMenu';
 import { articles } from '../data/articles';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -166,22 +167,30 @@ const Search = () => {
         {/* Profile Info Section */}
         {showProfileInfo && currentEmployeeInfo && (
           <div className="mb-8 bg-gradient-to-r from-red-accent/5 to-blue-accent/5 rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center space-x-4 mb-4">
-              <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-red-accent/20">
-                <img 
-                  src={currentEmployeeInfo.image} 
-                  alt={currentEmployeeInfo.name}
-                  className="w-full h-full object-cover"
-                />
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-red-accent/20">
+                  <img 
+                    src={currentEmployeeInfo.image} 
+                    alt={currentEmployeeInfo.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-black font-serif">
+                    {currentEmployeeInfo.name}
+                  </h3>
+                  <p className="text-red-accent font-semibold text-sm">
+                    {currentEmployeeInfo.role}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-black font-serif">
-                  {currentEmployeeInfo.name}
-                </h3>
-                <p className="text-red-accent font-semibold text-sm">
-                  {currentEmployeeInfo.role}
-                </p>
-              </div>
+              
+              {/* Share Menu */}
+              <ProfileShareMenu 
+                profileName={currentEmployeeInfo.name}
+                profileId={currentEmployeeInfo.id}
+              />
             </div>
             <p className="text-gray-700 text-sm leading-relaxed">
               {currentEmployeeInfo.description}
