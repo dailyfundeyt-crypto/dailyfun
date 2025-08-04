@@ -9,7 +9,7 @@ const Products = () => {
   const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#1A1A1A]">
       <Header />
       <InstallSidebar />
       
@@ -23,9 +23,9 @@ const Products = () => {
             {t('common.back')}
           </Link>
 
-          <h1 className="text-3xl font-bold text-black mb-6 font-serif">{t('products.title')}</h1>
+          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-6 font-sans">{t('products.title')}</h1>
           
-          <p className="text-gray-600 mb-8">
+          <p className="text-[#1A1A1A] mb-8 font-sans">
             {t('products.subtitle')}
           </p>
         </div>
@@ -45,12 +45,12 @@ const Products = () => {
             
             {/* Produktinhalt */}
             <div className="p-6">
-              <h2 className="text-xl font-bold text-black mb-4 font-serif">
+              <h2 className="text-xl font-bold text-[#1A1A1A] mb-4 font-sans">
                 {t('products.not.available')}
               </h2>
               
               {/* Produkt-Details */}
-              <ul className="text-gray-700 mb-4 space-y-2">
+              <ul className="text-[#1A1A1A] mb-4 space-y-2 font-sans">
                 <li className="flex items-center">
                   <span className="font-medium">{t('products.category')}</span>
                   <span className="ml-2">{t('products.book')}</span>
@@ -66,7 +66,7 @@ const Products = () => {
               </ul>
               
               {/* Preis */}
-              <div className="text-2xl font-bold text-red-accent mb-6">
+              <div className="text-2xl font-bold text-[#2EEAE0] mb-6 font-sans">
                 999 €
               </div>
               
@@ -75,7 +75,7 @@ const Products = () => {
                 href="https://youtube.com/@dailyfunen?feature=shared"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-full bg-red-accent text-white px-6 py-3 rounded-md font-medium hover:bg-blue-accent transition-colors duration-300"
+                className="inline-flex items-center justify-center w-full bg-[#5E40E3] text-[#FFFFFF] px-6 py-3 rounded-md font-medium hover:shadow-[0_0_15px_rgba(46,234,224,0.5)] transition-all duration-300"
               >
                 <span>{t('products.learn.more')}</span>
                 <ExternalLink className="h-4 w-4 ml-2" />
@@ -86,8 +86,8 @@ const Products = () => {
 
         {/* Zusätzlicher Info-Bereich */}
         <div className="mt-12 bg-gray-50 rounded-lg p-8 border border-gray-200">
-          <h3 className="text-2xl font-bold text-black mb-4 font-serif">{t('products.coming.soon')}</h3>
-          <p className="text-gray-700 text-lg">
+          <h3 className="text-2xl font-bold text-[#1A1A1A] mb-4 font-sans">{t('products.coming.soon')}</h3>
+          <p className="text-[#1A1A1A] text-lg font-sans">
             {t('products.coming.desc')}
           </p>
         </div>
