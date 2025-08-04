@@ -1,6 +1,5 @@
 
 import { useState, useMemo } from 'react';
-import { Search as SearchIcon } from 'lucide-react';
 import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
@@ -8,30 +7,56 @@ import { articles } from '../data/articles';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Search = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedAuthor, setSelectedAuthor] = useState('all');
   const { t } = useLanguage();
 
-  const categories = ['all', 'Comedy', 'Pets & Animals', 'Food & Recipes', 'Travel Adventures', 'Weird News'];
+  // Employee profiles data
+  const employees = [
+    {
+      id: 'stefan',
+      name: 'Stefan Kunc',
+      image: '/lovable-uploads/dd996217-e9c4-456c-af16-469f05791ad2.png'
+    },
+    {
+      id: 'elke',
+      name: 'Dr. Elke Schneider',
+      image: '/lovable-uploads/2679b50f-c4f9-40d5-bbce-828296880ba2.png'
+    },
+    {
+      id: 'karl',
+      name: 'Herr Karl Bergmann',
+      image: '/lovable-uploads/afb210bd-6729-403e-857a-9271499984f4.png'
+    },
+    {
+      id: 'jonas',
+      name: 'Herr Jonas Richter',
+      image: '/lovable-uploads/3e2b5f3d-bb10-4914-847d-e40fa0928943.png'
+    }
+  ];
 
   const filteredArticles = useMemo(() => {
     let filtered = articles;
 
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(article =>
-        article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        article.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        article.author.toLowerCase().includes(searchQuery.toLowerCase())
+    if (selectedAuthor !== 'all') {
+      // Map selected author to article authors
+      const authorMapping = {
+        'stefan': 'Stefan Kunc',
+        'elke': 'Dr. Elke Schneider',
+        'karl': 'Karl Bergmann',
+        'jonas': 'Jonas Richter'
+      };
+      
+      const authorName = authorMapping[selectedAuthor];
+      filtered = filtered.filter(article => 
+        article.author === authorName || 
+        article.author.includes(authorName.split(' ')[0]) ||
+        article.author.includes(authorName.split(' ').pop())
       );
     }
 
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(article => article.category === selectedCategory);
-    }
-
-    // Sort by publication date instead of views
+    // Sort by publication date
     return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-  }, [searchQuery, selectedCategory]);
+  }, [selectedAuthor]);
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -39,59 +64,83 @@ const Search = () => {
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black mb-6 font-serif">{t('search.title')}</h1>
-          
-          {/* Search Bar */}
-          <div className="relative mb-6">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <SearchIcon className="h-5 w-5 text-gray-400" />
+        {/* Employee Profiles Section */}
+        <div className="mb-12">
+          <div className="flex justify-center items-center space-x-8 mb-8">
+            {/* All Articles Profile */}
+            <div 
+              className="flex flex-col items-center cursor-pointer group"
+              onClick={() => setSelectedAuthor('all')}
+            >
+              <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center text-2xl font-bold transition-all ${
+                selectedAuthor === 'all' 
+                  ? 'border-red-accent bg-red-accent text-white' 
+                  : 'border-gray-300 bg-gray-100 text-gray-600 group-hover:border-red-accent/50'
+              }`}>
+                ALL
+              </div>
+              <span className="text-sm font-medium mt-2 text-center">Alle Artikel</span>
             </div>
-            <input
-              type="text"
-              placeholder={t('search.placeholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="block w-full pl-10 pr-3 py-3 border border-gray-300 bg-white text-black rounded-lg focus:outline-none focus:ring-2 focus:ring-red-accent focus:border-transparent text-lg"
-            />
-          </div>
 
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-red-accent text-white'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                }`}
+            {/* Employee Profiles */}
+            {employees.map((employee) => (
+              <div 
+                key={employee.id}
+                className="flex flex-col items-center cursor-pointer group"
+                onClick={() => setSelectedAuthor(employee.id)}
               >
-                {category === 'all' ? t('search.all') : category}
-              </button>
+                <div className={`w-20 h-20 rounded-full border-4 overflow-hidden transition-all ${
+                  selectedAuthor === employee.id 
+                    ? 'border-red-accent' 
+                    : 'border-gray-300 group-hover:border-red-accent/50'
+                }`}>
+                  <img 
+                    src={employee.image} 
+                    alt={employee.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="text-sm font-medium mt-2 text-center max-w-20">{employee.name}</span>
+              </div>
             ))}
           </div>
-
-          {/* Results Count */}
-          <p className="text-gray-600 mb-6">
-            {filteredArticles.length} {t('search.results')}
-            {searchQuery && ` ${t('search.results.for')} "${searchQuery}"`}
-          </p>
         </div>
 
-        {/* Search Results */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredArticles.map((article) => (
-            <ArticleCard key={article.id} article={article} />
+        {/* Latest Articles Section */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-black mb-8 font-serif text-center">
+            Neueste Artikel
+            {selectedAuthor !== 'all' && (
+              <span className="text-lg font-normal text-gray-600 block mt-2">
+                von {employees.find(emp => emp.id === selectedAuthor)?.name}
+              </span>
+            )}
+          </h2>
+        </div>
+
+        {/* Articles Grid with alternating backgrounds */}
+        <div className="space-y-0">
+          {filteredArticles.map((article, index) => (
+            <div 
+              key={article.id} 
+              className={`w-full ${index % 2 === 0 ? 'bg-white' : 'bg-purple-50'} py-8`}
+            >
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <ArticleCard article={article} featured={true} />
+              </div>
+            </div>
           ))}
         </div>
 
-        {filteredArticles.length === 0 && searchQuery && (
+        {filteredArticles.length === 0 && (
           <div className="text-center py-12">
-            <SearchIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-black mb-2">{t('search.no.results')}</h3>
-            <p className="text-gray-600">{t('search.no.results.desc')}</p>
+            <h3 className="text-lg font-medium text-black mb-2">Keine Artikel gefunden</h3>
+            <p className="text-gray-600">
+              {selectedAuthor !== 'all' 
+                ? `Keine Artikel von ${employees.find(emp => emp.id === selectedAuthor)?.name} verfügbar.`
+                : 'Keine Artikel verfügbar.'
+              }
+            </p>
           </div>
         )}
       </main>
