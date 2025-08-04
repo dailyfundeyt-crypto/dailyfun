@@ -187,7 +187,7 @@ const translations = {
     'home.goals.laughter.desc': 'Unzählige Geschichten schaffen, die Freude und Einsicht bringen.',
     'home.goals.talent': 'Globales Talent',
     'home.goals.talent.desc': 'Ein vielfältiges Team von komödiantischen Journalisten weltweit aufbauen.',
-    'home.goals.fun': 'Ununterbrochener Spaß',
+    'home.goals.fun': 'Spaß',
     'home.goals.fun.desc': 'Unterhaltsame und vertrauenswürdige Inhalte rund um die Uhr liefern.',
     
     // Search Page
