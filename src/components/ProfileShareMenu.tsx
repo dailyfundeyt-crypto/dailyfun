@@ -113,56 +113,82 @@ const ProfileShareMenu: React.FC<ProfileShareMenuProps> = ({ profileName, profil
         <MoreVertical className="h-4 w-4 text-gray-600" />
       </button>
 
-      {/* Fullscreen Share Menu Overlay */}
+      {/* Share Menu Overlay - Following main site design */}
       {isOpen && (
-        <div className="fixed inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex flex-col items-center justify-center z-50">
+        <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-50">
+          {/* Subtle organic background lines matching main site */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-accent/10 via-transparent to-blue-accent/10"></div>
+            <div className="absolute top-1/4 left-1/4 w-96 h-24 bg-red-accent/5 rounded-full transform -rotate-12 blur-xl"></div>
+            <div className="absolute bottom-1/3 right-1/4 w-80 h-20 bg-blue-accent/5 rounded-full transform rotate-12 blur-xl"></div>
+          </div>
+
           {/* Close Button */}
           <button
             onClick={handleClose}
-            className="absolute top-6 left-6 text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+            className="absolute top-6 right-6 text-black hover:text-red-accent rounded-full p-2 transition-colors z-10"
           >
             <X className="h-6 w-6" />
           </button>
 
-          {/* QR Code Container */}
-          <div className="bg-white rounded-3xl p-8 mx-6 max-w-sm w-full shadow-2xl">
-            {qrCodeUrl && (
-              <div className="flex flex-col items-center">
-                <img 
-                  src={qrCodeUrl} 
-                  alt={`QR-Code für ${profileName}`}
-                  className="w-48 h-48 rounded-2xl"
-                />
-                <h2 className="text-xl font-bold text-gray-900 mt-4 text-center">
-                  @{profileName.toUpperCase().replace(' ', '.')}
+          {/* Content Container */}
+          <div className="relative z-10 max-w-md w-full mx-6">
+            {/* QR Code Container */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 mb-6">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-black font-serif mb-2">
+                  Profil teilen
                 </h2>
+                <p className="text-gray-600 text-sm">
+                  Scannen Sie den QR-Code oder kopieren Sie den Link
+                </p>
               </div>
-            )}
-          </div>
 
-          {/* Action Buttons */}
-          <div className="bg-white rounded-2xl mx-6 mt-4 max-w-sm w-full shadow-2xl overflow-hidden">
-            <button
-              onClick={copyToClipboard}
-              className="w-full px-6 py-4 flex items-center justify-center space-x-3 hover:bg-gray-50 transition-colors border-b border-gray-100"
-            >
-              {copied ? (
-                <Check className="h-5 w-5 text-green-600" />
-              ) : (
-                <Link className="h-5 w-5 text-gray-700" />
+              {qrCodeUrl && (
+                <div className="flex flex-col items-center mb-6">
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <img 
+                      src={qrCodeUrl} 
+                      alt={`QR-Code für ${profileName}`}
+                      className="w-40 h-40"
+                    />
+                  </div>
+                  <div className="mt-4 text-center">
+                    <h3 className="text-lg font-bold text-black font-serif">
+                      {profileName}
+                    </h3>
+                    <p className="text-red-accent text-sm font-medium">
+                      Journalist & Autor
+                    </p>
+                  </div>
+                </div>
               )}
-              <span className={`font-medium ${copied ? 'text-green-600' : 'text-gray-700'}`}>
-                {copied ? 'Kopiert!' : 'Link kopieren'}
-              </span>
-            </button>
-            
-            <button
-              onClick={handleClose}
-              className="w-full px-6 py-4 flex items-center justify-center space-x-3 hover:bg-gray-50 transition-colors"
-            >
-              <Share2 className="h-5 w-5 text-gray-700" />
-              <span className="font-medium text-gray-700">Profil teilen</span>
-            </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={copyToClipboard}
+                className="w-full bg-red-accent hover:bg-red-accent/90 text-white font-medium py-4 px-6 rounded-xl transition-colors flex items-center justify-center space-x-3 shadow-lg"
+              >
+                {copied ? (
+                  <Check className="h-5 w-5" />
+                ) : (
+                  <Link className="h-5 w-5" />
+                )}
+                <span>
+                  {copied ? 'Link kopiert!' : 'Link kopieren'}
+                </span>
+              </button>
+              
+              <button
+                onClick={handleClose}
+                className="w-full bg-white hover:bg-gray-50 text-black font-medium py-4 px-6 rounded-xl transition-colors border border-gray-200 flex items-center justify-center space-x-3"
+              >
+                <Share2 className="h-5 w-5" />
+                <span>Andere Optionen</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
