@@ -166,32 +166,45 @@ const Search = () => {
 
         {/* Profile Info Section */}
         {showProfileInfo && currentEmployeeInfo && (
-          <div className="mb-8 bg-gradient-to-r from-red-accent/5 to-blue-accent/5 rounded-lg border border-gray-200 p-6">
+          <div className="mb-8 bg-white rounded-lg border border-gray-200 p-6 max-w-md mx-auto">
+            {/* Profile Header with Stats */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-red-accent/20">
+                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200">
                   <img 
                     src={currentEmployeeInfo.image} 
                     alt={currentEmployeeInfo.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold text-black font-serif">
-                    {currentEmployeeInfo.name}
-                  </h3>
-                  <p className="text-red-accent font-semibold text-sm">
-                    {currentEmployeeInfo.role}
-                  </p>
+                <div className="text-center">
+                  <div className="font-bold text-lg text-black">
+                    {filteredArticles.length}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Beiträge
+                  </div>
                 </div>
               </div>
               
-              {/* Share Menu */}
+              {/* Three Dots Menu */}
               <ProfileShareMenu 
                 profileName={currentEmployeeInfo.name}
                 profileId={currentEmployeeInfo.id}
               />
             </div>
+
+            {/* Profile Name and Role */}
+            <div className="mb-3">
+              <h3 className="text-lg font-bold text-black">
+                {currentEmployeeInfo.name}
+              </h3>
+              <p className="text-red-accent font-medium text-sm">
+                {currentEmployeeInfo.role}
+              </p>
+            </div>
+
+            {/* Bio */}
             <p className="text-gray-700 text-sm leading-relaxed">
               {currentEmployeeInfo.description}
             </p>
