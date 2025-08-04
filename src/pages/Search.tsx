@@ -245,6 +245,10 @@ const Search = () => {
                         src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
                         alt={article.title}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          console.log('Image failed to load:', article.imageUrl);
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
                       />
                     </div>
                   </div>
