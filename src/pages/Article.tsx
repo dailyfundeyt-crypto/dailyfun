@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Calendar, User, Bot, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calendar, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
@@ -26,8 +26,6 @@ const Article = () => {
   const article = articles.find(a => a.id === id);
   const { t, language } = useLanguage();
   const navigate = useNavigate();
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   useEffect(() => {
     // Scroll to top when article loads
@@ -76,14 +74,6 @@ const Article = () => {
     return imageMap[articleId] || article.imageUrl;
   };
 
-  const handleAIClick = () => {
-    const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
-    window.open(aiUrl, '_blank', 'noopener,noreferrer');
-  };
-
-  const navigateToAI = () => {
-    navigate('/ai');
-  };
 
 
   return (
@@ -91,14 +81,6 @@ const Article = () => {
       <Header />
       <InstallSidebar />
       
-      {/* Desktop Navigation Arrow */}
-      <button
-        onClick={navigateToAI}
-        className="hidden md:flex fixed right-4 top-1/2 transform -translate-y-1/2 z-10 bg-primary/10 hover:bg-primary/20 text-primary rounded-full p-3 transition-all duration-300 hover:scale-110 group"
-        title={language === 'de' ? 'Zur KI-Seite' : 'Go to AI Page'}
-      >
-        <ChevronRight className="h-6 w-6 group-hover:animate-pulse" />
-      </button>
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
@@ -111,13 +93,6 @@ const Article = () => {
           </Link>
           
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleAIClick}
-              className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <Bot className="h-4 w-4 mr-2" />
-              {language === 'de' ? 'Mit AI sprechen' : 'Ask AI'}
-            </button>
             <LanguageSwitcher />
           </div>
         </div>
