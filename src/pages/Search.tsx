@@ -11,7 +11,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Employee profiles data
   const employees = [
@@ -243,7 +243,7 @@ const Search = () => {
                     <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
                       <img
                         src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
-                        alt={article.title}
+                        alt={language === 'de' ? article.title : (article.titleEn || article.title)}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           console.log('Image failed to load:', article.imageUrl);
@@ -258,13 +258,13 @@ const Search = () => {
                     index % 2 === 0 ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]'
                   }`}>
                     <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
-                      {article.title}
+                      {language === 'de' ? article.title : (article.titleEn || article.title)}
                     </h3>
                     <p className="text-lg mb-6 opacity-90 line-clamp-3">
-                      {article.excerpt}
+                      {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
                     </p>
                     <div className="text-sm opacity-75">
-                      {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {article.category}
+                      {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {language === 'de' ? article.category : (article.categoryEn || article.category)}
                     </div>
                   </div>
                 </div>

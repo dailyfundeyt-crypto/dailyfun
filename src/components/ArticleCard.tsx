@@ -54,7 +54,7 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
           </div>
           <div className="absolute top-3 left-3">
             <span className="bg-red-accent text-white px-2 py-1 rounded text-xs font-bold">
-              {article.category}
+              {language === 'de' ? article.category : (article.categoryEn || article.category)}
             </span>
           </div>
         </div>

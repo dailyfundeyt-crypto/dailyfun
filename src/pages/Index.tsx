@@ -10,7 +10,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 
 const Index = () => {
   const [sortedArticles, setSortedArticles] = useState(articles);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     // Sort articles by publication date (newest first) and take only the latest 7
@@ -67,15 +67,15 @@ const Index = () => {
                     <div className={`order-1 lg:order-2 ${
                       index % 2 === 0 ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]'
                     }`}>
-                      <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
-                        {article.title}
-                      </h3>
-                      <p className="text-lg mb-6 opacity-90 line-clamp-3">
-                        {article.excerpt}
-                      </p>
-                      <div className="text-sm opacity-75">
-                        {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {article.category}
-                      </div>
+                       <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
+                         {language === 'de' ? article.title : (article.titleEn || article.title)}
+                       </h3>
+                       <p className="text-lg mb-6 opacity-90 line-clamp-3">
+                         {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
+                       </p>
+                       <div className="text-sm opacity-75">
+                         {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {language === 'de' ? article.category : (article.categoryEn || article.category)}
+                       </div>
                     </div>
                   </div>
                 </div>

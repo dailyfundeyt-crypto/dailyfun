@@ -22,7 +22,7 @@ const CategoryPage = () => {
   const { category } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 6;
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   
   // For the /weird route, we want to show "Weird News" category
   // Map URL paths to actual category names
@@ -111,7 +111,7 @@ const CategoryPage = () => {
                     <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
                       <img
                         src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
-                        alt={article.title}
+                        alt={language === 'de' ? article.title : (article.titleEn || article.title)}
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -122,13 +122,13 @@ const CategoryPage = () => {
                     index % 2 === 0 ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]'
                   }`}>
                     <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
-                      {article.title}
+                      {language === 'de' ? article.title : (article.titleEn || article.title)}
                     </h3>
                     <p className="text-lg mb-6 opacity-90 line-clamp-3">
-                      {article.excerpt}
+                      {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
                     </p>
                     <div className="text-sm opacity-75">
-                      {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {article.category}
+                      {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {language === 'de' ? article.category : (article.categoryEn || article.category)}
                     </div>
                   </div>
                 </div>
