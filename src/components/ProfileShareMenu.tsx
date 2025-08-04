@@ -102,6 +102,23 @@ const ProfileShareMenu: React.FC<ProfileShareMenuProps> = ({ profileName, profil
     setCopied(false);
   };
 
+  // Download QR Code function
+  const downloadQRCode = () => {
+    if (qrCodeUrl) {
+      const link = document.createElement('a');
+      link.download = `qr-code-${profileName.toLowerCase().replace(' ', '-')}.png`;
+      link.href = qrCodeUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "QR-Code heruntergeladen!",
+        description: "Der QR-Code wurde erfolgreich heruntergeladen.",
+      });
+    }
+  };
+
   return (
     <>
       {/* Three Dots Menu Button */}
@@ -182,11 +199,11 @@ const ProfileShareMenu: React.FC<ProfileShareMenuProps> = ({ profileName, profil
               </button>
               
               <button
-                onClick={handleClose}
+                onClick={downloadQRCode}
                 className="w-full bg-white hover:bg-gray-50 text-black font-medium py-4 px-6 rounded-xl transition-colors border border-gray-200 flex items-center justify-center space-x-3"
               >
-                <Share2 className="h-5 w-5" />
-                <span>Andere Optionen</span>
+                <QrCode className="h-5 w-5" />
+                <span>QR Code Teilen</span>
               </button>
             </div>
           </div>
