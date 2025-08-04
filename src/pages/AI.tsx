@@ -8,7 +8,6 @@ import { articles } from '@/data/articles';
 import Header from '@/components/Header';
 import { Link } from 'react-router-dom';
 import QRCode from 'qrcode';
-import { createClient } from '@supabase/supabase-js';
 
 interface Message {
   id: string;
@@ -256,40 +255,6 @@ const AI = () => {
     return germanScore > englishScore ? 'de' : 'en';
   };
 
-  // Initialize Supabase client
-  const supabase = createClient(
-    import.meta.env.VITE_SUPABASE_URL,
-    import.meta.env.VITE_SUPABASE_ANON_KEY
-  );
-
-  const processInternetSearch = async (query: string): Promise<string> => {
-    try {
-      const { data, error } = await supabase.functions.invoke('internet-search', {
-        body: { 
-          query: query,
-          language: language 
-        }
-      });
-
-      if (error) {
-        console.error('Internet search error:', error);
-        return language === 'de' 
-          ? `🔍 Entschuldigung, die Internet-Suche ist momentan nicht verfügbar.\n\nFehler: ${error.message}\n\n💡 Tipp: Stellen Sie sicher, dass der Perplexity API Key in den Supabase Edge Function Secrets konfiguriert ist.`
-          : `🔍 Sorry, internet search is currently unavailable.\n\nError: ${error.message}\n\n💡 Tip: Make sure the Perplexity API key is configured in your Supabase Edge Function secrets.`;
-      }
-
-      return data?.response || (language === 'de' 
-        ? 'Keine Antwort erhalten.'
-        : 'No response received.');
-        
-    } catch (error) {
-      console.error('Network error:', error);
-      return language === 'de'
-        ? '🔍 Entschuldigung, bei der Internet-Suche ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.'
-        : '🔍 Sorry, there was an error with the internet search. Please try again later.';
-    }
-  };
-
   const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string }> => {
     const input = userInput.toLowerCase();
     const detectedLanguage = detectLanguage(userInput);
@@ -321,12 +286,6 @@ const AI = () => {
           : 'Please send me a valid link (starting with http:// or https://) to create a QR code.\n\nExample: https://www.example.com';
         return { text: helpText };
       }
-    }
-
-    // Internet search mode
-    if (searchMode === 'internet') {
-      const response = await processInternetSearch(userInput);
-      return { text: response };
     }
 
     // Local article search for search mode
