@@ -175,12 +175,12 @@ const translations = {
     
     // Homepage
     'home.welcome': 'Willkommen bei Daily Fun',
-    'home.tagline': 'Unterhaltsame und vertrauenswürdige Inhalte rund um die Uhr liefern.',
+    'home.tagline': 'Daily Fun: Macht Nachrichten wieder Spaß. Ihre tägliche Dosis vertrauenswürdiger Unterhaltung.',
     'home.latest': 'Neueste Artikel',
     'home.product.title': 'Unser neuestes Produkt',
     'home.product.description': 'Bleib dran für unser spannendes Debüt: ein Buch voller unterhaltsamer Fakten!',
     'home.product.button': 'Zum Produkt',
-    'home.goals.title': 'Ununterbrochener Spaß',
+    'home.goals.title': 'Unsere Ziele',
     'home.goals.inspire': 'Millionen Inspirieren',
     'home.goals.inspire.desc': 'Eine große Zielgruppe mit unserer einzigartigen Nachrichtenmischung erreichen.',
     'home.goals.laughter': 'Endloses Lachen',
