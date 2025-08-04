@@ -156,8 +156,8 @@ const Search = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-16 sm:max-w-20 leading-tight">
-                  {employee.name.split(' ')[0]}
+                <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight">
+                  {employee.name}
                 </span>
               </div>
             ))}
