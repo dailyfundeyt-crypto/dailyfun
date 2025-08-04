@@ -89,8 +89,6 @@ const AI = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [articleContext, setArticleContext] = useState<string | null>(null);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Check for article parameter in URL and initialize article context
@@ -115,26 +113,6 @@ const AI = () => {
     }
   }, [language]);
 
-  // Touch swipe detection for back navigation
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchEnd - touchStart;
-    const isRightSwipe = distance > minSwipeDistance;
-    if (isRightSwipe) {
-      window.history.back();
-    }
-  };
 
   // Initialize welcome message based on language and context
   useEffect(() => {
@@ -587,26 +565,9 @@ const AI = () => {
   };
 
   return (
-    <div 
-      className="min-h-screen bg-white text-black"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
+    <div className="min-h-screen bg-white text-black">
       <Header />
       
-      {/* Back Button - Visible on PC, Touch swipe on mobile */}
-      <div className="fixed top-20 left-4 z-20">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.history.back()}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 hover:bg-white/80 backdrop-blur-sm shadow-lg rounded-lg border border-gray-200"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span className="text-sm hidden sm:inline">{language === 'de' ? 'Zurück' : 'Back'}</span>
-        </Button>
-      </div>
       
       {/* Hero Section - Modern ChatGPT-like Design */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

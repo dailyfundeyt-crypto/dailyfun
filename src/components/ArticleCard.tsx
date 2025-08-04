@@ -1,7 +1,6 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bot } from 'lucide-react';
 import { incrementViews } from '../utils/viewTracker';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -32,17 +31,6 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
     incrementViews(article.id);
   };
 
-  const handleAIClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Get translated title
-    const translatedTitle = language === 'de' ? article.title : (article.titleEn || article.title);
-    
-    // Create URL with article title as query parameter
-    const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
-    window.open(aiUrl, '_blank', 'noopener,noreferrer');
-  };
 
   // Get translated title for display
   const translatedTitle = language === 'de' ? article.title : (article.titleEn || article.title);
@@ -68,15 +56,6 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
             <span className="bg-red-accent text-white px-2 py-1 rounded text-xs font-bold">
               {article.category}
             </span>
-          </div>
-          <div className="absolute top-3 right-3">
-            <button
-              onClick={handleAIClick}
-              className="bg-blue-accent text-white p-2 rounded-full hover:bg-blue-accent/90 transition-colors shadow-md"
-              title={language === 'de' ? 'Mit AI über diesen Artikel sprechen' : 'Ask AI about this article'}
-            >
-              <Bot className="w-4 h-4" />
-            </button>
           </div>
         </div>
         

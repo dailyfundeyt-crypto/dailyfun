@@ -85,34 +85,9 @@ const Article = () => {
     navigate('/ai');
   };
 
-  // Touch swipe detection
-  const minSwipeDistance = 50;
-
-  const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const onTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    if (isLeftSwipe) {
-      navigateToAI();
-    }
-  };
 
   return (
-    <div 
-      className="min-h-screen bg-white text-black relative"
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
+    <div className="min-h-screen bg-white text-black relative">
       <Header />
       <InstallSidebar />
       
