@@ -1,5 +1,6 @@
 
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
@@ -228,14 +229,43 @@ const Search = () => {
         {/* Articles Grid with alternating backgrounds */}
         <div className="space-y-0">
           {filteredArticles.map((article, index) => (
-            <div 
-              key={article.id} 
-              className={`w-full ${index % 2 === 0 ? 'bg-white' : 'bg-purple-50'} py-8`}
+            <Link
+              key={article.id}
+              to={`/article/${article.id}`}
+              className={`block w-full py-16 transition-all duration-300 hover:scale-[1.02] ${
+                index % 2 === 0 ? 'bg-white' : 'bg-[#5E40E3]'
+              }`}
             >
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <ArticleCard article={article} featured={true} />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                  {/* Article Image - Left side */}
+                  <div className="order-2 lg:order-1">
+                    <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                      <img
+                        src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
+                        alt={article.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Article Content - Right side */}
+                  <div className={`order-1 lg:order-2 ${
+                    index % 2 === 0 ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]'
+                  }`}>
+                    <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
+                      {article.title}
+                    </h3>
+                    <p className="text-lg mb-6 opacity-90 line-clamp-3">
+                      {article.excerpt}
+                    </p>
+                    <div className="text-sm opacity-75">
+                      {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {article.category}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
