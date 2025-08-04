@@ -16,6 +16,7 @@ interface Message {
   timestamp: Date;
   feedback?: 'positive' | 'negative' | null;
   qrCode?: string;
+  articleSearch?: boolean;
 }
 
 interface ActionCard {
@@ -115,10 +116,8 @@ const AI = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [searchMode, setSearchMode] = useState<'local' | 'internet'>('local');
   const [lastAIResponse, setLastAIResponse] = useState<string>('');
-  const [showArticleSearch, setShowArticleSearch] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<{ [messageId: string]: any[] }>({});
   const [searchQuery, setSearchQuery] = useState('');
-  const [articleSearchInput, setArticleSearchInput] = useState('');
   const [articleContext, setArticleContext] = useState<string | null>(null);
   const [qrMode, setQrMode] = useState(false);
   const [visibleCopyButtons, setVisibleCopyButtons] = useState<string[]>([]);
@@ -370,17 +369,24 @@ const AI = () => {
       };
       setMessages(prev => [...prev, newMessage]);
     } else if (card.id === 'article-search') {
-      setShowArticleSearch(true);
+      const prompt = language === 'de' ? card.promptDe : card.promptEn;
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        text: prompt,
+        isUser: false,
+        timestamp: new Date(),
+        articleSearch: true
+      };
+      setMessages(prev => [...prev, newMessage]);
     }
   };
 
-  const handleArticleSearchInput = (query: string) => {
-    setArticleSearchInput(query);
+  const handleArticleSearchInput = (messageId: string, query: string) => {
     if (query.trim()) {
       const results = searchArticles(query);
-      setSearchResults(results);
+      setSearchResults(prev => ({ ...prev, [messageId]: results }));
     } else {
-      setSearchResults([]);
+      setSearchResults(prev => ({ ...prev, [messageId]: [] }));
     }
   };
 
@@ -452,32 +458,93 @@ const AI = () => {
                       ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                       : 'bg-white text-gray-800 border border-gray-100 shadow-sm'
                   }`}
-                  onClick={() => handleMessageClick(message.id)}
-                >
-                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {message.text}
-                  </div>
-                  {message.qrCode && (
-                    <div className="mt-4 text-center relative">
-                      <img 
-                        src={message.qrCode} 
-                        alt="Generated QR Code" 
-                        className="mx-auto rounded-xl shadow-lg border max-w-[200px] h-auto"
-                      />
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          downloadQRCode(message.qrCode!);
-                        }}
-                        size="sm"
-                        variant="outline"
-                        className="mt-3 bg-white/90 hover:bg-white"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        {language === 'de' ? 'Herunterladen' : 'Download'}
-                      </Button>
-                    </div>
-                  )}
+                   onClick={() => handleMessageClick(message.id)}
+                 >
+                   <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                     {message.text}
+                   </div>
+                   
+                   {/* Article Search Component */}
+                   {message.articleSearch && (
+                     <div className="mt-4 space-y-4">
+                       <div className="relative">
+                         <Input
+                           type="text"
+                           onChange={(e) => handleArticleSearchInput(message.id, e.target.value)}
+                           placeholder={language === 'de' ? 'Stichwort oder Kategorie eingeben...' : 'Enter keyword or category...'}
+                           className="pl-10 bg-gray-50 border-gray-200"
+                         />
+                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                       </div>
+                       
+                       {searchResults[message.id] && searchResults[message.id].length > 0 && (
+                         <div className="space-y-3 max-h-96 overflow-y-auto">
+                           {searchResults[message.id].map((article) => {
+                             const title = language === 'de' ? t(`article.${article.id}.title`) : article.title;
+                             const excerpt = language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt;
+                             const imageUrl = article.imageUrl?.startsWith('/') 
+                               ? article.imageUrl 
+                               : `https://images.unsplash.com/${article.imageUrl}?w=300&h=200&fit=crop`;
+                             
+                             return (
+                               <div
+                                 key={article.id}
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   handleArticleClick(article);
+                                 }}
+                                 className="flex gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors border"
+                               >
+                                 <img
+                                   src={imageUrl}
+                                   alt={title}
+                                   className="w-20 h-14 object-cover rounded-lg flex-shrink-0"
+                                   onError={(e) => {
+                                     e.currentTarget.src = '/placeholder.svg';
+                                   }}
+                                 />
+                                 <div className="flex-1 min-w-0">
+                                   <h3 className="font-semibold text-gray-800 text-sm line-clamp-2 mb-1">
+                                     {title}
+                                   </h3>
+                                   <p className="text-gray-600 text-xs line-clamp-2 mb-2">
+                                     {excerpt}
+                                   </p>
+                                   <div className="flex items-center gap-2 text-xs text-gray-500">
+                                     <span>{article.author}</span>
+                                     <span>•</span>
+                                     <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
+                                   </div>
+                                 </div>
+                               </div>
+                             );
+                           })}
+                         </div>
+                       )}
+                     </div>
+                   )}
+                   
+                   {message.qrCode && (
+                     <div className="mt-4 text-center relative">
+                       <img 
+                         src={message.qrCode} 
+                         alt="Generated QR Code" 
+                         className="mx-auto rounded-xl shadow-lg border max-w-[200px] h-auto"
+                       />
+                       <Button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           downloadQRCode(message.qrCode!);
+                         }}
+                         size="sm"
+                         variant="outline"
+                         className="mt-3 bg-white/90 hover:bg-white"
+                       >
+                         <Download className="w-4 h-4 mr-2" />
+                         {language === 'de' ? 'Herunterladen' : 'Download'}
+                       </Button>
+                     </div>
+                   )}
                   <div className="text-xs opacity-70 mt-3">
                     {message.timestamp.toLocaleTimeString()}
                   </div>
@@ -513,109 +580,6 @@ const AI = () => {
         </div>
       </div>
 
-      {/* Article Search Overlay */}
-      {showArticleSearch && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-800">
-                  {language === 'de' ? 'Artikel Suchen' : 'Search Articles'}
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowArticleSearch(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-              <div className="relative">
-                <Input
-                  type="text"
-                  value={articleSearchInput}
-                  onChange={(e) => handleArticleSearchInput(e.target.value)}
-                  placeholder={language === 'de' ? 'Stichwort oder Kategorie eingeben...' : 'Enter keyword or category...'}
-                  className="pl-10"
-                  autoFocus
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              </div>
-            </div>
-            
-            <div className="p-6 overflow-y-auto max-h-96">
-              {searchResults.length > 0 ? (
-                <div className="space-y-4">
-                  {searchResults.map((article) => {
-                    const title = language === 'de' ? t(`article.${article.id}.title`) : article.title;
-                    const excerpt = language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt;
-                    const imageUrl = article.imageUrl?.startsWith('/') 
-                      ? article.imageUrl 
-                      : `https://images.unsplash.com/${article.imageUrl}?w=300&h=200&fit=crop`;
-                    
-                    return (
-                      <div
-                        key={article.id}
-                        onClick={() => handleArticleClick(article)}
-                        className="flex gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors"
-                      >
-                        <img
-                          src={imageUrl}
-                          alt={title}
-                          className="w-24 h-16 object-cover rounded-lg flex-shrink-0"
-                          onError={(e) => {
-                            e.currentTarget.src = '/placeholder.svg';
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-800 text-sm line-clamp-2 mb-1">
-                            {title}
-                          </h3>
-                          <p className="text-gray-600 text-xs line-clamp-2 mb-2">
-                            {excerpt}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <span>{article.author}</span>
-                            <span>•</span>
-                            <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
-                            <span>•</span>
-                            <span>{article.category}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : articleSearchInput.trim() ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Search className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-medium mb-2">
-                    {language === 'de' ? 'Keine Artikel gefunden' : 'No articles found'}
-                  </p>
-                  <p className="text-sm">
-                    {language === 'de' 
-                      ? 'Versuchen Sie andere Suchbegriffe' 
-                      : 'Try different search terms'}
-                  </p>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg font-medium mb-2">
-                    {language === 'de' ? 'Artikel durchsuchen' : 'Search Articles'}
-                  </p>
-                  <p className="text-sm">
-                    {language === 'de' 
-                      ? 'Geben Sie ein Stichwort oder eine Kategorie ein' 
-                      : 'Enter a keyword or category to search'}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Floating bottom container with action cards, mode switcher and input */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50">
