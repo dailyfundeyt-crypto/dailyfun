@@ -508,53 +508,56 @@ const AI = () => {
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50">
         <div className="max-w-4xl mx-auto p-4 space-y-4">
           
-          {/* Action Cards - Only visible in Local mode */}
-          {searchMode === 'local' && (
-            <div className="flex justify-center gap-3">
-              {actionCards.map((card) => {
-                const Icon = card.icon;
-                return (
-                  <div
-                    key={card.id}
-                    onClick={() => handleActionCardClick(card)}
-                    className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer min-w-[120px] text-center hover:scale-105"
-                  >
-                    <div className="flex flex-col items-center">
-                      <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg p-2 mb-2">
-                        <Icon className="w-4 h-4 text-white" />
-                      </div>
-                      <h3 className="font-medium text-gray-800 text-xs">
-                        {language === 'de' ? card.titleDe : card.titleEn}
-                      </h3>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
 
-          {/* Mode Selection */}
-          <div className="flex justify-center">
-            <div className="bg-gray-100 rounded-xl p-1 shadow-sm">
-              <Button
-                variant={searchMode === 'local' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setSearchMode('local')}
-                className="mr-1 rounded-lg text-xs"
-              >
-                <Home className="w-3 h-3 mr-1" />
-                Daily Fun (Local)
-              </Button>
-              <Button
-                variant={searchMode === 'internet' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setSearchMode('internet')}
-                className="rounded-lg text-xs"
-              >
-                <Globe className="w-3 h-3 mr-1" />
-                Internet Search
-              </Button>
-            </div>
+          {/* Combined row with mode dropdown and action buttons */}
+          <div className="flex items-center justify-center gap-3">
+            {/* Mode selector dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="justify-between bg-white shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <Home className="w-4 h-4" />
+                    <span className="text-sm">Daily Fun (Local)</span>
+                  </div>
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="bg-background border z-50">
+                <DropdownMenuItem
+                  onClick={() => setSearchMode('local')}
+                  className="flex items-center gap-2"
+                >
+                  <Home className="w-4 h-4" />
+                  Daily Fun (Local)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setSearchMode('internet')}
+                  className="flex items-center gap-2"
+                >
+                  <Globe className="w-4 h-4" />
+                  Daily Fun (Internet Search)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Action buttons */}
+            <Button
+              variant="outline"
+              onClick={() => handleActionCardClick(actionCards[0])}
+              className="flex items-center gap-2 bg-white shadow-sm"
+            >
+              <Search className="w-4 h-4" />
+              <span className="text-sm">Article Search</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => handleActionCardClick(actionCards[1])}
+              className="flex items-center gap-2 bg-white shadow-sm"
+            >
+              <QrCode className="w-4 h-4" />
+              <span className="text-sm">Generate QR Code</span>
+            </Button>
           </div>
 
           {/* WhatsApp-style Input */}
