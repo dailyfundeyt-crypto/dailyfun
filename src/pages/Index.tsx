@@ -131,7 +131,7 @@ const Index = () => {
               </h2>
               <div className="w-32 h-1 bg-gradient-to-r from-white to-[#2EEAE0] mx-auto mb-6"></div>
               <p className="text-xl text-white/90 max-w-3xl mx-auto font-sans leading-relaxed">
-                Unsere Vision für die Zukunft der digitalen Unterhaltung
+                Ununterbrochener Spaß
               </p>
             </div>
 
