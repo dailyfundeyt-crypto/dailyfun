@@ -3,14 +3,12 @@ import { useState, useMemo } from 'react';
 import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
-import EmployeeProfilePopup from '../components/EmployeeProfilePopup';
 import { articles } from '../data/articles';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
-  const [selectedEmployee, setSelectedEmployee] = useState<typeof employees[0] | null>(null);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [showProfileInfo, setShowProfileInfo] = useState(false);
   const { t } = useLanguage();
 
   // Employee profiles data
@@ -61,14 +59,59 @@ const Search = () => {
     return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
   }, [selectedAuthor]);
 
-  const handleEmployeeClick = (employee: typeof employees[0]) => {
-    setSelectedEmployee(employee);
-    setIsPopupOpen(true);
+  const handleEmployeeClick = (employeeId: string) => {
+    setSelectedAuthor(employeeId);
+    setShowProfileInfo(true);
   };
 
-  const handleProfileFilter = (authorId: string) => {
-    setSelectedAuthor(authorId);
+  const handleAllClick = () => {
+    setSelectedAuthor('all');
+    setShowProfileInfo(false);
   };
+
+  // Get employee info for profile display
+  const getEmployeeInfo = (employeeId: string) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (!employee) return null;
+
+    const getDescription = (id: string) => {
+      switch (id) {
+        case 'stefan':
+          return t('about.stefan.vision.quote');
+        case 'elke':
+          return t('about.elke.desc');
+        case 'karl':
+          return t('about.karl.desc');
+        case 'jonas':
+          return t('about.jonas.desc');
+        default:
+          return '';
+      }
+    };
+
+    const getRole = (id: string) => {
+      switch (id) {
+        case 'stefan':
+          return 'Gründer & Chefredakteur';
+        case 'elke':
+          return t('about.elke.role');
+        case 'karl':
+          return t('about.karl.role');
+        case 'jonas':
+          return t('about.jonas.role');
+        default:
+          return '';
+      }
+    };
+
+    return {
+      ...employee,
+      description: getDescription(employeeId),
+      role: getRole(employeeId)
+    };
+  };
+
+  const currentEmployeeInfo = selectedAuthor !== 'all' ? getEmployeeInfo(selectedAuthor) : null;
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -82,7 +125,7 @@ const Search = () => {
             {/* All Articles Profile */}
             <div 
               className="flex flex-col items-center cursor-pointer group"
-              onClick={() => handleProfileFilter('all')}
+              onClick={handleAllClick}
             >
               <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center text-2xl font-bold transition-all ${
                 selectedAuthor === 'all' 
@@ -98,35 +141,53 @@ const Search = () => {
             {employees.map((employee) => (
               <div 
                 key={employee.id}
-                className="flex flex-col items-center cursor-pointer group relative"
+                className="flex flex-col items-center cursor-pointer group"
+                onClick={() => handleEmployeeClick(employee.id)}
               >
-                {/* Profile Image - clickable for popup */}
-                <div 
-                  className={`w-20 h-20 rounded-full border-4 overflow-hidden transition-all ${
-                    selectedAuthor === employee.id 
-                      ? 'border-red-accent' 
-                      : 'border-gray-300 group-hover:border-red-accent/50'
-                  }`}
-                  onClick={() => handleEmployeeClick(employee)}
-                >
+                <div className={`w-20 h-20 rounded-full border-4 overflow-hidden transition-all ${
+                  selectedAuthor === employee.id 
+                    ? 'border-red-accent' 
+                    : 'border-gray-300 group-hover:border-red-accent/50'
+                }`}>
                   <img 
                     src={employee.image} 
                     alt={employee.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                
-                {/* Name - clickable for filter */}
-                <span 
-                  className="text-sm font-medium mt-2 text-center max-w-20 hover:text-red-accent transition-colors"
-                  onClick={() => handleProfileFilter(employee.id)}
-                >
+                <span className="text-sm font-medium mt-2 text-center max-w-20">
                   {employee.name}
                 </span>
               </div>
             ))}
           </div>
         </div>
+
+        {/* Profile Info Section */}
+        {showProfileInfo && currentEmployeeInfo && (
+          <div className="mb-8 bg-gradient-to-r from-red-accent/5 to-blue-accent/5 rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-red-accent/20">
+                <img 
+                  src={currentEmployeeInfo.image} 
+                  alt={currentEmployeeInfo.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-black font-serif">
+                  {currentEmployeeInfo.name}
+                </h3>
+                <p className="text-red-accent font-semibold text-sm">
+                  {currentEmployeeInfo.role}
+                </p>
+              </div>
+            </div>
+            <p className="text-gray-700 text-sm leading-relaxed">
+              {currentEmployeeInfo.description}
+            </p>
+          </div>
+        )}
 
         {/* Latest Articles Section */}
         <div className="mb-8">
@@ -166,16 +227,6 @@ const Search = () => {
           </div>
         )}
       </main>
-
-      {/* Employee Profile Popup */}
-      <EmployeeProfilePopup
-        employee={selectedEmployee}
-        isOpen={isPopupOpen}
-        onClose={() => {
-          setIsPopupOpen(false);
-          setSelectedEmployee(null);
-        }}
-      />
     </div>
   );
 };
