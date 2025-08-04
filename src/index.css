@@ -100,9 +100,10 @@
   }
 
   body {
-    @apply bg-white text-black;
+    @apply bg-white text-black font-sans;
     position: relative;
     overflow-x: hidden;
+    line-height: 1.6;
   }
 
   /* Subtle organic background lines */

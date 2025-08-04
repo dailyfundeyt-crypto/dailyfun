@@ -1,142 +1,190 @@
-
-import { useState } from 'react';
-import { Search, Menu, X, Home, Info, ShoppingCart, Globe, Bot, Zap } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Home, Search, User, Phone, MessageSquare, Languages, Info, ShoppingCart, Globe, Bot, Zap } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useScrollDetection } from '../hooks/useScrollDetection';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+
+const navigation = [
+  { icon: Home, href: '/', label: 'Home' },
+  { icon: Search, href: '/search', label: 'Search' },
+  { icon: Info, href: '/about', label: 'About' },
+  { icon: ShoppingCart, href: '/products', label: 'Products' },
+  { icon: Zap, href: '/weird', label: 'Strange News' },
+  { icon: Globe, href: '#', label: 'Language', action: () => null },
+  { icon: Bot, href: '/ai', label: 'AI Chat' },
+];
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { toggleLanguage } = useLanguage();
   const location = useLocation();
-  const { language, toggleLanguage } = useLanguage();
+  const navigate = useNavigate();
+  const isScrolled = useScrollDetection(50);
 
-  const navigation = [
-    { icon: Home, href: '/', label: 'Home' },
-    { icon: Search, href: '/search', label: 'Search' },
-    { icon: Info, href: '/about', label: 'About' },
-    { icon: ShoppingCart, href: '/products', label: 'Products' },
-    { icon: Zap, href: '/weird', label: 'Strange News' },
-    { icon: Globe, href: '#', label: 'Language', action: 'language' },
-    { icon: Bot, href: '/ai', label: 'AI Chat' },
-  ];
+  const handleNavigation = (action?: () => void) => {
+    setIsMenuOpen(false);
+    if (action) {
+      action();
+    }
+  };
 
-  const handleNavigation = (item: typeof navigation[0]) => {
-    if (item.action === 'language') {
-      toggleLanguage();
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery('');
     }
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
+    <header className={`sticky top-0 z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-background/80 backdrop-blur-xl shadow-elevation-2 animate-slide-in-blur' 
+        : 'bg-background shadow-elevation-1'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Left side - Daily Fun logo */}
-          <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-black hover:text-red-accent transition-colors">
+        <div className="flex justify-between items-center h-18">
+          {/* Logo */}
+          <Link to="/" className="flex items-center group">
+            <h1 className="text-2xl font-signature font-bold text-red-accent transition-transform duration-300 group-hover:scale-105">
               Daily Fun
-            </Link>
+            </h1>
+          </Link>
+
+          {/* Desktop Search */}
+          <div className="hidden md:flex flex-1 max-w-md mx-8">
+            <form onSubmit={handleSearch} className="w-full">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Artikel suchen..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 w-full font-sans shadow-elevation-1 border-0 bg-muted/50 focus:bg-background transition-all duration-300"
+                />
+              </div>
+            </form>
           </div>
 
-          {/* Desktop Navigation - Icons only */}
-          <nav className="hidden md:flex items-center space-x-6">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-2">
             {navigation.map((item) => {
-              const Icon = item.icon;
+              const IconComponent = item.icon;
               const isActive = location.pathname === item.href;
-              
-              if (item.action === 'language') {
-                return (
-                  <button
-                    key={item.label}
-                    onClick={() => handleNavigation(item)}
-                    className={`p-2 rounded-md transition-colors ${
-                      isActive
-                        ? 'text-[hsl(var(--icon-hover))]'
-                        : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
-                    }`}
-                    title={`${item.label} (${language === 'en' ? 'EN' : 'DE'})`}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </button>
-                );
-              }
-              
               return (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`p-2 rounded-md transition-colors ${
-                    isActive
-                      ? 'text-[hsl(var(--icon-hover))]'
-                      : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
-                  }`}
-                  title={item.label}
-                >
-                  <Icon className="h-5 w-5" />
-                </Link>
+                <div key={item.href} className="relative group">
+                  {item.action ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleLanguage()}
+                      className={`flex items-center font-display transition-all duration-300 hover:scale-105 ${
+                        isActive 
+                          ? 'text-red-accent bg-red-accent/10' 
+                          : 'text-foreground hover:text-red-accent hover:bg-red-accent/5'
+                      }`}
+                    >
+                      <IconComponent size={18} />
+                    </Button>
+                  ) : (
+                    <Link to={item.href}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`flex items-center font-display transition-all duration-300 hover:scale-105 ${
+                          isActive 
+                            ? 'text-red-accent bg-red-accent/10' 
+                            : 'text-foreground hover:text-red-accent hover:bg-red-accent/5'
+                        }`}
+                      >
+                        <IconComponent size={18} />
+                      </Button>
+                    </Link>
+                  )}
+                  {/* Active indicator */}
+                  {isActive && (
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-red-accent rounded-full" />
+                  )}
+                </div>
               );
             })}
           </nav>
 
           {/* Mobile menu button */}
           <div className="md:hidden">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              className="text-foreground hover:text-red-accent transition-colors duration-300"
             >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </Button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-3 sm:px-3 bg-white border-t border-gray-200">
-              <div className="grid grid-cols-4 gap-4">
-                {navigation.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = location.pathname === item.href;
-                  
-                  if (item.action === 'language') {
-                    return (
-                      <button
-                        key={item.label}
-                        onClick={() => {
-                          handleNavigation(item);
-                          setIsMenuOpen(false);
-                        }}
-                        className={`flex flex-col items-center p-3 rounded-md transition-colors ${
+      {/* Mobile Navigation Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden animate-fade-in-up">
+          <div className="px-4 pt-4 pb-6 space-y-3 bg-background/95 backdrop-blur-xl border-t border-border">
+            {/* Mobile Search */}
+            <form onSubmit={handleSearch} className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="Artikel suchen..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 w-full font-sans"
+                />
+              </div>
+            </form>
+
+            {navigation.map((item) => {
+              const IconComponent = item.icon;
+              const isActive = location.pathname === item.href;
+              return (
+                <div key={item.href}>
+                  {item.action ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleNavigation(toggleLanguage)}
+                      className={`w-full justify-start text-left font-display text-base transition-all duration-300 ${
+                        isActive
+                          ? 'text-red-accent bg-red-accent/10'
+                          : 'text-foreground hover:text-red-accent hover:bg-red-accent/5'
+                      }`}
+                    >
+                      <IconComponent size={20} className="mr-3" />
+                      <span>{item.label}</span>
+                    </Button>
+                  ) : (
+                    <Link to={item.href} onClick={() => handleNavigation()}>
+                      <Button
+                        variant="ghost"
+                        className={`w-full justify-start text-left font-display text-base transition-all duration-300 ${
                           isActive
-                            ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
-                            : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))] hover:bg-gray-50'
+                            ? 'text-red-accent bg-red-accent/10'
+                            : 'text-foreground hover:text-red-accent hover:bg-red-accent/5'
                         }`}
                       >
-                        <Icon className="h-6 w-6 mb-1" />
-                        <span className="text-xs font-medium">{language === 'en' ? 'EN' : 'DE'}</span>
-                      </button>
-                    );
-                  }
-                  
-                  return (
-                    <Link
-                      key={item.label}
-                      to={item.href}
-                      className={`flex flex-col items-center p-3 rounded-md transition-colors ${
-                        isActive
-                          ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
-                          : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))] hover:bg-gray-50'
-                      }`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Icon className="h-6 w-6 mb-1" />
-                      <span className="text-xs font-medium">{item.label}</span>
+                        <IconComponent size={20} className="mr-3" />
+                        <span>{item.label}</span>
+                      </Button>
                     </Link>
-                  );
-                })}
-              </div>
-            </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </header>
   );
 };

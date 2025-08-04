@@ -4,114 +4,161 @@ import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
 import PhoneHero from '../components/PhoneHero';
+import { FeaturedArticle } from '../components/FeaturedArticle';
+import { ArticleSkeleton, FeaturedArticleSkeleton } from '../components/ArticleSkeleton';
 import { articles } from '../data/articles';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Button } from "@/components/ui/button";
+import { ArrowRight, Clock, TrendingUp } from 'lucide-react';
 
 const Index = () => {
   const [sortedArticles, setSortedArticles] = useState(articles);
+  const [isLoading, setIsLoading] = useState(true);
   const { t } = useLanguage();
 
   useEffect(() => {
-    // Sort articles by publication date (newest first) and take only the latest 7
-    const sorted = [...articles]
-      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-      .slice(0, 7);
-    setSortedArticles(sorted);
+    // Simulate loading for skeleton
+    const timer = setTimeout(() => {
+      // Sort articles by publication date (newest first) and take only the latest 7
+      const sorted = [...articles]
+        .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+        .slice(0, 7);
+      setSortedArticles(sorted);
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const featuredArticle = sortedArticles[0];
   const otherArticles = sortedArticles.slice(1);
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-background text-foreground font-sans">
       <Header />
       <InstallSidebar />
       
       {/* 3D Phone Hero Section */}
       <PhoneHero />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative">
+        {/* Featured Article Section */}
+        <section className="py-16 bg-gradient-to-b from-background to-muted/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-display font-medium mb-4">
+                <TrendingUp size={16} />
+                {t('featured')}
+              </div>
+              <h2 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-4">
+                {t('home.latest')}
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Entdecken Sie unsere neuesten und spannendsten Geschichten
+              </p>
+            </div>
 
-        {/* Latest Articles Section */}
-        <section className="mb-12">
-          <div className="flex items-center justify-between mb-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-black font-serif">{t('home.latest')}</h2>
-            <div className="h-1 bg-gradient-to-r from-red-accent to-blue-accent rounded-full flex-1 ml-6 max-w-32"></div>
-          </div>
-
-          {/* Full-width Articles with alternating backgrounds */}
-          <div className="space-y-0">
-            {sortedArticles.map((article, index) => (
-              <Link
-                key={article.id}
-                to={`/article/${article.id}`}
-                className={`block w-full py-16 transition-all duration-300 hover:scale-[1.02] ${
-                  index % 2 === 0 ? 'bg-white' : 'bg-[#5E40E3]'
-                }`}
-              >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                    {/* Article Image - Left side */}
-                    <div className="order-2 lg:order-1">
-                      <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
-                        <img
-                          src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Article Content - Right side */}
-                    <div className={`order-1 lg:order-2 ${
-                      index % 2 === 0 ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]'
-                    }`}>
-                      <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
-                        {article.title}
-                      </h3>
-                      <p className="text-lg mb-6 opacity-90 line-clamp-3">
-                        {article.excerpt}
-                      </p>
-                      <div className="text-sm opacity-75">
-                        {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {article.category}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
+            {isLoading ? (
+              <FeaturedArticleSkeleton />
+            ) : featuredArticle ? (
+              <FeaturedArticle article={featuredArticle} />
+            ) : null}
           </div>
         </section>
 
-        {/* Latest Product Section */}
-        <section className="bg-gradient-to-r from-[#5E40E3] to-[#FFFFFF] rounded-lg shadow-sm border border-gray-200 p-8 mb-12">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            {/* Product Image */}
-            <div className="flex-shrink-0">
-              <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-lg overflow-hidden shadow-md border border-gray-100">
-                <img
-                  src="/lovable-uploads/d60c8951-db95-4a1b-bd2e-35466f8bb081.png"
-                  alt="Our latest product"
-                  className="w-full h-full object-contain p-2"
-                />
+        {/* More Articles Section */}
+        <section className="py-16 bg-muted/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-12">
+              <div>
+                <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-2">
+                  Weitere Artikel
+                </h2>
+                <p className="text-muted-foreground text-lg">
+                  Entdecken Sie mehr interessante Geschichten
+                </p>
               </div>
+              <Link to="/search">
+                <Button variant="outline" className="hidden sm:flex items-center gap-2 font-display">
+                  Alle anzeigen
+                  <ArrowRight size={16} />
+                </Button>
+              </Link>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 text-center md:text-left">
-              <h3 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-4 font-sans">
-                {t('home.product.title')}
-              </h3>
-              <p className="text-[#1A1A1A] text-lg mb-6 font-sans">
-                {t('home.product.description')}
-              </p>
-              <Link
-                to="/products"
-                className="inline-flex items-center bg-[#5E40E3] text-[#FFFFFF] px-6 py-3 rounded-md font-medium hover:shadow-[0_0_15px_rgba(46,234,224,0.5)] transition-all duration-300"
-              >
-                {t('home.product.button')}
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[...Array(6)].map((_, i) => (
+                  <ArticleSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {otherArticles.map((article, index) => (
+                  <div 
+                    key={article.id} 
+                    className="animate-fade-in-up"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <ArticleCard article={article} />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="text-center mt-12">
+              <Link to="/search">
+                <Button size="lg" className="font-display shadow-elevation-2 hover:shadow-elevation-3">
+                  Alle Artikel durchsuchen
+                  <ArrowRight size={18} className="ml-2" />
+                </Button>
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* Product Section */}
+        <section className="py-16 bg-gradient-to-br from-primary/5 to-accent/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-card rounded-3xl shadow-premium overflow-hidden">
+              <div className="grid lg:grid-cols-2 gap-0">
+                <div className="p-8 lg:p-16 flex flex-col justify-center">
+                  <div className="mb-6">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-display font-medium">
+                      <Clock size={14} />
+                      Neu
+                    </span>
+                  </div>
+                  <h3 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-6">
+                    {t('home.product.title')}
+                  </h3>
+                  <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
+                    {t('home.product.description')}
+                  </p>
+                  <div>
+                    <Link to="/products">
+                      <Button size="lg" className="font-display shadow-elevation-2 hover:shadow-elevation-3 group">
+                        {t('home.product.button')}
+                        <ArrowRight size={18} className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+                <div className="relative bg-gradient-to-br from-primary/10 to-accent/20 flex items-center justify-center p-8">
+                  <div className="relative">
+                    <div className="w-48 h-48 lg:w-64 lg:h-64 bg-background rounded-2xl shadow-elevation-3 overflow-hidden">
+                      <img
+                        src="/lovable-uploads/d60c8951-db95-4a1b-bd2e-35466f8bb081.png"
+                        alt="Our latest product"
+                        className="w-full h-full object-contain p-4"
+                      />
+                    </div>
+                    <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-full opacity-20 animate-pulse" />
+                    <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-accent to-primary rounded-full opacity-30 animate-pulse" style={{ animationDelay: '1s' }} />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -125,99 +172,74 @@ const Index = () => {
           
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             {/* Header */}
-            <div className="text-center mb-16">
-              <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 font-sans tracking-tight">
+            <div className="text-center mb-16 animate-fade-in-up">
+              <h2 className="text-5xl md:text-6xl font-display font-bold text-white mb-6 tracking-tight">
                 {t('home.goals.title')}
               </h2>
               <div className="w-32 h-1 bg-gradient-to-r from-white to-[#2EEAE0] mx-auto mb-6"></div>
-              <p className="text-xl text-white/90 max-w-3xl mx-auto font-sans leading-relaxed">
+              <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
                 Unsere Vision für die Zukunft der digitalen Unterhaltung
               </p>
             </div>
 
             {/* Goals Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              <div className="group relative">
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                  <div className="mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-3xl">🎯</span>
+              {[
+                { icon: '🎯', title: t('home.goals.inspire'), desc: t('home.goals.inspire.desc') },
+                { icon: '😂', title: t('home.goals.laughter'), desc: t('home.goals.laughter.desc') },
+                { icon: '🌍', title: t('home.goals.talent'), desc: t('home.goals.talent.desc') },
+                { icon: '⚡', title: t('home.goals.fun'), desc: t('home.goals.fun.desc') }
+              ].map((goal, index) => (
+                <div 
+                  key={index} 
+                  className="group relative animate-scale-in"
+                  style={{ animationDelay: `${index * 0.2}s` }}
+                >
+                  <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                    <div className="mb-6">
+                      <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-elevation-2">
+                        <span className="text-3xl">{goal.icon}</span>
+                      </div>
+                      <h3 className="text-2xl font-display font-bold text-white mb-3">{goal.title}</h3>
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.inspire')}</h3>
+                    <p className="text-white/90 text-base leading-relaxed">{goal.desc}</p>
                   </div>
-                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.inspire.desc')}</p>
                 </div>
-              </div>
-
-              <div className="group relative">
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                  <div className="mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-3xl">😂</span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.laughter')}</h3>
-                  </div>
-                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.laughter.desc')}</p>
-                </div>
-              </div>
-
-              <div className="group relative">
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                  <div className="mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-3xl">🌍</span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.talent')}</h3>
-                  </div>
-                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.talent.desc')}</p>
-                </div>
-              </div>
-
-              <div className="group relative">
-                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                  <div className="mb-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-3xl">⚡</span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.fun')}</h3>
-                  </div>
-                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.fun.desc')}</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-50 text-black py-12 border-t border-gray-200">
+      <footer className="bg-card border-t border-border py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-2">
-              <h3 className="text-2xl font-bold mb-4 font-serif">Daily Fun</h3>
-              <p className="text-gray-600 mb-4 font-serif italic">
+              <h3 className="text-2xl font-signature font-bold text-red-accent mb-4">Daily Fun</h3>
+              <p className="text-muted-foreground mb-6 text-lg font-serif italic">
                 "{t('footer.quote')}"
               </p>
-              <p className="text-gray-600 text-sm">
+              <p className="text-muted-foreground text-sm">
                 {t('footer.rights')}
               </p>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-red-accent">{t('footer.quick')}</h4>
-              <ul className="space-y-2 text-gray-600">
-                <li><Link to="/about" className="hover:text-black transition-colors">{t('header.about')}</Link></li>
-                <li><Link to="/contact" className="hover:text-black transition-colors">Contact</Link></li>
-                <li><Link to="/privacy-policy" className="hover:text-black transition-colors">Privacy Policy</Link></li>
-                <li><Link to="/terms-of-service" className="hover:text-black transition-colors">Terms of Service</Link></li>
+              <h4 className="text-lg font-display font-semibold mb-6 text-red-accent">{t('footer.quick')}</h4>
+              <ul className="space-y-3 text-muted-foreground">
+                <li><Link to="/about" className="hover:text-foreground transition-colors duration-300 font-sans">{t('header.about')}</Link></li>
+                <li><Link to="/contact" className="hover:text-foreground transition-colors duration-300 font-sans">Contact</Link></li>
+                <li><Link to="/privacy-policy" className="hover:text-foreground transition-colors duration-300 font-sans">Privacy Policy</Link></li>
+                <li><Link to="/terms-of-service" className="hover:text-foreground transition-colors duration-300 font-sans">Terms of Service</Link></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="text-lg font-semibold mb-4 text-blue-accent">{t('footer.categories')}</h4>
-              <ul className="space-y-2 text-gray-600">
-                <li><Link to="/weird" className="hover:text-black transition-colors">{t('header.weird')}</Link></li>
-                <li><Link to="/products" className="hover:text-black transition-colors">{t('header.products')}</Link></li>
+              <h4 className="text-lg font-display font-semibold mb-6 text-blue-accent">{t('footer.categories')}</h4>
+              <ul className="space-y-3 text-muted-foreground">
+                <li><Link to="/weird" className="hover:text-foreground transition-colors duration-300 font-sans">{t('header.weird')}</Link></li>
+                <li><Link to="/products" className="hover:text-foreground transition-colors duration-300 font-sans">{t('header.products')}</Link></li>
               </ul>
             </div>
           </div>
