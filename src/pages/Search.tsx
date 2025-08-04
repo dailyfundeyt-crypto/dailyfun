@@ -7,11 +7,13 @@ import InstallSidebar from '../components/InstallSidebar';
 import ProfileShareMenu from '../components/ProfileShareMenu';
 import { articles } from '../data/articles';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useIsMobile } from '../hooks/use-mobile';
 
 const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
   const { t } = useLanguage();
+  const isMobile = useIsMobile();
 
   // Employee profiles data
   const employees = [
@@ -115,6 +117,157 @@ const Search = () => {
 
   const currentEmployeeInfo = selectedAuthor !== 'all' ? getEmployeeInfo(selectedAuthor) : null;
 
+  // Mobile TikTok-style layout
+  if (isMobile) {
+    return (
+      <div className="min-h-screen bg-black">
+        {/* Fixed Header */}
+        <div className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm">
+          <div className="flex items-center justify-between p-4">
+            <h1 className="text-white font-bold text-lg">Neueste Artikel</h1>
+            {selectedAuthor !== 'all' && (
+              <span className="text-white text-sm opacity-75">
+                {employees.find(emp => emp.id === selectedAuthor)?.name}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Author Filter - Fixed top */}
+        <div className="fixed top-16 left-0 right-0 z-40 bg-black/80 backdrop-blur-sm">
+          <div className="flex items-center space-x-3 px-4 py-3 overflow-x-auto" style={{scrollSnapType: 'x mandatory'}}>
+            {/* All Articles Profile */}
+            <div 
+              className="flex flex-col items-center cursor-pointer group flex-shrink-0"
+              onClick={handleAllClick}
+            >
+              <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-all ${
+                selectedAuthor === 'all' 
+                  ? 'border-red-500 bg-red-500 text-white' 
+                  : 'border-white/30 bg-white/10 text-white'
+              }`}>
+                ALL
+              </div>
+            </div>
+
+            {/* Employee Profiles */}
+            {employees.map((employee) => (
+              <div 
+                key={employee.id}
+                className="flex flex-col items-center cursor-pointer group flex-shrink-0"
+                onClick={() => handleEmployeeClick(employee.id)}
+              >
+                <div className={`w-12 h-12 rounded-full border-2 overflow-hidden transition-all ${
+                  selectedAuthor === employee.id 
+                    ? 'border-red-500' 
+                    : 'border-white/30'
+                }`}>
+                  <img 
+                    src={employee.image} 
+                    alt={employee.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* TikTok-style Articles */}
+        <div className="pt-32" style={{scrollSnapType: 'y mandatory'}}>
+          {filteredArticles.map((article, index) => (
+            <Link
+              key={article.id}
+              to={`/article/${article.id}`}
+              className="block relative"
+              style={{scrollSnapAlign: 'start'}}
+            >
+              <div className="h-screen w-full relative overflow-hidden">
+                {/* Background Image */}
+                <img
+                  src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
+                  alt={article.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  onError={(e) => {
+                    console.log('Image failed to load:', article.imageUrl);
+                    e.currentTarget.src = '/placeholder.svg';
+                  }}
+                />
+                
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                
+                {/* Content Overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  {/* Category Badge */}
+                  <div className="inline-block px-3 py-1 bg-red-500/80 rounded-full text-xs font-medium mb-3">
+                    {article.category}
+                  </div>
+                  
+                  {/* Title */}
+                  <h2 className="text-2xl font-bold mb-3 font-serif leading-tight">
+                    {article.title}
+                  </h2>
+                  
+                  {/* Excerpt */}
+                  <p className="text-sm opacity-90 mb-4 line-clamp-3 leading-relaxed">
+                    {article.excerpt}
+                  </p>
+                  
+                  {/* Author and Date */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                        <span className="text-xs font-bold">
+                          {article.author.split(' ').map(n => n[0]).join('')}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">{article.author}</div>
+                        <div className="text-xs opacity-75">
+                          {new Date(article.publishedAt).toLocaleDateString('de-DE')}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Article Index */}
+                    <div className="text-xs opacity-50">
+                      {index + 1} / {filteredArticles.length}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Tap to read indicator */}
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 pointer-events-none">
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full p-4">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {filteredArticles.length === 0 && (
+          <div className="h-screen flex items-center justify-center text-center text-white p-6">
+            <div>
+              <h3 className="text-xl font-medium mb-2">Keine Artikel gefunden</h3>
+              <p className="opacity-75">
+                {selectedAuthor !== 'all' 
+                  ? `Keine Artikel von ${employees.find(emp => emp.id === selectedAuthor)?.name} verfügbar.`
+                  : 'Keine Artikel verfügbar.'
+                }
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop layout (unchanged)
   return (
     <div className="min-h-screen bg-white text-black">
       <Header />
