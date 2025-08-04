@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle } from 'lucide-react';
+import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -120,6 +120,7 @@ const AI = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [articleContext, setArticleContext] = useState<string | null>(null);
   const [qrMode, setQrMode] = useState(false);
+  const [visibleCopyButtons, setVisibleCopyButtons] = useState<string[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // Check for article parameter in URL and initialize article context
@@ -178,8 +179,8 @@ const AI = () => {
   const generateQRCode = async (url: string): Promise<string> => {
     try {
       return await QRCode.toDataURL(url, {
-        width: 300,
-        margin: 2,
+        width: 200,
+        margin: 1,
         color: {
           dark: '#000000',
           light: '#FFFFFF'
@@ -189,6 +190,37 @@ const AI = () => {
       console.error('Error generating QR code:', error);
       throw error;
     }
+  };
+
+  const handleMessageClick = (messageId: string) => {
+    setVisibleCopyButtons(prev => 
+      prev.includes(messageId) 
+        ? prev.filter(id => id !== messageId)
+        : [...prev, messageId]
+    );
+    
+    // Hide after 3 seconds
+    setTimeout(() => {
+      setVisibleCopyButtons(prev => prev.filter(id => id !== messageId));
+    }, 3000);
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // You could add a toast notification here
+    } catch (error) {
+      console.error('Failed to copy text:', error);
+    }
+  };
+
+  const downloadQRCode = (qrCodeDataUrl: string) => {
+    const link = document.createElement('a');
+    link.download = 'qr-code.png';
+    link.href = qrCodeDataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const searchArticles = (query: string) => {
@@ -364,13 +396,13 @@ const AI = () => {
         const excerpt = language === 'de' ? t(`article.${contextArticle.id}.excerpt`) : contextArticle.excerpt;
         
         const responseText = language === 'de'
-          ? `📰 **${title}**\n\n${excerpt}\n\n📊 **Artikel-Details:**\n• Autor: ${contextArticle.author}\n• Kategorie: ${contextArticle.category}\n• Veröffentlicht: ${new Date(contextArticle.publishedAt).toLocaleDateString('de-DE')}\n• Aufrufe: ${contextArticle.views.toLocaleString()}\n\n💡 **Fragen Sie mich gerne:**\n• "Wer ist der Autor?"\n• "Mehr Details zur Kategorie"\n• "Ähnliche Artikel"\n• "Quellen zu diesem Artikel"`
-          : `📰 **${title}**\n\n${excerpt}\n\n📊 **Article Details:**\n• Author: ${contextArticle.author}\n• Category: ${contextArticle.category}\n• Published: ${new Date(contextArticle.publishedAt).toLocaleDateString('en-US')}\n• Views: ${contextArticle.views.toLocaleString()}\n\n💡 **Feel free to ask:**\n• "Who is the author?"\n• "More about this category"\n• "Similar articles"\n• "Sources for this article"`;
+          ? `🎯 Hier sind detaillierte Informationen über "${title}":\n\n📖 **Zusammenfassung:** ${excerpt}\n\n👤 **Autor:** ${contextArticle.author}\n📂 **Kategorie:** ${contextArticle.category}\n📅 **Veröffentlicht:** ${new Date(contextArticle.publishedAt).toLocaleDateString('de-DE')}\n👀 **Aufrufe:** ${contextArticle.views.toLocaleString()}\n\nSie können mich nach spezifischen Details, Quellen oder verwandten Artikeln fragen!`
+          : `🎯 Here's detailed information about "${title}":\n\n📖 **Summary:** ${excerpt}\n\n👤 **Author:** ${contextArticle.author}\n📂 **Category:** ${contextArticle.category}\n📅 **Published:** ${new Date(contextArticle.publishedAt).toLocaleDateString('en-US')}\n👀 **Views:** ${contextArticle.views.toLocaleString()}\n\nYou can ask me for specific details, sources, or related articles!`;
         
         return { text: responseText };
       }
     }
-    
+
     // Local article search for search mode
     if (searchMode === 'local') {
       const searchResults = searchArticles(userInput);
@@ -455,8 +487,32 @@ const AI = () => {
     return { text: defaultText };
   };
 
-  const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+  const handleActionCardClick = (card: ActionCard) => {
+    if (card.id === 'qr-generator') {
+      setQrMode(true);
+      const prompt = language === 'de' ? card.promptDe : card.promptEn;
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        text: prompt,
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, newMessage]);
+    } else {
+      const prompt = language === 'de' ? card.promptDe : card.promptEn;
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        text: prompt,
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, newMessage]);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputValue.trim() || isTyping) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -473,14 +529,15 @@ const AI = () => {
       const response = await processAIResponse(inputValue);
       setLastAIResponse(response.text);
 
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: response.text,
+        isUser: false,
+        timestamp: new Date(),
+        qrCode: response.qrCode
+      };
+
       setTimeout(() => {
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          text: response.text,
-          isUser: false,
-          timestamp: new Date(),
-          qrCode: response.qrCode
-        };
         setMessages(prev => [...prev, aiMessage]);
         setIsTyping(false);
       }, 1000);
@@ -490,147 +547,171 @@ const AI = () => {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
-    }
-  };
-
-  const handleActionCard = (actionId: ActionCard['id']) => {
-    const action = actionCards.find(a => a.id === actionId);
-    if (action) {
-      const promptText = language === 'de' ? action.promptDe : action.promptEn;
-      
-      if (actionId === 'qr-generator') {
-        setQrMode(true);
-      }
-      
-      const aiMessage: Message = {
-        id: Date.now().toString(),
-        text: promptText,
-        isUser: false,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header />
-      
-      <div className="container mx-auto px-4 py-8 h-screen flex flex-col">
+      <div className="container mx-auto px-4 pt-20 pb-8 h-screen flex flex-col">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-black">
-            {language === 'de' ? 'Was kann ich für Sie tun?' : 'What can I do for you?'}
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3">
+            Daily Fun AI
           </h1>
+          <p className="text-muted-foreground">
+            {language === 'de' ? 'Ihre intelligente Assistentin für alle Fragen' : 'Your intelligent assistant for all questions'}
+          </p>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col bg-gray-50 rounded-2xl border border-gray-200 shadow-lg">
-          {/* Messages */}
-          <div 
-            ref={scrollAreaRef}
-            className="flex-1 p-6 overflow-y-auto space-y-4"
-          >
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-              >
+        {/* Mode Selection */}
+        <div className="flex justify-center mb-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 border border-white/20 shadow-lg">
+            <Button
+              variant={searchMode === 'local' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setSearchMode('local')}
+              className="mr-1 rounded-xl"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Daily Fun (Local)
+            </Button>
+            <Button
+              variant={searchMode === 'internet' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setSearchMode('internet')}
+              className="rounded-xl"
+            >
+              <Globe className="w-4 h-4 mr-2" />
+              Internet Search
+            </Button>
+          </div>
+        </div>
+
+        {/* Action Cards - Only visible in Local mode */}
+        {searchMode === 'local' && (
+          <div className="flex justify-center gap-4 mb-6">
+            {actionCards.map((card) => {
+              const Icon = card.icon;
+              return (
                 <div
-                  className={`max-w-[80%] p-4 rounded-2xl ${
-                    message.isUser
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white text-black border border-gray-200 shadow-sm'
-                  }`}
+                  key={card.id}
+                  onClick={() => handleActionCardClick(card)}
+                  className="bg-white/90 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer min-w-[160px] text-center hover:scale-105"
                 >
-                  <p className="whitespace-pre-wrap">{message.text}</p>
-                  {message.qrCode && (
-                    <div className="mt-4 flex justify-center">
-                      <img 
-                        src={message.qrCode} 
-                        alt="Generated QR Code" 
-                        className="rounded-lg border border-gray-300"
-                      />
+                  <div className="flex flex-col items-center">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-4 mb-4 shadow-lg">
+                      <Icon className="w-6 h-6 text-white" />
                     </div>
-                  )}
-                  <span className="text-xs opacity-70 mt-2 block">
-                    {message.timestamp.toLocaleTimeString()}
-                  </span>
-                </div>
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-white border border-gray-200 shadow-sm p-4 rounded-2xl">
-                  <div className="flex space-x-2">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <h3 className="font-semibold text-gray-800 text-sm">
+                      {language === 'de' ? card.titleDe : card.titleEn}
+                    </h3>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })}
           </div>
+        )}
 
-          {/* Action Cards */}
-          <div className="px-6 pb-4">
-            <div className="grid grid-cols-2 gap-3">
-              {actionCards.map((action) => {
-                const Icon = action.icon;
-                
-                return (
-                  <button
-                    key={action.id}
-                    onClick={() => handleActionCard(action.id)}
-                    className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 hover:bg-gray-50"
+        {/* Chat Area */}
+        <div className="flex-1 bg-white/80 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg mb-4 flex flex-col overflow-hidden">
+          <div ref={scrollAreaRef} className="flex-1 p-6 overflow-y-auto">
+            <div className="space-y-6">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] p-4 rounded-2xl relative group ${
+                      message.isUser
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white ml-12 shadow-lg'
+                        : 'bg-gray-50 text-gray-800 mr-12 border border-gray-100'
+                    }`}
+                    onClick={() => handleMessageClick(message.id)}
                   >
-                    <div className="flex items-center justify-center space-x-2">
-                      <Icon className="h-5 w-5 text-gray-700" />
-                      <span className="text-sm font-medium text-gray-700">
-                        {language === 'de' ? action.titleDe : action.titleEn}
-                      </span>
+                    <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {message.text}
                     </div>
-                  </button>
-                );
-              })}
+                    {message.qrCode && (
+                      <div className="mt-4 text-center relative">
+                        <img 
+                          src={message.qrCode} 
+                          alt="Generated QR Code" 
+                          className="mx-auto rounded-xl shadow-lg border max-w-[200px] h-auto"
+                        />
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            downloadQRCode(message.qrCode!);
+                          }}
+                          size="sm"
+                          variant="outline"
+                          className="mt-3 bg-white/90 hover:bg-white"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          {language === 'de' ? 'Herunterladen' : 'Download'}
+                        </Button>
+                      </div>
+                    )}
+                    <div className="text-xs opacity-70 mt-3">
+                      {message.timestamp.toLocaleTimeString()}
+                    </div>
+                    {/* Copy button - only visible on click/hover */}
+                    {visibleCopyButtons.includes(message.id) && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          copyToClipboard(message.text);
+                        }}
+                        size="sm"
+                        variant="outline"
+                        className="absolute -bottom-2 -right-2 opacity-90 bg-white shadow-lg"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl mr-12">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Input Area */}
-          <div className="p-6 border-t border-gray-200">
-            <div className="flex gap-3 mb-4">
-              <Select value={searchMode} onValueChange={(value: 'local' | 'internet') => setSearchMode(value)}>
-                <SelectTrigger className="w-48 bg-white border-gray-300">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="local">Daily Fun (Local)</SelectItem>
-                  <SelectItem value="internet">Internet Search</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex gap-3">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={language === 'de' ? 'Schreiben Sie hier...' : 'Type here...'}
-                className="flex-1 bg-white border-gray-300 text-black placeholder-gray-500 focus:border-blue-500"
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputValue.trim()}
-                className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+        {/* Input Area */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/20 p-4 shadow-lg">
+          <form onSubmit={handleSubmit} className="flex gap-3">
+            <textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={language === 'de' ? 'Ihre Frage...' : 'Your question...'}
+              className="flex-1 rounded-xl border border-gray-200 p-3 resize-none min-h-[44px] max-h-32 bg-white/90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled={isTyping}
+              rows={1}
+              style={{ height: `${Math.min(Math.max(44, inputValue.split('\n').length * 20 + 24), 128)}px` }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
+            />
+            <Button 
+              type="submit" 
+              disabled={!inputValue.trim() || isTyping}
+              className="rounded-xl px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </form>
         </div>
       </div>
     </div>
