@@ -7,13 +7,11 @@ import InstallSidebar from '../components/InstallSidebar';
 import ProfileShareMenu from '../components/ProfileShareMenu';
 import { articles } from '../data/articles';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useIsMobile } from '../hooks/use-mobile';
 
 const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
   const { t } = useLanguage();
-  const isMobile = useIsMobile();
 
   // Employee profiles data
   const employees = [
@@ -117,135 +115,6 @@ const Search = () => {
 
   const currentEmployeeInfo = selectedAuthor !== 'all' ? getEmployeeInfo(selectedAuthor) : null;
 
-  // Mobile single article view with snap scrolling
-  if (isMobile) {
-    return (
-      <div className="min-h-screen bg-white text-black">
-        <Header />
-        <InstallSidebar />
-        
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Employee Profiles Section */}
-          <div className="mb-8 lg:mb-12">
-            <div className="flex items-start space-x-4 sm:space-x-6 lg:space-x-8 mb-6 lg:mb-8 overflow-x-auto pb-2 px-4 sm:px-6 lg:justify-center" style={{scrollSnapType: 'x mandatory'}}>
-              {/* All Articles Profile */}
-              <div 
-                className="flex flex-col items-center cursor-pointer group flex-shrink-0"
-                onClick={handleAllClick}
-              >
-                <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center text-lg sm:text-xl lg:text-2xl font-bold transition-all ${
-                  selectedAuthor === 'all' 
-                    ? 'border-red-accent bg-red-accent text-white' 
-                    : 'border-gray-300 bg-gray-100 text-gray-600 group-hover:border-red-accent/50'
-                }`}>
-                  ALL
-                </div>
-                <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-16 sm:max-w-20">Alle Artikel</span>
-              </div>
-
-              {/* Employee Profiles */}
-              {employees.map((employee) => (
-                <div 
-                  key={employee.id}
-                  className="flex flex-col items-center cursor-pointer group flex-shrink-0"
-                  onClick={() => handleEmployeeClick(employee.id)}
-                >
-                  <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 overflow-hidden transition-all ${
-                    selectedAuthor === employee.id 
-                      ? 'border-red-accent' 
-                      : 'border-gray-300 group-hover:border-red-accent/50'
-                  }`}>
-                    <img 
-                      src={employee.image} 
-                      alt={employee.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight">
-                    {employee.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Latest Articles Section */}
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-black mb-8 font-serif text-center">
-              Neueste Artikel
-              {selectedAuthor !== 'all' && (
-                <span className="text-lg font-normal text-gray-600 block mt-2">
-                  von {employees.find(emp => emp.id === selectedAuthor)?.name}
-                </span>
-              )}
-            </h2>
-          </div>
-
-          {/* Mobile Articles with Snap Scrolling */}
-          <div className="h-[70vh] overflow-y-auto" style={{scrollSnapType: 'y mandatory'}}>
-            {filteredArticles.map((article, index) => (
-              <Link
-                key={article.id}
-                to={`/article/${article.id}`}
-                className="block h-[70vh] mb-4 last:mb-0"
-                style={{scrollSnapAlign: 'start'}}
-              >
-                <div className={`h-full w-full p-6 transition-all duration-300 hover:scale-[1.02] ${
-                  index % 2 === 0 ? 'bg-white' : 'bg-[#5E40E3]'
-                } rounded-lg shadow-lg`}>
-                  <div className="h-full flex flex-col">
-                    {/* Article Image */}
-                    <div className="flex-1 mb-4">
-                      <div className="aspect-video rounded-lg overflow-hidden shadow-lg h-full">
-                        <img
-                          src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.log('Image failed to load:', article.imageUrl);
-                            e.currentTarget.src = '/placeholder.svg';
-                          }}
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Article Content */}
-                    <div className={`flex-shrink-0 ${
-                      index % 2 === 0 ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]'
-                    }`}>
-                      <h3 className="text-2xl font-bold mb-3 font-serif">
-                        {article.title}
-                      </h3>
-                      <p className="text-base mb-4 opacity-90 line-clamp-3">
-                        {article.excerpt}
-                      </p>
-                      <div className="text-sm opacity-75">
-                        {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {article.category}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          {filteredArticles.length === 0 && (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium text-black mb-2">Keine Artikel gefunden</h3>
-              <p className="text-gray-600">
-                {selectedAuthor !== 'all' 
-                  ? `Keine Artikel von ${employees.find(emp => emp.id === selectedAuthor)?.name} verfügbar.`
-                  : 'Keine Artikel verfügbar.'
-                }
-              </p>
-            </div>
-          )}
-        </main>
-      </div>
-    );
-  }
-
-  // Desktop layout (unchanged)
   return (
     <div className="min-h-screen bg-white text-black">
       <Header />
