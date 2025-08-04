@@ -121,31 +121,31 @@ const Search = () => {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Employee Profiles Section */}
-        <div className="mb-12">
-          <div className="flex justify-center items-center space-x-8 mb-8">
+        <div className="mb-8 lg:mb-12">
+          <div className="flex justify-center items-center space-x-4 sm:space-x-6 lg:space-x-8 mb-6 lg:mb-8 overflow-x-auto pb-2">
             {/* All Articles Profile */}
             <div 
-              className="flex flex-col items-center cursor-pointer group"
+              className="flex flex-col items-center cursor-pointer group flex-shrink-0"
               onClick={handleAllClick}
             >
-              <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center text-2xl font-bold transition-all ${
+              <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center text-lg sm:text-xl lg:text-2xl font-bold transition-all ${
                 selectedAuthor === 'all' 
                   ? 'border-red-accent bg-red-accent text-white' 
                   : 'border-gray-300 bg-gray-100 text-gray-600 group-hover:border-red-accent/50'
               }`}>
                 ALL
               </div>
-              <span className="text-sm font-medium mt-2 text-center">Alle Artikel</span>
+              <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-16 sm:max-w-20">Alle Artikel</span>
             </div>
 
             {/* Employee Profiles */}
             {employees.map((employee) => (
               <div 
                 key={employee.id}
-                className="flex flex-col items-center cursor-pointer group"
+                className="flex flex-col items-center cursor-pointer group flex-shrink-0"
                 onClick={() => handleEmployeeClick(employee.id)}
               >
-                <div className={`w-20 h-20 rounded-full border-4 overflow-hidden transition-all ${
+                <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 overflow-hidden transition-all ${
                   selectedAuthor === employee.id 
                     ? 'border-red-accent' 
                     : 'border-gray-300 group-hover:border-red-accent/50'
@@ -156,8 +156,8 @@ const Search = () => {
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <span className="text-sm font-medium mt-2 text-center max-w-20">
-                  {employee.name}
+                <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-16 sm:max-w-20 leading-tight">
+                  {employee.name.split(' ')[0]}
                 </span>
               </div>
             ))}
@@ -166,11 +166,11 @@ const Search = () => {
 
         {/* Profile Info Section */}
         {showProfileInfo && currentEmployeeInfo && (
-          <div className="mb-8 bg-white rounded-lg border border-gray-200 p-6 max-w-md mx-auto">
+          <div className="mb-6 lg:mb-8 bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mx-4 sm:mx-auto max-w-md">
             {/* Profile Header with Stats */}
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
                   <img 
                     src={currentEmployeeInfo.image} 
                     alt={currentEmployeeInfo.name}
@@ -178,34 +178,36 @@ const Search = () => {
                   />
                 </div>
                 <div className="text-center">
-                  <div className="font-bold text-lg text-black">
+                  <div className="font-bold text-base sm:text-lg text-black">
                     {filteredArticles.length}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-xs sm:text-sm text-gray-600">
                     Beiträge
                   </div>
                 </div>
               </div>
               
               {/* Three Dots Menu */}
-              <ProfileShareMenu 
-                profileName={currentEmployeeInfo.name}
-                profileId={currentEmployeeInfo.id}
-              />
+              <div className="flex-shrink-0">
+                <ProfileShareMenu 
+                  profileName={currentEmployeeInfo.name}
+                  profileId={currentEmployeeInfo.id}
+                />
+              </div>
             </div>
 
             {/* Profile Name and Role */}
             <div className="mb-3">
-              <h3 className="text-lg font-bold text-black">
+              <h3 className="text-base sm:text-lg font-bold text-black">
                 {currentEmployeeInfo.name}
               </h3>
-              <p className="text-red-accent font-medium text-sm">
+              <p className="text-red-accent font-medium text-xs sm:text-sm">
                 {currentEmployeeInfo.role}
               </p>
             </div>
 
             {/* Bio */}
-            <p className="text-gray-700 text-sm leading-relaxed">
+            <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
               {currentEmployeeInfo.description}
             </p>
           </div>
