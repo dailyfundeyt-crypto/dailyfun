@@ -57,13 +57,13 @@ const CategoryPage = () => {
 
   if (!categoryName) {
     return (
-      <div className="min-h-screen bg-white text-black">
+      <div className="min-h-screen bg-[#FFFFFF] text-[#1A1A1A]">
         <Header />
         <InstallSidebar />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-black mb-4">{t('category.not.found')}</h1>
-            <Link to="/" className="text-red-accent hover:text-blue-accent">
+            <h1 className="text-2xl font-bold text-[#1A1A1A] mb-4 font-sans">{t('category.not.found')}</h1>
+            <Link to="/" className="text-[#5E40E3] hover:text-[#2EEAE0] transition-colors">
               {t('category.return')}
             </Link>
           </div>
@@ -73,7 +73,7 @@ const CategoryPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#1A1A1A]">
       <Header />
       <InstallSidebar />
       
@@ -81,15 +81,15 @@ const CategoryPage = () => {
         <div className="mb-8">
           <Link
             to="/"
-            className="inline-flex items-center text-red-accent hover:text-blue-accent mb-6 transition-colors"
+            className="inline-flex items-center text-[#5E40E3] hover:text-[#2EEAE0] mb-6 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t('category.back')}
           </Link>
 
-          <h1 className="text-3xl font-bold text-black mb-6 font-serif">{categoryName}</h1>
+          <h1 className="text-3xl font-bold text-[#1A1A1A] mb-6 font-sans">{categoryName}</h1>
           
-          <p className="text-gray-600 mb-6">
+          <p className="text-[#1A1A1A] mb-6 font-sans">
             {filteredArticles.length} {t('category.articles')}
           </p>
         </div>
@@ -104,8 +104,8 @@ const CategoryPage = () => {
         {filteredArticles.length === 0 && (
           <Card className="mx-auto max-w-md">
             <CardContent className="text-center py-12">
-              <h3 className="text-lg font-medium text-black mb-2">{t('category.no.articles')}</h3>
-              <p className="text-gray-600">{t('category.no.articles.desc')} {categoryName} category.</p>
+              <h3 className="text-lg font-medium text-[#1A1A1A] mb-2 font-sans">{t('category.no.articles')}</h3>
+              <p className="text-[#1A1A1A] font-sans">{t('category.no.articles.desc')} {categoryName} category.</p>
             </CardContent>
           </Card>
         )}
