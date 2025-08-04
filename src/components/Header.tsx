@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Search, Menu, X, Home, Info, ShoppingCart, Globe, Bot, Zap } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -9,7 +9,7 @@ const Header = () => {
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
 
-  const navigation = [
+  const navigation = useMemo(() => [
     { icon: Home, href: '/', label: 'Home' },
     { icon: Search, href: '/search', label: 'Search' },
     { icon: Info, href: '/about', label: 'About' },
@@ -17,13 +17,21 @@ const Header = () => {
     { icon: Zap, href: '/weird', label: 'Strange News' },
     { icon: Globe, href: '#', label: 'Language', action: 'language' },
     { icon: Bot, href: '/ai', label: 'AI Chat' },
-  ];
+  ], []);
 
-  const handleNavigation = (item: typeof navigation[0]) => {
+  const handleNavigation = useCallback((item: typeof navigation[0]) => {
     if (item.action === 'language') {
       toggleLanguage();
     }
-  };
+  }, [toggleLanguage]);
+
+  const toggleMenu = useCallback(() => {
+    setIsMenuOpen(prev => !prev);
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setIsMenuOpen(false);
+  }, []);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 relative z-50">
@@ -79,7 +87,7 @@ const Header = () => {
           {/* Mobile menu button */}
           <div className="md:hidden">
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={toggleMenu}
               className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -102,7 +110,7 @@ const Header = () => {
                         key={item.label}
                         onClick={() => {
                           handleNavigation(item);
-                          setIsMenuOpen(false);
+                          closeMenu();
                         }}
                         className={`flex flex-col items-center p-3 rounded-md transition-colors ${
                           isActive
@@ -125,7 +133,7 @@ const Header = () => {
                           ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
                           : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))] hover:bg-gray-50'
                       }`}
-                      onClick={() => setIsMenuOpen(false)}
+                      onClick={closeMenu}
                     >
                       <Icon className="h-6 w-6 mb-1" />
                       <span className="text-xs font-medium">{item.label}</span>

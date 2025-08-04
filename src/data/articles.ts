@@ -1,5 +1,22 @@
 
-export const articles = [
+export interface Article {
+  id: string;
+  title: string;
+  titleEn?: string;
+  excerpt: string;
+  excerptEn?: string;
+  content?: string;
+  contentEn?: string;
+  imageUrl: string;
+  category: string;
+  categoryEn?: string;
+  author: string;
+  publishedAt: string;
+  tags?: string[];
+  views: number;
+}
+
+export const articles: Article[] = [
   {
     id: '1',
     title: 'Pfötchen an der Macht: Herr Whiskers verspricht Thunfisch-Utopie!',

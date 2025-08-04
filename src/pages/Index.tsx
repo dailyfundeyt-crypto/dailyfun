@@ -1,7 +1,7 @@
 
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import Header from '../components/Header';
-import ArticleCard from '../components/ArticleCard';
+import ArticleSection from '../components/ArticleSection';
 import InstallSidebar from '../components/InstallSidebar';
 import PhoneHero from '../components/PhoneHero';
 import { articles } from '../data/articles';
@@ -9,15 +9,13 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Index = () => {
-  const [sortedArticles, setSortedArticles] = useState(articles);
   const { t, language } = useLanguage();
 
-  useEffect(() => {
-    // Sort articles by publication date (newest first) and take only the latest 7
-    const sorted = [...articles]
+  // Memoize sorted articles to prevent unnecessary recalculations
+  const sortedArticles = useMemo(() => {
+    return [...articles]
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
       .slice(0, 7);
-    setSortedArticles(sorted);
   }, []);
 
   const featuredArticle = sortedArticles[0];
@@ -43,43 +41,12 @@ const Index = () => {
           {/* Full-width Articles with alternating backgrounds */}
           <div className="space-y-0">
             {sortedArticles.map((article, index) => (
-              <Link
+              <ArticleSection
                 key={article.id}
-                to={`/article/${article.id}`}
-                className={`block w-full py-16 transition-all duration-300 hover:scale-[1.02] ${
-                  index % 2 === 0 ? 'bg-white' : 'bg-[#5E40E3]'
-                }`}
-              >
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                    {/* Article Image - Left side */}
-                    <div className="order-2 lg:order-1">
-                      <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
-                        <img
-                          src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
-                          alt={article.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </div>
-                    
-                    {/* Article Content - Right side */}
-                    <div className={`order-1 lg:order-2 ${
-                      index % 2 === 0 ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]'
-                    }`}>
-                       <h3 className="text-3xl md:text-4xl font-bold mb-4 font-serif">
-                         {language === 'de' ? article.title : (article.titleEn || article.title)}
-                       </h3>
-                       <p className="text-lg mb-6 opacity-90 line-clamp-3">
-                         {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
-                       </p>
-                       <div className="text-sm opacity-75">
-                         {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {language === 'de' ? article.category : (article.categoryEn || article.category)}
-                       </div>
-                    </div>
-                  </div>
-                </div>
-              </Link>
+                article={article}
+                index={index}
+                language={language}
+              />
             ))}
           </div>
         </section>
