@@ -91,14 +91,6 @@ const Article = () => {
       <Header />
       <InstallSidebar />
       
-      {/* Desktop Navigation Arrow */}
-      <button
-        onClick={navigateToAI}
-        className="hidden md:flex fixed right-4 top-1/2 transform -translate-y-1/2 z-10 bg-primary/10 hover:bg-primary/20 text-primary rounded-full p-3 transition-all duration-300 hover:scale-110 group"
-        title={language === 'de' ? 'Zur KI-Seite' : 'Go to AI Page'}
-      >
-        <ChevronRight className="h-6 w-6 group-hover:animate-pulse" />
-      </button>
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
