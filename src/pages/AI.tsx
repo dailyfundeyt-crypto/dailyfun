@@ -254,98 +254,10 @@ const AI = () => {
     return germanScore > englishScore ? 'de' : 'en';
   };
 
-  const translateResponse = (response: string, targetLanguage: 'de' | 'en'): string => {
-    // Simple translation logic for common response patterns
-    if (targetLanguage === 'en') {
-      let translatedResponse = response
-        .replace(/Hier sind unsere Kontaktinformationen:/g, 'Here is our contact information:')
-        .replace(/Für deutsche Anfragen:/g, 'For German inquiries:')
-        .replace(/Für englische Anfragen:/g, 'For English inquiries:')
-        .replace(/Wir freuen uns auf Ihre Nachricht!/g, 'We look forward to hearing from you!')
-        .replace(/Hier sind alle verfügbaren Artikel:/g, 'Here are all available articles:')
-        .replace(/Sie können nach Quellen oder mehr Informationen zu jedem dieser Artikel fragen!/g, 'You can ask for sources or more information about any of these articles!')
-        .replace(/Hier sind die Quellen für/g, 'Here are the sources for')
-        .replace(/Hier sind detailliertere Informationen über/g, 'Here\'s more detailed information about')
-        .replace(/Über Daily Fun:/g, 'About Daily Fun:')
-        .replace(/Unsere Werte:/g, 'Our Values:')
-        .replace(/Unser Daily Fun Team:/g, 'Our Daily Fun Team:')
-        .replace(/Daily Fun Mission:/g, 'Daily Fun Mission:')
-        .replace(/Gründer & Visionär von Daily Fun:/g, 'Founder & Visionary of Daily Fun:')
-        .replace(/ist der kreative Kopf hinter Daily Fun und hat die Plattform mit dem Ziel gegründet, Nachrichten unterhaltsam und vertrauenswürdig zu gestalten./g, 'is the creative mind behind Daily Fun and founded the platform with the goal of making news entertaining and trustworthy.')
-        .replace(/Jedes Teammitglied trägt mit einzigartigen Fähigkeiten dazu bei, Daily Fun zu der vertrauenswürdigen und unterhaltsamen Plattform zu machen, die sie heute ist!/g, 'Each team member contributes unique skills to make Daily Fun the trustworthy and entertaining platform it is today!')
-        .replace(/Ich kann Ihnen helfen mit:/g, 'I can help you with:')
-        .replace(/Kontaktinformationen/g, 'Contact information')
-        .replace(/Team-Informationen/g, 'Team information')
-        .replace(/Artikel-Quellen und Details/g, 'Article sources and details')
-        .replace(/Liste aller Artikel/g, 'List of all articles')
-        .replace(/Fragen Sie mich zum Beispiel:/g, 'Try asking:');
-
-      // Translate German article titles to English
-      articles.forEach(article => {
-        const germanTitle = t(`article.${article.id}.title`);
-        translatedResponse = translatedResponse.replace(new RegExp(germanTitle, 'g'), article.title);
-      });
-
-      return translatedResponse;
-    } else {
-      let translatedResponse = response
-        .replace(/Here is our contact information:/g, 'Hier sind unsere Kontaktinformationen:')
-        .replace(/For German inquiries:/g, 'Für deutsche Anfragen:')
-        .replace(/For English inquiries:/g, 'Für englische Anfragen:')
-        .replace(/We look forward to hearing from you!/g, 'Wir freuen uns auf Ihre Nachricht!')
-        .replace(/Here are all available articles:/g, 'Hier sind alle verfügbaren Artikel:')
-        .replace(/You can ask for sources or more information about any of these articles!/g, 'Sie können nach Quellen oder mehr Informationen zu jedem dieser Artikel fragen!')
-        .replace(/Here are the sources for/g, 'Hier sind die Quellen für')
-        .replace(/Here\'s more detailed information about/g, 'Hier sind detailliertere Informationen über')
-        .replace(/About Daily Fun:/g, 'Über Daily Fun:')
-        .replace(/Our Values:/g, 'Unsere Werte:')
-        .replace(/Our Daily Fun Team:/g, 'Unser Daily Fun Team:')
-        .replace(/Daily Fun Mission:/g, 'Daily Fun Mission:')
-        .replace(/Founder & Visionary of Daily Fun:/g, 'Gründer & Visionär von Daily Fun:')
-        .replace(/is the creative mind behind Daily Fun and founded the platform with the goal of making news entertaining and trustworthy./g, 'ist der kreative Kopf hinter Daily Fun und hat die Plattform mit dem Ziel gegründet, Nachrichten unterhaltsam und vertrauenswürdig zu gestalten.')
-        .replace(/Each team member contributes unique skills to make Daily Fun the trustworthy and entertaining platform it is today!/g, 'Jedes Teammitglied trägt mit einzigartigen Fähigkeiten dazu bei, Daily Fun zu der vertrauenswürdigen und unterhaltsamen Plattform zu machen, die sie heute ist!')
-        .replace(/I can help you with:/g, 'Ich kann Ihnen helfen mit:')
-        .replace(/Contact information/g, 'Kontaktinformationen')
-        .replace(/Team information/g, 'Team-Informationen')
-        .replace(/Article sources and details/g, 'Artikel-Quellen und Details')
-        .replace(/List of all articles/g, 'Liste aller Artikel')
-        .replace(/Try asking:/g, 'Fragen Sie mich zum Beispiel:');
-
-      // Translate English article titles to German
-      articles.forEach(article => {
-        const germanTitle = t(`article.${article.id}.title`);
-        translatedResponse = translatedResponse.replace(new RegExp(article.title, 'g'), germanTitle);
-      });
-
-      return translatedResponse;
-    }
-  };
-
   const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string }> => {
     const input = userInput.toLowerCase();
     const detectedLanguage = detectLanguage(userInput);
     
-    // Check if user is requesting translation of the last response
-    const simpleLanguageSwitchPatterns = [
-      /^(auf\s+)?deutsch(\s+bitte)?$/i,
-      /^(auf\s+)?englisch(\s+bitte)?$/i,
-      /^(in\s+)?english(\s+please)?$/i,
-      /^(in\s+)?englsh$/i, // Common misspelling
-      /^(in\s+)?german(\s+please)?$/i,
-      /^deutsch$/i,
-      /^englisch$/i,
-      /^english$/i,
-      /^englsh$/i,
-      /^german$/i
-    ];
-    
-    const isTranslationRequest = lastAIResponse && 
-      simpleLanguageSwitchPatterns.some(pattern => pattern.test(userInput.trim()));
-    
-    if (isTranslationRequest && lastAIResponse) {
-      return { text: translateResponse(lastAIResponse, detectedLanguage) };
-    }
-
     // QR Code generation
     if (qrMode) {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -372,34 +284,6 @@ const AI = () => {
           ? 'Bitte senden Sie mir einen gültigen Link (beginnend mit http:// oder https://), um einen QR Code zu erstellen.\n\nBeispiel: https://www.example.com'
           : 'Please send me a valid link (starting with http:// or https://) to create a QR code.\n\nExample: https://www.example.com';
         return { text: helpText };
-      }
-    }
-
-    // Context-based AI responses when coming from an article
-    if (articleContext && (
-      input.includes('erzähl mir mehr über') || 
-      input.includes('tell me more about') || 
-      input.includes(articleContext.toLowerCase())
-    )) {
-      // Find the specific article being discussed
-      const contextArticle = articles.find(article => {
-        const titleDe = t(`article.${article.id}.title`);
-        const titleEn = article.title;
-        return titleDe.toLowerCase().includes(articleContext.toLowerCase()) ||
-               titleEn.toLowerCase().includes(articleContext.toLowerCase()) ||
-               articleContext.toLowerCase().includes(titleDe.toLowerCase()) ||
-               articleContext.toLowerCase().includes(titleEn.toLowerCase());
-      });
-
-      if (contextArticle) {
-        const title = language === 'de' ? t(`article.${contextArticle.id}.title`) : contextArticle.title;
-        const excerpt = language === 'de' ? t(`article.${contextArticle.id}.excerpt`) : contextArticle.excerpt;
-        
-        const responseText = language === 'de'
-          ? `🎯 Hier sind detaillierte Informationen über "${title}":\n\n📖 **Zusammenfassung:** ${excerpt}\n\n👤 **Autor:** ${contextArticle.author}\n📂 **Kategorie:** ${contextArticle.category}\n📅 **Veröffentlicht:** ${new Date(contextArticle.publishedAt).toLocaleDateString('de-DE')}\n👀 **Aufrufe:** ${contextArticle.views.toLocaleString()}\n\nSie können mich nach spezifischen Details, Quellen oder verwandten Artikeln fragen!`
-          : `🎯 Here's detailed information about "${title}":\n\n📖 **Summary:** ${excerpt}\n\n👤 **Author:** ${contextArticle.author}\n📂 **Category:** ${contextArticle.category}\n📅 **Published:** ${new Date(contextArticle.publishedAt).toLocaleDateString('en-US')}\n👀 **Views:** ${contextArticle.views.toLocaleString()}\n\nYou can ask me for specific details, sources, or related articles!`;
-        
-        return { text: responseText };
       }
     }
 
@@ -441,21 +325,6 @@ const AI = () => {
           ? `Stefan Kunc - Gründer & Visionär von Daily Fun:\n\n"${companyDatabase.founder.vision}"\n\nStefan ist der kreative Kopf hinter Daily Fun und hat die Plattform mit dem Ziel gegründet, Nachrichten unterhaltsam und vertrauenswürdig zu gestalten.`
           : `Stefan Kunc - Founder & Visionary of Daily Fun:\n\n"${companyDatabase.founder.vision}"\n\nStefan is the creative mind behind Daily Fun and founded the platform with the goal of making news entertaining and trustworthy.`;
         return { text: stefanText };
-      }
-      
-      if (input.includes('elke') || input.includes('schneider')) {
-        const elke = companyDatabase.team[0];
-        return { text: `${elke.name} (${elke.type}) - ${elke.role}:\n\n${elke.description}` };
-      }
-      
-      if (input.includes('karl') || input.includes('bergmann')) {
-        const karl = companyDatabase.team[1];
-        return { text: `${karl.name} (${karl.type}) - ${karl.role}:\n\n${karl.description}` };
-      }
-      
-      if (input.includes('jonas') || input.includes('richter')) {
-        const jonas = companyDatabase.team[2];
-        return { text: `${jonas.name} (${jonas.type}) - ${jonas.role}:\n\n${jonas.description}` };
       }
       
       // General team overview
@@ -548,166 +417,167 @@ const AI = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
       <Header />
-      <div className="container mx-auto px-4 pt-20 pb-8 h-screen flex flex-col">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3">
-            Daily Fun AI
-          </h1>
-          <p className="text-muted-foreground">
-            {language === 'de' ? 'Ihre intelligente Assistentin für alle Fragen' : 'Your intelligent assistant for all questions'}
-          </p>
-        </div>
+      
+      {/* Small Daily Fun AI title in upper corner */}
+      <div className="absolute top-24 left-4 z-10">
+        <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          Daily Fun AI
+        </h1>
+      </div>
 
-        {/* Mode Selection */}
-        <div className="flex justify-center mb-6">
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 border border-white/20 shadow-lg">
-            <Button
-              variant={searchMode === 'local' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setSearchMode('local')}
-              className="mr-1 rounded-xl"
-            >
-              <Home className="w-4 h-4 mr-2" />
-              Daily Fun (Local)
-            </Button>
-            <Button
-              variant={searchMode === 'internet' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setSearchMode('internet')}
-              className="rounded-xl"
-            >
-              <Globe className="w-4 h-4 mr-2" />
-              Internet Search
-            </Button>
-          </div>
-        </div>
-
-        {/* Action Cards - Only visible in Local mode */}
-        {searchMode === 'local' && (
-          <div className="flex justify-center gap-4 mb-6">
-            {actionCards.map((card) => {
-              const Icon = card.icon;
-              return (
+      {/* Full page chat area */}
+      <div className="flex-1 pt-32 pb-32 px-4 overflow-hidden">
+        <div ref={scrollAreaRef} className="h-full overflow-y-auto">
+          <div className="max-w-4xl mx-auto space-y-4 pb-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+              >
                 <div
-                  key={card.id}
-                  onClick={() => handleActionCardClick(card)}
-                  className="bg-white/90 backdrop-blur-sm border border-white/20 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer min-w-[160px] text-center hover:scale-105"
+                  className={`max-w-[80%] p-4 rounded-2xl relative group ${
+                    message.isUser
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
+                      : 'bg-white text-gray-800 border border-gray-100 shadow-sm'
+                  }`}
+                  onClick={() => handleMessageClick(message.id)}
                 >
-                  <div className="flex flex-col items-center">
-                    <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-4 mb-4 shadow-lg">
-                      <Icon className="w-6 h-6 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-gray-800 text-sm">
-                      {language === 'de' ? card.titleDe : card.titleEn}
-                    </h3>
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {message.text}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Chat Area */}
-        <div className="flex-1 bg-white/80 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg mb-4 flex flex-col overflow-hidden">
-          <div ref={scrollAreaRef} className="flex-1 p-6 overflow-y-auto">
-            <div className="space-y-6">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] p-4 rounded-2xl relative group ${
-                      message.isUser
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white ml-12 shadow-lg'
-                        : 'bg-gray-50 text-gray-800 mr-12 border border-gray-100'
-                    }`}
-                    onClick={() => handleMessageClick(message.id)}
-                  >
-                    <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {message.text}
-                    </div>
-                    {message.qrCode && (
-                      <div className="mt-4 text-center relative">
-                        <img 
-                          src={message.qrCode} 
-                          alt="Generated QR Code" 
-                          className="mx-auto rounded-xl shadow-lg border max-w-[200px] h-auto"
-                        />
-                        <Button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            downloadQRCode(message.qrCode!);
-                          }}
-                          size="sm"
-                          variant="outline"
-                          className="mt-3 bg-white/90 hover:bg-white"
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          {language === 'de' ? 'Herunterladen' : 'Download'}
-                        </Button>
-                      </div>
-                    )}
-                    <div className="text-xs opacity-70 mt-3">
-                      {message.timestamp.toLocaleTimeString()}
-                    </div>
-                    {/* Copy button - only visible on click/hover */}
-                    {visibleCopyButtons.includes(message.id) && (
+                  {message.qrCode && (
+                    <div className="mt-4 text-center relative">
+                      <img 
+                        src={message.qrCode} 
+                        alt="Generated QR Code" 
+                        className="mx-auto rounded-xl shadow-lg border max-w-[200px] h-auto"
+                      />
                       <Button
                         onClick={(e) => {
                           e.stopPropagation();
-                          copyToClipboard(message.text);
+                          downloadQRCode(message.qrCode!);
                         }}
                         size="sm"
                         variant="outline"
-                        className="absolute -bottom-2 -right-2 opacity-90 bg-white shadow-lg"
+                        className="mt-3 bg-white/90 hover:bg-white"
                       >
-                        <Copy className="w-4 h-4" />
+                        <Download className="w-4 h-4 mr-2" />
+                        {language === 'de' ? 'Herunterladen' : 'Download'}
                       </Button>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl mr-12">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                     </div>
+                  )}
+                  <div className="text-xs opacity-70 mt-3">
+                    {message.timestamp.toLocaleTimeString()}
+                  </div>
+                  {/* Copy button - only visible on click/hover */}
+                  {visibleCopyButtons.includes(message.id) && (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(message.text);
+                      }}
+                      size="sm"
+                      variant="outline"
+                      className="absolute -bottom-2 -right-2 opacity-90 bg-white shadow-lg"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Input Area */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-white/20 p-4 shadow-lg">
-          <form onSubmit={handleSubmit} className="flex gap-3">
-            <textarea
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder={language === 'de' ? 'Ihre Frage...' : 'Your question...'}
-              className="flex-1 rounded-xl border border-gray-200 p-3 resize-none min-h-[44px] max-h-32 bg-white/90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isTyping}
-              rows={1}
-              style={{ height: `${Math.min(Math.max(44, inputValue.split('\n').length * 20 + 24), 128)}px` }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                }
-              }}
-            />
+      {/* Floating bottom container with action cards, mode switcher and input */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50">
+        <div className="max-w-4xl mx-auto p-4 space-y-4">
+          
+          {/* Action Cards - Only visible in Local mode */}
+          {searchMode === 'local' && (
+            <div className="flex justify-center gap-3">
+              {actionCards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <div
+                    key={card.id}
+                    onClick={() => handleActionCardClick(card)}
+                    className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer min-w-[120px] text-center hover:scale-105"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg p-2 mb-2">
+                        <Icon className="w-4 h-4 text-white" />
+                      </div>
+                      <h3 className="font-medium text-gray-800 text-xs">
+                        {language === 'de' ? card.titleDe : card.titleEn}
+                      </h3>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Mode Selection */}
+          <div className="flex justify-center">
+            <div className="bg-gray-100 rounded-xl p-1 shadow-sm">
+              <Button
+                variant={searchMode === 'local' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSearchMode('local')}
+                className="mr-1 rounded-lg text-xs"
+              >
+                <Home className="w-3 h-3 mr-1" />
+                Daily Fun (Local)
+              </Button>
+              <Button
+                variant={searchMode === 'internet' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setSearchMode('internet')}
+                className="rounded-lg text-xs"
+              >
+                <Globe className="w-3 h-3 mr-1" />
+                Internet Search
+              </Button>
+            </div>
+          </div>
+
+          {/* WhatsApp-style Input */}
+          <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+            <div className="flex-1 bg-gray-100 rounded-2xl border border-gray-200 p-2">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={language === 'de' ? 'Nachricht...' : 'Message...'}
+                className="w-full bg-transparent border-none outline-none text-sm px-2 py-1"
+                disabled={isTyping}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+              />
+            </div>
             <Button 
               type="submit" 
               disabled={!inputValue.trim() || isTyping}
-              className="rounded-xl px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg"
+              className="rounded-full w-10 h-10 p-0 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg"
             >
               <Send className="w-4 h-4" />
             </Button>
