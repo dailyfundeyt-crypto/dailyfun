@@ -3,6 +3,7 @@ import { OrbitControls, RoundedBox, Text } from '@react-three/drei';
 import { useRef } from 'react';
 import * as THREE from 'three';
 import AnimatedParagraphPink from './AnimatedParagraphPink';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Phone Screen Content Component
 const PhoneScreen = () => {
@@ -197,6 +198,7 @@ const AnimatedPhone = () => {
 };
 
 const PhoneHero = () => {
+  const { t } = useLanguage();
   return (
     <section className="bg-white py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -233,7 +235,7 @@ const PhoneHero = () => {
             {/* Main Tagline - Load separately */}
             <div style={{ opacity: 1 }}>
               <AnimatedParagraphPink className="text-2xl md:text-4xl font-medium" delay={200}>
-                Ihre tägliche Dosis vertrauenswürdiger Unterhaltung.
+                {t('home.tagline')}
               </AnimatedParagraphPink>
             </div>
             
