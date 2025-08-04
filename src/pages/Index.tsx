@@ -116,28 +116,74 @@ const Index = () => {
           </div>
         </section>
 
-        {/* Goals Section */}
-        <section className="bg-gray-50 rounded-lg shadow-sm border border-gray-200 p-8 mb-12">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-black font-serif mb-2">{t('home.goals.title')}</h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-red-accent to-blue-accent mx-auto"></div>
+        {/* Goals Section - Premium Design */}
+        <section className="relative py-24 bg-gradient-to-br from-[#5E40E3] via-[#4533C8] to-[#2EEAE0] overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-0 w-full h-full bg-pattern"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            <div>
-              <div className="text-3xl font-bold text-red-accent mb-2 font-serif">{t('home.goals.inspire')}</div>
-              <div className="text-gray-700 text-sm">{t('home.goals.inspire.desc')}</div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            {/* Header */}
+            <div className="text-center mb-16">
+              <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 font-sans tracking-tight">
+                {t('home.goals.title')}
+              </h2>
+              <div className="w-32 h-1 bg-gradient-to-r from-white to-[#2EEAE0] mx-auto mb-6"></div>
+              <p className="text-xl text-white/90 max-w-3xl mx-auto font-sans leading-relaxed">
+                Unsere Vision für die Zukunft der digitalen Unterhaltung
+              </p>
             </div>
-            <div>
-              <div className="text-3xl font-bold text-blue-accent mb-2 font-serif">{t('home.goals.laughter')}</div>
-              <div className="text-gray-700 text-sm">{t('home.goals.laughter.desc')}</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-red-accent mb-2 font-serif">{t('home.goals.talent')}</div>
-              <div className="text-gray-700 text-sm">{t('home.goals.talent.desc')}</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-blue-accent mb-2 font-serif">{t('home.goals.fun')}</div>
-              <div className="text-gray-700 text-sm">{t('home.goals.fun.desc')}</div>
+
+            {/* Goals Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="group relative">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-3xl">🎯</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.inspire')}</h3>
+                  </div>
+                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.inspire.desc')}</p>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-3xl">😂</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.laughter')}</h3>
+                  </div>
+                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.laughter.desc')}</p>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-3xl">🌍</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.talent')}</h3>
+                  </div>
+                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.talent.desc')}</p>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-3xl">⚡</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.fun')}</h3>
+                  </div>
+                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.fun.desc')}</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
