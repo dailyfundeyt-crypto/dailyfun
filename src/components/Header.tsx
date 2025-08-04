@@ -54,7 +54,7 @@ const Header = () => {
                     }`}
                     title={`${item.label} (${language === 'en' ? 'EN' : 'DE'})`}
                   >
-                    <Icon className="h-5 w-5" />
+                    <span className="text-sm font-medium">{language === 'en' ? 'EN' : 'DE'}</span>
                   </button>
                 );
               }
