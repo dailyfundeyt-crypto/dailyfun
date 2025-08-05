@@ -23,48 +23,40 @@ export const articles: Article[] = [
     titleEn: 'No Legs, No Excuses? A Meme, a Mountain, and the Sudden Realization That My Couch Is a Very Dangerous Place.',
     excerpt: 'Ein humorvoller Blick auf Motivations-Memes und die Wahrheit über unsere alltäglichen Everests.',
     excerptEn: 'A humorous look at motivation memes and the truth about our everyday Everests.',
-    content: `Ich gebe es ja zu, ich war heute Morgen wieder kurz davor, die 'Motivations-Sprüche'-Sektion des Internets für immer zu meiden. Und dann taucht da ein Bild auf: Ein Mann ohne Beine, der den Mount Everest erklimmt.
+    content: `Ich gebe es ja zu, ich war heute Morgen wieder kurz davor, die 'Motivations-Sprüche'-Sektion des Internets für immer zu meiden. Und dann taucht da ein Bild auf: Ein Mann ohne Beine, der den Mount Everest erklimmt. Und dazu die überaus inspirierende Überschrift: 'Er hat keine Beine, aber er erklimmt den Everest. Was ist deine Ausrede?'.
 
 <img src="/lovable-uploads/406fa3a4-ecd7-46e8-90dd-ca7111fd3551.png" alt="Excited and calm reactions" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
 
-Und dazu die überaus inspirierende Überschrift: 'Er hat keine Beine, aber er erklimmt den Everest. Was ist deine Ausrede?'. Meine Ausrede? Nun, der Witzbold in mir hatte eine spontane Eingebung, die in etwa so lauten würde: 'Meine Beine würden schmerzen.' Und siehe da, ich bin nicht allein! Ein gewisser Klaus (mutiger Mann, Klaus!) hat in den Kommentaren genau diesen Gedanken ausgesprochen: 'Seine Beine tun nicht weh, meine schon…'.
+Meine Ausrede? Nun, der Witzbold in mir hatte eine spontane Eingebung, die in etwa so lauten würde: 'Meine Beine würden schmerzen.' Und siehe da, ich bin nicht allein! Ein gewisser Klaus (mutiger Mann, Klaus!) hat in den Kommentaren genau diesen Gedanken ausgesprochen: 'Seine Beine tun nicht weh, meine schon…'. Und plötzlich ist die Sache nicht mehr so einfach.
 
 <img src="/lovable-uploads/8aee5aea-c703-41c3-b3f6-5a10d3982cf8.png" alt="Confused man on ladder" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
 
-Und plötzlich ist die Sache nicht mehr so einfach. Dieser Mann auf dem Foto ist Hari Budha Magar, ein ehemaliger Gurkha-Soldat und Doppelamputierter. Er hat den Everest tatsächlich bestiegen. Das ist unbestreitbar inspirierend. Aber mal ehrlich, Jonas' Humor-Agentur ist jetzt am Zug.
+Dieser Mann auf dem Foto ist Hari Budha Magar, ein ehemaliger Gurkha-Soldat und Doppelamputierter. Er hat den Everest tatsächlich bestiegen. Das ist unbestreitbar inspirierend. Aber mal ehrlich, Jonas' Humor-Agentur ist jetzt am Zug. Während 'Motivator John' in meinem Kopf eine Art Tanz wie ein verrückter Wissenschaftler aufführt und mich zum Höchstleistungs-Athleten erklären will, stelle ich mir vor, wie Klaus (der geniale Kommentator) in einer Art Joker-Manier seinen Alltag meistert.
 
-Während 'Motivator John' in meinem Kopf eine Art Tanz wie ein verrückter Wissenschaftler aufführt und mich zum Höchstleistungs-Athleten erklären will, stelle ich mir vor, wie Klaus (der geniale Kommentator) in einer Art Joker-Manier seinen Alltag meistert. Er schaut auf den Berg, dann auf seine Beine, die gerade bequem unter dem Tisch liegen, und stellt fest: 'Ja, also, das ist ja alles schön und gut, aber meine Wadenkrämpfe nach dem Treppensteigen sind auch eine Herausforderung.'
+Er schaut auf den Berg, dann auf seine Beine, die gerade bequem unter dem Tisch liegen, und stellt fest: 'Ja, also, das ist ja alles schön und gut, aber meine Wadenkrämpfe nach dem Treppensteigen sind auch eine Herausforderung.' Und ich verstehe Klaus! Wir normalen Sterblichen kämpfen unsere eigenen, kleineren Schlachten. Der Aufstieg zum Gipfel meines Bücherregals, um ein vergessenes Buch zu holen. Die abenteuerliche Reise zum Kühlschrank, die von der Angst vor dem leeren Milchkarton getrieben ist. Das sind unsere persönlichen Everests.
+
+Und da sind schmerzende Beine (sowie Rückenschmerzen, die aus dem Nichts kommen) eine sehr legitime Ausrede. Wer braucht schon Sauerstoffmasken, wenn man gegen die tückische Treppenstufe im Dunkeln kämpft, die man jedes Mal vergisst? Magar hat vielleicht keine Beine, aber er hat auch nicht dieses unangenehme Kribbeln in den Zehen, wenn man zu lange im Sitzen am Computer war.
 
 <img src="/lovable-uploads/dfeed3f5-68b3-4c63-af2a-9e30d9e53641.png" alt="Tired man on couch" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
 
-Und ich verstehe Klaus! Wir normalen Sterblichen kämpfen unsere eigenen, kleineren Schlachten. Der Aufstieg zum Gipfel meines Bücherregals, um ein vergessenes Buch zu holen. Die abenteuerliche Reise zum Kühlschrank, die von der Angst vor dem leeren Milchkarton getrieben ist. Das sind unsere persönlichen Everests.
-
-<img src="/lovable-uploads/6cb8d886-4fc0-4431-a466-c25c68feeb74.png" alt="Mountain climber with ice axe" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
-
-Und da sind schmerzende Beine (sowie Rückenschmerzen, die aus dem Nichts kommen) eine sehr legitime Ausrede. Wer braucht schon Sauerstoffmasken, wenn man gegen die tückische Treppenstufe im Dunkeln kämpft, die man jedes Mal vergisst?
-
-Magar hat vielleicht keine Beine, aber er hat auch nicht dieses unangenehme Kribbeln in den Zehen, wenn man zu lange im Sitzen am Computer war. Also ja, Klaus. Deine Beine schmerzen. Meine auch. Und das ist eine gültige Entschuldigung. Jedenfalls für heute. Morgen vielleicht. Oder nächste Woche. Wir sehen uns auf der Couch.`,
-    contentEn: `I admit it, this morning I was on the verge of avoiding the 'motivation quotes' section of the internet forever. And then a picture pops up: a man without legs climbing Mount Everest.
+Also ja, Klaus. Deine Beine schmerzen. Meine auch. Und das ist eine gültige Entschuldigung. Jedenfalls für heute. Morgen vielleicht. Oder nächste Woche. Wir sehen uns auf der Couch.`,
+    contentEn: `I admit it, this morning I was on the verge of avoiding the 'motivation quotes' section of the internet forever. And then a picture pops up: a man without legs climbing Mount Everest. And with it, the overly inspiring caption: 'He has no legs but climbs Everest. What's your excuse?'.
 
 <img src="/lovable-uploads/406fa3a4-ecd7-46e8-90dd-ca7111fd3551.png" alt="Excited and calm reactions" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
 
-And with it, the overly inspiring caption: 'He has no legs but climbs Everest. What's your excuse?'. My excuse? Well, the comedian in me had a spontaneous idea that would go something like this: 'My legs would hurt.' And lo and behold, I am not alone! A certain Klaus (brave man, Klaus!) expressed this very thought in the comments: 'His legs won't hurt, mine will…'.
+My excuse? Well, the comedian in me had a spontaneous idea that would go something like this: 'My legs would hurt.' And lo and behold, I am not alone! A certain Klaus (brave man, Klaus!) expressed this very thought in the comments: 'His legs won't hurt, mine will…'. And suddenly, the matter isn't so simple anymore.
 
 <img src="/lovable-uploads/8aee5aea-c703-41c3-b3f6-5a10d3982cf8.png" alt="Confused man on ladder" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
 
-And suddenly, the matter isn't so simple anymore. This man in the photo is Hari Budha Magar, a former Gurkha soldier and double amputee. He actually climbed Everest. That is undeniably inspiring. But let's be honest, Jonas's humor agency is now on the case.
+This man in the photo is Hari Budha Magar, a former Gurkha soldier and double amputee. He actually climbed Everest. That is undeniably inspiring. But let's be honest, Jonas's humor agency is now on the case. While 'Motivator John' in my head performs a kind of dance like a mad scientist and wants to declare me a top-level athlete, I imagine how Klaus (the brilliant commentator) masters his everyday life in a sort of Joker-like manner.
 
-While 'Motivator John' in my head performs a kind of dance like a mad scientist and wants to declare me a top-level athlete, I imagine how Klaus (the brilliant commentator) masters his everyday life in a sort of Joker-like manner. He looks at the mountain, then at his legs, which are currently resting comfortably under the table, and states: 'Yeah, well, that's all well and good, but my calf cramps after climbing the stairs are also a challenge.'
+He looks at the mountain, then at his legs, which are currently resting comfortably under the table, and states: 'Yeah, well, that's all well and good, but my calf cramps after climbing the stairs are also a challenge.' And I understand Klaus! We normal mortals fight our own, smaller battles. The ascent to the top of my bookshelf to retrieve a forgotten book. The adventurous journey to the refrigerator, driven by the fear of an empty milk carton. These are our personal Everests.
+
+And in those situations, sore legs (as well as back pain that comes out of nowhere) are a very legitimate excuse. Who needs oxygen masks when you're fighting the treacherous stair step in the dark that you forget about every time? Magar may not have legs, but he also doesn't have that uncomfortable tingling in his toes from sitting at the computer for too long.
 
 <img src="/lovable-uploads/dfeed3f5-68b3-4c63-af2a-9e30d9e53641.png" alt="Tired man on couch" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
 
-And I understand Klaus! We normal mortals fight our own, smaller battles. The ascent to the top of my bookshelf to retrieve a forgotten book. The adventurous journey to the refrigerator, driven by the fear of an empty milk carton. These are our personal Everests.
-
-<img src="/lovable-uploads/6cb8d886-4fc0-4431-a466-c25c68feeb74.png" alt="Mountain climber with ice axe" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
-
-And in those situations, sore legs (as well as back pain that comes out of nowhere) are a very legitimate excuse. Who needs oxygen masks when you're fighting the treacherous stair step in the dark that you forget about every time?
-
-Magar may not have legs, but he also doesn't have that uncomfortable tingling in his toes from sitting at the computer for too long. So yes, Klaus. Your legs hurt. Mine too. And that's a valid excuse. At least for today. Maybe tomorrow. Or next week. See you on the couch.`,
+So yes, Klaus. Your legs hurt. Mine too. And that's a valid excuse. At least for today. Maybe tomorrow. Or next week. See you on the couch.`,
     imageUrl: '/lovable-uploads/6cb8d886-4fc0-4431-a466-c25c68feeb74.png',
     category: 'Humor',
     categoryEn: 'Humor',
