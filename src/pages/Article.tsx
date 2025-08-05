@@ -153,18 +153,33 @@ const Article = () => {
               
               <div className="text-[#1A1A1A] space-y-6 sans-serif leading-relaxed">
                 {article.content ? (
-                  // Split content into paragraphs and animate each one
+                  // Get the translated content
                   (() => {
-                    const paragraphs = article.content.split('\n\n');
-                    return paragraphs.map((paragraph, index) => (
-                      <AnimatedParagraph 
-                        key={index} 
-                        className="mb-6 text-lg leading-relaxed"
-                        delay={index * 100}
-                      >
-                        {paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}
-                      </AnimatedParagraph>
-                    ));
+                    const content = language === 'de' ? article.content : (article.contentEn || article.content);
+                    // Split content into paragraphs but preserve HTML
+                    const paragraphs = content.split('\n\n');
+                    return paragraphs.map((paragraph, index) => {
+                      // Check if paragraph contains HTML img tag
+                      if (paragraph.includes('<img')) {
+                        return (
+                          <div 
+                            key={index} 
+                            className="mb-6 text-lg leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: paragraph }}
+                          />
+                        );
+                      } else {
+                        return (
+                          <AnimatedParagraph 
+                            key={index} 
+                            className="mb-6 text-lg leading-relaxed"
+                            delay={index * 100}
+                          >
+                            {paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}
+                          </AnimatedParagraph>
+                        );
+                      }
+                    });
                   })()
                 ) : (
                   // Fallback to generic content with animation
