@@ -18,6 +18,38 @@ export interface Article {
 
 export const articles: Article[] = [
   {
+    id: 'doner-paradox',
+    title: 'Das Döner-Paradoxon: Warum 100 Billionen Dollar manchmal nur für einen Witz reichen',
+    titleEn: 'The Doner Paradox: Why 100 Trillion Dollars Sometimes Only Buy a Laugh',
+    excerpt: 'Stell dir vor, du stehst vor der Entscheidung deines Lebens. Du hast die Wahl zwischen einem dicken Bündel Dollarscheine und einem frisch gegrillten, duftenden Döner.',
+    excerptEn: 'Imagine you\'re facing the decision of a lifetime. You have the choice between a fat stack of dollar bills and a freshly grilled, fragrant doner kebab.',
+    content: `Stell dir vor, du stehst vor der Entscheidung deines Lebens. Du hast die Wahl zwischen einem dicken Bündel Dollarscheine und einem frisch gegrillten, duftenden Döner. Was würdest du nehmen? 'Na, die Scheine, klar!', hör ich euch rufen. Aber was, wenn die Scheine aus Simbabwe kommen und auf jedem stolze 100 Billionen steht? Plötzlich ist die Entscheidung nicht mehr ganz so einfach. Genau das ist das verrückte Spiel, das Geld mit uns spielt. Die Zahl, die auf einem Schein steht, ist manchmal nur eine lustige Dekoration. Und das ist das große, skurrile Paradoxon unserer globalisierten Welt. Während du in einem Land mit 5 Euro ein komplettes Mittagessen bekommst, kaufst du in einem anderen Land dafür nicht mal eine Flasche Wasser. Es ist wie ein Witz, den nur die Währung selbst versteht.
+
+<img src="/lovable-uploads/a52aa891-c9d5-4254-9902-58e61c3f442c.png" alt="Trauriger Mann mit wertlosen Scheinen" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Das Bild der 100 Billionen Dollar-Note aus Simbabwe ist der beste Beweis dafür. Es sieht aus wie eine Eintrittskarte in ein Leben voller Luxus – Privatinsel, goldener Lamborghini, alles, was das Herz begehrt. Aber die Wahrheit ist, dass man sich damit nicht mal einen Busfahrschein kaufen konnte. Diese Scheine sind heute eher ein lustiges Sammlerstück oder ein hervorragendes Geschenk für jemanden, den man auf den Arm nehmen will.
+
+<img src="/lovable-uploads/18f946c5-6912-4cd6-a832-e441b83338d4.png" alt="Verwirrter Mann mit Trillion Dollar Scheinen" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Und genau dieser Witz macht sie so berühmt. Sie erinnern uns daran, dass der Wert des Geldes nicht in den Nullen liegt, sondern in dem, was man sich damit kaufen kann. Man stelle sich vor, man geht damit in ein Berliner Sterne-Restaurant und versucht, das Menü zu bezahlen. Der Kellner würde wahrscheinlich lachen und mit dem Schein ein Flugzeug falten. Und so bleibt der Döner immer die sichere Wette. Denn egal, welche Zahl auf dem Geldschein steht, am Ende des Tages zählt nur, was wirklich in deiner Tasche ist. Ein warmer, leckerer Döner, der dir ein Lächeln ins Gesicht zaubert, ist da manchmal mehr wert als ein Haufen unbrauchbarer Nullen.`,
+    contentEn: `Imagine you're facing the decision of a lifetime. You have the choice between a fat stack of dollar bills and a freshly grilled, fragrant doner kebab. What would you take? 'The bills, obviously!', I can hear you shouting. But what if those bills are from Zimbabwe and each one proudly declares a value of 100 trillion? Suddenly, the decision isn't quite so easy, is it? That's the crazy game money plays with us. The number on a bill is sometimes just a funny decoration. And that's the great, bizarre paradox of our globalized world. While you can get a full lunch for 5 euros in one country, in another, you can't even buy a bottle of water with it. It's like a joke that only the currency itself understands.
+
+<img src="/lovable-uploads/a52aa891-c9d5-4254-9902-58e61c3f442c.png" alt="Sad man with worthless bills" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+The image of the 100 trillion dollar note from Zimbabwe is the best proof of this. It looks like the ticket to a life of luxury on a private island, a golden Lamborghini, everything your heart desires. But the truth is, you couldn't even buy a bus ticket with it. Today, these bills are more of a fun collector's item or an excellent gift for someone you want to prank.
+
+<img src="/lovable-uploads/18f946c5-6912-4cd6-a832-e441b83338d4.png" alt="Confused man with trillion dollar bills" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+And it's precisely this joke that makes them so famous. They remind us that the value of money isn't in the zeros, but in what you can buy with it. Imagine walking into a Michelin-starred restaurant in Berlin with that note and trying to pay for the menu. The waiter would probably laugh and fold the bill into a paper airplane. And so, the doner kebab remains the safest bet. Because no matter what number is on the banknote, at the end of the day, all that matters is what's really in your pocket. A warm, delicious doner that puts a smile on your face is sometimes worth more than a bunch of useless zeros.`,
+    imageUrl: '/lovable-uploads/a2907a4e-853f-4d2d-b521-670a79e7f5cf.png',
+    category: 'Humor',
+    categoryEn: 'Humor',
+    author: 'Mr. Jonas Richter',
+    publishedAt: '2024-08-06',
+    tags: ['humor', 'money', 'doner', 'paradox'],
+    views: 0,
+  },
+  {
     id: 'no-legs-no-excuses',
     title: 'Keine Beine, keine Ausrede? Ein Meme, ein Berg und die plötzliche Erkenntnis, dass meine Couch ein sehr gefährlicher Ort ist.',
     titleEn: 'No Legs, No Excuses? A Meme, a Mountain, and the Sudden Realization That My Couch Is a Very Dangerous Place.',
