@@ -18,6 +18,58 @@ export interface Article {
 
 export const articles: Article[] = [
   {
+    id: 'gta-vs-driving-license',
+    title: 'Vom Joystick zur Stoßstange: Warum \'GTA\' kein gültiges Ersatzdiplom für den Führerschein ist',
+    titleEn: 'From Joystick to Bumper: Why \'GTA\' is Not a Valid Diploma for a Driver\'s License',
+    excerpt: 'Ich habe diese E-Mail von einem Herrn Kevin M. erhalten, 23 Jahre alt. Er fragt mich, warum sein Antrag auf einen Führerschein abgelehnt wurde, obwohl er in \'Grand Theft Auto\' bereits über 2.000 Stunden Erfahrung gesammelt hat.',
+    excerptEn: 'I received this email from a Mr. Kevin M., 23 years old. He asks me why his application for a driver\'s license was rejected, despite having over 2,000 hours of experience in \'Grand Theft Auto.\'',
+    content: `Ich habe diese E-Mail von einem Herrn Kevin M. erhalten, 23 Jahre alt. Er fragt mich, warum sein Antrag auf einen Führerschein abgelehnt wurde, obwohl er in 'Grand Theft Auto' bereits über 2.000 Stunden Erfahrung gesammelt hat. Zitat: „Ich kann perfekt parken und habe in San Andreas alle Missionen mit Gold abgeschlossen. Warum brauche ich jetzt noch einen Fahrschullehrer, der mir was vom Kupplungspedal erzählt?"
+
+<img src="/public/lovable-uploads/04bc5366-c909-4dcb-85d8-fd07a3584f86.png" alt="Geschäftsfrau denkt an GTA" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Kevin, lieber Kevin, ich verstehe deinen Frust. Aber ich muss dir leider aufklären, dass die reale Welt der 180-Grad-Wenden auf der Autobahn mit einem 40-Tonner mitnichten der virtuellen Welt, die du kennst, entspricht. Zunächst einmal: Glückwunsch zu deinen 'GTA'-Leistungen! Das ist beeindruckend. Aber lassen Sie uns doch einmal nüchtern die Fakten betrachten.
+
+In der realen Welt gibt es sogenannte Gesetze der Physik. Diese besagen, dass ein Auto, das frontal in einen Baum prallt, sich nicht einfach in ein paar Polygonen auflöst, um dann fünf Sekunden später wieder zu erscheinen. Es gibt so etwas wie G-Kräfte, die uns in den Sitz drücken, oder Reifen, die bei Nässe den Grip verlieren.
+
+<img src="/public/lovable-uploads/cbca4b3a-8a82-4073-9c38-f7646cdfb32a.png" alt="Lehrerin erklärt Physik mit Autounfällen" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+In 'GTA' wird Ihnen maximal mitgeteilt, dass Sie einen 'wanted level' erhalten, wenn Sie einen Streifenwagen rammen. Im echten Leben wird Ihnen der Staatsanwalt mit einem Aktenkoffer voller Paragrafen entgegenkommen. Des Weiteren ist in 'GTA' das Konzept der 'anderen Verkehrsteilnehmer' oft sehr… vereinfacht. Meistens sind es einfach nur animierte Objekte, die man beiseite schiebt, wenn sie stören. In der Realität nennt man diese Objekte 'Menschen'. Und 'Menschen' haben die unangenehme Angewohnheit, nicht wieder aufzutauchen, wenn man sie 'wegschiebt'.
+
+<img src="/public/lovable-uploads/e32622de-7d2e-4e08-8f5d-2423ceae4180.png" alt="Verwirrte Frau mit Controller und Lenkrad" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Dann zu den Fahrsimulatoren in Fahrschulen, die oft mit Spielen verwechselt werden. Kevin, das ist so, als würdest du eine Schokoladen-Pudding-Torte mit einer echten Erdbebensimulation vergleichen, nur weil beides wackelt. Ein moderner Fahrsimulator ist ein ausgeklügeltes Stück Ingenieurskunst, das auf realen physikalischen Modellen basiert und nicht auf der Logik, dass man durch einen Sprung über einen Gullydeckel 200 Meter weit fliegen kann.
+
+Abschließend möchte ich dich, lieber Kevin, und all die anderen Möchtegern-Fahrprofis da draußen ermutigen: Legt den Controller beiseite, beweist ein wenig Mut zur Realität und besucht eine echte Fahrschule. Dort lernt man nicht nur, wie man einparkt, sondern auch, wie man überlebt. Und das ist eine Fähigkeit, die in keinem Videospiel gelehrt wird.
+
+<img src="/public/lovable-uploads/5ca44ad5-ba17-4901-92d1-e6ea96c2fc42.png" alt="Frau fährt echtes Auto auf Autobahn" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />`,
+    contentEn: `I received this email from a Mr. Kevin M., 23 years old. He asks me why his application for a driver's license was rejected, despite having over 2,000 hours of experience in 'Grand Theft Auto.' Quote: 'I can park perfectly and complete all missions in San Andreas with a gold rating. Why do I now need a driving instructor telling me about the clutch pedal?'
+
+<img src="/public/lovable-uploads/04bc5366-c909-4dcb-85d8-fd07a3584f86.png" alt="Businesswoman thinking about GTA" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Kevin, dear Kevin, I understand your frustration. But I must unfortunately inform you that the real world of 180-degree turns on the highway in a 40-ton truck is by no means the virtual world you know. First of all: Congratulations on your 'GTA' achievements! That is impressive. But let's take a sober look at the facts.
+
+In the real world, there are so-called laws of physics. These state that a car that crashes head-on into a tree does not simply dissolve into a few polygons, only to reappear five seconds later. There's such a thing as G-forces that press us into the seat, or tires that lose grip on wet roads.
+
+<img src="/public/lovable-uploads/cbca4b3a-8a82-4073-9c38-f7646cdfb32a.png" alt="Teacher explaining physics with car crashes" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+In 'GTA,' you are at most informed that you have received a 'wanted level' if you ram a police car. In real life, the public prosecutor will approach you with a briefcase full of legal paragraphs. Furthermore, in 'GTA,' the concept of 'other road users' is often very... simplified. Most of the time, they are just animated objects that you push aside if they get in the way. In reality, these objects are called 'people.' And 'people' have the unpleasant habit of not reappearing when you 'push them aside.'
+
+<img src="/public/lovable-uploads/e32622de-7d2e-4e08-8f5d-2423ceae4180.png" alt="Confused woman with controller and steering wheel" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Then there are driving simulators in driving schools, which are often confused with games. Kevin, that's like comparing a chocolate pudding cake to a real earthquake simulation just because both wobble. A modern driving simulator is a sophisticated piece of engineering based on real physical models and not on the logic that you can fly 200 meters by jumping over a manhole cover.
+
+In conclusion, dear Kevin, and all the other aspiring driving pros out there, I want to encourage you: put the controller aside, show a little courage for reality, and go to a real driving school. There you will learn not only how to park but also how to survive. And that is a skill that is not taught in any video game.
+
+<img src="/public/lovable-uploads/5ca44ad5-ba17-4901-92d1-e6ea96c2fc42.png" alt="Woman driving real car on highway" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />`,
+    imageUrl: '/public/lovable-uploads/04bc5366-c909-4dcb-85d8-fd07a3584f86.png',
+    category: 'Technology',
+    categoryEn: 'Technology',
+    author: 'Dr. Elke Schneider',
+    publishedAt: '2024-08-07',
+    tags: ['gaming', 'driving', 'reality', 'education', 'humor'],
+    views: 0,
+  },
+  {
     id: 'doner-paradox',
     title: 'Das Döner-Paradoxon: Warum 100 Billionen Dollar manchmal nur für einen Witz reichen',
     titleEn: 'The Doner Paradox: Why 100 Trillion Dollars Sometimes Only Buy a Laugh',
