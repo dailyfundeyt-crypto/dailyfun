@@ -18,6 +18,62 @@ export interface Article {
 
 export const articles: Article[] = [
   {
+    id: 'hunger-games-schweinehund',
+    title: 'Hunger Games: Eine wissenschaftliche Betrachtung des inneren Schweinehunds',
+    titleEn: 'Hunger Games: A Scientific Look at the \'Innere Schweinehund\'',
+    excerpt: 'Wer kennt es nicht? Man steht vor dem fast leeren Kühlschrank, der Magen knurrt wie ein wütender Bär, und man denkt: „Jetzt ist es vorbei. Ich sterbe an Hunger!" Doch bevor Sie in Panik geraten und die letzte Tütensuppe plündern, lassen Sie uns die Fakten betrachten.',
+    excerptEn: 'Who hasn\'t been there? You\'re standing in front of an almost empty fridge, your stomach growling like an angry bear, and you think, \'This is it. I\'m going to die of starvation!\' But before you panic and raid the last packet of instant soup, let\'s look at the facts.',
+    content: `Wer kennt es nicht? Man steht vor dem fast leeren Kühlschrank, der Magen knurrt wie ein wütender Bär, und man denkt: „Jetzt ist es vorbei. Ich sterbe an Hunger!" Doch bevor Sie in Panik geraten und die letzte Tütensuppe plündern, lassen Sie uns die Fakten betrachten.
+
+<img src="/public/lovable-uploads/db4b09a0-6696-46e4-b0a1-a5d0febae2db.png" alt="Frau vor leerem Kühlschrank mit Suppe" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Die Annahme, dass der Mensch nach zwei Stunden ohne Wurstbrot dem Tod geweiht ist, ist, nun ja, eine charmante, aber wissenschaftlich nicht haltbare Fehleinschätzung. Die Realität ist, wie so oft, viel absurder. Unser Körper, ein Meister der Improvisation, verfügt über erstaunliche Überlebensstrategien. 
+
+Während ein Krokodil bis zu drei Jahre lang faul in der Sonne liegen kann, bevor es sich mühsam zum nächsten All-you-can-eat-Buffet schleppt, und ein Bär den halben Winter im Schlaf verplempert, sind wir Menschen tatsächlich auch nicht ganz so zimperlich, wie es das ständige Verlangen nach einem Snack suggeriert.
+
+<img src="/public/lovable-uploads/3aeba940-a6d0-46b1-99ae-0290bcb064c3.png" alt="Wissenschaftlerin mit Krokodil in tropischer Umgebung" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Ein durchschnittlicher Mensch kann bei ausreichender Wasserzufuhr bis zu 8 Wochen ohne Nahrung überleben. Ja, Sie haben richtig gelesen. Ihr Krokodil selbst kann also getrost noch ein paar Jährchen warten. Das Geheimnis? Fettpolster. Diese praktischen Energiereserven, die wir so gerne verfluchen, sind im Notfall unsere Lebensretter.
+
+<img src="/public/lovable-uploads/41e6954d-801e-45ba-9029-5eeebebddccb.png" alt="Wissenschaftlerin beobachtet schlafenden Bären im Winterschlaf" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Während wir gemütlich auf dem Sofa liegen, arbeitet unser Körper auf Hochtouren, verbrennt Kalorien und bereitet sich darauf vor, im Falle einer Nahrungskrise auf dieses Polster zurückzugreifen. Und was ist mit anderen Tieren? Ein Pinguin kann zwei Monate ohne Futter auskommen, ein Hai dreieinhalb. Der Esel im Wüsten-Outfit, das Kamel, schafft es sogar auf zweieinhalb Monate.
+
+Diese beeindruckende Liste zeigt, dass Überleben eine Frage der richtigen Strategie ist. Während der Mensch sich mit unzähligen Überlegungen, ob er sich lieber das Tiramisu oder die Schokocreme gönnen soll, selbst im Weg steht, hat die Natur längst einfache und effektive Lösungen gefunden.
+
+<img src="/public/lovable-uploads/24a2b029-9f12-46e4-b6ad-384ed0ea7ee9.png" alt="Wissenschaftlerin mit Gemüse und wütendem inneren Schweinehund" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+Wir sollten uns also weniger über das, was auf dem Teller liegt, und mehr über die beeindruckende Resilienz unseres Körpers Gedanken machen. Und vielleicht, nur vielleicht, sollten wir auch einfach mal eine Tütensuppe essen, wenn der Magen knurrt – nur um das Überleben zu feiern, versteht sich.`,
+    contentEn: `Who hasn't been there? You're standing in front of an almost empty fridge, your stomach growling like an angry bear, and you think, 'This is it. I'm going to die of starvation!' But before you panic and raid the last packet of instant soup, let's look at the facts.
+
+<img src="/public/lovable-uploads/db4b09a0-6696-46e4-b0a1-a5d0febae2db.png" alt="Woman in front of empty fridge with soup" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+The assumption that a human is doomed to die after two hours without a sausage sandwich is, well, a charming but scientifically untenable misconception. The reality, as is often the case, is far more absurd. Our body, a master of improvisation, has amazing survival strategies.
+
+While a crocodile can laze in the sun for up to three years before laboriously dragging itself to the next all-you-can-eat buffet, and a bear wastes half the winter sleeping, we humans are actually not quite as delicate as our constant craving for a snack suggests.
+
+<img src="/public/lovable-uploads/3aeba940-a6d0-46b1-99ae-0290bcb064c3.png" alt="Scientist with crocodile in tropical setting" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+An average human with sufficient water intake can survive without food for up to 8 weeks. Yes, you read that right. So your inner crocodile can safely wait for a few more years. The secret? Fat deposits. These practical energy reserves, which we so often curse, are our lifesavers in an emergency.
+
+<img src="/public/lovable-uploads/41e6954d-801e-45ba-9029-5eeebebddccb.png" alt="Scientist observing sleeping bear in hibernation" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+While we comfortably lie on the sofa, our body is working at full speed, burning calories and preparing to fall back on these reserves in the event of a food crisis. And what about other animals? A penguin can survive for two months without food, a shark for three and a half. The donkey in the desert outfit, the camel, even manages two and a half months.
+
+This impressive list shows that survival is a matter of the right strategy. While humans get in their own way with countless considerations about whether to treat themselves to tiramisu or chocolate cream, nature has long since found simple and effective solutions.
+
+<img src="/public/lovable-uploads/24a2b029-9f12-46e4-b6ad-384ed0ea7ee9.png" alt="Scientist with vegetables and angry inner pig" style="width: 300px; height: 200px; object-fit: cover; margin: 16px 0; border-radius: 8px;" />
+
+So we should worry less about what's on the plate and more about the impressive resilience of our bodies. And maybe, just maybe, we should also just eat a packet of instant soup when our stomach growls - just to celebrate survival, of course.`,
+    imageUrl: '/public/lovable-uploads/db4b09a0-6696-46e4-b0a1-a5d0febae2db.png',
+    category: 'Wissenschaft',
+    categoryEn: 'Science',
+    author: 'Dr. Elke Schneider',
+    publishedAt: '2025-01-06',
+    tags: ['Wissenschaft', 'Ernährung', 'Psychologie', 'Biologie'],
+    views: 0
+  },
+  {
     id: 'gta-vs-driving-license',
     title: 'Vom Joystick zur Stoßstange: Warum \'GTA\' kein gültiges Ersatzdiplom für den Führerschein ist',
     titleEn: 'From Joystick to Bumper: Why \'GTA\' is Not a Valid Diploma for a Driver\'s License',
