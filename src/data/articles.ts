@@ -376,5 +376,60 @@ And let's be honest, why would you change perfection?`,
     categoryEn: "Technology",
     imageUrl: "/lovable-uploads/862ed89b-835e-4f52-a296-8e2bea919073.png",
     views: 0
+  },
+  {
+    id: "16",
+    title: "Wer sucht, der findet... sich selbst! Die skurrilste Vermisstensuche aller Zeiten.",
+    titleEn: "He Who Seeks, Finds... Himself! The Most Bizarre Missing Person Search Ever.",
+    excerpt: "Manche Menschen suchen nach dem Sinn des Lebens, andere nach ihren Schlüsseln und wieder andere suchen sich selbst. Letzteres klingt nach tiefgründiger Philosophie, war in der Türkei aber die amüsante Realität.",
+    excerptEn: "Some people search for the meaning of life, others for their keys, and then there are those who search for themselves. The latter might sound like profound philosophy, but in Turkey, it became an amusing reality.",
+    content: `Manche Menschen suchen nach dem Sinn des Lebens, andere nach ihren Schlüsseln und wieder andere suchen sich selbst. Letzteres klingt nach tiefgründiger Philosophie, war in der Türkei aber die amüsante Realität. Denn wie jetzt bekannt wurde, hat ein angetrunkener Mann stundenlang bei der Suche nach sich selbst mitgeholfen – ohne es zu merken. Eine wahre Meisterleistung der Desorientierung!
+
+Die Geschichte beginnt, wie so viele gute Geschichten, mit ein paar Freunden in einem Waldstück. Unser Held des Tages, nennen wir ihn der Einfachheit halber Herr Mutlu, hatte sich wohl ein bisschen zu sehr in Feierlaune getrunken und beschloss, einen kleinen Spaziergang zu unternehmen. Ein fataler Fehler, wie sich herausstellen sollte.
+
+<img src="/lovable-uploads/be0010f6-14e4-41ac-96e8-0214ac2ab934.png" alt="Herr Mutlu mit einem Polizeibeamten nach der erfolgreichen Suche" style="width: 100%; height: auto; margin: 20px 0; border-radius: 8px;" />
+
+Als er nicht zurückkehrte, befürchteten seine besorgten Freunde das Schlimmste und alarmierten die Behörden. Was folgte, war eine großangelegte Suchaktion mit Polizei, Rettungskräften und vielen Freiwilligen aus der Nachbarschaft, die sich durch die dunklen Wälder kämpften.
+
+Und hier kommt der Clou: Mitten unter diesen tapferen Helfern befand sich niemand Geringeres als Herr Mutlu selbst! Anstatt sich in seinem betrunkenen Zustand zu verstecken oder zu schlafen, hatte er sich spontan dazu entschlossen, bei der Suche nach dem „Vermissten" zu helfen.
+
+<img src="/lovable-uploads/abfab804-cb03-44be-a1c5-45947dd8b755.png" alt="Herr Mutlu inmitten der Rettungskräfte bei der Suche" style="width: 100%; height: auto; margin: 20px 0; border-radius: 8px;" />
+
+Er stapfte tapfer mit Fackeln und Stirnlampen durch das Unterholz, rief den Namen des Verschwundenen und war so engagiert bei der Sache, dass niemand in der Gruppe misstrauisch wurde. Es muss ein Bild für die Götter gewesen sein: Ein Suchtrupp, der in geschlossener Formation nach einer Person ruft, die mittendrin steht und mit ruft.
+
+Ein bisschen wie im Kindergarten, wenn man seine Mütze sucht, die man die ganze Zeit auf dem Kopf hat – nur mit Blaulicht und mehr Drama.
+
+<img src="/lovable-uploads/503e1f16-ccc7-4b83-b9a0-b741daaf4bfb.png" alt="Die Suchaktion im Wald mit Taschenlampen und Helfern" style="width: 100%; height: auto; margin: 20px 0; border-radius: 8px;" />
+
+Das Spektakel endete erst, als die Retter immer wieder den Namen 'Beyhan Mutlu' riefen. Unser Protagonist, inzwischen wohl etwas nüchterner, blickte verwirrt in die Runde und fragte: „Wen suchen wir hier eigentlich? Ich bin doch hier!" Ein Moment, der die Suche mit einem Schlag beendete.
+
+Die Polizei, sichtlich amüsiert, aber auch froh, dass alles gut ausgegangen war, nahm seine Personalien auf und brachte ihn sicher nach Hause. Ob sein Vater, vor dem er sich laut eigener Aussage fürchtete, ihn wirklich zur Rede stellte, ist nicht überliefert. Aber die Moral der Geschichte ist wohl: Wer betrunken in den Wald geht, sollte vorher seine eigene Adresse auf die Stirn schreiben. Sicher ist sicher.`,
+    contentEn: `Some people search for the meaning of life, others for their keys, and then there are those who search for themselves. The latter might sound like profound philosophy, but in Turkey, it became an amusing reality. As it turns out, an inebriated man spent hours helping a search party look for himself—without even realizing it. A true masterpiece of disorientation!
+
+The story begins, like so many good stories, with a group of friends in a wooded area. Our hero of the day, let's call him Mr. Mutlu for simplicity, had apparently had a little too much fun and decided to go for a short walk. A fatal mistake, as it turned out.
+
+<img src="/lovable-uploads/be0010f6-14e4-41ac-96e8-0214ac2ab934.png" alt="Mr. Mutlu with a police officer after the successful search" style="width: 100%; height: auto; margin: 20px 0; border-radius: 8px;" />
+
+When he didn't return, his worried friends feared the worst and alerted the authorities. What followed was a large-scale search operation with police, rescue workers, and many volunteers from the neighborhood, all battling their way through the dark woods.
+
+And here's the kicker: right in the middle of these brave helpers was none other than Mr. Mutlu himself! Instead of hiding or sleeping in his drunken state, he had spontaneously decided to help with the search for the 'missing person.'
+
+<img src="/lovable-uploads/abfab804-cb03-44be-a1c5-45947dd8b755.png" alt="Mr. Mutlu among the rescue workers during the search" style="width: 100%; height: auto; margin: 20px 0; border-radius: 8px;" />
+
+He trudged bravely through the undergrowth with torches and headlamps, calling out the name of the disappeared person, and was so dedicated to the cause that no one in the group became suspicious. It must have been a sight to behold: a search party in a tight formation calling out for a person who was standing right in the middle of them and calling along.
+
+A bit like in kindergarten when you're looking for your hat that's been on your head the whole time just with blue lights and more drama.
+
+<img src="/lovable-uploads/503e1f16-ccc7-4b83-b9a0-b741daaf4bfb.png" alt="The search operation in the woods with flashlights and helpers" style="width: 100%; height: auto; margin: 20px 0; border-radius: 8px;" />
+
+The spectacle only ended when the rescuers repeatedly called out the name 'Beyhan Mutlu.' Our protagonist, by now probably a bit more sober, looked around confusedly and asked, 'Who are we even looking for? I'm right here!' A moment that brought the search to an immediate halt.
+
+The police, visibly amused but also glad that everything had worked out, took his details and brought him home safely. Whether his father, whom he was reportedly afraid of, actually lectured him is not known. But the moral of the story is probably this: if you go into the woods while drunk, you should write your own address on your forehead beforehand. Just to be safe.`,
+    imageUrl: "/lovable-uploads/7d758bff-2caf-493d-8474-14d55635e13a.png",
+    category: "Daily Fun",
+    author: "Mr. Jonas Richter",
+    publishedAt: "2025-01-07",
+    tags: ["Humor", "Türkei", "Vermisstensuche", "Kurios"],
+    views: 0
   }
 ];
