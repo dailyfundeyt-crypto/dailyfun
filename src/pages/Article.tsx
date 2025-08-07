@@ -1,10 +1,11 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Calendar, User, Bot, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Bot } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import ArticleShareButton from '../components/ArticleShareButton';
 import AnimatedParagraph from '../components/AnimatedParagraph';
 import { useLanguage } from '../contexts/LanguageContext';
 import { articles } from '../data/articles';
@@ -102,14 +103,15 @@ const Article = () => {
             {t('common.back')}
           </Link>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={handleAIClick}
-              className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 rounded-lg font-medium text-sm"
             >
               <Bot className="h-4 w-4 mr-2" />
               {language === 'de' ? 'Mit AI sprechen' : 'Ask AI'}
             </button>
+            <ArticleShareButton articleId={article.id} title={translatedTitle} />
             <LanguageSwitcher />
           </div>
         </div>
