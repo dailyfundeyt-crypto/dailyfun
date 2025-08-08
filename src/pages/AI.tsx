@@ -106,6 +106,27 @@ const createCompanyDatabase = () => {
   };
 };
 
+const SUGGESTIONS = {
+  de: [
+    'erstelle mir eine erinnerung',
+    'erstelle mir ein logo',
+    'erstelle mir einen rap text',
+    'erstelle mir eine einkaufsliste',
+    'erstelle mir ein outfit',
+    'fass mir den letzten artikel zusammen',
+    'zeige mir artikel über technik'
+  ],
+  en: [
+    'create a reminder for me',
+    'design me a simple logo',
+    'write me a rap verse',
+    'make me a shopping list',
+    'suggest me an outfit',
+    'summarize the latest article',
+    'show me tech articles'
+  ]
+} as const;
+
 const AI = () => {
   const { language, t } = useLanguage();
   const articleDatabase = createArticleDatabase();
@@ -123,6 +144,8 @@ const AI = () => {
   const [autoAsk, setAutoAsk] = useState<{ question: string } | null>(null);
   const [qrMode, setQrMode] = useState(false);
   const [visibleCopyButtons, setVisibleCopyButtons] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -233,6 +256,13 @@ const AI = () => {
       scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    const base = language === 'de' ? SUGGESTIONS.de : SUGGESTIONS.en;
+    const q = inputValue.trim().toLowerCase();
+    const list = q ? base.filter(s => s.toLowerCase().includes(q)) : base;
+    setFilteredSuggestions(list.slice(0, 5));
+  }, [inputValue, language]);
 
   const generateQRCode = async (url: string): Promise<string> => {
     try {
@@ -513,6 +543,41 @@ const AI = () => {
     window.location.href = `/article/${article.id}`;
   };
 
+  const sendPrompt = async (text: string) => {
+    if (!text.trim() || isTyping) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text,
+      isUser: true,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setIsTyping(true);
+
+    try {
+      const response = await processAIResponse(text);
+      setLastAIResponse(response.text);
+
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: response.text,
+        isUser: false,
+        timestamp: new Date(),
+        qrCode: response.qrCode
+      };
+
+      setTimeout(() => {
+        setMessages(prev => [...prev, aiMessage]);
+        setIsTyping(false);
+      }, 800);
+    } catch (error) {
+      setIsTyping(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || isTyping) return;
@@ -758,13 +823,41 @@ const AI = () => {
             </Button>
           </div>
 
+          {/* Suggestions (like examples) */}
+          {showSuggestions && filteredSuggestions.length > 0 && (
+            <div className="flex justify-center">
+              <div className="w-full md:w-[80%] bg-white/90 border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                {filteredSuggestions.map((s, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      sendPrompt(s);
+                      setShowSuggestions(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
+                  >
+                    <Search className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm">{s}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* WhatsApp-style Input */}
           <form onSubmit={handleSubmit} className="flex gap-2 items-end">
             <div className="flex-1 bg-gray-100 rounded-2xl border border-gray-200 p-2">
               <input
                 type="text"
                 value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
                 placeholder={language === 'de' ? 'Nachricht...' : 'Message...'}
                 className="w-full bg-transparent border-none outline-none text-sm px-2 py-1"
                 disabled={isTyping}
