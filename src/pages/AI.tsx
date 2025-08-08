@@ -108,22 +108,20 @@ const createCompanyDatabase = () => {
 
 const SUGGESTIONS = {
   de: [
-    'erstelle mir eine erinnerung',
-    'erstelle mir ein logo',
-    'erstelle mir einen rap text',
-    'erstelle mir eine einkaufsliste',
-    'erstelle mir ein outfit',
-    'fass mir den letzten artikel zusammen',
-    'zeige mir artikel über technik'
+    'Zeig mir alle Artikel',
+    'Finde Artikel über Humor',
+    'Suche Artikel nach Kategorie Technik',
+    'Wer ist Stefan Kunc?',
+    'Wie kann ich euch kontaktieren?',
+    'Was ist die Mission von Daily Fun?',
   ],
   en: [
-    'create a reminder for me',
-    'design me a simple logo',
-    'write me a rap verse',
-    'make me a shopping list',
-    'suggest me an outfit',
-    'summarize the latest article',
-    'show me tech articles'
+    'Show me all articles',
+    'Find articles about humor',
+    'Search articles by category technology',
+    'Who is Stefan Kunc?',
+    'How can I contact you?',
+    "What is Daily Fun's mission?",
   ]
 } as const;
 
@@ -259,10 +257,31 @@ const AI = () => {
 
   useEffect(() => {
     const base = language === 'de' ? SUGGESTIONS.de : SUGGESTIONS.en;
+    const ctx = articleContext;
+    const contextual = ctx
+      ? (
+          language === 'de'
+            ? [
+                `Fasse mir "${ctx}" in 3-5 Sätzen zusammen`,
+                `Nenne 3 wichtige Erkenntnisse aus "${ctx}"`,
+                `Wer ist der Autor von "${ctx}"?`,
+                `Wann wurde "${ctx}" veröffentlicht?`,
+                `In welcher Kategorie ist "${ctx}"?`,
+              ]
+            : [
+                `Summarize "${ctx}" in 3-5 sentences`,
+                `List 3 key takeaways from "${ctx}"`,
+                `Who is the author of "${ctx}"?`,
+                `When was "${ctx}" published?`,
+                `Which category is "${ctx}" in?`,
+              ]
+        )
+      : [];
+    const merged = [...contextual, ...base];
     const q = inputValue.trim().toLowerCase();
-    const list = q ? base.filter(s => s.toLowerCase().includes(q)) : base;
-    setFilteredSuggestions(list.slice(0, 5));
-  }, [inputValue, language]);
+    const list = q ? merged.filter(s => s.toLowerCase().includes(q)) : merged;
+    setFilteredSuggestions(list.slice(0, 6));
+  }, [inputValue, language, articleContext]);
 
   const generateQRCode = async (url: string): Promise<string> => {
     try {
