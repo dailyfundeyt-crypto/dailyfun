@@ -78,7 +78,10 @@ const Article = () => {
   };
 
   const handleAIClick = () => {
-    const aiUrl = `/ai?article=${encodeURIComponent(translatedTitle)}`;
+    const defaultPrefill = language === 'de'
+      ? 'Bitte gib mir eine klare, kurze Zusammenfassung dieses Artikels in 3-5 Sätzen und liste 3 wichtige Erkenntnisse auf.'
+      : 'Please provide a clear, concise 3-5 sentence summary of this article and list 3 key takeaways.';
+    const aiUrl = `/ai?articleId=${encodeURIComponent(article.id)}&prefill=${encodeURIComponent(defaultPrefill)}`;
     window.open(aiUrl, '_blank', 'noopener,noreferrer');
   };
 

@@ -119,32 +119,89 @@ const AI = () => {
   const [searchResults, setSearchResults] = useState<{ [messageId: string]: any[] }>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [articleContext, setArticleContext] = useState<string | null>(null);
+  const [contextArticleId, setContextArticleId] = useState<string | null>(null);
+  const [autoAsk, setAutoAsk] = useState<{ question: string } | null>(null);
   const [qrMode, setQrMode] = useState(false);
   const [visibleCopyButtons, setVisibleCopyButtons] = useState<string[]>([]);
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // Check for article parameter in URL and initialize article context
+  // Check for article/articleId/prefill parameters in URL and initialize context
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const articleParam = urlParams.get('article');
-    
-    if (articleParam && articleParam.length <= 500 && !/[<>"'&]/.test(articleParam)) {
-      const decodedArticle = decodeURIComponent(articleParam).trim();
-      setArticleContext(decodedArticle);
-      
-      // Set contextual placeholder and auto-set local mode
-      const aiQuestion = language === 'de' 
-        ? `Erzähl mir mehr über ${decodedArticle}`
-        : `Tell me more about ${decodedArticle}`;
-      setInputValue(aiQuestion);
+    const articleIdParam = urlParams.get('articleId');
+    const prefillParam = urlParams.get('prefill') || urlParams.get('prompt');
+
+    let ctxTitle: string | null = null;
+    let ctxId: string | null = null;
+
+    if (articleIdParam) {
+      const byId = articles.find(a => a.id === articleIdParam);
+      if (byId) {
+        ctxId = byId.id;
+        ctxTitle = language === 'de' ? byId.title : (byId.titleEn || byId.title);
+      }
+    } else if (articleParam && articleParam.length <= 500 && !/[<>"'&]/.test(articleParam)) {
+      const decoded = decodeURIComponent(articleParam).trim();
+      ctxTitle = decoded;
+      const matched = articles.find(a => [a.title?.toLowerCase(), a.titleEn?.toLowerCase()].includes(decoded.toLowerCase()));
+      if (matched) ctxId = matched.id;
+    }
+
+    if (ctxTitle) {
+      setArticleContext(ctxTitle);
+      if (ctxId) setContextArticleId(ctxId);
+
+      const defaultPrefill = language === 'de'
+        ? `Bitte gib mir eine klare, kurze Zusammenfassung von "${ctxTitle}" in 3-5 Sätzen und nenne 3 wichtige Erkenntnisse.`
+        : `Please give me a clear, concise 3-5 sentence summary of "${ctxTitle}" and list 3 key takeaways.`;
+      const question = (prefillParam && prefillParam.length < 300 ? prefillParam : defaultPrefill);
+      setInputValue(question);
       setSearchMode('local');
-      
-      // Clear the URL parameter
+      setAutoAsk({ question });
+
+      // Clear the URL parameters
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
     }
   }, [language]);
+
+  // Auto-run prefilled question when provided via URL
+  useEffect(() => {
+    if (!autoAsk) return;
+    const question = autoAsk.question;
+    const send = async () => {
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        text: question,
+        isUser: true,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, userMessage]);
+      setInputValue('');
+      setIsTyping(true);
+      try {
+        const response = await processAIResponse(question);
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: response.text,
+          isUser: false,
+          timestamp: new Date(),
+          qrCode: response.qrCode,
+        };
+        setTimeout(() => {
+          setMessages(prev => [...prev, aiMessage]);
+          setIsTyping(false);
+        }, 600);
+      } catch (e) {
+        setIsTyping(false);
+      } finally {
+        setAutoAsk(null);
+      }
+    };
+    send();
+  }, [autoAsk]);
 
   // Initialize welcome message based on language and context
   useEffect(() => {
@@ -224,21 +281,43 @@ const AI = () => {
     document.body.removeChild(link);
   };
 
-  const searchArticles = (query: string) => {
-    const filtered = articles.filter(article => {
-      const title = language === 'de' ? t(`article.${article.id}.title`) : article.title;
-      const excerpt = language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt;
-      const lowerQuery = query.toLowerCase();
-      
-      return title.toLowerCase().includes(lowerQuery) ||
-             excerpt.toLowerCase().includes(lowerQuery) ||
-             article.author.toLowerCase().includes(lowerQuery) ||
-             article.category.toLowerCase().includes(lowerQuery);
-    });
-    
-    return filtered.slice(0, 5);
+  // Helpers to create nicer, more logical answers
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const toSentences = (text: string) => text.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const summarize = (text: string, maxSentences = 4) => {
+    const s = toSentences(text);
+    return s.slice(0, Math.min(maxSentences, s.length)).join(' ');
+  };
+  const keyPoints = (text: string, tags?: string[], count = 3) => {
+    const s = toSentences(text).slice(1, 10);
+    const unique = Array.from(new Set(s.map(v => v.trim()))).filter(Boolean);
+    const pts = unique.slice(0, count);
+    if (pts.length < count && tags && tags.length) {
+      const filler = tags.slice(0, count - pts.length).map(tag => language === 'de' ? `Thema: ${tag}` : `Topic: ${tag}`);
+      return [...pts, ...filler];
+    }
+    return pts;
   };
 
+  const searchArticles = (query: string) => {
+    const lowerQuery = query.toLowerCase();
+    const filtered = articles.filter(article => {
+      const titleDe = article.title || '';
+      const titleEn = article.titleEn || '';
+      const excerptDe = article.excerpt || '';
+      const excerptEn = article.excerptEn || '';
+      const contentDe = article.content || '';
+      const contentEn = article.contentEn || '';
+      const categoryDe = article.category || '';
+      const categoryEn = article.categoryEn || '';
+      const haystack = [
+        titleDe, titleEn, excerptDe, excerptEn, contentDe, contentEn,
+        categoryDe, categoryEn, article.author, ...(article.tags || [])
+      ].join(' ').toLowerCase();
+      return haystack.includes(lowerQuery);
+    });
+    return filtered.slice(0, 8);
+  };
   const detectLanguage = (text: string): 'de' | 'en' => {
     const germanWords = ['der', 'die', 'das', 'und', 'ist', 'ein', 'eine', 'ich', 'sie', 'er', 'wir', 'für', 'auf', 'mit', 'von', 'zu', 'am', 'im', 'über', 'dass', 'können', 'haben', 'werden', 'sein', 'nicht'];
     const englishWords = ['the', 'and', 'is', 'a', 'an', 'i', 'you', 'he', 'she', 'we', 'for', 'on', 'with', 'from', 'to', 'at', 'in', 'about', 'that', 'can', 'have', 'will', 'be', 'not'];
@@ -288,25 +367,64 @@ const AI = () => {
       }
     }
 
-    // Local article search for search mode
+    // Article-specific Q&A and summarization when context is present
+    if (searchMode === 'local' && (contextArticleId || articleContext)) {
+      const ctxArticle = contextArticleId
+        ? articles.find(a => a.id === contextArticleId)
+        : articles.find(a => {
+            const ctx = (articleContext || '').toLowerCase();
+            const titles = [a.title || '', a.titleEn || ''].map(t => t.toLowerCase());
+            return titles.includes(ctx) || titles.some(t => t.includes(ctx));
+          });
+      if (ctxArticle) {
+        const title = language === 'de' ? ctxArticle.title : (ctxArticle.titleEn || ctxArticle.title);
+        const raw = language === 'de' ? (ctxArticle.content || ctxArticle.excerpt) : (ctxArticle.contentEn || ctxArticle.excerptEn || ctxArticle.excerpt);
+        const clean = stripHtml(raw || '');
+        const sum = summarize(clean, 4);
+        const points = keyPoints(clean, ctxArticle.tags, 3);
+        const ask = input;
+        if (ask.includes('autor') || ask.includes('author')) {
+          const res = language === 'de' ? `Autor: ${ctxArticle.author}` : `Author: ${ctxArticle.author}`;
+          return { text: `🧑‍💻 ${res}\n\n🔗 /article/${ctxArticle.id}` };
+        }
+        if (ask.includes('datum') || ask.includes('date')) {
+          const dateStr = new Date(ctxArticle.publishedAt).toLocaleDateString();
+          const res = language === 'de' ? `Veröffentlichungsdatum: ${dateStr}` : `Published on: ${dateStr}`;
+          return { text: `📅 ${res}\n\n🔗 /article/${ctxArticle.id}` };
+        }
+        if (ask.includes('kategorie') || ask.includes('category')) {
+          const cat = language === 'de' ? (ctxArticle.category) : (ctxArticle.categoryEn || ctxArticle.category);
+          const res = language === 'de' ? `Kategorie: ${cat}` : `Category: ${cat}`;
+          return { text: `🏷️ ${res}\n\n🔗 /article/${ctxArticle.id}` };
+        }
+        const header = language === 'de' ? `📰 ${title}\n\nKurz zusammengefasst:` : `📰 ${title}\n\nIn short:`;
+        const pointsHeader = language === 'de' ? '\n\nWichtige Punkte:' : '\n\nKey takeaways:';
+        const factsHeader = language === 'de' ? '\n\nFakten:' : '\n\nFacts:';
+        const facts = [
+          language === 'de' ? `Autor: ${ctxArticle.author}` : `Author: ${ctxArticle.author}`,
+          language === 'de' ? `Kategorie: ${ctxArticle.category}` : `Category: ${ctxArticle.categoryEn || ctxArticle.category}`,
+          `${language === 'de' ? 'Datum' : 'Date'}: ${new Date(ctxArticle.publishedAt).toLocaleDateString()}`,
+        ].join('\n- ');
+        const link = `\n\n🔗 ${language === 'de' ? 'Zum Artikel' : 'Open article'}: /article/${ctxArticle.id}`;
+        return { text: `${header}\n${sum}${pointsHeader}\n${points.map(p => `- ${p}`).join('\n')}${factsHeader}\n- ${facts}${link}` };
+      }
+    }
+
+    // Local article search for search mode (all articles)
     if (searchMode === 'local') {
-      const searchResults = searchArticles(userInput);
-      
-      if (searchResults.length > 0) {
+      const results = searchArticles(userInput);
+      if (results.length > 0) {
         const resultText = language === 'de' 
-          ? `📰 Ich habe ${searchResults.length} passende Artikel gefunden:\n\n`
-          : `📰 I found ${searchResults.length} matching articles:\n\n`;
-        
-        const articleList = searchResults.map((article, index) => {
-          const title = language === 'de' ? t(`article.${article.id}.title`) : article.title;
-          const excerpt = language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt;
-          return `${index + 1}. **${title}**\n   ${excerpt}\n   📝 ${article.author} • 📅 ${new Date(article.publishedAt).toLocaleDateString()}\n`;
+          ? `📰 Ich habe ${results.length} passende Artikel gefunden:\n\n`
+          : `📰 I found ${results.length} matching articles:\n\n`;
+        const articleList = results.map((article, index) => {
+          const title = language === 'de' ? (article.title) : (article.titleEn || article.title);
+          const excerpt = language === 'de' ? (article.excerpt) : (article.excerptEn || article.excerpt);
+          return `${index + 1}. **${title}**\n   ${excerpt}\n   🔗 /article/${article.id} \n   📝 ${article.author} • 📅 ${new Date(article.publishedAt).toLocaleDateString()}\n`;
         }).join('\n');
-        
         const footer = language === 'de'
           ? '\n💡 Fragen Sie nach mehr Details zu einem bestimmten Artikel!'
           : '\n💡 Ask for more details about a specific article!';
-        
         return { text: resultText + articleList + footer };
       }
     }
