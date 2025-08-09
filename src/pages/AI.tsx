@@ -394,12 +394,60 @@ const AI = () => {
     document.body.removeChild(link);
   };
 
-  const generateQuiz = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
+  const generateGermanQuiz = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
     const input = userInput.toLowerCase();
     
-    // Determine quiz category and language
+    // Determine topic from input
+    let topic = 'Allgemeinwissen';
+    if (input.includes('katzen')) topic = 'Katzen';
+    else if (input.includes('hunde')) topic = 'Hunde';
+    else if (input.includes('geschichte')) topic = 'Geschichte';
+    else if (input.includes('wissenschaft')) topic = 'Wissenschaft';
+    else if (input.includes('sport')) topic = 'Sport';
+    else if (input.includes('filme')) topic = 'Filme';
+    else if (input.includes('musik')) topic = 'Musik';
+    
+    try {
+      // Call Supabase Edge Function for Perplexity API
+      const response = await fetch('/api/generate-german-quiz', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ topic }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('API call failed');
+      }
+      
+      const data = await response.json();
+      
+      if (data.quiz) {
+        return {
+          text: 'INTERACTIVE_QUIZ',
+          quizData: {
+            question: data.quiz.question,
+            answers: data.quiz.answers,
+            correctAnswer: data.quiz.correctAnswer,
+            explanation: data.quiz.explanation
+          }
+        };
+      } else {
+        throw new Error('No quiz data returned');
+      }
+    } catch (error) {
+      console.error('German quiz generation failed:', error);
+      // Fallback to translated English quiz
+      return generateEnglishQuizWithTranslation(userInput);
+    }
+  };
+
+  const generateEnglishQuizWithTranslation = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
+    const input = userInput.toLowerCase();
+    
+    // Determine quiz category
     let category = '';
-    let amount = 1;
     
     if (input.includes('katzen') || input.includes('cat')) {
       category = '27'; // Animals
@@ -415,12 +463,10 @@ const AI = () => {
       category = '11'; // Movies
     } else if (input.includes('musik') || input.includes('music')) {
       category = '12'; // Music
-    } else {
-      category = ''; // Random
     }
     
     try {
-      const apiUrl = `https://opentdb.com/api.php?amount=${amount}&type=multiple${category ? `&category=${category}` : ''}`;
+      const apiUrl = `https://opentdb.com/api.php?amount=1&type=multiple${category ? `&category=${category}` : ''}`;
       const response = await fetch(apiUrl);
       const data = await response.json();
       
@@ -438,8 +484,8 @@ const AI = () => {
         const correctAnswer = decodeHtml(quiz.correct_answer);
         const incorrectAnswers = quiz.incorrect_answers.map((ans: string) => decodeHtml(ans));
         
-        // Translate if German is selected
-        const translatedContent = language === 'de' ? await translateToGerman(question, correctAnswer, incorrectAnswers) : {
+        // Improved translation for German
+        const translatedContent = language === 'de' ? await improvedTranslateToGerman(question, correctAnswer, incorrectAnswers) : {
           question,
           correct: correctAnswer,
           incorrect: incorrectAnswers
@@ -452,17 +498,13 @@ const AI = () => {
           question: translatedContent.question,
           answers: allAnswers,
           correctAnswer: translatedContent.correct,
-          explanation: quiz.difficulty === 'hard' 
-            ? (language === 'de' 
-                ? `Diese Frage war schwierig! Die richtige Antwort ist "${translatedContent.correct}".`
-                : `This was a hard question! The correct answer is "${translatedContent.correct}".`)
-            : (language === 'de'
-                ? `Die richtige Antwort ist "${translatedContent.correct}".`
-                : `The correct answer is "${translatedContent.correct}".`)
+          explanation: language === 'de' 
+            ? `Die richtige Antwort ist "${translatedContent.correct}".`
+            : `The correct answer is "${translatedContent.correct}".`
         };
         
         return { 
-          text: 'INTERACTIVE_QUIZ', // Special marker for interactive quiz
+          text: 'INTERACTIVE_QUIZ',
           quizData 
         };
       } else {
@@ -479,31 +521,65 @@ const AI = () => {
     }
   };
 
-  const translateToGerman = async (question: string, correct: string, incorrect: string[]) => {
-    // Simple keyword-based translation for common quiz terms
+  const generateQuiz = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
+    if (language === 'de') {
+      return generateGermanQuiz(userInput);
+    } else {
+      return generateEnglishQuizWithTranslation(userInput);
+    }
+  };
+
+  const improvedTranslateToGerman = async (question: string, correct: string, incorrect: string[]) => {
+    // Enhanced translation dictionary
     const translations: { [key: string]: string } = {
-      'What': 'Was',
-      'Who': 'Wer', 
-      'When': 'Wann',
-      'Where': 'Wo',
-      'Which': 'Welche',
-      'How': 'Wie',
-      'True': 'Wahr',
-      'False': 'Falsch',
-      'Yes': 'Ja',
-      'No': 'Nein'
+      // Question words
+      'What': 'Was', 'Who': 'Wer', 'Where': 'Wo', 'When': 'Wann', 'Why': 'Warum', 'How': 'Wie',
+      'Which': 'Welche', 'Whose': 'Wessen',
+      
+      // Common quiz terms
+      'the smallest': 'die kleinste', 'the largest': 'die größte', 'the first': 'die erste',
+      'the last': 'die letzte', 'the most': 'die meisten', 'the least': 'die wenigsten',
+      'smallest': 'kleinste', 'largest': 'größte', 'biggest': 'größte', 'tiniest': 'winzigste',
+      
+      // Animals
+      'dog': 'Hund', 'cat': 'Katze', 'dogs': 'Hunde', 'cats': 'Katzen',
+      'breed': 'Rasse', 'breeds': 'Rassen', 'animal': 'Tier', 'animals': 'Tiere',
+      
+      // Science terms
+      'temperature': 'Temperatur', 'degree': 'Grad', 'degrees': 'Grad',
+      'Celsius': 'Celsius', 'Fahrenheit': 'Fahrenheit',
+      
+      // Common words
+      'is': 'ist', 'are': 'sind', 'was': 'war', 'were': 'waren',
+      'in': 'in', 'on': 'auf', 'at': 'bei', 'by': 'von',
+      'world': 'Welt', 'country': 'Land', 'countries': 'Länder',
+      'year': 'Jahr', 'years': 'Jahre', 'century': 'Jahrhundert',
+      
+      // Verbs
+      'considered': 'gilt als', 'known': 'bekannt', 'called': 'genannt',
+      'reach': 'erreichen', 'produce': 'produzieren', 'burn': 'brennen',
+      
+      // Adjectives
+      'bright': 'hell', 'white': 'weiß', 'small': 'klein', 'large': 'groß',
+      'high': 'hoch', 'low': 'niedrig', 'hot': 'heiß', 'cold': 'kalt'
     };
-    
-    let translatedQuestion = question;
-    let translatedCorrect = correct;
-    let translatedIncorrect = incorrect;
-    
-    // For now, return original content as translation would require a full API
-    // In production, you'd want to use Google Translate API or similar
+
+    const translateText = (text: string): string => {
+      let translated = text;
+      
+      // Replace whole words only
+      Object.entries(translations).forEach(([en, de]) => {
+        const regex = new RegExp(`\\b${en}\\b`, 'gi');
+        translated = translated.replace(regex, de);
+      });
+      
+      return translated;
+    };
+
     return {
-      question: translatedQuestion,
-      correct: translatedCorrect,
-      incorrect: translatedIncorrect
+      question: translateText(question),
+      correct: translateText(correct),
+      incorrect: incorrect.map(translateText)
     };
   };
 
