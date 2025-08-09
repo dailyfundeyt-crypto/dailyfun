@@ -17,6 +17,14 @@ interface Message {
   feedback?: 'positive' | 'negative' | null;
   qrCode?: string;
   articleSearch?: boolean;
+  quizData?: {
+    question: string;
+    answers: string[];
+    correctAnswer: string;
+    explanation: string;
+    selectedAnswer?: string;
+    showResults?: boolean;
+  };
 }
 
 interface ActionCard {
@@ -179,6 +187,22 @@ const AI = () => {
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
+  const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId && msg.quizData) {
+        return {
+          ...msg,
+          quizData: {
+            ...msg.quizData,
+            selectedAnswer,
+            showResults: true
+          }
+        };
+      }
+      return msg;
+    }));
+  };
+
   // Check for article/articleId/prefill parameters in URL and initialize context
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -242,6 +266,7 @@ const AI = () => {
           isUser: false,
           timestamp: new Date(),
           qrCode: response.qrCode,
+          quizData: response.quizData,
         };
         setTimeout(() => {
           setMessages(prev => [...prev, aiMessage]);
@@ -369,12 +394,12 @@ const AI = () => {
     document.body.removeChild(link);
   };
 
-  const generateQuiz = async (userInput: string): Promise<{ text: string }> => {
+  const generateQuiz = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
     const input = userInput.toLowerCase();
     
     // Determine quiz category and language
     let category = '';
-    let amount = 5;
+    let amount = 1;
     
     if (input.includes('katzen') || input.includes('cat')) {
       category = '27'; // Animals
@@ -400,7 +425,7 @@ const AI = () => {
       const data = await response.json();
       
       if (data.response_code === 0 && data.results.length > 0) {
-        const quiz = data.results[0]; // Take first question for now
+        const quiz = data.results[0];
         
         // Decode HTML entities
         const decodeHtml = (html: string) => {
@@ -421,13 +446,25 @@ const AI = () => {
         };
         
         const allAnswers = [translatedContent.correct, ...translatedContent.incorrect].sort(() => Math.random() - 0.5);
-        const correctIndex = allAnswers.indexOf(translatedContent.correct);
         
-        const quizText = language === 'de' 
-          ? `🧠 **Quiz Frage:**\n\n${translatedContent.question}\n\n**Antwortmöglichkeiten:**\n${allAnswers.map((ans, idx) => `${String.fromCharCode(65 + idx)}. ${ans}`).join('\n')}\n\n*Die richtige Antwort ist: ${String.fromCharCode(65 + correctIndex)}. ${translatedContent.correct}*\n\n🎯 Möchten Sie eine weitere Frage? Fragen Sie einfach nach einem anderen Quiz!`
-          : `🧠 **Quiz Question:**\n\n${translatedContent.question}\n\n**Answer Options:**\n${allAnswers.map((ans, idx) => `${String.fromCharCode(65 + idx)}. ${ans}`).join('\n')}\n\n*The correct answer is: ${String.fromCharCode(65 + correctIndex)}. ${translatedContent.correct}*\n\n🎯 Want another question? Just ask for another quiz!`;
+        // Create quiz data for interactive display
+        const quizData = {
+          question: translatedContent.question,
+          answers: allAnswers,
+          correctAnswer: translatedContent.correct,
+          explanation: quiz.difficulty === 'hard' 
+            ? (language === 'de' 
+                ? `Diese Frage war schwierig! Die richtige Antwort ist "${translatedContent.correct}".`
+                : `This was a hard question! The correct answer is "${translatedContent.correct}".`)
+            : (language === 'de'
+                ? `Die richtige Antwort ist "${translatedContent.correct}".`
+                : `The correct answer is "${translatedContent.correct}".`)
+        };
         
-        return { text: quizText };
+        return { 
+          text: 'INTERACTIVE_QUIZ', // Special marker for interactive quiz
+          quizData 
+        };
       } else {
         const errorText = language === 'de'
           ? '❌ Entschuldigung, ich konnte kein Quiz für dieses Thema generieren. Versuchen Sie es mit einem anderen Thema!'
@@ -523,7 +560,7 @@ const AI = () => {
     return germanScore > englishScore ? 'de' : 'en';
   };
 
-  const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string }> => {
+  const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string; quizData?: any }> => {
     const input = userInput.toLowerCase();
     const detectedLanguage = detectLanguage(userInput);
     
@@ -736,13 +773,14 @@ const AI = () => {
       const response = await processAIResponse(text);
       setLastAIResponse(response.text);
 
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.text,
-        isUser: false,
-        timestamp: new Date(),
-        qrCode: response.qrCode
-      };
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: response.text,
+          isUser: false,
+          timestamp: new Date(),
+          qrCode: response.qrCode,
+          quizData: response.quizData
+        };
 
       setTimeout(() => {
         setMessages(prev => [...prev, aiMessage]);
@@ -772,13 +810,14 @@ const AI = () => {
       const response = await processAIResponse(inputValue);
       setLastAIResponse(response.text);
 
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.text,
-        isUser: false,
-        timestamp: new Date(),
-        qrCode: response.qrCode
-      };
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: response.text,
+          isUser: false,
+          timestamp: new Date(),
+          qrCode: response.qrCode,
+          quizData: response.quizData
+        };
 
       setTimeout(() => {
         setMessages(prev => [...prev, aiMessage]);
@@ -818,9 +857,83 @@ const AI = () => {
                   }`}
                    onClick={() => handleMessageClick(message.id)}
                  >
-                   <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                     {message.text}
-                   </div>
+                    {message.text === 'INTERACTIVE_QUIZ' && message.quizData ? (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {message.quizData.question}
+                        </h3>
+                        <div className="space-y-2">
+                          {message.quizData.answers.map((answer: string, index: number) => {
+                            const answerLetter = String.fromCharCode(65 + index);
+                            const isCorrect = answer === message.quizData.correctAnswer;
+                            const isSelected = answer === message.quizData.selectedAnswer;
+                            const showResults = message.quizData.showResults;
+                            
+                            let buttonClass = "w-full text-left p-3 rounded-lg border transition-all duration-200 ";
+                            
+                            if (showResults) {
+                              if (isCorrect) {
+                                buttonClass += "bg-green-100 border-green-300 text-green-800";
+                              } else if (isSelected && !isCorrect) {
+                                buttonClass += "bg-red-100 border-red-300 text-red-800";
+                              } else {
+                                buttonClass += "bg-gray-100 border-gray-200 text-gray-600";
+                              }
+                            } else {
+                              buttonClass += "bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-800";
+                            }
+                            
+                            return (
+                              <button
+                                key={index}
+                                onClick={() => !showResults && handleQuizAnswer(message.id, answer)}
+                                disabled={showResults}
+                                className={buttonClass}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <span className="font-semibold text-lg">
+                                    {answerLetter}.
+                                  </span>
+                                  <span className="flex-1">{answer}</span>
+                                  {showResults && isCorrect && (
+                                    <span className="text-green-600 font-semibold">
+                                      ✓ {language === 'de' ? 'Richtige Antwort' : 'Correct Answer'}
+                                    </span>
+                                  )}
+                                  {showResults && isSelected && !isCorrect && (
+                                    <span className="text-red-600 font-semibold">
+                                      ✗ {language === 'de' ? 'Nicht ganz' : 'Not quite'}
+                                    </span>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        
+                        {message.quizData.showResults && (
+                          <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <p className="text-blue-800">
+                              <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {message.quizData.explanation}
+                            </p>
+                            <div className="mt-3">
+                              <Button
+                                onClick={() => sendPrompt(language === 'de' ? 'Random Quiz' : 'Random Quiz')}
+                                size="sm"
+                                variant="outline"
+                                className="bg-white"
+                              >
+                                {language === 'de' ? 'Nächste Frage' : 'Next Question'}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {message.text}
+                      </div>
+                    )}
                    
                    {/* Article Search Component */}
                    {message.articleSearch && (
