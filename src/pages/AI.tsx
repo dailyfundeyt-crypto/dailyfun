@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown } from 'lucide-react';
+import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -20,7 +20,7 @@ interface Message {
 }
 
 interface ActionCard {
-  id: 'article-search' | 'qr-generator';
+  id: 'article-search' | 'qr-generator' | 'quiz';
   titleDe: string;
   titleEn: string;
   icon: React.ComponentType<any>;
@@ -44,6 +44,14 @@ const actionCards: ActionCard[] = [
     icon: QrCode,
     promptDe: 'Senden Sie mir einfach einen Link und ich erstelle sofort einen QR Code dafür! Perfekt zum Teilen von Webseiten, Artikeln oder beliebigen URLs.',
     promptEn: 'Just send me a link and I\'ll instantly create a QR code for it! Perfect for sharing websites, articles, or any URLs.'
+  },
+  {
+    id: 'quiz',
+    titleDe: 'Quiz',
+    titleEn: 'Quiz',
+    icon: Brain,
+    promptDe: 'Ich kann für Sie interessante Quizzes erstellen! Wählen Sie ein Thema oder probieren Sie eines unserer beliebten Quizzes aus.',
+    promptEn: 'I can create interesting quizzes for you! Choose a topic or try one of our popular quizzes.'
   }
 ];
 
@@ -125,6 +133,29 @@ const SUGGESTIONS = {
   ]
 } as const;
 
+const QUIZ_SUGGESTIONS = {
+  de: [
+    'Katzen Quiz',
+    'Hunde Quiz',
+    'Random Quiz',
+    'Quiz über Geschichte',
+    'Quiz über Wissenschaft',
+    'Quiz über Sport',
+    'Quiz über Filme',
+    'Quiz über Musik'
+  ],
+  en: [
+    'Cat Quiz',
+    'Dog Quiz',
+    'Random Quiz',
+    'History Quiz',
+    'Science Quiz',
+    'Sports Quiz',
+    'Movie Quiz',
+    'Music Quiz'
+  ]
+} as const;
+
 const AI = () => {
   const { language, t } = useLanguage();
   const articleDatabase = createArticleDatabase();
@@ -141,6 +172,7 @@ const AI = () => {
   const [contextArticleId, setContextArticleId] = useState<string | null>(null);
   const [autoAsk, setAutoAsk] = useState<{ question: string } | null>(null);
   const [qrMode, setQrMode] = useState(false);
+  const [quizMode, setQuizMode] = useState(false);
   const [visibleCopyButtons, setVisibleCopyButtons] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
@@ -256,9 +288,16 @@ const AI = () => {
   }, [messages]);
 
   useEffect(() => {
-    const base = language === 'de' ? SUGGESTIONS.de : SUGGESTIONS.en;
+    let base: readonly string[];
+    
+    if (quizMode) {
+      base = language === 'de' ? QUIZ_SUGGESTIONS.de : QUIZ_SUGGESTIONS.en;
+    } else {
+      base = language === 'de' ? SUGGESTIONS.de : SUGGESTIONS.en;
+    }
+    
     const ctx = articleContext;
-    const contextual = ctx
+    const contextual = ctx && !quizMode
       ? (
           language === 'de'
             ? [
@@ -281,7 +320,7 @@ const AI = () => {
     const q = inputValue.trim().toLowerCase();
     const list = q ? merged.filter(s => s.toLowerCase().includes(q)) : merged;
     setFilteredSuggestions(list.slice(0, 6));
-  }, [inputValue, language, articleContext]);
+  }, [inputValue, language, articleContext, quizMode]);
 
   const generateQRCode = async (url: string): Promise<string> => {
     try {
@@ -328,6 +367,107 @@ const AI = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const generateQuiz = async (userInput: string): Promise<{ text: string }> => {
+    const input = userInput.toLowerCase();
+    
+    // Determine quiz category and language
+    let category = '';
+    let amount = 5;
+    
+    if (input.includes('katzen') || input.includes('cat')) {
+      category = '27'; // Animals
+    } else if (input.includes('hunde') || input.includes('dog')) {
+      category = '27'; // Animals  
+    } else if (input.includes('geschichte') || input.includes('history')) {
+      category = '23'; // History
+    } else if (input.includes('wissenschaft') || input.includes('science')) {
+      category = '17'; // Science & Nature
+    } else if (input.includes('sport')) {
+      category = '21'; // Sports
+    } else if (input.includes('filme') || input.includes('movie')) {
+      category = '11'; // Movies
+    } else if (input.includes('musik') || input.includes('music')) {
+      category = '12'; // Music
+    } else {
+      category = ''; // Random
+    }
+    
+    try {
+      const apiUrl = `https://opentdb.com/api.php?amount=${amount}&type=multiple${category ? `&category=${category}` : ''}`;
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+      
+      if (data.response_code === 0 && data.results.length > 0) {
+        const quiz = data.results[0]; // Take first question for now
+        
+        // Decode HTML entities
+        const decodeHtml = (html: string) => {
+          const txt = document.createElement('textarea');
+          txt.innerHTML = html;
+          return txt.value;
+        };
+        
+        const question = decodeHtml(quiz.question);
+        const correctAnswer = decodeHtml(quiz.correct_answer);
+        const incorrectAnswers = quiz.incorrect_answers.map((ans: string) => decodeHtml(ans));
+        
+        // Translate if German is selected
+        const translatedContent = language === 'de' ? await translateToGerman(question, correctAnswer, incorrectAnswers) : {
+          question,
+          correct: correctAnswer,
+          incorrect: incorrectAnswers
+        };
+        
+        const allAnswers = [translatedContent.correct, ...translatedContent.incorrect].sort(() => Math.random() - 0.5);
+        const correctIndex = allAnswers.indexOf(translatedContent.correct);
+        
+        const quizText = language === 'de' 
+          ? `🧠 **Quiz Frage:**\n\n${translatedContent.question}\n\n**Antwortmöglichkeiten:**\n${allAnswers.map((ans, idx) => `${String.fromCharCode(65 + idx)}. ${ans}`).join('\n')}\n\n*Die richtige Antwort ist: ${String.fromCharCode(65 + correctIndex)}. ${translatedContent.correct}*\n\n🎯 Möchten Sie eine weitere Frage? Fragen Sie einfach nach einem anderen Quiz!`
+          : `🧠 **Quiz Question:**\n\n${translatedContent.question}\n\n**Answer Options:**\n${allAnswers.map((ans, idx) => `${String.fromCharCode(65 + idx)}. ${ans}`).join('\n')}\n\n*The correct answer is: ${String.fromCharCode(65 + correctIndex)}. ${translatedContent.correct}*\n\n🎯 Want another question? Just ask for another quiz!`;
+        
+        return { text: quizText };
+      } else {
+        const errorText = language === 'de'
+          ? '❌ Entschuldigung, ich konnte kein Quiz für dieses Thema generieren. Versuchen Sie es mit einem anderen Thema!'
+          : '❌ Sorry, I couldn\'t generate a quiz for this topic. Try another topic!';
+        return { text: errorText };
+      }
+    } catch (error) {
+      const errorText = language === 'de'
+        ? '❌ Fehler beim Laden des Quiz. Bitte versuchen Sie es später erneut.'
+        : '❌ Error loading quiz. Please try again later.';
+      return { text: errorText };
+    }
+  };
+
+  const translateToGerman = async (question: string, correct: string, incorrect: string[]) => {
+    // Simple keyword-based translation for common quiz terms
+    const translations: { [key: string]: string } = {
+      'What': 'Was',
+      'Who': 'Wer', 
+      'When': 'Wann',
+      'Where': 'Wo',
+      'Which': 'Welche',
+      'How': 'Wie',
+      'True': 'Wahr',
+      'False': 'Falsch',
+      'Yes': 'Ja',
+      'No': 'Nein'
+    };
+    
+    let translatedQuestion = question;
+    let translatedCorrect = correct;
+    let translatedIncorrect = incorrect;
+    
+    // For now, return original content as translation would require a full API
+    // In production, you'd want to use Google Translate API or similar
+    return {
+      question: translatedQuestion,
+      correct: translatedCorrect,
+      incorrect: translatedIncorrect
+    };
   };
 
   // Helpers to create nicer, more logical answers
@@ -387,6 +527,12 @@ const AI = () => {
     const input = userInput.toLowerCase();
     const detectedLanguage = detectLanguage(userInput);
     
+    // Quiz generation
+    if (quizMode || input.includes('quiz')) {
+      setQuizMode(false);
+      return await generateQuiz(userInput);
+    }
+
     // QR Code generation
     if (qrMode) {
       const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -543,6 +689,16 @@ const AI = () => {
         isUser: false,
         timestamp: new Date(),
         articleSearch: true
+      };
+      setMessages(prev => [...prev, newMessage]);
+    } else if (card.id === 'quiz') {
+      setQuizMode(true);
+      const prompt = language === 'de' ? card.promptDe : card.promptEn;
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        text: prompt,
+        isUser: false,
+        timestamp: new Date()
       };
       setMessages(prev => [...prev, newMessage]);
     }
@@ -839,6 +995,16 @@ const AI = () => {
               <QrCode className="w-3 h-3 md:w-4 md:h-4" />
               <span className="hidden sm:inline">Generate QR Code</span>
               <span className="sm:hidden">QR</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => handleActionCardClick(actionCards[2])}
+              className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+            >
+              <Brain className="w-3 h-3 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">Quiz</span>
+              <span className="sm:hidden">Quiz</span>
             </Button>
           </div>
 
