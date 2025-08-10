@@ -9,100 +9,108 @@ serve(async (req) => {
 
   try {
     const { topic } = await req.json()
-    
-    // Get Perplexity API key from environment
-    const perplexityApiKey = Deno.env.get('PERPLEXITY_API_KEY')
-    
-    if (!perplexityApiKey) {
-      throw new Error('PERPLEXITY_API_KEY not found in environment variables')
+
+    const query = (topic || '').toString().trim()
+    if (!query) {
+      throw new Error('Missing topic')
     }
 
-    const prompt = `Erstelle ein deutsches Multiple-Choice-Quiz über ${topic}. 
-    Antworte nur mit einem JSON-Objekt in folgendem Format:
-    {
-      "question": "Die Quizfrage auf Deutsch",
-      "answers": ["Antwort A", "Antwort B", "Antwort C", "Antwort D"],
-      "correctAnswer": "Die richtige Antwort",
-      "explanation": "Kurze Erklärung warum diese Antwort richtig ist"
+    // Use German Wikipedia to generate a multiple-choice quiz without API keys
+    const lang = 'de'
+    const searchUrl = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json`
+
+    const searchRes = await fetch(searchUrl)
+    if (!searchRes.ok) {
+      throw new Error(`Wikipedia search failed: ${searchRes.status}`)
     }
-    
-    Stelle sicher, dass:
-    - Die Frage interessant und nicht zu schwer ist
-    - Alle 4 Antworten plausibel klingen
-    - Die Erklärung informativ aber kurz ist
-    - Alles auf Deutsch ist`
+    const searchData = await searchRes.json()
+    const first = searchData?.query?.search?.[0]
 
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${perplexityApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
-        messages: [
-          {
-            role: 'system',
-            content: 'Du bist ein Experte für deutsche Quizfragen. Antworte nur mit validen JSON-Objekten ohne zusätzlichen Text.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        top_p: 0.9,
-        max_tokens: 500,
-        return_images: false,
-        return_related_questions: false
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Perplexity API error: ${response.status}`)
+    if (!first) {
+      throw new Error('Keine Wikipedia-Ergebnisse gefunden')
     }
 
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content
+    const title = first.title
+    const summaryUrl = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
+    const summaryRes = await fetch(summaryUrl)
+    if (!summaryRes.ok) {
+      throw new Error(`Wikipedia summary failed: ${summaryRes.status}`)
+    }
+    const sum = await summaryRes.json()
 
-    if (!content) {
-      throw new Error('No content received from Perplexity API')
+    const extract: string = sum?.extract || ''
+    const description: string = sum?.description || ''
+
+    const toSentences = (text: string) => text.split(/(?<=[.!?])\s+/).filter(Boolean)
+    const summarize = (text: string, max = 2) => toSentences(text).slice(0, max).join(' ')
+
+    // Build quiz
+    const question = `Was beschreibt "${title}" am besten?`
+
+    const wrongTypes = [
+      'fiktive Figur',
+      'Programmiersprache',
+      'Gebirge',
+      'Fluss',
+      'Chemisches Element',
+      'Sportverein',
+      'Musikalbum',
+      'Computerspiel'
+    ]
+
+    let correct = description || ''
+
+    if (!correct) {
+      // Try to extract a short description from the first sentence
+      const firstSentence = toSentences(extract)[0] || ''
+      const match = firstSentence.match(/ist\s+(ein|eine|ein)\s+([^.,;]+)/i)
+      correct = match ? match[2].trim() : 'Begriff aus Wikipedia'
     }
 
-    // Try to parse JSON from the response
-    let quiz
-    try {
-      // Extract JSON from markdown code blocks if present
-      const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, content]
-      const jsonText = jsonMatch[1] || content
-      quiz = JSON.parse(jsonText.trim())
-    } catch (parseError) {
-      console.error('Failed to parse JSON:', parseError)
-      throw new Error('Invalid JSON response from AI')
+    // Ensure distinct options
+    const unique = new Set<string>()
+    unique.add(correct)
+
+    // pick 3 wrong options
+    for (const w of wrongTypes) {
+      if (unique.size >= 4) break
+      if (!unique.has(w)) unique.add(w)
     }
 
-    // Validate the quiz structure
-    if (!quiz.question || !quiz.answers || !quiz.correctAnswer || !quiz.explanation) {
-      throw new Error('Invalid quiz structure')
+    const answers = Array.from(unique).slice(0, 4)
+
+    // Shuffle answers
+    for (let i = answers.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[answers[i], answers[j]] = [answers[j], answers[i]]
     }
 
-    if (!Array.isArray(quiz.answers) || quiz.answers.length !== 4) {
-      throw new Error('Quiz must have exactly 4 answers')
+    const quiz = {
+      question,
+      answers,
+      correctAnswer: correct,
+      explanation: summarize(extract || `Weitere Informationen auf Wikipedia zu "${title}".`)
     }
 
+    // Validate
+    if (!quiz.question || !Array.isArray(quiz.answers) || quiz.answers.length !== 4) {
+      throw new Error('Ungültige Quiz-Struktur')
+    }
     if (!quiz.answers.includes(quiz.correctAnswer)) {
-      throw new Error('Correct answer must be one of the provided answers')
+      // In case shuffling removed correct text due to trimming, ensure presence by forcing first option
+      quiz.answers[0] = quiz.correctAnswer
     }
 
     return new Response(
       JSON.stringify({ quiz }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
+      {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
       }
     )
+  }
 
   } catch (error) {
     console.error('Error generating German quiz:', error)

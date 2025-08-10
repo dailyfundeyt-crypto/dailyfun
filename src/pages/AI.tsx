@@ -675,6 +675,36 @@ const AI = () => {
       }
     }
 
+    // Internet search mode (Wikipedia + concise summary)
+    if (searchMode === 'internet') {
+      const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en'
+      try {
+        const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(userInput)}&utf8=&format=json&origin=*`
+        const sRes = await fetch(searchUrl)
+        const sData = await sRes.json() as any
+        const first = sData?.query?.search?.[0]
+        if (first) {
+          const title = first.title as string
+          const sumUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
+          const sumRes = await fetch(sumUrl)
+          const sumData = await sumRes.json() as any
+          const extract = sumData?.extract || ''
+          const summary = summarize(extract, 3)
+          const link = (sumData?.content_urls?.desktop?.page) || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title)}`
+          const heading = language === 'de' ? `🌐 Wikipedia: ${title}\n\nKurzfassung:` : `🌐 Wikipedia: ${title}\n\nSummary:`
+          const others = (sData?.query?.search || []).slice(1, 3).map((r: any) => `- ${r.title}`).join('\n')
+          const othersHeader = others ? (language === 'de' ? '\n\nWeitere Treffer:\n' : '\n\nOther results:\n') : ''
+          return { text: `${heading}\n${summary}\n\n🔗 ${link}${othersHeader}${others}` }
+        } else {
+          const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.'
+          return { text: `🌐 ${notFound}` }
+        }
+      } catch (e) {
+        const err = language === 'de' ? 'Fehler bei der Wikipedia-Suche.' : 'Error during Wikipedia search.'
+        return { text: `❌ ${err}` }
+      }
+    }
+
     // Article-specific Q&A and summarization when context is present
     if (searchMode === 'local' && (contextArticleId || articleContext)) {
       const ctxArticle = contextArticleId
@@ -1160,7 +1190,7 @@ const AI = () => {
                   className="flex items-center gap-2"
                 >
                   <Globe className="w-4 h-4" />
-                  Daily Fun (Internet Search)
+                  Daily Fun (Logical)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
