@@ -106,10 +106,10 @@ const Article = () => {
             {t('common.back')}
           </Link>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <button
               onClick={handleAIClick}
-              className="inline-flex items-center px-4 py-2 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 rounded-lg font-medium text-sm"
+              className="inline-flex items-center px-2.5 py-1.5 md:px-4 md:py-2 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 rounded-lg font-medium text-xs md:text-sm"
             >
               <Bot className="h-4 w-4 mr-2" />
               {language === 'de' ? 'Mit AI sprechen' : 'Ask AI'}
