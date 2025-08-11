@@ -25,6 +25,7 @@ interface Message {
     selectedAnswer?: string;
     showResults?: boolean;
   };
+  endConversationAvailable?: boolean;
 }
 
 interface ActionCard {
@@ -185,6 +186,7 @@ const AI = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showModeDropdown, setShowModeDropdown] = useState(false);
+  const [internetSeed, setInternetSeed] = useState<{ firstQuery: string; title?: string; lang: 'de' | 'en'; link?: string } | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
@@ -601,6 +603,52 @@ const AI = () => {
     return pts;
   };
 
+  // Internet mode helpers (Wikipedia deep-dive for follow-up questions)
+  const STOPWORDS = {
+    de: ['der','die','das','und','ist','eine','einen','einem','den','des','im','in','am','an','auf','mit','für','von','oder','nicht','auch','wie','was','wer','wo','warum'],
+    en: ['the','and','is','are','a','an','in','on','at','for','with','from','to','of','or','not','also','how','what','who','where','why']
+  } as const;
+
+  const getWikiExtract = async (title: string, lang: 'de' | 'en'): Promise<string> => {
+    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=${encodeURIComponent(title)}&format=json&origin=*`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const pages = data?.query?.pages;
+    const page = pages ? pages[Object.keys(pages)[0]] : null;
+    return page?.extract || '';
+  };
+
+  const pickRelevantSentences = (extract: string, question: string, lang: 'de' | 'en', max = 4): string[] => {
+    const sentences = toSentences(extract);
+    const words = question.toLowerCase().split(/[^\p{L}0-9]+/u).filter(Boolean);
+    const keywords = words.filter(w => w.length >= 4 && !STOPWORDS[lang].includes(w as any));
+    const ranked = sentences
+      .map(s => ({ s, score: keywords.reduce((acc, kw) => acc + (s.toLowerCase().includes(kw) ? 1 : 0), 0) }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, max)
+      .map(r => r.s.trim());
+    if (ranked.length > 0) return ranked;
+    return sentences.slice(0, max).map(s => s.trim());
+  };
+
+  const answerInternetFollowUp = async (question: string): Promise<string> => {
+    if (!internetSeed?.title || !internetSeed.lang) {
+      return language === 'de' ? 'Bitte nenne erst ein Thema, dann kann ich Nachfragen beantworten.' : 'Please provide a topic first, then I can answer follow-ups.';
+    }
+    try {
+      const extract = await getWikiExtract(internetSeed.title, internetSeed.lang);
+      const rel = pickRelevantSentences(extract, question, internetSeed.lang, 4);
+      const header = language === 'de'
+        ? `🤖 Vertiefung zum Thema "${internetSeed.title}"\n\nAusgehend von deiner Erstfrage: "${internetSeed.firstQuery}"\nNeue Frage: "${question}"`
+        : `🤖 Deep dive on "${internetSeed.title}"\n\nFrom your initial question: "${internetSeed.firstQuery}"\nNew question: "${question}"`;
+      const link = internetSeed.link ? `\n\n🔗 ${internetSeed.link}` : '';
+      return `${header}\n\n${rel.map(s => `• ${s}`).join('\n')}${link}`;
+    } catch (e) {
+      return language === 'de' ? 'Es gab ein Problem bei der vertieften Antwort.' : 'There was a problem generating the deepened answer.';
+    }
+  };
+
   const searchArticles = (query: string) => {
     const lowerQuery = query.toLowerCase();
     const filtered = articles.filter(article => {
@@ -675,10 +723,17 @@ const AI = () => {
       }
     }
 
-    // Internet search mode (Wikipedia + concise summary)
+    // Internet search mode (Wikipedia + concise summary + follow-ups)
     if (searchMode === 'internet') {
       const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en'
       try {
+        // If we already have a seed topic, answer as a follow-up using that context
+        if (internetSeed) {
+          const follow = await answerInternetFollowUp(userInput);
+          return { text: follow };
+        }
+
+        // First question: perform Wikipedia search and set seed
         const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(userInput)}&utf8=&format=json&origin=*`
         const sRes = await fetch(searchUrl)
         const sData = await sRes.json() as any
@@ -694,6 +749,10 @@ const AI = () => {
           const heading = language === 'de' ? `🌐 Wikipedia: ${title}\n\nKurzfassung:` : `🌐 Wikipedia: ${title}\n\nSummary:`
           const others = (sData?.query?.search || []).slice(1, 3).map((r: any) => `- ${r.title}`).join('\n')
           const othersHeader = others ? (language === 'de' ? '\n\nWeitere Treffer:\n' : '\n\nOther results:\n') : ''
+
+          // Store seed context for follow-up questions
+          setInternetSeed({ firstQuery: userInput, title, lang: langCode, link });
+
           return { text: `${heading}\n${summary}\n\n🔗 ${link}${othersHeader}${others}` }
         } else {
           const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.'
@@ -885,7 +944,8 @@ const AI = () => {
           isUser: false,
           timestamp: new Date(),
           qrCode: response.qrCode,
-          quizData: response.quizData
+          quizData: response.quizData,
+          endConversationAvailable: searchMode === 'internet'
         };
 
       setTimeout(() => {
@@ -922,7 +982,8 @@ const AI = () => {
           isUser: false,
           timestamp: new Date(),
           qrCode: response.qrCode,
-          quizData: response.quizData
+          quizData: response.quizData,
+          endConversationAvailable: searchMode === 'internet'
         };
 
       setTimeout(() => {
@@ -933,6 +994,16 @@ const AI = () => {
       console.error('Error processing AI response:', error);
       setIsTyping(false);
     }
+  };
+
+  const endInternetConversation = () => {
+    setInternetSeed(null);
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      text: language === 'de' ? '🛑 Konversation beendet. Bitte nenne ein neues Thema für die Internet-Suche.' : '🛑 Conversation ended. Please provide a new topic for Internet search.',
+      isUser: false,
+      timestamp: new Date()
+    }]);
   };
 
   return (
@@ -1121,10 +1192,22 @@ const AI = () => {
                          {language === 'de' ? 'Herunterladen' : 'Download'}
                        </Button>
                      </div>
+                    )}
+                   {message.endConversationAvailable && (
+                     <div className="mt-3">
+                       <Button
+                         size="sm"
+                         variant="outline"
+                         className="bg-white"
+                         onClick={(e) => { e.stopPropagation(); endInternetConversation(); }}
+                       >
+                         {language === 'de' ? 'Konversation beenden' : 'End conversation'}
+                       </Button>
+                     </div>
                    )}
-                  <div className="text-xs opacity-70 mt-3">
-                    {message.timestamp.toLocaleTimeString()}
-                  </div>
+                   <div className="text-xs opacity-70 mt-3">
+                     {message.timestamp.toLocaleTimeString()}
+                   </div>
                   {/* Copy button - only visible on click/hover */}
                   {visibleCopyButtons.includes(message.id) && (
                     <Button
