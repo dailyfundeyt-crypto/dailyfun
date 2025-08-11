@@ -649,6 +649,66 @@ const AI = () => {
     }
   };
 
+  // Parse 'Weitere Treffer' or 'Other results' lines from a Wikipedia message
+  const parseWikiOtherResults = (text: string): string[] => {
+    const markerDe = 'Weitere Treffer:';
+    const markerEn = 'Other results:';
+    const idx = text.indexOf(markerDe) !== -1 ? text.indexOf(markerDe) : text.indexOf(markerEn);
+    if (idx === -1) return [];
+    const after = text.slice(idx).split('\n').slice(1); // lines after the marker
+    const titles = after
+      .map(l => l.trim())
+      .filter(l => l.startsWith('- '))
+      .map(l => l.replace(/^-\s+/, '').trim())
+      .filter(Boolean);
+    return titles;
+  };
+
+  // Fetch a Wikipedia summary for a given title and build the same formatted message
+  const fetchWikiSummaryForTitle = async (title: string): Promise<{ text: string; title: string; link: string; lang: 'de' | 'en' }> => {
+    const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en';
+    // Search again to get a fresh related list
+    const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&utf8=&format=json&origin=*`;
+    const sRes = await fetch(searchUrl);
+    const sData = await sRes.json() as any;
+    const first = sData?.query?.search?.[0];
+    if (!first) {
+      const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.';
+      return { text: `🌐 ${notFound}`, title, link: '', lang: langCode };
+    }
+    const finalTitle = first.title as string;
+    const sumUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(finalTitle)}`;
+    const sumRes = await fetch(sumUrl);
+    const sumData = await sumRes.json() as any;
+    const extract = sumData?.extract || '';
+    const summary = summarize(extract, 3);
+    const link = (sumData?.content_urls?.desktop?.page) || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(finalTitle)}`;
+    const heading = language === 'de' ? `🌐 Wikipedia: ${finalTitle}\n\nKurzfassung:` : `🌐 Wikipedia: ${finalTitle}\n\nSummary:`;
+    const others = (sData?.query?.search || []).slice(1, 3).map((r: any) => `- ${r.title}`).join('\n');
+    const othersHeader = others ? (language === 'de' ? '\n\nWeitere Treffer:\n' : '\n\nOther results:\n') : '';
+    return { text: `${heading}\n${summary}\n\n🔗 ${link}${othersHeader}${others}`, title: finalTitle, link, lang: langCode };
+  };
+
+  // Handle clicks on 'Weitere Treffer' buttons: only Wikipedia, no AI, and update seed for follow-ups
+  const handleWikiResultClick = async (title: string) => {
+    try {
+      const res = await fetchWikiSummaryForTitle(title);
+      // Update seed so that follow-up questions refer to this latest topic
+      setInternetSeed({ firstQuery: res.title, title: res.title, lang: res.lang, link: res.link });
+      const aiMessage: Message = {
+        id: (Date.now()).toString(),
+        text: res.text,
+        isUser: false,
+        timestamp: new Date(),
+        endConversationAvailable: true,
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (e) {
+      const errText = language === 'de' ? 'Fehler beim Laden des Wikipedia-Artikels.' : 'Error loading Wikipedia article.';
+      setMessages(prev => [...prev, { id: Date.now().toString(), text: `❌ ${errText}`, isUser: false, timestamp: new Date() }]);
+    }
+  };
+
   const searchArticles = (query: string) => {
     const lowerQuery = query.toLowerCase();
     const filtered = articles.filter(article => {
@@ -1107,8 +1167,25 @@ const AI = () => {
                         )}
                       </div>
                     ) : (
-                      <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {message.text}
+                      <div>
+                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                          {message.text}
+                        </div>
+                        {parseWikiOtherResults(message.text).length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {parseWikiOtherResults(message.text).map((title, idx) => (
+                              <Button
+                                key={idx}
+                                size="sm"
+                                variant="outline"
+                                className="bg-white"
+                                onClick={(e) => { e.stopPropagation(); handleWikiResultClick(title); }}
+                              >
+                                {title}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                    
