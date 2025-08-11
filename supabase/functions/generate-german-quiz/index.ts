@@ -41,7 +41,7 @@ serve(async (req) => {
     const extract: string = sum?.extract || ''
     const description: string = sum?.description || ''
 
-    const toSentences = (text: string) => text.split(/(?<=[.!?])\s+/).filter(Boolean)
+    const toSentences = (text: string) => text.split(/(?<=\p{L}[.!?])\s+/u).filter(Boolean)
     const summarize = (text: string, max = 2) => toSentences(text).slice(0, max).join(' ')
 
     // Build quiz
