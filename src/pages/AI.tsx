@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown, Brain } from 'lucide-react';
+import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown, Brain, Mic, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -188,6 +188,10 @@ const AI = () => {
   const [showModeDropdown, setShowModeDropdown] = useState(false);
   const [internetSeed, setInternetSeed] = useState<{ firstQuery: string; title?: string; lang: 'de' | 'en'; link?: string } | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<number | null>(null);
+  const [puterReady, setPuterReady] = useState(false);
 
   const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
     setMessages(prev => prev.map(msg => {
@@ -348,6 +352,22 @@ const AI = () => {
     const list = q ? merged.filter(s => s.toLowerCase().includes(q)) : merged;
     setFilteredSuggestions(list.slice(0, 6));
   }, [inputValue, language, articleContext, quizMode]);
+
+  // Load Puter AI SDK for chat and TTS
+  useEffect(() => {
+    const scriptId = 'puter-sdk-v2';
+    if (document.getElementById(scriptId)) {
+      setPuterReady(true);
+      return;
+    }
+    const s = document.createElement('script');
+    s.id = scriptId;
+    s.src = 'https://js.puter.com/v2/';
+    s.async = true;
+    s.onload = () => setPuterReady(true);
+    s.onerror = () => setPuterReady(false);
+    document.body.appendChild(s);
+  }, []);
 
   const generateQRCode = async (url: string): Promise<string> => {
     try {
@@ -706,6 +726,110 @@ const AI = () => {
     } catch (e) {
       const errText = language === 'de' ? 'Fehler beim Laden des Wikipedia-Artikels.' : 'Error loading Wikipedia article.';
       setMessages(prev => [...prev, { id: Date.now().toString(), text: `❌ ${errText}`, isUser: false, timestamp: new Date() }]);
+    }
+  };
+
+  // Speak mode helpers (speech recognition + AI chat + TTS)
+  const getSpeechLanguage = (): string => (language === 'de' ? 'de-DE' : 'en-GB');
+
+  const playTTS = async (text: string) => {
+    try {
+      const puter = (window as any).puter;
+      if (!puter?.ai?.txt2speech) return;
+      const audio = await puter.ai.txt2speech(text, {
+        engine: 'generative',
+        language: getSpeechLanguage(),
+      });
+      if (audio && typeof audio.play === 'function') audio.play();
+    } catch (e) {
+      console.error('TTS failed', e);
+    }
+  };
+
+  const askPuterAI = async (prompt: string): Promise<string> => {
+    try {
+      const puter = (window as any).puter;
+      if (!puter?.ai?.chat) throw new Error('Puter AI not ready');
+      const res = await puter.ai.chat(prompt);
+      return typeof res === 'string' ? res : String(res);
+    } catch (e) {
+      return language === 'de' ? '❌ Fehler bei der KI-Antwort.' : '❌ Error getting AI response.';
+    }
+  };
+
+  const stopListening = () => {
+    setIsListening(false);
+    if (silenceTimerRef.current) {
+      window.clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+  };
+
+  const startListening = async () => {
+    try { await navigator.mediaDevices.getUserMedia({ audio: true }); } catch {}
+    const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setMessages(prev => [...prev, { id: Date.now().toString(), text: language === 'de' ? 'Spracherkennung wird von deinem Browser nicht unterstützt.' : 'Speech recognition is not supported by your browser.', isUser: false, timestamp: new Date() }]);
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = getSpeechLanguage();
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognitionRef.current = recognition;
+    setIsListening(true);
+
+    const resetSilenceTimer = () => {
+      if (silenceTimerRef.current) window.clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = window.setTimeout(() => {
+        stopListening();
+      }, 2000);
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setInputValue(transcript);
+      stopListening();
+      sendSpeakPrompt(transcript);
+    };
+    recognition.onerror = () => {
+      stopListening();
+    };
+    recognition.onend = () => {};
+    recognition.onsoundstart = resetSilenceTimer;
+    recognition.onspeechstart = resetSilenceTimer;
+    recognition.onaudiostart = resetSilenceTimer;
+    recognition.onsoundend = resetSilenceTimer;
+    recognition.onspeechend = resetSilenceTimer;
+    recognition.start();
+    resetSilenceTimer();
+  };
+
+  const toggleSpeakMode = () => {
+    if (isListening) stopListening(); else startListening();
+  };
+
+  const sendSpeakPrompt = async (promptText: string) => {
+    const text = promptText.trim();
+    if (!text) return;
+    const userMessage: Message = { id: Date.now().toString(), text, isUser: true, timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setIsTyping(true);
+    try {
+      const aiText = await askPuterAI(text);
+      const aiMessage: Message = { id: (Date.now()+1).toString(), text: aiText, isUser: false, timestamp: new Date(), endConversationAvailable: searchMode === 'internet' };
+      setTimeout(() => {
+        setMessages(prev => [...prev, aiMessage]);
+        setIsTyping(false);
+        playTTS(aiText);
+      }, 600);
+    } catch (e) {
+      setIsTyping(false);
     }
   };
 
@@ -1356,35 +1480,95 @@ const AI = () => {
             </DropdownMenu>
 
             {/* Action buttons */}
-            <Button
-              variant="outline"
-              onClick={() => handleActionCardClick(actionCards[0])}
-              className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
-            >
-              <Search className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Article Search</span>
-              <span className="sm:hidden">Search</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={() => handleActionCardClick(actionCards[1])}
-              className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
-            >
-              <QrCode className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Generate QR Code</span>
-              <span className="sm:hidden">QR</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={() => handleActionCardClick(actionCards[2])}
-              className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
-            >
-              <Brain className="w-3 h-3 md:w-4 md:h-4" />
-              <span className="hidden sm:inline">Quiz</span>
-              <span className="sm:hidden">Quiz</span>
-            </Button>
+            {searchMode === 'internet' ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={toggleSpeakMode}
+                  className={`flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 border ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-white shadow-sm'}`}
+                >
+                  <Mic className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">{language === 'de' ? 'Sprechmodus' : 'Speak mode'}</span>
+                  <span className="sm:hidden">{language === 'de' ? 'Sprechen' : 'Speak'}</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const msg = language === 'de' 
+                      ? '🖼️ Bildgenerator: Beschreibe das Bild, das ich erstellen soll (z. B. "Ein roter Drache über einer Stadt bei Nacht").'
+                      : '🖼️ Image generator: Describe the image you want me to create (e.g., "A red dragon over a city at night").';
+                    setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                  }}
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                >
+                  <ImageIcon className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">{language === 'de' ? 'Bildgenerator' : 'Image generator'}</span>
+                  <span className="sm:hidden">IMG</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const msg = language === 'de' 
+                      ? '📝 Zusammenfassung: Füge den Text ein oder beschreibe, was zusammengefasst werden soll.'
+                      : '📝 Summarize: Paste the text or describe what should be summarized.';
+                    setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                  }}
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                >
+                  <MessageCircle className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">{language === 'de' ? 'Informationen zusammenfassen' : 'Summarize information'}</span>
+                  <span className="sm:hidden">Sum</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setQuizMode(true);
+                    const msg = language === 'de' ? 'Ich kann ein Informations-Quiz erstellen! Nenne ein Thema.' : 'I can create an information quiz! Name a topic.';
+                    setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                  }}
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                >
+                  <Brain className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">{language === 'de' ? 'Informations-Quiz' : 'Information Quiz'}</span>
+                  <span className="sm:hidden">Quiz</span>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => handleActionCardClick(actionCards[0])}
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                >
+                  <Search className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Article Search</span>
+                  <span className="sm:hidden">Search</span>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => handleActionCardClick(actionCards[1])}
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                >
+                  <QrCode className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Generate QR Code</span>
+                  <span className="sm:hidden">QR</span>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => handleActionCardClick(actionCards[2])}
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                >
+                  <Brain className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Quiz</span>
+                  <span className="sm:hidden">Quiz</span>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Suggestions (like examples) */}
