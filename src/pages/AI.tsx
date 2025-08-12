@@ -746,13 +746,42 @@ const AI = () => {
     }
   };
 
+  // Ensure Puter SDK is ready before using it
+  const waitForPuterReady = async (timeoutMs = 8000): Promise<void> => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const puter = (window as any).puter;
+      if (puter?.ai?.chat) return;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    throw new Error('Puter SDK not ready');
+  };
+
+  // Ask the AI (Gemini 2.0 Flash with streaming). Language follows site language.
   const askPuterAI = async (prompt: string): Promise<string> => {
     try {
+      await waitForPuterReady();
       const puter = (window as any).puter;
-      if (!puter?.ai?.chat) throw new Error('Puter AI not ready');
-      const res = await puter.ai.chat(prompt);
-      return typeof res === 'string' ? res : String(res);
+
+      // Nudge language explicitly
+      const localizedPrompt = language === 'de'
+        ? `Antworte auf Deutsch. Frage: ${prompt}`
+        : `Answer in English. Question: ${prompt}`;
+
+      // Prefer streaming for faster first tokens
+      const stream = await puter.ai.chat(localizedPrompt, { model: 'gemini-2.0-flash', stream: true });
+      let fullText = '';
+      for await (const part of stream as any) {
+        const chunk = part?.text ?? '';
+        if (chunk) fullText += chunk;
+      }
+      if (fullText.trim()) return fullText.trim();
+
+      // Fallback: non-streaming
+      const res = await puter.ai.chat(localizedPrompt, { model: 'gemini-2.0-flash' });
+      return typeof res === 'string' ? res : (res?.text ?? String(res));
     } catch (e) {
+      console.error('askPuterAI failed', e);
       return language === 'de' ? '❌ Fehler bei der KI-Antwort.' : '❌ Error getting AI response.';
     }
   };
@@ -1485,7 +1514,8 @@ const AI = () => {
                 <Button
                   variant="outline"
                   onClick={toggleSpeakMode}
-                  className={`flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 border ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-white shadow-sm'}`}
+                  disabled={!puterReady}
+                  className={`flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 border ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-white shadow-sm'} ${!puterReady ? 'opacity-60 cursor-not-allowed' : ''}`}
                 >
                   <Mic className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">{language === 'de' ? 'Sprechmodus' : 'Speak mode'}</span>
