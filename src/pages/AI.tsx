@@ -734,15 +734,33 @@ const AI = () => {
 
   const playTTS = async (text: string) => {
     try {
+      await waitForPuterReady();
       const puter = (window as any).puter;
-      if (!puter?.ai?.txt2speech) return;
-      const audio = await puter.ai.txt2speech(text, {
-        engine: 'generative',
-        language: getSpeechLanguage(),
+      if (!puter?.ai?.txt2speech) {
+        console.warn('TTS not available');
+        return;
+      }
+      
+      // Remove markdown and clean text
+      const cleanText = text.replace(/[*_#`]/g, '').replace(/\n+/g, ' ').trim();
+      if (!cleanText) return;
+      
+      // Use different voices and languages for German/English
+      const isGerman = language === 'de';
+      const voice = isGerman ? "Marlene" : "Joanna"; // German voice vs English voice
+      const lang = isGerman ? 'de-DE' : 'en-GB';
+      
+      const audio = await puter.ai.txt2speech(cleanText, {
+        voice: voice,
+        engine: "generative", 
+        language: lang
       });
-      if (audio && typeof audio.play === 'function') audio.play();
-    } catch (e) {
-      console.error('TTS failed', e);
+      
+      if (audio && typeof audio.play === 'function') {
+        audio.play();
+      }
+    } catch (error) {
+      console.error('TTS error:', error);
     }
   };
 
@@ -857,21 +875,11 @@ const AI = () => {
     recognitionRef.current = recognition;
     setIsListening(true);
 
-    const resetSilenceTimer = () => {
-      if (silenceTimerRef.current) window.clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = window.setTimeout(() => {
-        stopListening();
-      }, 2000);
-    };
-
     recognition.onresult = (event: any) => {
       const transcript = event.results[event.results.length - 1][0].transcript;
       setInputValue(transcript);
       
-      // Reset silence timer on each word
-      resetSilenceTimer();
-      
-      // If final result on mobile or transcript is complete, send it
+      // If final result, send it
       if (event.results[event.results.length - 1].isFinal || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         stopListening();
         sendSpeakPrompt(transcript);
@@ -882,13 +890,7 @@ const AI = () => {
       stopListening();
     };
     recognition.onend = () => {};
-    recognition.onsoundstart = resetSilenceTimer;
-    recognition.onspeechstart = resetSilenceTimer;
-    recognition.onaudiostart = resetSilenceTimer;
-    recognition.onsoundend = resetSilenceTimer;
-    recognition.onspeechend = resetSilenceTimer;
     recognition.start();
-    resetSilenceTimer();
   };
 
   const toggleSpeakMode = async () => {
@@ -914,6 +916,7 @@ const AI = () => {
       setTimeout(() => {
         setMessages(prev => [...prev, aiMessage]);
         setIsTyping(false);
+        // Always play TTS when using speech mode
         playTTS(aiText);
       }, 600);
     } catch (e) {
@@ -1580,16 +1583,6 @@ const AI = () => {
             {/* Action buttons */}
             {searchMode === 'internet' ? (
               <>
-                <Button
-                  variant="outline"
-                  onClick={toggleSpeakMode}
-                  disabled={!puterReady}
-                  className={`flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 border ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-white shadow-sm'} ${!puterReady ? 'opacity-60 cursor-not-allowed' : ''}`}
-                >
-                  <Mic className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden sm:inline">{language === 'de' ? 'Sprechmodus' : 'Speak mode'}</span>
-                  <span className="sm:hidden">{language === 'de' ? 'Sprechen' : 'Speak'}</span>
-                </Button>
 
                 <Button
                   variant="outline"
