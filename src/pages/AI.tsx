@@ -757,6 +757,25 @@ const AI = () => {
     throw new Error('Puter SDK not ready');
   };
 
+  // Extract topic from user query using AI
+  const extractTopicFromQuery = async (userQuery: string): Promise<string> => {
+    try {
+      await waitForPuterReady();
+      const puter = (window as any).puter;
+      
+      const prompt = language === 'de' 
+        ? `Analysiere diese Frage und gib nur das Hauptthema in wenigen Worten zurück (max 3 Wörter). Frage: "${userQuery}"`
+        : `Analyze this question and return only the main topic in a few words (max 3 words). Question: "${userQuery}"`;
+        
+      const response = await puter.ai.chat(prompt, { model: 'gemini-2.0-flash' });
+      const topic = typeof response === 'string' ? response.trim() : (response?.text ?? userQuery).trim();
+      return topic || userQuery;
+    } catch (e) {
+      console.error('Topic extraction failed:', e);
+      return userQuery;
+    }
+  };
+
   // Ask the AI (Gemini 2.0 Flash with streaming). Language follows site language.
   const askPuterAI = async (prompt: string): Promise<string> => {
     try {
@@ -799,7 +818,25 @@ const AI = () => {
   };
 
   const startListening = async () => {
-    try { await navigator.mediaDevices.getUserMedia({ audio: true }); } catch {}
+    try { 
+      // Request microphone permission with enhanced mobile settings
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      }); 
+      // Stop the stream immediately as we just needed permission
+      stream.getTracks().forEach(track => track.stop());
+    } catch (e) {
+      alert(language === 'de' 
+        ? 'Mikrofon-Zugriff verweigert. Bitte erlauben Sie den Mikrofon-Zugriff in den Browser-Einstellungen.'
+        : 'Microphone access denied. Please allow microphone access in browser settings.'
+      );
+      return;
+    }
+    
     const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setMessages(prev => [...prev, { id: Date.now().toString(), text: language === 'de' ? 'Spracherkennung wird von deinem Browser nicht unterstützt.' : 'Speech recognition is not supported by your browser.', isUser: false, timestamp: new Date() }]);
@@ -807,8 +844,16 @@ const AI = () => {
     }
     const recognition = new SpeechRecognition();
     recognition.lang = getSpeechLanguage();
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
+    recognition.continuous = true;
+    
+    // Mobile specific settings
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      recognition.continuous = false;
+      recognition.interimResults = false;
+    }
+    
     recognitionRef.current = recognition;
     setIsListening(true);
 
@@ -820,12 +865,20 @@ const AI = () => {
     };
 
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
+      const transcript = event.results[event.results.length - 1][0].transcript;
       setInputValue(transcript);
-      stopListening();
-      sendSpeakPrompt(transcript);
+      
+      // Reset silence timer on each word
+      resetSilenceTimer();
+      
+      // If final result on mobile or transcript is complete, send it
+      if (event.results[event.results.length - 1].isFinal || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        stopListening();
+        sendSpeakPrompt(transcript);
+      }
     };
-    recognition.onerror = () => {
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
       stopListening();
     };
     recognition.onend = () => {};
@@ -838,8 +891,14 @@ const AI = () => {
     resetSilenceTimer();
   };
 
-  const toggleSpeakMode = () => {
-    if (isListening) stopListening(); else startListening();
+  const toggleSpeakMode = async () => {
+    if (!puterReady) return;
+    
+    if (isListening) {
+      stopListening();
+    } else {
+      await startListening();
+    }
   };
 
   const sendSpeakPrompt = async (promptText: string) => {
@@ -936,7 +995,7 @@ const AI = () => {
       }
     }
 
-    // Internet search mode (Wikipedia + concise summary + follow-ups)
+    // Internet search mode (Wikipedia + AI analysis)
     if (searchMode === 'internet') {
       const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en'
       try {
@@ -946,8 +1005,11 @@ const AI = () => {
           return { text: follow };
         }
 
-        // First question: perform Wikipedia search and set seed
-        const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(userInput)}&utf8=&format=json&origin=*`
+        // Extract main topic from user's question using AI
+        const extractedTopic = await extractTopicFromQuery(userInput);
+        
+        // First question: perform Wikipedia search using extracted topic
+        const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic)}&utf8=&format=json&origin=*`
         const sRes = await fetch(searchUrl)
         const sData = await sRes.json() as any
         const first = sData?.query?.search?.[0]
@@ -957,16 +1019,22 @@ const AI = () => {
           const sumRes = await fetch(sumUrl)
           const sumData = await sumRes.json() as any
           const extract = sumData?.extract || ''
-          const summary = summarize(extract, 3)
+          
+          // Send both original question and Wikipedia content to AI
+          const combinedPrompt = language === 'de' 
+            ? `Benutzer Frage: "${userInput}"\n\nWikipedia Informationen über "${title}":\n${extract}\n\nBitte beantworte die ursprüngliche Frage des Benutzers mit diesen Informationen und gib zusätzliche Einblicke.`
+            : `User Question: "${userInput}"\n\nWikipedia Information about "${title}":\n${extract}\n\nPlease answer the user's original question using this information and provide additional insights.`;
+          
+          const aiResponse = await askPuterAI(combinedPrompt);
+          
           const link = (sumData?.content_urls?.desktop?.page) || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title)}`
-          const heading = language === 'de' ? `🌐 Wikipedia: ${title}\n\nKurzfassung:` : `🌐 Wikipedia: ${title}\n\nSummary:`
           const others = (sData?.query?.search || []).slice(1, 3).map((r: any) => `- ${r.title}`).join('\n')
           const othersHeader = others ? (language === 'de' ? '\n\nWeitere Treffer:\n' : '\n\nOther results:\n') : ''
 
           // Store seed context for follow-up questions
           setInternetSeed({ firstQuery: userInput, title, lang: langCode, link });
 
-          return { text: `${heading}\n${summary}\n\n🔗 ${link}${othersHeader}${others}` }
+          return { text: `${aiResponse}\n\n🔗 ${link}${othersHeader}${others}` }
         } else {
           const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.'
           return { text: `🌐 ${notFound}` }
@@ -976,6 +1044,7 @@ const AI = () => {
         return { text: `❌ ${err}` }
       }
     }
+
 
     // Article-specific Q&A and summarization when context is present
     if (searchMode === 'local' && (contextArticleId || articleContext)) {
@@ -1647,13 +1716,28 @@ const AI = () => {
                 }}
               />
             </div>
-            <Button 
-              type="submit" 
-              disabled={!inputValue.trim() || isTyping}
-              className="rounded-full w-10 h-10 p-0 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg"
-            >
-              <Send className="w-4 h-4" />
-            </Button>
+            {/* Send button - only visible when there's text */}
+            {inputValue.trim() !== '' && (
+              <Button 
+                type="submit" 
+                disabled={!inputValue.trim() || isTyping}
+                className="rounded-full w-10 h-10 p-0 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            )}
+            
+            {/* Speak mode button - positioned where send button normally is when input is empty */}
+            {inputValue.trim() === '' && (
+              <Button
+                variant="outline"
+                onClick={toggleSpeakMode}
+                disabled={!puterReady}
+                className={`rounded-full w-10 h-10 p-0 border ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-white shadow-sm'} ${!puterReady ? 'opacity-60 cursor-not-allowed' : ''}`}
+              >
+                <Mic className="w-4 h-4" />
+              </Button>
+            )}
           </form>
         </div>
       </div>
