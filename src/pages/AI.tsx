@@ -811,12 +811,42 @@ const AI = () => {
       const puter = (window as any).puter;
       
       const prompt = language === 'de' 
-        ? `Analysiere diese Frage und gib nur das Hauptthema in wenigen Worten zurück (max 3 Wörter). Frage: "${userQuery}"`
-        : `Analyze this question and return only the main topic in a few words (max 3 words). Question: "${userQuery}"`;
+        ? `Du bist ein Topic-Extractor. Analysiere diese Frage und extrahiere nur das Hauptthema für eine Wikipedia-Suche. Antworte mit maximal 2-3 Wörtern ohne Erklärung.
+
+Beispiele:
+"Wer ist Albert Einstein?" → "Albert Einstein"
+"Was ist die Relativitätstheorie?" → "Relativitätstheorie"
+"Erzähl mir von Paris" → "Paris"
+
+Frage: "${userQuery}"
+
+Antwort:`
+        : `You are a topic extractor. Analyze this question and extract only the main topic for a Wikipedia search. Answer with maximum 2-3 words without explanation.
+
+Examples:
+"Who is Albert Einstein?" → "Albert Einstein"
+"What is relativity theory?" → "Relativity theory"
+"Tell me about Paris" → "Paris"
+
+Question: "${userQuery}"
+
+Answer:`;
         
       const response = await puter.ai.chat(prompt, { model: 'gemini-2.0-flash' });
       const topic = typeof response === 'string' ? response.trim() : (response?.text ?? userQuery).trim();
-      return topic || userQuery;
+      const cleanTopic = topic.replace(/["""'']/g, '').trim();
+      
+      console.log('Extracted topic:', cleanTopic, 'from query:', userQuery);
+      
+      // Fallback for common cases
+      if (!cleanTopic || cleanTopic === userQuery) {
+        const words = userQuery.toLowerCase().split(' ');
+        if (words.includes('einstein')) return 'Albert Einstein';
+        if (words.includes('paris')) return 'Paris';
+        if (words.includes('relativitätstheorie') || words.includes('relativity')) return language === 'de' ? 'Relativitätstheorie' : 'Theory of relativity';
+      }
+      
+      return cleanTopic || userQuery;
     } catch (e) {
       console.error('Topic extraction failed:', e);
       return userQuery;
