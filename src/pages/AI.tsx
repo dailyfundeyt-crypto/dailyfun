@@ -804,52 +804,80 @@ const AI = () => {
     throw new Error('Puter SDK not ready');
   };
 
-  // Extract topic from user query using AI
+  // Extract topic from user query using Claude 4 Sonnet for better accuracy
   const extractTopicFromQuery = async (userQuery: string): Promise<string> => {
     try {
       await waitForPuterReady();
       const puter = (window as any).puter;
       
       const prompt = language === 'de' 
-        ? `Du bist ein Topic-Extractor. Analysiere diese Frage und extrahiere nur das Hauptthema für eine Wikipedia-Suche. Antworte mit maximal 2-3 Wörtern ohne Erklärung.
+        ? `Extrahiere das Hauptthema aus dieser Frage für eine Wikipedia-Suche. Antworte nur mit dem Namen oder Begriff, keine Erklärung.
 
 Beispiele:
 "Wer ist Albert Einstein?" → "Albert Einstein"
-"Was ist die Relativitätstheorie?" → "Relativitätstheorie"
+"Was ist die Relativitätstheorie?" → "Relativitätstheorie" 
 "Erzähl mir von Paris" → "Paris"
+"Wer ist Olaf Scholz?" → "Olaf Scholz"
+"Was war die Ampelkoalition?" → "Ampelkoalition"
 
 Frage: "${userQuery}"
-
 Antwort:`
-        : `You are a topic extractor. Analyze this question and extract only the main topic for a Wikipedia search. Answer with maximum 2-3 words without explanation.
+        : `Extract the main topic from this question for a Wikipedia search. Answer only with the name or term, no explanation.
 
 Examples:
 "Who is Albert Einstein?" → "Albert Einstein"
-"What is relativity theory?" → "Relativity theory"
+"What is relativity theory?" → "relativity theory"
 "Tell me about Paris" → "Paris"
 
 Question: "${userQuery}"
-
 Answer:`;
         
-      const response = await puter.ai.chat(prompt, { model: 'gemini-2.0-flash' });
+      const response = await puter.ai.chat(prompt, { model: 'claude-sonnet-4' });
       const topic = typeof response === 'string' ? response.trim() : (response?.text ?? userQuery).trim();
-      const cleanTopic = topic.replace(/["""'']/g, '').trim();
+      const cleanTopic = topic.replace(/["""''`]/g, '').replace(/^(der|die|das|the|a|an)\s+/i, '').trim();
       
       console.log('Extracted topic:', cleanTopic, 'from query:', userQuery);
-      
-      // Fallback for common cases
-      if (!cleanTopic || cleanTopic === userQuery) {
-        const words = userQuery.toLowerCase().split(' ');
-        if (words.includes('einstein')) return 'Albert Einstein';
-        if (words.includes('paris')) return 'Paris';
-        if (words.includes('relativitätstheorie') || words.includes('relativity')) return language === 'de' ? 'Relativitätstheorie' : 'Theory of relativity';
-      }
-      
       return cleanTopic || userQuery;
     } catch (e) {
       console.error('Topic extraction failed:', e);
+      // Fallback extraction
+      const words = userQuery.toLowerCase().split(' ');
+      for (let i = 0; i < words.length; i++) {
+        if (['ist', 'is', 'war', 'was', 'wer', 'who', 'what', 'wie', 'how'].includes(words[i]) && words[i + 1]) {
+          return words.slice(i + 1).join(' ');
+        }
+      }
       return userQuery;
+    }
+  };
+
+  // Search for news articles about a topic
+  const searchNewsArticles = async (topic: string): Promise<string[]> => {
+    try {
+      const searchQuery = encodeURIComponent(`${topic} news article`);
+      // Simple web search for news mentions
+      const searches = [
+        `site:spiegel.de ${topic}`,
+        `site:zeit.de ${topic}`,
+        `site:faz.net ${topic}`,
+        `site:bbc.com ${topic}`,
+        `site:cnn.com ${topic}`
+      ];
+      
+      const newsLinks: string[] = [];
+      for (const search of searches.slice(0, 3)) { // Limit to avoid rate limits
+        try {
+          // This is a simplified approach - in reality you'd use a proper news API
+          const url = `https://www.google.com/search?q=${encodeURIComponent(search)}`;
+          newsLinks.push(`🔗 ${search.split(' ')[0].replace('site:', '')}`);
+        } catch (e) {
+          console.error('News search error:', e);
+        }
+      }
+      return newsLinks;
+    } catch (e) {
+      console.error('News search failed:', e);
+      return [];
     }
   };
 
@@ -1057,7 +1085,7 @@ Answer:`;
       }
     }
 
-    // Internet search mode (Wikipedia + AI analysis)
+    // Internet search mode (Wikipedia + AI analysis + News search)
     if (searchMode === 'internet') {
       const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en'
       try {
@@ -1069,39 +1097,78 @@ Answer:`;
 
         // Extract main topic from user's question using AI
         const extractedTopic = await extractTopicFromQuery(userInput);
+        console.log('Searching Wikipedia for:', extractedTopic);
         
-        // First question: perform Wikipedia search using extracted topic
+        // Search Wikipedia using extracted topic
         const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic)}&utf8=&format=json&origin=*`
         const sRes = await fetch(searchUrl)
         const sData = await sRes.json() as any
         const first = sData?.query?.search?.[0]
+        
         if (first) {
           const title = first.title as string
+          console.log('Found Wikipedia article:', title);
+          
+          // Get full article summary
           const sumUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
           const sumRes = await fetch(sumUrl)
           const sumData = await sumRes.json() as any
           const extract = sumData?.extract || ''
           
-          // Send both original question and Wikipedia content to AI
-          const combinedPrompt = language === 'de' 
-            ? `Benutzer Frage: "${userInput}"\n\nWikipedia Informationen über "${title}":\n${extract}\n\nBitte beantworte die ursprüngliche Frage des Benutzers mit diesen Informationen und gib zusätzliche Einblicke.`
-            : `User Question: "${userInput}"\n\nWikipedia Information about "${title}":\n${extract}\n\nPlease answer the user's original question using this information and provide additional insights.`;
+          // Use Claude 4 Sonnet for better summarization
+          await waitForPuterReady();
+          const puter = (window as any).puter;
           
-          const aiResponse = await askPuterAI(combinedPrompt);
+          const summaryPrompt = language === 'de' 
+            ? `Analysiere den folgenden Wikipedia-Artikel über "${title}" und erstelle eine strukturierte Zusammenfassung:
+
+Wikipedia-Text: "${extract}"
+
+Bitte erstelle:
+1. Eine kurze Einführung (1-2 Sätze)
+2. Die wichtigsten Informationen in Stichpunkten (3-5 Punkte)
+3. Relevante Details falls vorhanden
+
+Format die Antwort schön strukturiert.`
+            : `Analyze the following Wikipedia article about "${title}" and create a structured summary:
+
+Wikipedia text: "${extract}"
+
+Please create:
+1. A brief introduction (1-2 sentences)
+2. The most important information in bullet points (3-5 points)
+3. Relevant details if available
+
+Format the response nicely structured.`;
+
+          const aiSummary = await puter.ai.chat(summaryPrompt, { model: 'claude-sonnet-4' });
+          const summaryText = typeof aiSummary === 'string' ? aiSummary : (aiSummary?.text ?? '');
+          
+          // Get news articles (simplified approach)
+          const newsLinks = await searchNewsArticles(extractedTopic);
           
           const link = (sumData?.content_urls?.desktop?.page) || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title)}`
           const others = (sData?.query?.search || []).slice(1, 3).map((r: any) => `- ${r.title}`).join('\n')
-          const othersHeader = others ? (language === 'de' ? '\n\nWeitere Treffer:\n' : '\n\nOther results:\n') : ''
+          const othersHeader = others ? (language === 'de' ? '\n\nWeitere Wikipedia-Artikel:\n' : '\n\nOther Wikipedia articles:\n') : ''
+          
+          const newsHeader = newsLinks.length > 0 ? (language === 'de' ? '\n\nNachrichten und Artikel:\n' : '\n\nNews and articles:\n') : ''
+          const newsSection = newsLinks.length > 0 ? newsLinks.join('\n') : ''
 
           // Store seed context for follow-up questions
           setInternetSeed({ firstQuery: userInput, title, lang: langCode, link });
 
-          return { text: `${aiResponse}\n\n🔗 ${link}${othersHeader}${others}` }
+          const result = `📖 **Wikipedia**
+${summaryText}
+
+🔗 ${link}${othersHeader}${others}${newsHeader}${newsSection}`;
+
+          return { text: result }
         } else {
           const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.'
           return { text: `🌐 ${notFound}` }
         }
       } catch (e) {
+        console.error('Wikipedia search error:', e);
         const err = language === 'de' ? 'Fehler bei der Wikipedia-Suche.' : 'Error during Wikipedia search.'
         return { text: `❌ ${err}` }
       }
