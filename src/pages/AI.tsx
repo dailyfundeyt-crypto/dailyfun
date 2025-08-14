@@ -732,7 +732,7 @@ const AI = () => {
   // Speak mode helpers (speech recognition + AI chat + TTS)
   const getSpeechLanguage = (): string => (language === 'de' ? 'de-DE' : 'en-GB');
 
-  const playTTS = async (text: string) => {
+  const playTTSGerman = async (text: string) => {
     try {
       await waitForPuterReady();
       const puter = (window as any).puter;
@@ -745,22 +745,51 @@ const AI = () => {
       const cleanText = text.replace(/[*_#`]/g, '').replace(/\n+/g, ' ').trim();
       if (!cleanText) return;
       
-      // Use different voices and languages for German/English
-      const isGerman = language === 'de';
-      const voice = isGerman ? "Marlene" : "Joanna"; // German voice vs English voice
-      const lang = isGerman ? 'de-DE' : 'en-GB';
-      
       const audio = await puter.ai.txt2speech(cleanText, {
-        voice: voice,
-        engine: "generative", 
-        language: lang
+        language: "de-DE",
+        engine: "neural"
       });
       
       if (audio && typeof audio.play === 'function') {
         audio.play();
       }
     } catch (error) {
-      console.error('TTS error:', error);
+      console.error('German TTS error:', error);
+    }
+  };
+
+  const playTTSEnglish = async (text: string) => {
+    try {
+      await waitForPuterReady();
+      const puter = (window as any).puter;
+      if (!puter?.ai?.txt2speech) {
+        console.warn('TTS not available');
+        return;
+      }
+      
+      // Remove markdown and clean text
+      const cleanText = text.replace(/[*_#`]/g, '').replace(/\n+/g, ' ').trim();
+      if (!cleanText) return;
+      
+      const audio = await puter.ai.txt2speech(cleanText, {
+        voice: "Joanna",
+        language: "en-US",
+        engine: "neural"
+      });
+      
+      if (audio && typeof audio.play === 'function') {
+        audio.play();
+      }
+    } catch (error) {
+      console.error('English TTS error:', error);
+    }
+  };
+
+  const playTTS = async (text: string) => {
+    if (language === 'de') {
+      await playTTSGerman(text);
+    } else {
+      await playTTSEnglish(text);
     }
   };
 
