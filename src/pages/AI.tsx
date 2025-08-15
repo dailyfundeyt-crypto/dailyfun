@@ -8,6 +8,7 @@ import { articles } from '@/data/articles';
 import Header from '@/components/Header';
 import { Link } from 'react-router-dom';
 import QRCode from 'qrcode';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: string;
@@ -1536,18 +1537,18 @@ ${summaryText}
                       : ''
                   }`}
                    onClick={() => handleMessageClick(message.id)}
-                 >
-                    {message.text === 'INTERACTIVE_QUIZ' && message.quizData ? (
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold text-gray-800">
-                          {message.quizData.question}
-                        </h3>
-                        <div className="space-y-2">
-                          {message.quizData.answers.map((answer: string, index: number) => {
-                            const answerLetter = String.fromCharCode(65 + index);
-                            const isCorrect = answer === message.quizData.correctAnswer;
-                            const isSelected = answer === message.quizData.selectedAnswer;
-                            const showResults = message.quizData.showResults;
+                  >
+                     {message.text === 'INTERACTIVE_QUIZ' && message.quizData ? (
+                       <div className="space-y-4">
+                         <h3 className="text-lg font-semibold text-gray-800">
+                           {message.quizData.question}
+                         </h3>
+                         <div className="space-y-2">
+                           {message.quizData.answers.map((answer: string, index: number) => {
+                             const answerLetter = String.fromCharCode(65 + index);
+                             const isCorrect = answer === message.quizData.correctAnswer;
+                             const isSelected = answer === message.quizData.selectedAnswer;
+                             const showResults = message.quizData.showResults;
                             
                             let buttonClass = "w-full text-left p-3 rounded-lg border transition-all duration-200 ";
                             
@@ -1609,11 +1610,29 @@ ${summaryText}
                           </div>
                         )}
                       </div>
-                    ) : (
-                      <div>
-                        <div className="text-sm leading-relaxed whitespace-pre-wrap">
-                          {message.text}
-                        </div>
+                     ) : (
+                       <div>
+                         <div className="text-sm leading-relaxed">
+                           <ReactMarkdown 
+                             className="prose prose-sm max-w-none"
+                             components={{
+                               p: ({ children }) => <p className="mb-2">{children}</p>,
+                               h1: ({ children }) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
+                               h2: ({ children }) => <h2 className="text-lg font-semibold mb-2">{children}</h2>,
+                               h3: ({ children }) => <h3 className="text-base font-medium mb-1">{children}</h3>,
+                               ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
+                               ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
+                               li: ({ children }) => <li className="mb-1">{children}</li>,
+                               strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                               em: ({ children }) => <em className="italic">{children}</em>,
+                               blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic">{children}</blockquote>,
+                               code: ({ children }) => <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">{children}</code>,
+                               a: ({ children, href }) => <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>
+                             }}
+                           >
+                             {message.text}
+                           </ReactMarkdown>
+                         </div>
                         {parseWikiOtherResults(message.text).length > 0 && (
                           <div className="mt-3 flex flex-wrap gap-2">
                             {parseWikiOtherResults(message.text).map((title, idx) => (
@@ -1726,19 +1745,19 @@ ${summaryText}
                       </div>
                     )}
                     
-                    {/* Summarize button for AI messages when summary mode is active */}
-                    {!message.isUser && message.showSummaryButton && summaryMode && selectedMessages.length > 0 && (
-                      <div className="mt-3">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200"
-                          onClick={(e) => { e.stopPropagation(); summarizeSelectedMessages(); }}
-                        >
-                          {language === 'de' ? `${selectedMessages.length} Nachrichten zusammenfassen` : `Summarize ${selectedMessages.length} messages`}
-                        </Button>
-                      </div>
-                    )}
+                     {/* Summarize button for AI messages when summary mode is active */}
+                     {!message.isUser && summaryMode && selectedMessages.length > 0 && (
+                       <div className="mt-3">
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           className="bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200"
+                           onClick={(e) => { e.stopPropagation(); summarizeSelectedMessages(); }}
+                         >
+                           {language === 'de' ? `${selectedMessages.length} Nachrichten zusammenfassen` : `Summarize ${selectedMessages.length} messages`}
+                         </Button>
+                       </div>
+                     )}
                    <div className="text-xs opacity-70 mt-3">
                      {message.timestamp.toLocaleTimeString()}
                    </div>
