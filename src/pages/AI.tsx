@@ -26,6 +26,8 @@ interface Message {
     showResults?: boolean;
   };
   endConversationAvailable?: boolean;
+  isSelected?: boolean;
+  showSummaryButton?: boolean;
 }
 
 interface ActionCard {
@@ -192,6 +194,8 @@ const AI = () => {
   const recognitionRef = useRef<any>(null);
   const silenceTimerRef = useRef<number | null>(null);
   const [puterReady, setPuterReady] = useState(false);
+  const [summaryMode, setSummaryMode] = useState(false);
+  const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
 
   const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
     setMessages(prev => prev.map(msg => {
@@ -386,16 +390,24 @@ const AI = () => {
   };
 
   const handleMessageClick = (messageId: string) => {
-    setVisibleCopyButtons(prev => 
-      prev.includes(messageId) 
-        ? prev.filter(id => id !== messageId)
-        : [...prev, messageId]
-    );
-    
-    // Hide after 3 seconds
-    setTimeout(() => {
-      setVisibleCopyButtons(prev => prev.filter(id => id !== messageId));
-    }, 3000);
+    if (summaryMode) {
+      setSelectedMessages(prev => 
+        prev.includes(messageId)
+          ? prev.filter(id => id !== messageId)
+          : [...prev, messageId]
+      );
+    } else {
+      setVisibleCopyButtons(prev => 
+        prev.includes(messageId) 
+          ? prev.filter(id => id !== messageId)
+          : [...prev, messageId]
+      );
+      
+      // Hide after 3 seconds
+      setTimeout(() => {
+        setVisibleCopyButtons(prev => prev.filter(id => id !== messageId));
+      }, 3000);
+    }
   };
 
   const copyToClipboard = async (text: string) => {
@@ -1046,9 +1058,73 @@ Answer:`;
     return germanScore > englishScore ? 'de' : 'en';
   };
 
+  const summarizeSelectedMessages = async () => {
+    if (selectedMessages.length === 0) return;
+    
+    const messagesToSummarize = messages
+      .filter(msg => selectedMessages.includes(msg.id))
+      .map(msg => msg.text)
+      .join('\n\n');
+    
+    try {
+      await waitForPuterReady();
+      const puter = (window as any).puter;
+      
+      const prompt = `Please read the following text and provide a concise summary of its main points. Focus solely on summarizing the key themes, ideas, or events presented in the text. Do not include any additional explanations or descriptions outside of the summary itself. Here's the text: ${messagesToSummarize}`;
+      
+      const response = await puter.ai.chat(prompt);
+      const summaryText = typeof response === 'string' ? response : (response?.text ?? '');
+      
+      const summaryMessage: Message = {
+        id: Date.now().toString(),
+        text: `📝 **${language === 'de' ? 'Zusammenfassung' : 'Summary'}**\n\n${summaryText}`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, summaryMessage]);
+      setSelectedMessages([]);
+      setSummaryMode(false);
+    } catch (error) {
+      console.error('Summarization failed:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: `❌ ${language === 'de' ? 'Fehler bei der Zusammenfassung.' : 'Error during summarization.'}`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const checkForSummaryCommand = (text: string): boolean => {
+    const normalizedText = text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ');
+    
+    // German keywords
+    if (language === 'de') {
+      const germanWords = ['fasse', 'informationen', 'zusammen'];
+      const hasAllGermanWords = germanWords.every(word => 
+        normalizedText.includes(word) || normalizedText.includes(word.replace('ß', 'ss'))
+      );
+      if (hasAllGermanWords) return true;
+    }
+    
+    // English keywords
+    const englishWords = ['summarize', 'information'];
+    const hasAllEnglishWords = englishWords.every(word => normalizedText.includes(word));
+    
+    return hasAllEnglishWords;
+  };
+
   const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string; quizData?: any }> => {
     const input = userInput.toLowerCase();
     const detectedLanguage = detectLanguage(userInput);
+    
+    // Check for summary command
+    if (checkForSummaryCommand(userInput)) {
+      await summarizeSelectedMessages();
+      return { text: '' }; // Return empty to prevent duplicate message
+    }
     
     // Quiz generation
     if (quizMode || input.includes('quiz')) {
@@ -1349,6 +1425,8 @@ ${summaryText}
       const response = await processAIResponse(text);
       setLastAIResponse(response.text);
 
+      // Only add AI message if there's actual text content
+      if (response.text && response.text.trim()) {
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           text: response.text,
@@ -1356,13 +1434,17 @@ ${summaryText}
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: searchMode === 'internet'
+          endConversationAvailable: searchMode === 'internet',
+          showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
-      setTimeout(() => {
-        setMessages(prev => [...prev, aiMessage]);
+        setTimeout(() => {
+          setMessages(prev => [...prev, aiMessage]);
+          setIsTyping(false);
+        }, 800);
+      } else {
         setIsTyping(false);
-      }, 800);
+      }
     } catch (error) {
       setIsTyping(false);
     }
@@ -1387,6 +1469,8 @@ ${summaryText}
       const response = await processAIResponse(inputValue);
       setLastAIResponse(response.text);
 
+      // Only add AI message if there's actual text content
+      if (response.text && response.text.trim()) {
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           text: response.text,
@@ -1394,13 +1478,17 @@ ${summaryText}
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: searchMode === 'internet'
+          endConversationAvailable: searchMode === 'internet',
+          showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
-      setTimeout(() => {
-        setMessages(prev => [...prev, aiMessage]);
+        setTimeout(() => {
+          setMessages(prev => [...prev, aiMessage]);
+          setIsTyping(false);
+        }, 1000);
+      } else {
         setIsTyping(false);
-      }, 1000);
+      }
     } catch (error) {
       console.error('Error processing AI response:', error);
       setIsTyping(false);
@@ -1442,6 +1530,10 @@ ${summaryText}
                     message.isUser
                       ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                       : 'bg-white text-gray-800 border border-gray-100 shadow-sm'
+                  } ${
+                    selectedMessages.includes(message.id) 
+                      ? 'ring-2 ring-orange-400 bg-orange-50' 
+                      : ''
                   }`}
                    onClick={() => handleMessageClick(message.id)}
                  >
@@ -1621,18 +1713,32 @@ ${summaryText}
                        </Button>
                      </div>
                     )}
-                   {message.endConversationAvailable && (
-                     <div className="mt-3">
-                       <Button
-                         size="sm"
-                         variant="outline"
-                         className="bg-white"
-                         onClick={(e) => { e.stopPropagation(); endInternetConversation(); }}
-                       >
-                         {language === 'de' ? 'Konversation beenden' : 'End conversation'}
-                       </Button>
-                     </div>
-                   )}
+                    {message.endConversationAvailable && (
+                      <div className="mt-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-white"
+                          onClick={(e) => { e.stopPropagation(); endInternetConversation(); }}
+                        >
+                          {language === 'de' ? 'Konversation beenden' : 'End conversation'}
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {/* Summarize button for AI messages when summary mode is active */}
+                    {!message.isUser && message.showSummaryButton && summaryMode && selectedMessages.length > 0 && (
+                      <div className="mt-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200"
+                          onClick={(e) => { e.stopPropagation(); summarizeSelectedMessages(); }}
+                        >
+                          {language === 'de' ? `${selectedMessages.length} Nachrichten zusammenfassen` : `Summarize ${selectedMessages.length} messages`}
+                        </Button>
+                      </div>
+                    )}
                    <div className="text-xs opacity-70 mt-3">
                      {message.timestamp.toLocaleTimeString()}
                    </div>
@@ -1709,35 +1815,31 @@ ${summaryText}
             {/* Action buttons */}
             {searchMode === 'internet' ? (
               <>
-
                 <Button
                   variant="outline"
                   onClick={() => {
-                    const msg = language === 'de' 
-                      ? '🖼️ Bildgenerator: Beschreibe das Bild, das ich erstellen soll (z. B. "Ein roter Drache über einer Stadt bei Nacht").'
-                      : '🖼️ Image generator: Describe the image you want me to create (e.g., "A red dragon over a city at night").';
-                    setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                    if (summaryMode) {
+                      setSummaryMode(false);
+                      setSelectedMessages([]);
+                      const msg = language === 'de' 
+                        ? '❌ Zusammenfassungs-Modus deaktiviert.'
+                        : '❌ Summary mode disabled.';
+                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                    } else {
+                      setSummaryMode(true);
+                      const msg = language === 'de' 
+                        ? '📝 **Zusammenfassungs-Modus aktiviert**\n\nSo funktioniert es:\n1. Klicken Sie auf die Nachrichten, die Sie zusammenfassen möchten\n2. Ausgewählte Nachrichten werden mit einem Rahmen markiert\n3. Klicken Sie auf den "Zusammenfassen" Button in einer AI-Nachricht\n4. Oder schreiben Sie "fasse die Informationen zusammen"\n\nWählen Sie jetzt die Nachrichten aus, die zusammengefasst werden sollen.'
+                        : '📝 **Summary Mode Activated**\n\nHow it works:\n1. Click on the messages you want to summarize\n2. Selected messages will be highlighted with a border\n3. Click the "Summarize" button in an AI message\n4. Or type "summarize the information"\n\nNow select the messages you want to summarize.';
+                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                    }
                   }}
-                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
-                >
-                  <ImageIcon className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden sm:inline">{language === 'de' ? 'Bildgenerator' : 'Image generator'}</span>
-                  <span className="sm:hidden">IMG</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    const msg = language === 'de' 
-                      ? '📝 Zusammenfassung: Füge den Text ein oder beschreibe, was zusammengefasst werden soll.'
-                      : '📝 Summarize: Paste the text or describe what should be summarized.';
-                    setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
-                  }}
-                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                  className={`flex items-center gap-1 md:gap-2 shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 ${
+                    summaryMode ? 'bg-orange-100 border-orange-300 text-orange-700' : 'bg-white'
+                  }`}
                 >
                   <MessageCircle className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden sm:inline">{language === 'de' ? 'Informationen zusammenfassen' : 'Summarize information'}</span>
-                  <span className="sm:hidden">Sum</span>
+                  <span className="hidden sm:inline">{language === 'de' ? (summaryMode ? 'Modus beenden' : 'Informationen zusammenfassen') : (summaryMode ? 'Exit mode' : 'Summarize information')}</span>
+                  <span className="sm:hidden">{summaryMode ? 'Exit' : 'Sum'}</span>
                 </Button>
 
                 <Button
