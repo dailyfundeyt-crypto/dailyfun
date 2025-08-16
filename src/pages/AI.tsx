@@ -29,6 +29,7 @@ interface Message {
   endConversationAvailable?: boolean;
   isSelected?: boolean;
   showSummaryButton?: boolean;
+  showQuizButton?: boolean;
 }
 
 interface ActionCard {
@@ -197,6 +198,7 @@ const AI = () => {
   const [puterReady, setPuterReady] = useState(false);
   const [summaryMode, setSummaryMode] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
+  const [quizInfoMode, setQuizInfoMode] = useState(false);
 
   const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
     setMessages(prev => prev.map(msg => {
@@ -391,7 +393,7 @@ const AI = () => {
   };
 
   const handleMessageClick = (messageId: string) => {
-    if (summaryMode) {
+    if (summaryMode || quizInfoMode) {
       setSelectedMessages(prev => 
         prev.includes(messageId)
           ? prev.filter(id => id !== messageId)
@@ -1144,6 +1146,169 @@ Here is the text: ${messagesToSummarize}`;
     return hasAllEnglishWords;
   };
 
+  const checkForQuizCommand = (text: string): boolean => {
+    const normalizedText = text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ');
+    
+    // German keywords
+    if (language === 'de') {
+      const germanWords = ['erstelle', 'informations', 'quiz'];
+      const hasAllGermanWords = germanWords.every(word => normalizedText.includes(word));
+      if (hasAllGermanWords) return true;
+    }
+    
+    // English keywords
+    const englishWords = ['create', 'information', 'quiz'];
+    const hasAllEnglishWords = englishWords.every(word => normalizedText.includes(word));
+    
+    return hasAllEnglishWords;
+  };
+
+  const generateInformationQuiz = async () => {
+    if (selectedMessages.length === 0) return;
+    
+    const messagesToQuiz = messages
+      .filter(msg => selectedMessages.includes(msg.id))
+      .map(msg => `${msg.isUser ? (language === 'de' ? 'Benutzer' : 'User') : 'AI'}: ${msg.text}`)
+      .join('\n\n');
+    
+    try {
+      setIsTyping(true);
+      
+      const prompt = language === 'de' 
+        ? `Erstelle ein interaktives Quiz basierend auf dem folgenden Text. Das Quiz soll aus genau 3 Multiple-Choice-Fragen bestehen. Formatiere die Antwort GENAU so:
+
+QUIZ_START
+QUESTION_1: [Frage hier]
+A) [Antwort A]
+B) [Antwort B] 
+C) [Antwort C]
+D) [Antwort D]
+CORRECT_1: [A, B, C oder D]
+EXPLANATION_1: [Ausführliche Erklärung warum diese Antwort richtig ist]
+
+QUESTION_2: [Frage hier]
+A) [Antwort A]
+B) [Antwort B]
+C) [Antwort C] 
+D) [Antwort D]
+CORRECT_2: [A, B, C oder D]
+EXPLANATION_2: [Ausführliche Erklärung warum diese Antwort richtig ist]
+
+QUESTION_3: [Frage hier]
+A) [Antwort A]
+B) [Antwort B]
+C) [Antwort C]
+D) [Antwort D]
+CORRECT_3: [A, B, C oder D]
+EXPLANATION_3: [Ausführliche Erklärung warum diese Antwort richtig ist]
+QUIZ_END
+
+Text für das Quiz: ${messagesToQuiz}`
+        : `Create an interactive quiz based on the following text. The quiz should consist of exactly 3 multiple-choice questions. Format the response EXACTLY like this:
+
+QUIZ_START
+QUESTION_1: [Question here]
+A) [Answer A]
+B) [Answer B]
+C) [Answer C]
+D) [Answer D]
+CORRECT_1: [A, B, C or D]
+EXPLANATION_1: [Detailed explanation why this answer is correct]
+
+QUESTION_2: [Question here]
+A) [Answer A]
+B) [Answer B]
+C) [Answer C]
+D) [Answer D]
+CORRECT_2: [A, B, C or D]
+EXPLANATION_2: [Detailed explanation why this answer is correct]
+
+QUESTION_3: [Question here]
+A) [Answer A]
+B) [Answer B]
+C) [Answer C]
+D) [Answer D]
+CORRECT_3: [A, B, C or D]
+EXPLANATION_3: [Detailed explanation why this answer is correct]
+QUIZ_END
+
+Text for the quiz: ${messagesToQuiz}`;
+      
+      const puter = (window as any).puter;
+      const response = await puter.ai.chat(prompt, {
+        model: 'claude-sonnet-4',
+        temperature: 0.4,
+        max_tokens: 3000
+      });
+      
+      const quizText = typeof response === 'string' ? response : (response?.text ?? response);
+      
+      const quizMessage: Message = {
+        id: Date.now().toString(),
+        text: `INTERACTIVE_INFO_QUIZ:${quizText}`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, quizMessage]);
+      setSelectedMessages([]);
+      setQuizInfoMode(false);
+    } catch (error) {
+      console.error('Quiz generation failed:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: language === 'de' 
+          ? '❌ Fehler beim Erstellen des Quiz. Bitte versuchen Sie es erneut.'
+          : '❌ Error creating quiz. Please try again.',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const parseInteractiveQuiz = (text: string) => {
+    if (!text.startsWith('INTERACTIVE_INFO_QUIZ:')) return null;
+    
+    const quizContent = text.replace('INTERACTIVE_INFO_QUIZ:', '');
+    const quizStart = quizContent.indexOf('QUIZ_START');
+    const quizEnd = quizContent.indexOf('QUIZ_END');
+    
+    if (quizStart === -1 || quizEnd === -1) return null;
+    
+    const quizData = quizContent.substring(quizStart + 10, quizEnd);
+    const questions = [];
+    
+    for (let i = 1; i <= 3; i++) {
+      const questionMatch = quizData.match(new RegExp(`QUESTION_${i}: (.+?)(?=A\\))`));
+      const answersMatch = quizData.match(new RegExp(`A\\) (.+?)\\s*B\\) (.+?)\\s*C\\) (.+?)\\s*D\\) (.+?)\\s*CORRECT_${i}:`));
+      const correctMatch = quizData.match(new RegExp(`CORRECT_${i}: ([ABCD])`));
+      const explanationMatch = quizData.match(new RegExp(`EXPLANATION_${i}: (.+?)(?=QUESTION_|QUIZ_END|$)`));
+      
+      if (questionMatch && answersMatch && correctMatch && explanationMatch) {
+        questions.push({
+          question: questionMatch[1].trim(),
+          answers: [
+            answersMatch[1].trim(),
+            answersMatch[2].trim(),
+            answersMatch[3].trim(),
+            answersMatch[4].trim()
+          ],
+          correctAnswer: correctMatch[1],
+          explanation: explanationMatch[1].trim(),
+          selectedAnswer: null,
+          showResult: false
+        });
+      }
+    }
+    
+    return questions.length === 3 ? questions : null;
+  };
+
+  const [quizStates, setQuizStates] = useState<{ [messageId: string]: any[] }>({});
+
   const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string; quizData?: any }> => {
     const input = userInput.toLowerCase();
     const detectedLanguage = detectLanguage(userInput);
@@ -1151,6 +1316,12 @@ Here is the text: ${messagesToSummarize}`;
     // Check for summary command
     if (checkForSummaryCommand(userInput)) {
       await summarizeSelectedMessages();
+      return { text: '' }; // Return empty to prevent duplicate message
+    }
+    
+    // Check for quiz command
+    if (checkForQuizCommand(userInput)) {
+      await generateInformationQuiz();
       return { text: '' }; // Return empty to prevent duplicate message
     }
     
@@ -1560,12 +1731,99 @@ ${summaryText}
                       : 'bg-white text-gray-800 border border-gray-100 shadow-sm'
                   } ${
                     selectedMessages.includes(message.id) 
-                      ? 'ring-2 ring-orange-400 bg-orange-50' 
+                      ? `ring-2 ${summaryMode ? 'ring-orange-400' : 'ring-blue-400'} ${message.isUser ? '' : 'bg-orange-50'}` 
                       : ''
                   }`}
                    onClick={() => handleMessageClick(message.id)}
                   >
-                     {message.text === 'INTERACTIVE_QUIZ' && message.quizData ? (
+                    {/* Interactive Information Quiz Display */}
+                    {message.text.startsWith('INTERACTIVE_INFO_QUIZ:') ? (
+                      <div className="space-y-6">
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">
+                          {language === 'de' ? '🧠 Informations-Quiz' : '🧠 Information Quiz'}
+                        </h2>
+                        {(() => {
+                          const quizQuestions = parseInteractiveQuiz(message.text);
+                          if (!quizQuestions) {
+                            return <p className="text-red-600">{language === 'de' ? 'Fehler beim Laden des Quiz' : 'Error loading quiz'}</p>;
+                          }
+                          
+                          if (!quizStates[message.id]) {
+                            setQuizStates(prev => ({ ...prev, [message.id]: quizQuestions }));
+                            return <div>Loading...</div>;
+                          }
+                          
+                          const currentQuiz = quizStates[message.id];
+                          
+                          return currentQuiz.map((q: any, qIndex: number) => (
+                            <div key={qIndex} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                              <h3 className="font-semibold text-gray-800 mb-3">
+                                {qIndex + 1}. {q.question}
+                              </h3>
+                              <div className="space-y-2">
+                                {q.answers.map((answer: string, aIndex: number) => {
+                                  const letter = ['A', 'B', 'C', 'D'][aIndex];
+                                  const isCorrect = letter === q.correctAnswer;
+                                  const isSelected = q.selectedAnswer === letter;
+                                  
+                                  return (
+                                    <button
+                                      key={aIndex}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setQuizStates(prev => ({
+                                          ...prev,
+                                          [message.id]: prev[message.id].map((quiz: any, idx: number) => 
+                                            idx === qIndex 
+                                              ? { ...quiz, selectedAnswer: letter, showResult: true }
+                                              : quiz
+                                          )
+                                        }));
+                                      }}
+                                      disabled={q.showResult}
+                                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                                        q.showResult
+                                          ? isCorrect
+                                            ? 'bg-green-100 border-green-400 text-green-800'
+                                            : isSelected
+                                            ? 'bg-red-100 border-red-400 text-red-800'
+                                            : 'bg-gray-100 border-gray-300 text-gray-600'
+                                          : 'bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                                      }`}
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        <span className="font-semibold">
+                                          {letter}.
+                                        </span>
+                                        <span className="flex-1">{answer}</span>
+                                        {q.showResult && isCorrect && (
+                                          <span className="text-green-600 font-semibold">
+                                            ✓ {language === 'de' ? 'Richtig' : 'Correct'}
+                                          </span>
+                                        )}
+                                        {q.showResult && isSelected && !isCorrect && (
+                                          <span className="text-red-600 font-semibold">
+                                            ✗ {language === 'de' ? 'Falsch' : 'Wrong'}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              
+                              {q.showResult && (
+                                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                  <p className="text-blue-800">
+                                    <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {q.explanation}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    ) : message.text === 'INTERACTIVE_QUIZ' && message.quizData ? (
                        <div className="space-y-4">
                          <h3 className="text-lg font-semibold text-gray-800">
                            {message.quizData.question}
@@ -1772,8 +2030,8 @@ ${summaryText}
                       </div>
                     )}
                     
-                     {/* Summarize button for AI messages when summary mode is active */}
-                     {!message.isUser && summaryMode && selectedMessages.length > 0 && (
+                     {/* Summarize button - only show in the mode activation message */}
+                     {message.showSummaryButton && summaryMode && selectedMessages.length > 0 && (
                        <div className="mt-3">
                          <Button
                            size="sm"
@@ -1782,6 +2040,20 @@ ${summaryText}
                            onClick={(e) => { e.stopPropagation(); summarizeSelectedMessages(); }}
                          >
                            {language === 'de' ? `${selectedMessages.length} Nachrichten zusammenfassen` : `Summarize ${selectedMessages.length} messages`}
+                         </Button>
+                       </div>
+                     )}
+                     
+                     {/* Quiz button - only show in the mode activation message */}
+                     {message.showQuizButton && quizInfoMode && selectedMessages.length > 0 && (
+                       <div className="mt-3">
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           className="bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200"
+                           onClick={(e) => { e.stopPropagation(); generateInformationQuiz(); }}
+                         >
+                           {language === 'de' ? `Quiz aus ${selectedMessages.length} Nachrichten erstellen` : `Create quiz from ${selectedMessages.length} messages`}
                          </Button>
                        </div>
                      )}
@@ -1867,16 +2139,19 @@ ${summaryText}
                     if (summaryMode) {
                       setSummaryMode(false);
                       setSelectedMessages([]);
+                      setQuizInfoMode(false); // Ensure quiz mode is also disabled
                       const msg = language === 'de' 
                         ? '❌ Zusammenfassungs-Modus deaktiviert.'
                         : '❌ Summary mode disabled.';
                       setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
                     } else {
                       setSummaryMode(true);
+                      setQuizInfoMode(false); // Disable quiz mode when enabling summary
+                      setSelectedMessages([]);
                       const msg = language === 'de' 
                         ? '📝 **Zusammenfassungs-Modus aktiviert**\n\nSo funktioniert es:\n1. Klicken Sie auf die Nachrichten, die Sie zusammenfassen möchten\n2. Ausgewählte Nachrichten werden mit einem Rahmen markiert\n3. Klicken Sie auf den "Zusammenfassen" Button in einer AI-Nachricht\n4. Oder schreiben Sie "fasse die Informationen zusammen"\n\nWählen Sie jetzt die Nachrichten aus, die zusammengefasst werden sollen.'
                         : '📝 **Summary Mode Activated**\n\nHow it works:\n1. Click on the messages you want to summarize\n2. Selected messages will be highlighted with a border\n3. Click the "Summarize" button in an AI message\n4. Or type "summarize the information"\n\nNow select the messages you want to summarize.';
-                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date(), showSummaryButton: true }]);
                     }
                   }}
                   className={`flex items-center gap-1 md:gap-2 shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 ${
@@ -1891,15 +2166,31 @@ ${summaryText}
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setQuizMode(true);
-                    const msg = language === 'de' ? 'Ich kann ein Informations-Quiz erstellen! Nenne ein Thema.' : 'I can create an information quiz! Name a topic.';
-                    setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                    if (quizInfoMode) {
+                      setQuizInfoMode(false);
+                      setSelectedMessages([]);
+                      setSummaryMode(false); // Ensure summary mode is also disabled
+                      const msg = language === 'de' 
+                        ? '❌ Quiz-Modus deaktiviert.'
+                        : '❌ Quiz mode disabled.';
+                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                    } else {
+                      setQuizInfoMode(true);
+                      setSummaryMode(false); // Disable summary mode when enabling quiz
+                      setSelectedMessages([]);
+                      const msg = language === 'de' 
+                        ? '🧠 **Quiz-Modus aktiviert**\n\nSo funktioniert es:\n1. Klicken Sie auf die Nachrichten, die Sie für das Quiz verwenden möchten\n2. Ausgewählte Nachrichten werden mit einem Rahmen markiert\n3. Klicken Sie auf den "Quiz erstellen" Button in einer AI-Nachricht\n4. Oder schreiben Sie "erstelle informations quiz"\n\nWählen Sie jetzt die Nachrichten aus, die für das Quiz verwendet werden sollen.'
+                        : '🧠 **Quiz Mode Activated**\n\nHow it works:\n1. Click on the messages you want to use for the quiz\n2. Selected messages will be highlighted with a border\n3. Click the "Create Quiz" button in an AI message\n4. Or type "create information quiz"\n\nNow select the messages you want to use for the quiz.';
+                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date(), showQuizButton: true }]);
+                    }
                   }}
-                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                  className={`flex items-center gap-1 md:gap-2 shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 ${
+                    quizInfoMode ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white'
+                  }`}
                 >
                   <Brain className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden sm:inline">{language === 'de' ? 'Informations-Quiz' : 'Information Quiz'}</span>
-                  <span className="sm:hidden">Quiz</span>
+                  <span className="hidden sm:inline">{language === 'de' ? (quizInfoMode ? 'Modus beenden' : 'Informations-Quiz') : (quizInfoMode ? 'Exit mode' : 'Information Quiz')}</span>
+                  <span className="sm:hidden">{quizInfoMode ? 'Exit' : 'Quiz'}</span>
                 </Button>
               </>
             ) : (
