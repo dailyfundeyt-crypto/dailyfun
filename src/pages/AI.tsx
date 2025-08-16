@@ -1064,21 +1064,44 @@ Answer:`;
     
     const messagesToSummarize = messages
       .filter(msg => selectedMessages.includes(msg.id))
-      .map(msg => msg.text)
+      .map(msg => `${msg.isUser ? (language === 'de' ? 'Benutzer' : 'User') : 'AI'}: ${msg.text}`)
       .join('\n\n');
     
     try {
-      await waitForPuterReady();
+      setIsTyping(true);
+      
+      const prompt = language === 'de' 
+        ? `Bitte lies den folgenden Text sorgfältig und erstelle eine ausführliche, aber gut strukturierte Zusammenfassung. Gliedere die Zusammenfassung in folgende Bereiche:
+
+1. **Hauptthemen**: Die wichtigsten behandelten Themen
+2. **Zentrale Informationen**: Die relevantesten Fakten und Daten
+3. **Wichtige Erkenntnisse**: Die bedeutendsten Schlussfolgerungen
+4. **Zusammenfassung**: Ein prägnantes Fazit
+
+Hier ist der Text: ${messagesToSummarize}`
+        : `Please read the following text carefully and create a comprehensive, well-structured summary. Organize the summary into these sections:
+
+1. **Main Topics**: The most important topics discussed
+2. **Key Information**: The most relevant facts and data
+3. **Important Insights**: The most significant conclusions
+4. **Summary**: A concise conclusion
+
+Here is the text: ${messagesToSummarize}`;
+      
       const puter = (window as any).puter;
+      const response = await puter.ai.chat(prompt, {
+        model: 'claude-sonnet-4',
+        temperature: 0.3,
+        max_tokens: 2000
+      });
       
-      const prompt = `Please read the following text and provide a concise summary of its main points. Focus solely on summarizing the key themes, ideas, or events presented in the text. Do not include any additional explanations or descriptions outside of the summary itself. Here's the text: ${messagesToSummarize}`;
-      
-      const response = await puter.ai.chat(prompt);
-      const summaryText = typeof response === 'string' ? response : (response?.text ?? '');
+      const summaryText = typeof response === 'string' ? response : (response?.text ?? response);
       
       const summaryMessage: Message = {
         id: Date.now().toString(),
-        text: `📝 **${language === 'de' ? 'Zusammenfassung' : 'Summary'}**\n\n${summaryText}`,
+        text: language === 'de' 
+          ? `📝 **Zusammenfassung ausgewählter Nachrichten**\n\n${summaryText}`
+          : `📝 **Summary of Selected Messages**\n\n${summaryText}`,
         isUser: false,
         timestamp: new Date()
       };
@@ -1090,11 +1113,15 @@ Answer:`;
       console.error('Summarization failed:', error);
       const errorMessage: Message = {
         id: Date.now().toString(),
-        text: `❌ ${language === 'de' ? 'Fehler bei der Zusammenfassung.' : 'Error during summarization.'}`,
+        text: language === 'de' 
+          ? '❌ Fehler beim Zusammenfassen der Nachrichten. Bitte versuchen Sie es erneut.'
+          : '❌ Error summarizing messages. Please try again.',
         isUser: false,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
