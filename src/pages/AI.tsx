@@ -648,12 +648,30 @@ const AI = () => {
   } as const;
 
   const getWikiExtract = async (title: string, lang: 'de' | 'en'): Promise<string> => {
-    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=${encodeURIComponent(title)}&format=json&origin=*`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const pages = data?.query?.pages;
-    const page = pages ? pages[Object.keys(pages)[0]] : null;
-    return page?.extract || '';
+    try {
+      // Use correct German Wikipedia API endpoint
+      const apiUrl = lang === 'de' 
+        ? `https://de.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=${encodeURIComponent(title)}&format=json&origin=*&exsectionformat=plain`
+        : `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=${encodeURIComponent(title)}&format=json&origin=*&exsectionformat=plain`;
+      
+      const res = await fetch(apiUrl);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
+      const data = await res.json();
+      const pages = data?.query?.pages;
+      const page = pages ? pages[Object.keys(pages)[0]] : null;
+      
+      if (page && page.pageid && page.extract) {
+        return page.extract;
+      }
+      
+      return '';
+    } catch (error) {
+      console.error('Wikipedia API error:', error);
+      return '';
+    }
   };
 
   const pickRelevantSentences = (extract: string, question: string, lang: 'de' | 'en', max = 4): string[] => {
@@ -707,26 +725,59 @@ const AI = () => {
   // Fetch a Wikipedia summary for a given title and build the same formatted message
   const fetchWikiSummaryForTitle = async (title: string): Promise<{ text: string; title: string; link: string; lang: 'de' | 'en' }> => {
     const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en';
-    // Search again to get a fresh related list
-    const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&utf8=&format=json&origin=*`;
-    const sRes = await fetch(searchUrl);
-    const sData = await sRes.json() as any;
-    const first = sData?.query?.search?.[0];
-    if (!first) {
-      const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.';
-      return { text: `🌐 ${notFound}`, title, link: '', lang: langCode };
+    
+    try {
+      // Search again to get a fresh related list with better error handling
+      const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&utf8=&format=json&origin=*`;
+      const sRes = await fetch(searchUrl);
+      
+      if (!sRes.ok) {
+        throw new Error(`Search failed: ${sRes.status}`);
+      }
+      
+      const sData = await sRes.json() as any;
+      const first = sData?.query?.search?.[0];
+      
+      if (!first) {
+        const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.';
+        return { text: `🌐 ${notFound}`, title, link: '', lang: langCode };
+      }
+      
+      const finalTitle = first.title as string;
+      
+      // Try REST API first, fallback to extract API
+      let extract = '';
+      let link = `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(finalTitle)}`;
+      
+      try {
+        const sumUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(finalTitle)}`;
+        const sumRes = await fetch(sumUrl);
+        
+        if (sumRes.ok) {
+          const sumData = await sumRes.json() as any;
+          extract = sumData?.extract || '';
+          link = sumData?.content_urls?.desktop?.page || link;
+        }
+      } catch (restError) {
+        console.warn('REST API failed, trying extract API:', restError);
+      }
+      
+      // Fallback to extract API if REST failed
+      if (!extract) {
+        extract = await getWikiExtract(finalTitle, langCode);
+      }
+      
+      const summary = extract ? summarize(extract, 3) : (language === 'de' ? 'Keine Zusammenfassung verfügbar.' : 'No summary available.');
+      const heading = language === 'de' ? `🌐 Wikipedia: ${finalTitle}\n\nKurzfassung:` : `🌐 Wikipedia: ${finalTitle}\n\nSummary:`;
+      const others = (sData?.query?.search || []).slice(1, 3).map((r: any) => `- ${r.title}`).join('\n');
+      const othersHeader = others ? (language === 'de' ? '\n\nWeitere Treffer:\n' : '\n\nOther results:\n') : '';
+      
+      return { text: `${heading}\n${summary}\n\n🔗 ${link}${othersHeader}${others}`, title: finalTitle, link, lang: langCode };
+    } catch (error) {
+      console.error('fetchWikiSummaryForTitle error:', error);
+      const errorText = language === 'de' ? 'Fehler beim Laden der Wikipedia-Daten.' : 'Error loading Wikipedia data.';
+      return { text: `🌐 ${errorText}`, title, link: '', lang: langCode };
     }
-    const finalTitle = first.title as string;
-    const sumUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(finalTitle)}`;
-    const sumRes = await fetch(sumUrl);
-    const sumData = await sumRes.json() as any;
-    const extract = sumData?.extract || '';
-    const summary = summarize(extract, 3);
-    const link = (sumData?.content_urls?.desktop?.page) || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(finalTitle)}`;
-    const heading = language === 'de' ? `🌐 Wikipedia: ${finalTitle}\n\nKurzfassung:` : `🌐 Wikipedia: ${finalTitle}\n\nSummary:`;
-    const others = (sData?.query?.search || []).slice(1, 3).map((r: any) => `- ${r.title}`).join('\n');
-    const othersHeader = others ? (language === 'de' ? '\n\nWeitere Treffer:\n' : '\n\nOther results:\n') : '';
-    return { text: `${heading}\n${summary}\n\n🔗 ${link}${othersHeader}${others}`, title: finalTitle, link, lang: langCode };
   };
 
   // Handle clicks on 'Weitere Treffer' buttons: only Wikipedia, no AI, and update seed for follow-ups
@@ -901,29 +952,24 @@ Answer:`;
     }
   };
 
-  // Ask the AI (Gemini 2.0 Flash with streaming). Language follows site language.
+  // Ask the AI using Puter AI
   const askPuterAI = async (prompt: string): Promise<string> => {
     try {
-      await waitForPuterReady();
       const puter = (window as any).puter;
+      if (!puter?.ai?.chat) {
+        throw new Error('Puter AI not available');
+      }
 
       // Nudge language explicitly
       const localizedPrompt = language === 'de'
         ? `Antworte auf Deutsch. Frage: ${prompt}`
         : `Answer in English. Question: ${prompt}`;
 
-      // Prefer streaming for faster first tokens
-      const stream = await puter.ai.chat(localizedPrompt, { model: 'gemini-2.0-flash', stream: true });
-      let fullText = '';
-      for await (const part of stream as any) {
-        const chunk = part?.text ?? '';
-        if (chunk) fullText += chunk;
-      }
-      if (fullText.trim()) return fullText.trim();
-
-      // Fallback: non-streaming
-      const res = await puter.ai.chat(localizedPrompt, { model: 'gemini-2.0-flash' });
-      return typeof res === 'string' ? res : (res?.text ?? String(res));
+      const response = await puter.ai.chat(localizedPrompt, { 
+        model: 'gemini-2.0-flash'
+      });
+      
+      return typeof response === 'string' ? response : (response?.message?.content || response?.text || String(response));
     } catch (e) {
       console.error('askPuterAI failed', e);
       return language === 'de' ? '❌ Fehler bei der KI-Antwort.' : '❌ Error getting AI response.';
@@ -1077,9 +1123,6 @@ Answer:`;
     try {
       setIsTyping(true);
       
-      // Wait for Puter to be ready before making AI call
-      await waitForPuterReady();
-      
       const prompt = language === 'de' 
         ? `Bitte lies den folgenden Text sorgfältig und erstelle eine ausführliche, aber gut strukturierte Zusammenfassung. Gliedere die Zusammenfassung in folgende Bereiche:
 
@@ -1098,19 +1141,17 @@ Hier ist der Text: ${messagesToSummarize}`
 
 Here is the text: ${messagesToSummarize}`;
       
+      // Use Puter AI with correct syntax
       const puter = (window as any).puter;
-      
       if (!puter?.ai?.chat) {
         throw new Error('Puter AI not available');
       }
       
       const response = await puter.ai.chat(prompt, {
-        model: 'claude-sonnet-4',
-        temperature: 0.3,
-        max_tokens: 2000
+        model: 'claude-sonnet-4'
       });
       
-      const summaryText = typeof response === 'string' ? response : (response?.text ?? response);
+      const summaryText = typeof response === 'string' ? response : (response?.message?.content || response?.text || response);
       
       const summaryMessage: Message = {
         id: Date.now().toString(),
@@ -1187,9 +1228,6 @@ Here is the text: ${messagesToSummarize}`;
     try {
       setIsTyping(true);
       
-      // Wait for Puter to be ready before making AI call
-      await waitForPuterReady();
-      
       const prompt = language === 'de' 
         ? `Erstelle ein interaktives Quiz basierend auf dem folgenden Text. Das Quiz soll aus genau 3 Multiple-Choice-Fragen bestehen. Formatiere die Antwort GENAU so:
 
@@ -1250,19 +1288,17 @@ QUIZ_END
 
 Text for the quiz: ${messagesToQuiz}`;
       
+      // Use Puter AI with correct syntax
       const puter = (window as any).puter;
-      
       if (!puter?.ai?.chat) {
         throw new Error('Puter AI not available');
       }
       
       const response = await puter.ai.chat(prompt, {
-        model: 'claude-sonnet-4',
-        temperature: 0.4,
-        max_tokens: 3000
+        model: 'claude-sonnet-4'
       });
       
-      const quizText = typeof response === 'string' ? response : (response?.text ?? response);
+      const quizText = typeof response === 'string' ? response : (response?.message?.content || response?.text || response);
       
       const quizMessage: Message = {
         id: Date.now().toString(),
