@@ -296,6 +296,9 @@ const AI = () => {
 
   // Initialize welcome message based on language and context
   useEffect(() => {
+    // Clear internet seed when language changes to prevent context mixing
+    setInternetSeed(null);
+    
     if (articleContext) {
       const contextMessage = {
         id: '1',
@@ -668,12 +671,14 @@ const AI = () => {
   };
 
   const answerInternetFollowUp = async (question: string): Promise<string> => {
-    if (!internetSeed?.title || !internetSeed.lang) {
+    if (!internetSeed?.title) {
       return language === 'de' ? 'Bitte nenne erst ein Thema, dann kann ich Nachfragen beantworten.' : 'Please provide a topic first, then I can answer follow-ups.';
     }
     try {
-      const extract = await getWikiExtract(internetSeed.title, internetSeed.lang);
-      const rel = pickRelevantSentences(extract, question, internetSeed.lang, 4);
+      // Use current UI language instead of seed language for better user experience
+      const currentLang = language === 'de' ? 'de' : 'en';
+      const extract = await getWikiExtract(internetSeed.title, currentLang);
+      const rel = pickRelevantSentences(extract, question, currentLang, 4);
       const header = language === 'de'
         ? `🤖 Vertiefung zum Thema "${internetSeed.title}"\n\nAusgehend von deiner Erstfrage: "${internetSeed.firstQuery}"\nNeue Frage: "${question}"`
         : `🤖 Deep dive on "${internetSeed.title}"\n\nFrom your initial question: "${internetSeed.firstQuery}"\nNew question: "${question}"`;
@@ -809,14 +814,14 @@ const AI = () => {
   };
 
   // Ensure Puter SDK is ready before using it
-  const waitForPuterReady = async (timeoutMs = 8000): Promise<void> => {
+  const waitForPuterReady = async (timeoutMs = 10000): Promise<void> => {
     const start = Date.now();
     while (Date.now() - start < timeoutMs) {
       const puter = (window as any).puter;
       if (puter?.ai?.chat) return;
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, 150));
     }
-    throw new Error('Puter SDK not ready');
+    throw new Error('Puter SDK not ready within timeout');
   };
 
   // Extract topic from user query using Claude 4 Sonnet for better accuracy
@@ -1072,6 +1077,9 @@ Answer:`;
     try {
       setIsTyping(true);
       
+      // Wait for Puter to be ready before making AI call
+      await waitForPuterReady();
+      
       const prompt = language === 'de' 
         ? `Bitte lies den folgenden Text sorgfältig und erstelle eine ausführliche, aber gut strukturierte Zusammenfassung. Gliedere die Zusammenfassung in folgende Bereiche:
 
@@ -1091,6 +1099,11 @@ Hier ist der Text: ${messagesToSummarize}`
 Here is the text: ${messagesToSummarize}`;
       
       const puter = (window as any).puter;
+      
+      if (!puter?.ai?.chat) {
+        throw new Error('Puter AI not available');
+      }
+      
       const response = await puter.ai.chat(prompt, {
         model: 'claude-sonnet-4',
         temperature: 0.3,
@@ -1116,8 +1129,8 @@ Here is the text: ${messagesToSummarize}`;
       const errorMessage: Message = {
         id: Date.now().toString(),
         text: language === 'de' 
-          ? '❌ Fehler beim Zusammenfassen der Nachrichten. Bitte versuchen Sie es erneut.'
-          : '❌ Error summarizing messages. Please try again.',
+          ? '❌ Fehler beim Zusammenfassen der Nachrichten. Stellen Sie sicher, dass eine Internetverbindung besteht und versuchen Sie es erneut.'
+          : '❌ Error summarizing messages. Make sure you have an internet connection and try again.',
         isUser: false,
         timestamp: new Date()
       };
@@ -1173,6 +1186,9 @@ Here is the text: ${messagesToSummarize}`;
     
     try {
       setIsTyping(true);
+      
+      // Wait for Puter to be ready before making AI call
+      await waitForPuterReady();
       
       const prompt = language === 'de' 
         ? `Erstelle ein interaktives Quiz basierend auf dem folgenden Text. Das Quiz soll aus genau 3 Multiple-Choice-Fragen bestehen. Formatiere die Antwort GENAU so:
@@ -1235,6 +1251,11 @@ QUIZ_END
 Text for the quiz: ${messagesToQuiz}`;
       
       const puter = (window as any).puter;
+      
+      if (!puter?.ai?.chat) {
+        throw new Error('Puter AI not available');
+      }
+      
       const response = await puter.ai.chat(prompt, {
         model: 'claude-sonnet-4',
         temperature: 0.4,
@@ -1258,8 +1279,8 @@ Text for the quiz: ${messagesToQuiz}`;
       const errorMessage: Message = {
         id: Date.now().toString(),
         text: language === 'de' 
-          ? '❌ Fehler beim Erstellen des Quiz. Bitte versuchen Sie es erneut.'
-          : '❌ Error creating quiz. Please try again.',
+          ? '❌ Fehler beim Erstellen des Quiz. Stellen Sie sicher, dass eine Internetverbindung besteht und versuchen Sie es erneut.'
+          : '❌ Error creating quiz. Make sure you have an internet connection and try again.',
         isUser: false,
         timestamp: new Date()
       };
@@ -1365,9 +1386,13 @@ Text for the quiz: ${messagesToQuiz}`;
       const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en'
       try {
         // If we already have a seed topic, answer as a follow-up using that context
-        if (internetSeed) {
+        // But only if the seed language matches current language to avoid confusion
+        if (internetSeed && (!internetSeed.lang || internetSeed.lang === langCode)) {
           const follow = await answerInternetFollowUp(userInput);
           return { text: follow };
+        } else if (internetSeed && internetSeed.lang !== langCode) {
+          // Clear seed if language doesn't match to start fresh
+          setInternetSeed(null);
         }
 
         // Extract main topic from user's question using AI
