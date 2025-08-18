@@ -966,10 +966,24 @@ Answer:`;
         : `Answer in English. Question: ${prompt}`;
 
       const response = await puter.ai.chat(localizedPrompt, { 
-        model: 'gemini-2.0-flash'
+        model: 'claude-sonnet-4'
       });
       
-      return typeof response === 'string' ? response : (response?.message?.content || response?.text || String(response));
+      // Fix the [object] [object] issue by properly extracting the response text
+      let responseText = '';
+      if (typeof response === 'string') {
+        responseText = response;
+      } else if (response?.message?.content) {
+        responseText = response.message.content;
+      } else if (response?.text) {
+        responseText = response.text;
+      } else if (response?.content) {
+        responseText = response.content;
+      } else {
+        responseText = JSON.stringify(response) || 'No response';
+      }
+      
+      return responseText;
     } catch (e) {
       console.error('askPuterAI failed', e);
       return language === 'de' ? '❌ Fehler bei der KI-Antwort.' : '❌ Error getting AI response.';
@@ -1434,15 +1448,8 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
     if (searchMode === 'internet') {
       const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en'
       try {
-        // If we already have a seed topic, answer as a follow-up using that context
-        // But only if the seed language matches current language to avoid confusion
-        if (internetSeed && (!internetSeed.lang || internetSeed.lang === langCode)) {
-          const follow = await answerInternetFollowUp(userInput);
-          return { text: follow };
-        } else if (internetSeed && internetSeed.lang !== langCode) {
-          // Clear seed if language doesn't match to start fresh
-          setInternetSeed(null);
-        }
+        // REMOVED DEEP DIVE FUNCTIONALITY - Always start fresh search
+        // No more follow-up context to prevent unwanted deep dives
 
         // Extract main topic from user's question using AI
         const extractedTopic = await extractTopicFromQuery(userInput);
@@ -1537,7 +1544,18 @@ Create a list of 3-5 additional links here. Mix relevant websites and articles f
           let structuredResponse = '';
           try {
             const aiResponse = await puter.ai.chat(structuredPrompt, { model: 'claude-sonnet-4' });
-            structuredResponse = typeof aiResponse === 'string' ? aiResponse : (aiResponse?.message?.content || aiResponse?.text || aiResponse);
+            // Fix response parsing to avoid [object] [object]
+            if (typeof aiResponse === 'string') {
+              structuredResponse = aiResponse;
+            } else if (aiResponse?.message?.content) {
+              structuredResponse = aiResponse.message.content;
+            } else if (aiResponse?.text) {
+              structuredResponse = aiResponse.text;
+            } else if (aiResponse?.content) {
+              structuredResponse = aiResponse.content;
+            } else {
+              structuredResponse = JSON.stringify(aiResponse) || 'No response';
+            }
           } catch (aiError) {
             console.error('AI analysis failed:', aiError);
             // Fallback to simple format
@@ -1548,11 +1566,16 @@ Create a list of 3-5 additional links here. Mix relevant websites and articles f
             structuredResponse = `${fallbackHeader}\n${extract}${fallbackAnalysis}`;
           }
           
+          // Add buttons for more articles and external links
           const linkText = language === 'de' 
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
-          const result = `${structuredResponse}${linkText}`;
+          const buttonsText = language === 'de'
+            ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Weitere Artikel suchen]\n\n**🌐 Externe Quellen:**\n[News suchen] [Google Scholar] [Academic Papers]'
+            : '\n\n**📰 More Articles on this Topic:**\n[Search More Articles]\n\n**🌐 External Sources:**\n[Search News] [Google Scholar] [Academic Papers]';
+          
+          const result = `${structuredResponse}${linkText}${buttonsText}`;
           
           return { text: result }
         } else {
@@ -2147,8 +2170,9 @@ Create a list of 3-5 additional links here. Mix relevant websites and articles f
                       </div>
                     )}
                     
-                     {/* Summarize button - only show in the mode activation message */}
-                     {message.showSummaryButton && summaryMode && selectedMessages.length > 0 && (
+                      {/* Summarize button - only show in activation message AND when messages are selected */}
+                     {message.showSummaryButton && summaryMode && selectedMessages.length > 0 && 
+                      (message.text.includes('Zusammenfassungs-Modus aktiviert') || message.text.includes('Summary Mode Activated')) && (
                        <div className="mt-3">
                          <Button
                            size="sm"
@@ -2161,8 +2185,9 @@ Create a list of 3-5 additional links here. Mix relevant websites and articles f
                        </div>
                      )}
                      
-                     {/* Quiz button - only show in the mode activation message */}
-                     {message.showQuizButton && quizInfoMode && selectedMessages.length > 0 && (
+                     {/* Quiz button - only show in activation message AND when messages are selected */}
+                     {message.showQuizButton && quizInfoMode && selectedMessages.length > 0 && 
+                      (message.text.includes('Quiz-Modus aktiviert') || message.text.includes('Quiz Mode Activated')) && (
                        <div className="mt-3">
                          <Button
                            size="sm"
