@@ -1124,22 +1124,14 @@ Answer:`;
       setIsTyping(true);
       
       const prompt = language === 'de' 
-        ? `Bitte lies den folgenden Text sorgfältig und erstelle eine ausführliche, aber gut strukturierte Zusammenfassung. Gliedere die Zusammenfassung in folgende Bereiche:
+        ? `Du bist ein Experte für die präzise Zusammenfassung von Texten. Deine Aufgabe ist es, den folgenden Text klar, strukturiert und verständlich zusammenzufassen. Stelle sicher, dass alle wesentlichen Informationen und Kernaussagen erhalten bleiben, aber entferne Füllwörter und unwichtige Details. Gib nur die Zusammenfassung aus.
 
-1. **Hauptthemen**: Die wichtigsten behandelten Themen
-2. **Zentrale Informationen**: Die relevantesten Fakten und Daten
-3. **Wichtige Erkenntnisse**: Die bedeutendsten Schlussfolgerungen
-4. **Zusammenfassung**: Ein prägnantes Fazit
+Der zusammenzufassende Text lautet:
+"${messagesToSummarize}"`
+        : `You are an expert at precise text summarization. Your task is to summarize the following text clearly, structurally and comprehensibly. Make sure all essential information and key statements are preserved, but remove filler words and unimportant details. Only output the summary.
 
-Hier ist der Text: ${messagesToSummarize}`
-        : `Please read the following text carefully and create a comprehensive, well-structured summary. Organize the summary into these sections:
-
-1. **Main Topics**: The most important topics discussed
-2. **Key Information**: The most relevant facts and data
-3. **Important Insights**: The most significant conclusions
-4. **Summary**: A concise conclusion
-
-Here is the text: ${messagesToSummarize}`;
+The text to be summarized is:
+"${messagesToSummarize}"`;
       
       // Use Puter AI with correct syntax
       const puter = (window as any).puter;
@@ -1229,64 +1221,52 @@ Here is the text: ${messagesToSummarize}`;
       setIsTyping(true);
       
       const prompt = language === 'de' 
-        ? `Erstelle ein interaktives Quiz basierend auf dem folgenden Text. Das Quiz soll aus genau 3 Multiple-Choice-Fragen bestehen. Formatiere die Antwort GENAU so:
+        ? `Du bist eine Quiz-Erstellungs-Engine. Deine einzige Aufgabe ist es, aus dem gegebenen Kontext ein Quiz im JSON-Format zu erstellen. Gib ausschließlich den JSON-Code aus, ohne jeglichen begleitenden Text, Erklärungen oder Formatierungszeichen wie \`\`\`json.
 
-QUIZ_START
-QUESTION_1: [Frage hier]
-A) [Antwort A]
-B) [Antwort B] 
-C) [Antwort C]
-D) [Antwort D]
-CORRECT_1: [A, B, C oder D]
-EXPLANATION_1: [Ausführliche Erklärung warum diese Antwort richtig ist]
+**Beispiel für das Ausgabeformat:**
+{
+  "quizTitle": "Titel des Quiz",
+  "questions": [
+    {
+      "questionText": "Was ist die Hauptstadt von Deutschland?",
+      "options": ["München", "Hamburg", "Berlin", "Köln"],
+      "correctAnswer": "Berlin"
+    },
+    {
+      "questionText": "Welcher Fluss fließt durch London?",
+      "options": ["Themse", "Seine", "Donau", "Rhein"],
+      "correctAnswer": "Themse"
+    }
+  ]
+}
 
-QUESTION_2: [Frage hier]
-A) [Antwort A]
-B) [Antwort B]
-C) [Antwort C] 
-D) [Antwort D]
-CORRECT_2: [A, B, C oder D]
-EXPLANATION_2: [Ausführliche Erklärung warum diese Antwort richtig ist]
+**Kontext für das zu erstellende Quiz:**
+"${messagesToQuiz}"
 
-QUESTION_3: [Frage hier]
-A) [Antwort A]
-B) [Antwort B]
-C) [Antwort C]
-D) [Antwort D]
-CORRECT_3: [A, B, C oder D]
-EXPLANATION_3: [Ausführliche Erklärung warum diese Antwort richtig ist]
-QUIZ_END
+Erstelle jetzt ein Quiz basierend auf dem bereitgestellten Kontext in exakt dem oben gezeigten JSON-Format.`
+        : `You are a quiz creation engine. Your only task is to create a quiz in JSON format from the given context. Output exclusively the JSON code, without any accompanying text, explanations or formatting characters like \`\`\`json.
 
-Text für das Quiz: ${messagesToQuiz}`
-        : `Create an interactive quiz based on the following text. The quiz should consist of exactly 3 multiple-choice questions. Format the response EXACTLY like this:
+**Example output format:**
+{
+  "quizTitle": "Quiz Title",
+  "questions": [
+    {
+      "questionText": "What is the capital of Germany?",
+      "options": ["Munich", "Hamburg", "Berlin", "Cologne"],
+      "correctAnswer": "Berlin"
+    },
+    {
+      "questionText": "Which river flows through London?",
+      "options": ["Thames", "Seine", "Danube", "Rhine"],
+      "correctAnswer": "Thames"
+    }
+  ]
+}
 
-QUIZ_START
-QUESTION_1: [Question here]
-A) [Answer A]
-B) [Answer B]
-C) [Answer C]
-D) [Answer D]
-CORRECT_1: [A, B, C or D]
-EXPLANATION_1: [Detailed explanation why this answer is correct]
+**Context for the quiz to be created:**
+"${messagesToQuiz}"
 
-QUESTION_2: [Question here]
-A) [Answer A]
-B) [Answer B]
-C) [Answer C]
-D) [Answer D]
-CORRECT_2: [A, B, C or D]
-EXPLANATION_2: [Detailed explanation why this answer is correct]
-
-QUESTION_3: [Question here]
-A) [Answer A]
-B) [Answer B]
-C) [Answer C]
-D) [Answer D]
-CORRECT_3: [A, B, C or D]
-EXPLANATION_3: [Detailed explanation why this answer is correct]
-QUIZ_END
-
-Text for the quiz: ${messagesToQuiz}`;
+Now create a quiz based on the provided context in exactly the JSON format shown above.`;
       
       // Use Puter AI with correct syntax
       const puter = (window as any).puter;
@@ -1300,14 +1280,47 @@ Text for the quiz: ${messagesToQuiz}`;
       
       const quizText = typeof response === 'string' ? response : (response?.message?.content || response?.text || response);
       
-      const quizMessage: Message = {
-        id: Date.now().toString(),
-        text: `INTERACTIVE_INFO_QUIZ:${quizText}`,
-        isUser: false,
-        timestamp: new Date()
-      };
+      // Try to parse JSON response
+      try {
+        const jsonData = JSON.parse(quizText);
+        if (jsonData.questions && Array.isArray(jsonData.questions)) {
+          // Convert to our internal format
+          const formattedQuiz = jsonData.questions.map((q: any, index: number) => {
+            const correctIndex = q.options.findIndex((opt: string) => opt === q.correctAnswer);
+            const correctLetter = ['A', 'B', 'C', 'D'][correctIndex] || 'A';
+            
+            return `QUESTION_${index + 1}: ${q.questionText}
+A) ${q.options[0] || ''}
+B) ${q.options[1] || ''}
+C) ${q.options[2] || ''}
+D) ${q.options[3] || ''}
+CORRECT_${index + 1}: ${correctLetter}
+EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
+          }).join('\n\n');
+          
+          const quizMessage: Message = {
+            id: Date.now().toString(),
+            text: `INTERACTIVE_INFO_QUIZ:QUIZ_START\n${formattedQuiz}\nQUIZ_END`,
+            isUser: false,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, quizMessage]);
+        } else {
+          throw new Error('Invalid JSON structure');
+        }
+      } catch (jsonError) {
+        // Fallback to old format if JSON parsing fails
+        const quizMessage: Message = {
+          id: Date.now().toString(),
+          text: `INTERACTIVE_INFO_QUIZ:${quizText}`,
+          isUser: false,
+          timestamp: new Date()
+        };
+        
+        setMessages(prev => [...prev, quizMessage]);
+      }
       
-      setMessages(prev => [...prev, quizMessage]);
       setSelectedMessages([]);
       setQuizInfoMode(false);
     } catch (error) {
@@ -1435,69 +1448,112 @@ Text for the quiz: ${messagesToQuiz}`;
         const extractedTopic = await extractTopicFromQuery(userInput);
         console.log('Searching Wikipedia for:', extractedTopic);
         
-        // Search Wikipedia using extracted topic
-        const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic)}&utf8=&format=json&origin=*`
-        const sRes = await fetch(searchUrl)
-        const sData = await sRes.json() as any
-        const first = sData?.query?.search?.[0]
+        // Search Wikipedia using extracted topic with better error handling
+        const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic)}&utf8=&format=json&origin=*&srlimit=3`
+        let sRes, sData, first;
+        
+        try {
+          sRes = await fetch(searchUrl);
+          if (!sRes.ok) throw new Error(`Search failed: ${sRes.status}`);
+          sData = await sRes.json() as any;
+          first = sData?.query?.search?.[0];
+        } catch (searchError) {
+          console.error('Wikipedia search error:', searchError);
+          // Try fallback search with simpler query
+          const fallbackUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic.split(' ')[0])}&utf8=&format=json&origin=*&srlimit=1`
+          try {
+            sRes = await fetch(fallbackUrl);
+            sData = await sRes.json() as any;
+            first = sData?.query?.search?.[0];
+          } catch (fallbackError) {
+            console.error('Fallback search also failed:', fallbackError);
+          }
+        }
         
         if (first) {
           const title = first.title as string
           console.log('Found Wikipedia article:', title);
           
-          // Get full article summary
+          // Get full article summary with better error handling
           const sumUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
-          const sumRes = await fetch(sumUrl)
-          const sumData = await sumRes.json() as any
-          const extract = sumData?.extract || ''
+          let sumRes, sumData;
           
-          // Use Claude 4 Sonnet for better summarization
+          try {
+            sumRes = await fetch(sumUrl);
+            if (!sumRes.ok) throw new Error(`Summary fetch failed: ${sumRes.status}`);
+            sumData = await sumRes.json() as any;
+          } catch (summaryError) {
+            console.error('Wikipedia summary error:', summaryError);
+            // Use search snippet as fallback
+            sumData = { extract: first.snippet?.replace(/<[^>]*>/g, '') || 'Keine Zusammenfassung verfügbar.' };
+          }
+          const extract = sumData?.extract || (language === 'de' ? 'Keine Zusammenfassung verfügbar.' : 'No summary available.');
+          console.log('Wikipedia extract:', extract);
+          
+          // Set seed for future questions
+          setInternetSeed({ 
+            firstQuery: userInput, 
+            title, 
+            lang: langCode, 
+            link: `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}` 
+          });
+          
+          // Use the optimized three-part response format
           await waitForPuterReady();
           const puter = (window as any).puter;
           
-          const summaryPrompt = language === 'de' 
-            ? `Analysiere den folgenden Wikipedia-Artikel über "${title}" und erstelle eine strukturierte Zusammenfassung:
+          const structuredPrompt = language === 'de' 
+            ? `Du bist ein intelligenter Recherche-Assistent. Deine Aufgabe ist es, eine umfassende und gut strukturierte Antwort auf die Anfrage des Nutzers zu geben. Die Antwort muss aus den folgenden drei Abschnitten bestehen:
 
-Wikipedia-Text: "${extract}"
+**Anfrage des Nutzers:** "${userInput}"
+**Wikipedia-Kontext:** "${extract}"
 
-Bitte erstelle:
-1. Eine kurze Einführung (1-2 Sätze)
-2. Die wichtigsten Informationen in Stichpunkten (3-5 Punkte)
-3. Relevante Details falls vorhanden
+---
 
-Format die Antwort schön strukturiert.`
-            : `Analyze the following Wikipedia article about "${title}" and create a structured summary:
+**1. Wikipedia:**
+Gib hier eine saubere und gut lesbare Zusammenfassung des bereitgestellten Wikipedia-Kontextes wieder.
 
-Wikipedia text: "${extract}"
+**2. KI-Analyse:**
+Gib hier deine eigene, detaillierte und hilfreiche Antwort auf die ursprüngliche Anfrage des Nutzers. Gehe über die Wikipedia-Informationen hinaus und biete zusätzliche Einblicke oder Erklärungen.
 
-Please create:
-1. A brief introduction (1-2 sentences)
-2. The most important information in bullet points (3-5 points)
-3. Relevant details if available
+**3. Weitere Informationen:**
+Erstelle hier eine Liste mit 3-5 weiterführenden Links. Mische dabei relevante Webseiten und Artikel von bekannten internationalen Nachrichtenmagazinen oder Fachzeitschriften.`
+            : `You are an intelligent research assistant. Your task is to provide a comprehensive and well-structured answer to the user's request. The answer must consist of the following three sections:
 
-Format the response nicely structured.`;
+**User Request:** "${userInput}"
+**Wikipedia Context:** "${extract}"
 
-          const aiSummary = await puter.ai.chat(summaryPrompt, { model: 'claude-sonnet-4' });
-          const summaryText = typeof aiSummary === 'string' ? aiSummary : (aiSummary?.text ?? '');
+---
+
+**1. Wikipedia:**
+Provide a clean and readable summary of the provided Wikipedia context here.
+
+**2. AI Analysis:**
+Provide your own detailed and helpful answer to the user's original request here. Go beyond the Wikipedia information and offer additional insights or explanations.
+
+**3. Further Information:**
+Create a list of 3-5 additional links here. Mix relevant websites and articles from well-known international news magazines or professional journals.`;
           
-          // Get news articles (simplified approach)
-          const newsLinks = await searchNewsArticles(extractedTopic);
+          let structuredResponse = '';
+          try {
+            const aiResponse = await puter.ai.chat(structuredPrompt, { model: 'claude-sonnet-4' });
+            structuredResponse = typeof aiResponse === 'string' ? aiResponse : (aiResponse?.message?.content || aiResponse?.text || aiResponse);
+          } catch (aiError) {
+            console.error('AI analysis failed:', aiError);
+            // Fallback to simple format
+            const fallbackHeader = language === 'de' ? '🌐 **Wikipedia:**' : '🌐 **Wikipedia:**';
+            const fallbackAnalysis = language === 'de' 
+              ? '\n\n🤖 **KI-Analyse:**\nKI-Analyse nicht verfügbar. Die Wikipedia-Informationen sind oben verfügbar.'
+              : '\n\n🤖 **AI Analysis:**\nAI analysis not available. Wikipedia information is provided above.';
+            structuredResponse = `${fallbackHeader}\n${extract}${fallbackAnalysis}`;
+          }
           
-          const link = (sumData?.content_urls?.desktop?.page) || `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title)}`
-          const others = (sData?.query?.search || []).slice(1, 3).map((r: any) => `- ${r.title}`).join('\n')
-          const othersHeader = others ? (language === 'de' ? '\n\nWeitere Wikipedia-Artikel:\n' : '\n\nOther Wikipedia articles:\n') : ''
+          const linkText = language === 'de' 
+            ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
+            : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
-          const newsHeader = newsLinks.length > 0 ? (language === 'de' ? '\n\nNachrichten und Artikel:\n' : '\n\nNews and articles:\n') : ''
-          const newsSection = newsLinks.length > 0 ? newsLinks.join('\n') : ''
-
-          // Store seed context for follow-up questions
-          setInternetSeed({ firstQuery: userInput, title, lang: langCode, link });
-
-          const result = `📖 **Wikipedia**
-${summaryText}
-
-🔗 ${link}${othersHeader}${others}${newsHeader}${newsSection}`;
-
+          const result = `${structuredResponse}${linkText}`;
+          
           return { text: result }
         } else {
           const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.'
