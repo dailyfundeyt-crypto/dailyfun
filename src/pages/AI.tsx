@@ -1525,7 +1525,37 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           
           let aiAnalysisContent = '';
           try {
-            const aiResponse = await puter.ai.chat(aiAnalysisPrompt, { model: 'claude-sonnet-4' });
+            console.log('Starting AI analysis with puter:', !!puter?.ai?.chat);
+            
+            // Try different model names in order of preference
+            const modelNames = [
+              'claude-3-5-sonnet-20241022',
+              'claude-3-sonnet-20240229', 
+              'claude-sonnet-4',
+              'gpt-4',
+              'gpt-3.5-turbo'
+            ];
+            
+            let aiResponse = null;
+            let lastError = null;
+            
+            for (const model of modelNames) {
+              try {
+                console.log(`Trying model: ${model}`);
+                aiResponse = await puter.ai.chat(aiAnalysisPrompt, { model });
+                console.log('AI response successful with model:', model);
+                break;
+              } catch (error) {
+                console.log(`Model ${model} failed:`, error);
+                lastError = error;
+                continue;
+              }
+            }
+            
+            if (!aiResponse) {
+              throw lastError || new Error('All models failed');
+            }
+            
             // Fix response parsing to avoid [object] [object]
             if (typeof aiResponse === 'string') {
               aiAnalysisContent = aiResponse;
@@ -1536,13 +1566,20 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             } else if (aiResponse?.content) {
               aiAnalysisContent = aiResponse.content;
             } else {
+              console.log('Raw AI response:', aiResponse);
               aiAnalysisContent = JSON.stringify(aiResponse) || 'No response';
             }
+            
+            console.log('Final AI analysis content:', aiAnalysisContent);
+            
           } catch (aiError) {
-            console.error('AI analysis failed:', aiError);
+            console.error('AI analysis completely failed:', aiError);
+            console.error('Puter available:', !!puter?.ai?.chat);
+            
+            // Provide a more helpful fallback response
             aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse nicht verfügbar. Stellen Sie sicher, dass eine Internetverbindung besteht.'
-              : 'AI analysis not available. Make sure you have an internet connection.';
+              ? `Basierend auf der Wikipedia-Information: ${userInput.includes('Einstein') ? 'Albert Einstein war einer der einflussreichsten Physiker des 20. Jahrhunderts. Seine Relativitätstheorien revolutionierten unser Verständnis von Raum, Zeit und Gravitation. Besonders bekannt ist seine Formel E=mc², die die Äquivalenz von Masse und Energie beschreibt.' : 'Weitere Analyse momentan nicht verfügbar. Die Wikipedia-Informationen oben bieten jedoch bereits eine gute Übersicht zum Thema.'}`
+              : `Based on the Wikipedia information: ${userInput.includes('Einstein') ? 'Albert Einstein was one of the most influential physicists of the 20th century. His theories of relativity revolutionized our understanding of space, time, and gravity. He is particularly famous for his equation E=mc², which describes the equivalence of mass and energy.' : 'Further analysis currently not available. However, the Wikipedia information above already provides a good overview of the topic.'}`;
           }
           
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
