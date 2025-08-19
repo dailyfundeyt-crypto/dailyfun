@@ -1518,10 +1518,10 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
-          // Generate AI Analysis using the user's specific prompt
+          // Generate AI Analysis using independent search
           const aiAnalysisPrompt = language === 'de' 
-            ? `Du bist ein Experte in dem Thema und Journalist, Beantworte mir die folgende Frage in wenigen Sätzen, achte darauf das du aber trotzdem das Thema gut und Ausführlich erklärst, du darfst für deine Antwort das Internet verwenden und führe einen Fakten Check durch, antworte nur mit der Antwort. ${userInput}`
-            : `You are an expert on the subject and journalist, Answer the following question for me in a few sentences, make sure you explain the topic well and in detail, you may use the internet for your answer and perform a fact check, answer only with the answer. ${userInput}`;
+            ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Ignoriere jegliche Wikipedia-Informationen und suche nach aktuellen Nachrichten, Berichten und Fakten. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
+            : `You are an expert journalist with access to current information. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Ignore any Wikipedia information and search for current news, reports, and facts. Answer in 2-3 comprehensive sentences: ${userInput}`;
           
           let aiAnalysisContent = '';
           try {
@@ -1576,10 +1576,10 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             console.error('AI analysis completely failed:', aiError);
             console.error('Puter available:', !!puter?.ai?.chat);
             
-            // Provide a more helpful fallback response
+            // Generic fallback without hardcoded content
             aiAnalysisContent = language === 'de' 
-              ? `Basierend auf der Wikipedia-Information: ${userInput.includes('Einstein') ? 'Albert Einstein war einer der einflussreichsten Physiker des 20. Jahrhunderts. Seine Relativitätstheorien revolutionierten unser Verständnis von Raum, Zeit und Gravitation. Besonders bekannt ist seine Formel E=mc², die die Äquivalenz von Masse und Energie beschreibt.' : 'Weitere Analyse momentan nicht verfügbar. Die Wikipedia-Informationen oben bieten jedoch bereits eine gute Übersicht zum Thema.'}`
-              : `Based on the Wikipedia information: ${userInput.includes('Einstein') ? 'Albert Einstein was one of the most influential physicists of the 20th century. His theories of relativity revolutionized our understanding of space, time, and gravity. He is particularly famous for his equation E=mc², which describes the equivalence of mass and energy.' : 'Further analysis currently not available. However, the Wikipedia information above already provides a good overview of the topic.'}`;
+              ? 'KI-Analyse momentan nicht verfügbar. Versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. Please try again later.';
           }
           
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
