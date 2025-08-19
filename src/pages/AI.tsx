@@ -1509,73 +1509,51 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           await waitForPuterReady();
           const puter = (window as any).puter;
           
-          const structuredPrompt = language === 'de' 
-            ? `Du bist ein intelligenter Recherche-Assistent. Deine Aufgabe ist es, eine umfassende und gut strukturierte Antwort auf die Anfrage des Nutzers zu geben. Die Antwort muss aus den folgenden drei Abschnitten bestehen:
-
-**Anfrage des Nutzers:** "${userInput}"
-**Wikipedia-Kontext:** "${extract}"
-
----
-
-**1. Wikipedia:**
-Gib hier eine saubere und gut lesbare Zusammenfassung des bereitgestellten Wikipedia-Kontextes wieder.
-
-**2. KI-Analyse:**
-Gib hier deine eigene, detaillierte und hilfreiche Antwort auf die ursprüngliche Anfrage des Nutzers. Gehe über die Wikipedia-Informationen hinaus und biete zusätzliche Einblicke oder Erklärungen.
-
-**3. Weitere Informationen:**
-Erstelle hier eine Liste mit 3-5 weiterführenden Links. Mische dabei relevante Webseiten und Artikel von bekannten internationalen Nachrichtenmagazinen oder Fachzeitschriften.`
-            : `You are an intelligent research assistant. Your task is to provide a comprehensive and well-structured answer to the user's request. The answer must consist of the following three sections:
-
-**User Request:** "${userInput}"
-**Wikipedia Context:** "${extract}"
-
----
-
-**1. Wikipedia:**
-Provide a clean and readable summary of the provided Wikipedia context here.
-
-**2. AI Analysis:**
-Provide your own detailed and helpful answer to the user's original request here. Go beyond the Wikipedia information and offer additional insights or explanations.
-
-**3. Further Information:**
-Create a list of 3-5 additional links here. Mix relevant websites and articles from well-known international news magazines or professional journals.`;
+          // First show Wikipedia content
+          const wikipediaHeader = language === 'de' ? '🌐 **Wikipedia:**' : '🌐 **Wikipedia:**';
+          let wikipediaContent = `${wikipediaHeader}\n${extract}`;
           
-          let structuredResponse = '';
-          try {
-            const aiResponse = await puter.ai.chat(structuredPrompt, { model: 'claude-sonnet-4' });
-            // Fix response parsing to avoid [object] [object]
-            if (typeof aiResponse === 'string') {
-              structuredResponse = aiResponse;
-            } else if (aiResponse?.message?.content) {
-              structuredResponse = aiResponse.message.content;
-            } else if (aiResponse?.text) {
-              structuredResponse = aiResponse.text;
-            } else if (aiResponse?.content) {
-              structuredResponse = aiResponse.content;
-            } else {
-              structuredResponse = JSON.stringify(aiResponse) || 'No response';
-            }
-          } catch (aiError) {
-            console.error('AI analysis failed:', aiError);
-            // Fallback to simple format
-            const fallbackHeader = language === 'de' ? '🌐 **Wikipedia:**' : '🌐 **Wikipedia:**';
-            const fallbackAnalysis = language === 'de' 
-              ? '\n\n🤖 **KI-Analyse:**\nKI-Analyse nicht verfügbar. Die Wikipedia-Informationen sind oben verfügbar.'
-              : '\n\n🤖 **AI Analysis:**\nAI analysis not available. Wikipedia information is provided above.';
-            structuredResponse = `${fallbackHeader}\n${extract}${fallbackAnalysis}`;
-          }
-          
-          // Add buttons for more articles and external links
+          // Add Wikipedia source link
           const linkText = language === 'de' 
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
+          // Generate AI Analysis using the user's specific prompt
+          const aiAnalysisPrompt = language === 'de' 
+            ? `Du bist ein Experte in dem Thema und Journalist, Beantworte mir die folgende Frage in wenigen Sätzen, achte darauf das du aber trotzdem das Thema gut und Ausführlich erklärst, du darfst für deine Antwort das Internet verwenden und führe einen Fakten Check durch, antworte nur mit der Antwort. ${userInput}`
+            : `You are an expert on the subject and journalist, Answer the following question for me in a few sentences, make sure you explain the topic well and in detail, you may use the internet for your answer and perform a fact check, answer only with the answer. ${userInput}`;
+          
+          let aiAnalysisContent = '';
+          try {
+            const aiResponse = await puter.ai.chat(aiAnalysisPrompt, { model: 'claude-sonnet-4' });
+            // Fix response parsing to avoid [object] [object]
+            if (typeof aiResponse === 'string') {
+              aiAnalysisContent = aiResponse;
+            } else if (aiResponse?.message?.content) {
+              aiAnalysisContent = aiResponse.message.content;
+            } else if (aiResponse?.text) {
+              aiAnalysisContent = aiResponse.text;
+            } else if (aiResponse?.content) {
+              aiAnalysisContent = aiResponse.content;
+            } else {
+              aiAnalysisContent = JSON.stringify(aiResponse) || 'No response';
+            }
+          } catch (aiError) {
+            console.error('AI analysis failed:', aiError);
+            aiAnalysisContent = language === 'de' 
+              ? 'KI-Analyse nicht verfügbar. Stellen Sie sicher, dass eine Internetverbindung besteht.'
+              : 'AI analysis not available. Make sure you have an internet connection.';
+          }
+          
+          const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
+          const aiAnalysisSection = `${aiAnalysisHeader}\n${aiAnalysisContent}`;
+          
+          // Add buttons for more articles and external links
           const buttonsText = language === 'de'
             ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Weitere Artikel suchen]\n\n**🌐 Externe Quellen:**\n[News suchen] [Google Scholar] [Academic Papers]'
             : '\n\n**📰 More Articles on this Topic:**\n[Search More Articles]\n\n**🌐 External Sources:**\n[Search News] [Google Scholar] [Academic Papers]';
           
-          const result = `${structuredResponse}${linkText}${buttonsText}`;
+          const result = `${wikipediaContent}${linkText}${aiAnalysisSection}${buttonsText}`;
           
           return { text: result }
         } else {
