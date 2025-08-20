@@ -1524,62 +1524,108 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             : `You are an expert journalist with access to current information. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Ignore any Wikipedia information and search for current news, reports, and facts. Answer in 2-3 comprehensive sentences: ${userInput}`;
           
           let aiAnalysisContent = '';
-          try {
-            console.log('Starting AI analysis with puter:', !!puter?.ai?.chat);
-            
-            // Try different model names in order of preference
-            const modelNames = [
-              'claude-3-5-sonnet-20241022',
-              'claude-3-sonnet-20240229', 
-              'claude-sonnet-4',
-              'gpt-4',
-              'gpt-3.5-turbo'
-            ];
-            
-            let aiResponse = null;
-            let lastError = null;
-            
-            for (const model of modelNames) {
-              try {
-                console.log(`Trying model: ${model}`);
-                aiResponse = await puter.ai.chat(aiAnalysisPrompt, { model });
-                console.log('AI response successful with model:', model);
-                break;
-              } catch (error) {
-                console.log(`Model ${model} failed:`, error);
-                lastError = error;
-                continue;
+          
+          // Enhanced AI models with better fallbacks
+          const aiModels = [
+            { name: 'GPT-5', model: 'gpt-5' },
+            { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
+            { name: 'GPT-4.1', model: 'gpt-4.1' },
+            { name: 'Claude Opus 4', model: 'claude-opus-4' },
+            { name: 'GPT-4o', model: 'gpt-4o' }
+          ];
+          
+          let successfulModel = null;
+          let lastError = null;
+          
+          for (const aiModel of aiModels) {
+            try {
+              console.log(`🤖 Trying AI model: ${aiModel.name} (${aiModel.model})`);
+              
+              const aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
+                model: aiModel.model,
+                max_tokens: 400,
+                temperature: 0.7
+              });
+              
+              console.log(`✅ Response from ${aiModel.name}:`, typeof aiResponse, aiResponse);
+              
+              // Enhanced response parsing to handle all possible formats
+              let extractedText = '';
+              
+              if (typeof aiResponse === 'string' && aiResponse.trim()) {
+                extractedText = aiResponse.trim();
+              } else if (aiResponse && typeof aiResponse === 'object') {
+                // Try multiple extraction paths
+                const extractionPaths = [
+                  () => aiResponse.choices?.[0]?.message?.content,
+                  () => aiResponse.message?.content,
+                  () => aiResponse.content,
+                  () => aiResponse.text,
+                  () => aiResponse.response,
+                  () => aiResponse.completion,
+                  () => aiResponse.data?.content,
+                  () => aiResponse.data?.text
+                ];
+                
+                for (const extractPath of extractionPaths) {
+                  try {
+                    const extracted = extractPath();
+                    if (typeof extracted === 'string' && extracted.trim()) {
+                      extractedText = extracted.trim();
+                      break;
+                    }
+                  } catch (e) {
+                    // Continue to next extraction method
+                  }
+                }
+                
+                // If still no text found, try to convert to string safely
+                if (!extractedText && aiResponse) {
+                  try {
+                    const stringified = JSON.stringify(aiResponse);
+                    if (stringified && stringified !== '{}' && !stringified.includes('[object Object]')) {
+                      extractedText = stringified;
+                    }
+                  } catch (e) {
+                    console.warn('Could not stringify response');
+                  }
+                }
               }
+              
+              // Validate the extracted text
+              if (extractedText && 
+                  extractedText.length > 15 && 
+                  !extractedText.includes('[object') && 
+                  !extractedText.includes('[Object]') &&
+                  !extractedText.includes('undefined') &&
+                  !extractedText.includes('null') &&
+                  extractedText !== '{}' &&
+                  extractedText !== '[]') {
+                
+                aiAnalysisContent = extractedText;
+                successfulModel = aiModel.name;
+                console.log(`✅ Successfully extracted analysis from ${aiModel.name}`);
+                break;
+              } else {
+                console.log(`❌ Invalid response from ${aiModel.name}: "${extractedText}"`);
+                lastError = new Error(`Invalid response format: ${extractedText}`);
+              }
+              
+            } catch (modelError) {
+              console.error(`❌ Model ${aiModel.name} failed:`, modelError);
+              lastError = modelError;
+              // Continue to next model
             }
-            
-            if (!aiResponse) {
-              throw lastError || new Error('All models failed');
-            }
-            
-            // Fix response parsing to avoid [object] [object]
-            if (typeof aiResponse === 'string') {
-              aiAnalysisContent = aiResponse;
-            } else if (aiResponse?.message?.content) {
-              aiAnalysisContent = aiResponse.message.content;
-            } else if (aiResponse?.text) {
-              aiAnalysisContent = aiResponse.text;
-            } else if (aiResponse?.content) {
-              aiAnalysisContent = aiResponse.content;
-            } else {
-              console.log('Raw AI response:', aiResponse);
-              aiAnalysisContent = JSON.stringify(aiResponse) || 'No response';
-            }
-            
-            console.log('Final AI analysis content:', aiAnalysisContent);
-            
-          } catch (aiError) {
-            console.error('AI analysis completely failed:', aiError);
-            console.error('Puter available:', !!puter?.ai?.chat);
-            
-            // Generic fallback without hardcoded content
+          }
+          
+          // If all models failed, provide helpful fallback
+          if (!successfulModel) {
+            console.error('🚨 All AI models failed. Last error:', lastError);
             aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. Please try again later.';
+              ? 'KI-Analyse momentan nicht verfügbar. Alle verfügbaren AI-Modelle (GPT-5, Claude Sonnet 4, GPT-4.1) sind derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. All available AI models (GPT-5, Claude Sonnet 4, GPT-4.1) are currently unreachable. Please try again later.';
+          } else {
+            console.log(`🎉 AI Analysis completed successfully using ${successfulModel}`);
           }
           
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
