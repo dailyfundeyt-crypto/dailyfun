@@ -1531,8 +1531,46 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
             { name: 'GPT-4.1', model: 'gpt-4.1' },
             { name: 'Claude Opus 4', model: 'claude-opus-4' },
-            { name: 'GPT-4o', model: 'gpt-4o' }
+            { name: 'GPT-4o', model: 'gpt-4o' },
+            { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
           ];
+
+          // AIML API call function
+          const callAIMLAPI = async (prompt: string) => {
+            try {
+              const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': 'Bearer b1e7ed5d35304c83b9691f980d7a4432',
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: 'google/gemma-3n-e4b-it',
+                  messages: [
+                    {
+                      role: 'user',
+                      content: prompt
+                    }
+                  ],
+                  temperature: 0.7,
+                  top_p: 0.7,
+                  frequency_penalty: 1,
+                  top_k: 50,
+                  max_tokens: 400
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error(`AIML API error: ${response.status}`);
+              }
+
+              const data = await response.json();
+              return data.choices?.[0]?.message?.content || '';
+            } catch (error) {
+              console.error('AIML API call failed:', error);
+              throw error;
+            }
+          };
           
           let successfulModel = null;
           let lastError = null;
@@ -1541,11 +1579,19 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             try {
               console.log(`🤖 Trying AI model: ${aiModel.name} (${aiModel.model})`);
               
-              const aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
-                model: aiModel.model,
-                max_tokens: 400,
-                temperature: 0.7
-              });
+              let aiResponse;
+              
+              // Use custom AIML API for the AIML model
+              if (aiModel.isAIML) {
+                aiResponse = await callAIMLAPI(aiAnalysisPrompt);
+              } else {
+                // Use Puter AI for other models
+                aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
+                  model: aiModel.model,
+                  max_tokens: 400,
+                  temperature: 0.7
+                });
+              }
               
               console.log(`✅ Response from ${aiModel.name}:`, typeof aiResponse, aiResponse);
               
@@ -1622,8 +1668,8 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           if (!successfulModel) {
             console.error('🚨 All AI models failed. Last error:', lastError);
             aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Alle verfügbaren AI-Modelle (GPT-5, Claude Sonnet 4, GPT-4.1) sind derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. All available AI models (GPT-5, Claude Sonnet 4, GPT-4.1) are currently unreachable. Please try again later.';
+              ? 'KI-Analyse momentan nicht verfügbar. Alle verfügbaren AI-Modelle (GPT-5, Claude Sonnet 4, GPT-4.1, Claude Opus 4, GPT-4o, AIML Gemma) sind derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. All available AI models (GPT-5, Claude Sonnet 4, GPT-4.1, Claude Opus 4, GPT-4o, AIML Gemma) are currently unreachable. Please try again later.';
           } else {
             console.log(`🎉 AI Analysis completed successfully using ${successfulModel}`);
           }
