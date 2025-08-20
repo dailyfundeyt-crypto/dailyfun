@@ -1525,13 +1525,15 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           
           let aiAnalysisContent = '';
           
-          // Enhanced AI models with better fallbacks
+          // Enhanced AI models with better fallbacks - AIML as last resort
           const aiModels = [
             { name: 'GPT-5', model: 'gpt-5' },
             { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
             { name: 'GPT-4.1', model: 'gpt-4.1' },
             { name: 'Claude Opus 4', model: 'claude-opus-4' },
             { name: 'GPT-4o', model: 'gpt-4o' },
+            { name: 'o3-mini', model: 'o3-mini' },
+            { name: 'o1-mini', model: 'o1-mini' },
             { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
           ];
 
@@ -1595,56 +1597,30 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
               
               console.log(`✅ Response from ${aiModel.name}:`, typeof aiResponse, aiResponse);
               
-              // Enhanced response parsing to handle all possible formats
+              // Corrected response parsing - Puter AI returns strings directly
               let extractedText = '';
               
-              if (typeof aiResponse === 'string' && aiResponse.trim()) {
-                extractedText = aiResponse.trim();
-              } else if (aiResponse && typeof aiResponse === 'object') {
-                // Try multiple extraction paths
-                const extractionPaths = [
-                  () => aiResponse.choices?.[0]?.message?.content,
-                  () => aiResponse.message?.content,
-                  () => aiResponse.content,
-                  () => aiResponse.text,
-                  () => aiResponse.response,
-                  () => aiResponse.completion,
-                  () => aiResponse.data?.content,
-                  () => aiResponse.data?.text
-                ];
-                
-                for (const extractPath of extractionPaths) {
-                  try {
-                    const extracted = extractPath();
-                    if (typeof extracted === 'string' && extracted.trim()) {
-                      extractedText = extracted.trim();
-                      break;
-                    }
-                  } catch (e) {
-                    // Continue to next extraction method
-                  }
-                }
-                
-                // If still no text found, try to convert to string safely
-                if (!extractedText && aiResponse) {
-                  try {
-                    const stringified = JSON.stringify(aiResponse);
-                    if (stringified && stringified !== '{}' && !stringified.includes('[object Object]')) {
-                      extractedText = stringified;
-                    }
-                  } catch (e) {
-                    console.warn('Could not stringify response');
-                  }
-                }
+              if (aiModel.isAIML) {
+                // AIML API returns string directly from our custom function
+                extractedText = typeof aiResponse === 'string' ? aiResponse.trim() : '';
+              } else {
+                // Puter AI returns string directly (not objects)
+                extractedText = typeof aiResponse === 'string' ? aiResponse.trim() : '';
               }
               
-              // Validate the extracted text
+              // If still no valid text, log and continue to next model
+              if (!extractedText) {
+                console.log(`❌ Empty response from ${aiModel.name}`);
+                lastError = new Error(`Empty response from ${aiModel.name}`);
+                continue;
+              }
+              
+              // Validate that we have meaningful content (not just whitespace or placeholders)
               if (extractedText && 
-                  extractedText.length > 15 && 
-                  !extractedText.includes('[object') && 
-                  !extractedText.includes('[Object]') &&
-                  !extractedText.includes('undefined') &&
-                  !extractedText.includes('null') &&
+                  extractedText.trim().length > 10 && 
+                  !extractedText.includes('[object Object]') &&
+                  extractedText !== 'undefined' &&
+                  extractedText !== 'null' &&
                   extractedText !== '{}' &&
                   extractedText !== '[]') {
                 
