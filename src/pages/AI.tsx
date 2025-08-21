@@ -1073,18 +1073,31 @@ Answer:`;
   const sendSpeakPrompt = async (promptText: string) => {
     const text = promptText.trim();
     if (!text) return;
+    
+    // Speech mode: Pass text directly to processAIResponse like the input field
     const userMessage: Message = { id: Date.now().toString(), text, isUser: true, timestamp: new Date() };
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
     setIsTyping(true);
+    
     try {
-      const aiText = await askPuterAI(text);
-      const aiMessage: Message = { id: (Date.now()+1).toString(), text: aiText, isUser: false, timestamp: new Date(), endConversationAvailable: searchMode === 'internet' };
+      const response = await processAIResponse(text);
+      const aiMessage: Message = { 
+        id: (Date.now()+1).toString(), 
+        text: response.text, 
+        isUser: false, 
+        timestamp: new Date(), 
+        qrCode: response.qrCode,
+        quizData: response.quizData,
+        endConversationAvailable: searchMode === 'internet'
+      };
       setTimeout(() => {
         setMessages(prev => [...prev, aiMessage]);
         setIsTyping(false);
         // Always play TTS when using speech mode
-        playTTS(aiText);
+        if (response.text && response.text.trim()) {
+          playTTS(response.text);
+        }
       }, 600);
     } catch (e) {
       setIsTyping(false);
@@ -1147,23 +1160,127 @@ Der zusammenzufassende Text lautet:
 The text to be summarized is:
 "${messagesToSummarize}"`;
       
-      // Use Puter AI with correct syntax
+      // Enhanced AI models - try kostenlosen models first, AIML as last resort
+      const aiModels = [
+        { name: 'GPT-5', model: 'gpt-5' },
+        { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
+        { name: 'GPT-4.1', model: 'gpt-4.1' },
+        { name: 'Claude Opus 4', model: 'claude-opus-4' },
+        { name: 'GPT-4o', model: 'gpt-4o' },
+        { name: 'o3-mini', model: 'o3-mini' },
+        { name: 'o1-mini', model: 'o1-mini' },
+        { name: 'Deepseek Chat', model: 'deepseek-chat' },
+        { name: 'Deepseek Reasoner', model: 'deepseek-reasoner' },
+        { name: 'Gemini 2.0 Flash', model: 'gemini-2.0-flash' },
+        { name: 'Meta Llama 3.1 70B', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' },
+        { name: 'Mistral Large', model: 'mistral-large-latest' },
+        { name: 'Grok Beta', model: 'grok-beta' },
+        { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
+      ];
+
+      // Custom AIML API function
+      const callAIMLAPI = async (promptText: string): Promise<string> => {
+        try {
+          const response = await fetch('https://api.aimlapi.com/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + 'b95c22b2537e4e31893073c2bad3e2bc',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'google/gemma-3n-e4b-it',
+              messages: [
+                {
+                  role: 'user',
+                  content: promptText
+                }
+              ],
+              temperature: 0.7,
+              top_p: 0.7,
+              frequency_penalty: 1,
+              top_k: 50,
+              max_tokens: 400
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`AIML API error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data.choices?.[0]?.message?.content || '';
+        } catch (error) {
+          console.error('AIML API call failed:', error);
+          throw error;
+        }
+      };
+      
       const puter = (window as any).puter;
-      if (!puter?.ai?.chat) {
-        throw new Error('Puter AI not available');
+      let summaryText = '';
+      let successfulModel = null;
+      let lastError = null;
+      
+      // Try all AI models sequentially until one succeeds
+      for (const aiModel of aiModels) {
+        try {
+          console.log(`🤖 Trying AI model for summary: ${aiModel.name} (${aiModel.model})`);
+          
+          let aiResponse;
+          
+          if (aiModel.isAIML) {
+            aiResponse = await callAIMLAPI(prompt);
+          } else {
+            if (!puter?.ai?.chat) {
+              throw new Error('Puter AI not available');
+            }
+            aiResponse = await puter.ai.chat(prompt, {
+              model: aiModel.model,
+              max_tokens: 400,
+              temperature: 0.7
+            });
+          }
+          
+          // Parse response
+          let extractedText = '';
+          if (typeof aiResponse === 'string') {
+            extractedText = aiResponse.trim();
+          } else if (aiResponse?.message?.content) {
+            extractedText = aiResponse.message.content.trim();
+          } else if (aiResponse?.text) {
+            extractedText = aiResponse.text.trim();
+          }
+          
+          // Validate response quality
+          if (extractedText && 
+              extractedText.length > 10 && 
+              !extractedText.includes('[object Object]') &&
+              extractedText !== 'undefined' &&
+              extractedText !== 'null') {
+            
+            summaryText = extractedText;
+            successfulModel = aiModel.name;
+            console.log(`✅ Successfully got summary from ${aiModel.name}`);
+            break;
+          } else {
+            console.log(`❌ Invalid response from ${aiModel.name}`);
+            lastError = new Error(`Invalid response from ${aiModel.name}`);
+          }
+          
+        } catch (modelError) {
+          console.error(`❌ Model ${aiModel.name} failed:`, modelError);
+          lastError = modelError;
+        }
       }
       
-      const response = await puter.ai.chat(prompt, {
-        model: 'claude-sonnet-4'
-      });
-      
-      const summaryText = typeof response === 'string' ? response : (response?.message?.content || response?.text || response);
+      if (!successfulModel) {
+        throw new Error('All AI models failed for summarization');
+      }
       
       const summaryMessage: Message = {
         id: Date.now().toString(),
         text: language === 'de' 
-          ? `📝 **Zusammenfassung ausgewählter Nachrichten**\n\n${summaryText}`
-          : `📝 **Summary of Selected Messages**\n\n${summaryText}`,
+          ? `📝 **Zusammenfassung ausgewählter Nachrichten** (${successfulModel})\n\n${summaryText}`
+          : `📝 **Summary of Selected Messages** (${successfulModel})\n\n${summaryText}`,
         isUser: false,
         timestamp: new Date()
       };
@@ -1176,8 +1293,8 @@ The text to be summarized is:
       const errorMessage: Message = {
         id: Date.now().toString(),
         text: language === 'de' 
-          ? '❌ Fehler beim Zusammenfassen der Nachrichten. Stellen Sie sicher, dass eine Internetverbindung besteht und versuchen Sie es erneut.'
-          : '❌ Error summarizing messages. Make sure you have an internet connection and try again.',
+          ? '❌ Fehler beim Zusammenfassen der Nachrichten. Alle verfügbaren AI-Modelle sind momentan nicht erreichbar. Versuchen Sie es später erneut.'
+          : '❌ Error summarizing messages. All available AI models are currently unreachable. Try again later.',
         isUser: false,
         timestamp: new Date()
       };
@@ -1282,17 +1399,121 @@ Erstelle jetzt ein Quiz basierend auf dem bereitgestellten Kontext in exakt dem 
 
 Now create a quiz based on the provided context in exactly the JSON format shown above.`;
       
-      // Use Puter AI with correct syntax
+      // Enhanced AI models - try kostenlosen models first, AIML as last resort
+      const aiModels = [
+        { name: 'GPT-5', model: 'gpt-5' },
+        { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
+        { name: 'GPT-4.1', model: 'gpt-4.1' },
+        { name: 'Claude Opus 4', model: 'claude-opus-4' },
+        { name: 'GPT-4o', model: 'gpt-4o' },
+        { name: 'o3-mini', model: 'o3-mini' },
+        { name: 'o1-mini', model: 'o1-mini' },
+        { name: 'Deepseek Chat', model: 'deepseek-chat' },
+        { name: 'Deepseek Reasoner', model: 'deepseek-reasoner' },
+        { name: 'Gemini 2.0 Flash', model: 'gemini-2.0-flash' },
+        { name: 'Meta Llama 3.1 70B', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' },
+        { name: 'Mistral Large', model: 'mistral-large-latest' },
+        { name: 'Grok Beta', model: 'grok-beta' },
+        { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
+      ];
+
+      // Custom AIML API function
+      const callAIMLAPI = async (promptText: string): Promise<string> => {
+        try {
+          const response = await fetch('https://api.aimlapi.com/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + 'b95c22b2537e4e31893073c2bad3e2bc',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'google/gemma-3n-e4b-it',
+              messages: [
+                {
+                  role: 'user',
+                  content: promptText
+                }
+              ],
+              temperature: 0.7,
+              top_p: 0.7,
+              frequency_penalty: 1,
+              top_k: 50,
+              max_tokens: 400
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`AIML API error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data.choices?.[0]?.message?.content || '';
+        } catch (error) {
+          console.error('AIML API call failed:', error);
+          throw error;
+        }
+      };
+      
       const puter = (window as any).puter;
-      if (!puter?.ai?.chat) {
-        throw new Error('Puter AI not available');
+      let quizText = '';
+      let successfulModel = null;
+      let lastError = null;
+      
+      // Try all AI models sequentially until one succeeds
+      for (const aiModel of aiModels) {
+        try {
+          console.log(`🤖 Trying AI model for quiz: ${aiModel.name} (${aiModel.model})`);
+          
+          let aiResponse;
+          
+          if (aiModel.isAIML) {
+            aiResponse = await callAIMLAPI(prompt);
+          } else {
+            if (!puter?.ai?.chat) {
+              throw new Error('Puter AI not available');
+            }
+            aiResponse = await puter.ai.chat(prompt, {
+              model: aiModel.model,
+              max_tokens: 400,
+              temperature: 0.7
+            });
+          }
+          
+          // Parse response
+          let extractedText = '';
+          if (typeof aiResponse === 'string') {
+            extractedText = aiResponse.trim();
+          } else if (aiResponse?.message?.content) {
+            extractedText = aiResponse.message.content.trim();
+          } else if (aiResponse?.text) {
+            extractedText = aiResponse.text.trim();
+          }
+          
+          // Validate response quality
+          if (extractedText && 
+              extractedText.length > 10 && 
+              !extractedText.includes('[object Object]') &&
+              extractedText !== 'undefined' &&
+              extractedText !== 'null') {
+            
+            quizText = extractedText;
+            successfulModel = aiModel.name;
+            console.log(`✅ Successfully got quiz from ${aiModel.name}`);
+            break;
+          } else {
+            console.log(`❌ Invalid response from ${aiModel.name}`);
+            lastError = new Error(`Invalid response from ${aiModel.name}`);
+          }
+          
+        } catch (modelError) {
+          console.error(`❌ Model ${aiModel.name} failed:`, modelError);
+          lastError = modelError;
+        }
       }
       
-      const response = await puter.ai.chat(prompt, {
-        model: 'claude-sonnet-4'
-      });
-      
-      const quizText = typeof response === 'string' ? response : (response?.message?.content || response?.text || response);
+      if (!successfulModel) {
+        throw new Error('All AI models failed for quiz generation');
+      }
       
       // Try to parse JSON response
       try {
@@ -1331,7 +1552,6 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           isUser: false,
           timestamp: new Date()
         };
-        
         setMessages(prev => [...prev, quizMessage]);
       }
       
@@ -1342,8 +1562,8 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
       const errorMessage: Message = {
         id: Date.now().toString(),
         text: language === 'de' 
-          ? '❌ Fehler beim Erstellen des Quiz. Stellen Sie sicher, dass eine Internetverbindung besteht und versuchen Sie es erneut.'
-          : '❌ Error creating quiz. Make sure you have an internet connection and try again.',
+          ? '❌ Fehler beim Erstellen des Quiz. Alle verfügbaren AI-Modelle sind momentan nicht erreichbar. Versuchen Sie es später erneut.'
+          : '❌ Error creating quiz. All available AI models are currently unreachable. Try again later.',
         isUser: false,
         timestamp: new Date()
       };
@@ -1525,7 +1745,7 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           
           let aiAnalysisContent = '';
           
-          // Enhanced AI models with better fallbacks - AIML as last resort
+          // Enhanced AI models with better fallbacks - kostenlosen Puter AI models first, AIML as last resort
           const aiModels = [
             { name: 'GPT-5', model: 'gpt-5' },
             { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
@@ -1534,6 +1754,12 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             { name: 'GPT-4o', model: 'gpt-4o' },
             { name: 'o3-mini', model: 'o3-mini' },
             { name: 'o1-mini', model: 'o1-mini' },
+            { name: 'Deepseek Chat', model: 'deepseek-chat' },
+            { name: 'Deepseek Reasoner', model: 'deepseek-reasoner' },
+            { name: 'Gemini 2.0 Flash', model: 'gemini-2.0-flash' },
+            { name: 'Meta Llama 3.1 70B', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' },
+            { name: 'Mistral Large', model: 'mistral-large-latest' },
+            { name: 'Grok Beta', model: 'grok-beta' },
             { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
           ];
 
@@ -1577,17 +1803,18 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           let successfulModel = null;
           let lastError = null;
           
+          // Try all AI models sequentially until one succeeds
           for (const aiModel of aiModels) {
             try {
               console.log(`🤖 Trying AI model: ${aiModel.name} (${aiModel.model})`);
               
               let aiResponse;
               
-              // Use custom AIML API for the AIML model
+              // Use custom AIML API for the AIML model (only as last resort due to cost)
               if (aiModel.isAIML) {
                 aiResponse = await callAIMLAPI(aiAnalysisPrompt);
               } else {
-                // Use Puter AI for other models
+                // Use Puter AI for all other models (kostenlosen)
                 aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
                   model: aiModel.model,
                   max_tokens: 400,
@@ -1597,7 +1824,7 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
               
               console.log(`✅ Response from ${aiModel.name}:`, typeof aiResponse, aiResponse);
               
-              // Corrected response parsing - Puter AI returns strings directly
+              // Parse response based on API type
               let extractedText = '';
               
               if (aiModel.isAIML) {
@@ -1608,14 +1835,14 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
                 extractedText = typeof aiResponse === 'string' ? aiResponse.trim() : '';
               }
               
-              // If still no valid text, log and continue to next model
+              // Validate response quality
               if (!extractedText) {
                 console.log(`❌ Empty response from ${aiModel.name}`);
                 lastError = new Error(`Empty response from ${aiModel.name}`);
                 continue;
               }
               
-              // Validate that we have meaningful content (not just whitespace or placeholders)
+              // Check for meaningful content
               if (extractedText && 
                   extractedText.trim().length > 10 && 
                   !extractedText.includes('[object Object]') &&
@@ -1627,6 +1854,7 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
                 aiAnalysisContent = extractedText;
                 successfulModel = aiModel.name;
                 console.log(`✅ Successfully extracted analysis from ${aiModel.name}`);
+                // Stop trying other models once we have a successful response
                 break;
               } else {
                 console.log(`❌ Invalid response from ${aiModel.name}: "${extractedText}"`);
@@ -1636,7 +1864,7 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             } catch (modelError) {
               console.error(`❌ Model ${aiModel.name} failed:`, modelError);
               lastError = modelError;
-              // Continue to next model
+              // Continue to next model instead of breaking
             }
           }
           
@@ -1644,8 +1872,8 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           if (!successfulModel) {
             console.error('🚨 All AI models failed. Last error:', lastError);
             aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Alle verfügbaren AI-Modelle (GPT-5, Claude Sonnet 4, GPT-4.1, Claude Opus 4, GPT-4o, AIML Gemma) sind derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. All available AI models (GPT-5, Claude Sonnet 4, GPT-4.1, Claude Opus 4, GPT-4o, AIML Gemma) are currently unreachable. Please try again later.';
+              ? 'KI-Analyse momentan nicht verfügbar. Alle verfügbaren kostenlosen AI-Modelle (GPT-5, Claude Sonnet 4, GPT-4.1, Claude Opus 4, GPT-4o, o3-mini, o1-mini, Deepseek, Gemini, Llama, Mistral, Grok) und AIML Gemma sind derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. All available free AI models (GPT-5, Claude Sonnet 4, GPT-4.1, Claude Opus 4, GPT-4o, o3-mini, o1-mini, Deepseek, Gemini, Llama, Mistral, Grok) and AIML Gemma are currently unreachable. Please try again later.';
           } else {
             console.log(`🎉 AI Analysis completed successfully using ${successfulModel}`);
           }
