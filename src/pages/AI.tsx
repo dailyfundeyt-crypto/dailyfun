@@ -1653,10 +1653,14 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
           const aiAnalysisSection = `${aiAnalysisHeader}\n${aiAnalysisContent}`;
           
-          // Fetch real articles from Guardian API
+          // Fetch real articles with fallback system (Guardian API -> GNews API)
           let articlesSection = '';
+          let successfulNewsAPI = null;
+          let lastNewsError = null;
+          
+          // Try Guardian API first
           try {
-            console.log('Fetching Guardian articles for:', extractedTopic);
+            console.log('🗞️ Trying Guardian API for:', extractedTopic);
             const guardianApiKey = '0be420a7-af7b-45e9-b5cb-04afb863e15c';
             const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(extractedTopic)}&api-key=${guardianApiKey}&show-fields=headline,trailText&page-size=5&order-by=relevance`;
             
@@ -1666,6 +1670,7 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
               const articles = guardianData.response?.results || [];
               
               if (articles.length > 0) {
+                console.log('✅ Guardian API successful, found', articles.length, 'articles');
                 const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
                 const articleButtons = articles.map((article: any, index: number) => {
                   const headline = article.fields?.headline || article.webTitle;
@@ -1674,25 +1679,62 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
                 }).join('\n');
                 
                 articlesSection = `${articlesHeader}\n${articleButtons}`;
+                successfulNewsAPI = 'Guardian';
               } else {
-                const noArticlesText = language === 'de' 
-                  ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\nKeine verwandten Artikel gefunden.'
-                  : '\n\n**📰 More Articles on this Topic:**\nNo related articles found.';
-                articlesSection = noArticlesText;
+                throw new Error('No articles found in Guardian API');
               }
             } else {
-              console.error('Guardian API error:', guardianResponse.status);
+              throw new Error(`Guardian API error: ${guardianResponse.status}`);
+            }
+          } catch (guardianError) {
+            console.error('❌ Guardian API failed:', guardianError);
+            lastNewsError = guardianError;
+            
+            // Fallback to GNews API (costs money, so only used when Guardian fails)
+            try {
+              console.log('🗞️ Trying GNews API as fallback for:', extractedTopic);
+              const gnewsApiKey = '494b5937247cd56ede96dd66842f802d';
+              const gnewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(extractedTopic)}&token=${gnewsApiKey}&lang=${language === 'de' ? 'de' : 'en'}&country=${language === 'de' ? 'de' : 'us'}&max=5&sortby=relevance`;
+              
+              const gnewsResponse = await fetch(gnewsUrl);
+              if (gnewsResponse.ok) {
+                const gnewsData = await gnewsResponse.json();
+                const articles = gnewsData.articles || [];
+                
+                if (articles.length > 0) {
+                  console.log('✅ GNews API successful, found', articles.length, 'articles');
+                  const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
+                  const articleButtons = articles.map((article: any, index: number) => {
+                    const title = article.title;
+                    const shortTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
+                    return `[${shortTitle}](${article.url})`;
+                  }).join('\n');
+                  
+                  articlesSection = `${articlesHeader}\n${articleButtons}`;
+                  successfulNewsAPI = 'GNews';
+                } else {
+                  throw new Error('No articles found in GNews API');
+                }
+              } else {
+                throw new Error(`GNews API error: ${gnewsResponse.status}`);
+              }
+            } catch (gnewsError) {
+              console.error('❌ GNews API also failed:', gnewsError);
+              lastNewsError = gnewsError;
+              
+              // Both APIs failed, provide manual search links
               const fallbackText = language === 'de'
-                ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
-                : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
+                ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
+                : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
               articlesSection = fallbackText;
             }
-          } catch (error) {
-            console.error('Error fetching Guardian articles:', error);
-            const errorText = language === 'de'
-              ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
-              : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
-            articlesSection = errorText;
+          }
+          
+          // Log which API was successful
+          if (successfulNewsAPI) {
+            console.log(`🎉 Articles fetched successfully using ${successfulNewsAPI} API`);
+          } else {
+            console.error('🚨 All news APIs failed. Last error:', lastNewsError);
           }
           
           // Add external sources section
