@@ -1653,12 +1653,54 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
           const aiAnalysisSection = `${aiAnalysisHeader}\n${aiAnalysisContent}`;
           
-          // Add buttons for more articles and external links
-          const buttonsText = language === 'de'
-            ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Weitere Artikel suchen]\n\n**🌐 Externe Quellen:**\n[News suchen] [Google Scholar] [Academic Papers]'
-            : '\n\n**📰 More Articles on this Topic:**\n[Search More Articles]\n\n**🌐 External Sources:**\n[Search News] [Google Scholar] [Academic Papers]';
+          // Fetch real articles from Guardian API
+          let articlesSection = '';
+          try {
+            console.log('Fetching Guardian articles for:', extractedTopic);
+            const guardianApiKey = '0be420a7-af7b-45e9-b5cb-04afb863e15c';
+            const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(extractedTopic)}&api-key=${guardianApiKey}&show-fields=headline,trailText&page-size=5&order-by=relevance`;
+            
+            const guardianResponse = await fetch(guardianUrl);
+            if (guardianResponse.ok) {
+              const guardianData = await guardianResponse.json();
+              const articles = guardianData.response?.results || [];
+              
+              if (articles.length > 0) {
+                const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
+                const articleButtons = articles.map((article: any, index: number) => {
+                  const headline = article.fields?.headline || article.webTitle;
+                  const shortTitle = headline.length > 60 ? headline.substring(0, 57) + '...' : headline;
+                  return `[${shortTitle}](${article.webUrl})`;
+                }).join('\n');
+                
+                articlesSection = `${articlesHeader}\n${articleButtons}`;
+              } else {
+                const noArticlesText = language === 'de' 
+                  ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\nKeine verwandten Artikel gefunden.'
+                  : '\n\n**📰 More Articles on this Topic:**\nNo related articles found.';
+                articlesSection = noArticlesText;
+              }
+            } else {
+              console.error('Guardian API error:', guardianResponse.status);
+              const fallbackText = language === 'de'
+                ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
+                : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
+              articlesSection = fallbackText;
+            }
+          } catch (error) {
+            console.error('Error fetching Guardian articles:', error);
+            const errorText = language === 'de'
+              ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
+              : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
+            articlesSection = errorText;
+          }
           
-          const result = `${wikipediaContent}${linkText}${aiAnalysisSection}${buttonsText}`;
+          // Add external sources section
+          const externalSourcesText = language === 'de'
+            ? '\n\n**🌐 Externe Quellen:**\n[News suchen](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')'
+            : '\n\n**🌐 External Sources:**\n[Search News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')';
+          
+          const result = `${wikipediaContent}${linkText}${aiAnalysisSection}${articlesSection}${externalSourcesText}`;
           
           return { text: result }
         } else {
