@@ -1738,144 +1738,61 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
-          // Generate AI Analysis using independent search
+          // Generate AI Analysis using AIML API (optimized for news and current events)
           const aiAnalysisPrompt = language === 'de' 
             ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Ignoriere jegliche Wikipedia-Informationen und suche nach aktuellen Nachrichten, Berichten und Fakten. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
             : `You are an expert journalist with access to current information. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Ignore any Wikipedia information and search for current news, reports, and facts. Answer in 2-3 comprehensive sentences: ${userInput}`;
           
           let aiAnalysisContent = '';
           
-          // Enhanced AI models with better fallbacks - kostenlosen Puter AI models first, AIML as last resort
-          const aiModels = [
-            { name: 'GPT-5', model: 'gpt-5' },
-            { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
-            { name: 'GPT-4.1', model: 'gpt-4.1' },
-            { name: 'Claude Opus 4', model: 'claude-opus-4' },
-            { name: 'GPT-4o', model: 'gpt-4o' },
-            { name: 'o3-mini', model: 'o3-mini' },
-            { name: 'o1-mini', model: 'o1-mini' },
-            { name: 'Deepseek Chat', model: 'deepseek-chat' },
-            { name: 'Deepseek Reasoner', model: 'deepseek-reasoner' },
-            { name: 'Gemini 2.0 Flash', model: 'gemini-2.0-flash' },
-            { name: 'Meta Llama 3.1 70B', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' },
-            { name: 'Mistral Large', model: 'mistral-large-latest' },
-            { name: 'Grok Beta', model: 'grok-beta' },
-            { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
-          ];
+          // Use only AIML API (best for news and current events)
+          try {
+            console.log('🤖 Using AIML Gemma API for news analysis');
+            
+            const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer b1e7ed5d35304c83b9691f980d7a4432',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemma-3n-e4b-it',
+                messages: [
+                  {
+                    role: 'user',
+                    content: aiAnalysisPrompt
+                  }
+                ],
+                temperature: 0.7,
+                top_p: 0.7,
+                frequency_penalty: 1,
+                top_k: 50,
+                max_tokens: 400
+              }),
+            });
 
-          // AIML API call function
-          const callAIMLAPI = async (prompt: string) => {
-            try {
-              const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': 'Bearer b1e7ed5d35304c83b9691f980d7a4432',
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  model: 'google/gemma-3n-e4b-it',
-                  messages: [
-                    {
-                      role: 'user',
-                      content: prompt
-                    }
-                  ],
-                  temperature: 0.7,
-                  top_p: 0.7,
-                  frequency_penalty: 1,
-                  top_k: 50,
-                  max_tokens: 400
-                }),
-              });
-
-              if (!response.ok) {
-                throw new Error(`AIML API error: ${response.status}`);
-              }
-
-              const data = await response.json();
-              return data.choices?.[0]?.message?.content || '';
-            } catch (error) {
-              console.error('AIML API call failed:', error);
-              throw error;
+            if (!response.ok) {
+              throw new Error(`AIML API error: ${response.status}`);
             }
-          };
-          
-          let successfulModel = null;
-          let lastError = null;
-          
-          // Try all AI models sequentially until one succeeds
-          for (const aiModel of aiModels) {
-            try {
-              console.log(`🤖 Trying AI model: ${aiModel.name} (${aiModel.model})`);
-              
-              let aiResponse;
-              
-              // Use custom AIML API for the AIML model (only as last resort due to cost)
-              if (aiModel.isAIML) {
-                aiResponse = await callAIMLAPI(aiAnalysisPrompt);
-              } else {
-                // Use Puter AI for all other models (kostenlosen)
-                aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
-                  model: aiModel.model,
-                  max_tokens: 400,
-                  temperature: 0.7
-                });
-              }
-              
-              console.log(`✅ Response from ${aiModel.name}:`, typeof aiResponse, aiResponse);
-              
-              // Parse response based on API type
-              let extractedText = '';
-              
-              if (aiModel.isAIML) {
-                // AIML API returns string directly from our custom function
-                extractedText = typeof aiResponse === 'string' ? aiResponse.trim() : '';
-              } else {
-                // Puter AI returns string directly (not objects)
-                extractedText = typeof aiResponse === 'string' ? aiResponse.trim() : '';
-              }
-              
-              // Validate response quality
-              if (!extractedText) {
-                console.log(`❌ Empty response from ${aiModel.name}`);
-                lastError = new Error(`Empty response from ${aiModel.name}`);
-                continue;
-              }
-              
-              // Check for meaningful content
-              if (extractedText && 
-                  extractedText.trim().length > 10 && 
-                  !extractedText.includes('[object Object]') &&
-                  extractedText !== 'undefined' &&
-                  extractedText !== 'null' &&
-                  extractedText !== '{}' &&
-                  extractedText !== '[]') {
-                
-                aiAnalysisContent = extractedText;
-                successfulModel = aiModel.name;
-                console.log(`✅ Successfully extracted analysis from ${aiModel.name}`);
-                // Stop trying other models once we have a successful response
-                break;
-              } else {
-                console.log(`❌ Invalid response from ${aiModel.name}: "${extractedText}"`);
-                lastError = new Error(`Invalid response format: ${extractedText}`);
-              }
-              
-            } catch (modelError) {
-              console.error(`❌ Model ${aiModel.name} failed:`, modelError);
-              lastError = modelError;
-              // Continue to next model instead of breaking
+
+            const data = await response.json();
+            const aiResponse = data.choices?.[0]?.message?.content || '';
+            
+            console.log('✅ AIML API response received:', aiResponse);
+            
+            // Validate response quality
+            if (aiResponse && aiResponse.trim().length > 10) {
+              aiAnalysisContent = aiResponse.trim();
+              console.log('✅ AI Analysis completed successfully using AIML Gemma');
+            } else {
+              throw new Error('Invalid response from AIML API');
             }
-          }
-          
-          // If all models failed, provide helpful fallback
-          if (!successfulModel) {
-            console.error('🚨 All AI models failed. Last error:', lastError);
+            
+          } catch (error) {
+            console.error('❌ AIML API failed:', error);
             aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Alle verfügbaren kostenlosen AI-Modelle (GPT-5, Claude Sonnet 4, GPT-4.1, Claude Opus 4, GPT-4o, o3-mini, o1-mini, Deepseek, Gemini, Llama, Mistral, Grok) und AIML Gemma sind derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. All available free AI models (GPT-5, Claude Sonnet 4, GPT-4.1, Claude Opus 4, GPT-4o, o3-mini, o1-mini, Deepseek, Gemini, Llama, Mistral, Grok) and AIML Gemma are currently unreachable. Please try again later.';
-          } else {
-            console.log(`🎉 AI Analysis completed successfully using ${successfulModel}`);
+              ? 'KI-Analyse momentan nicht verfügbar. Das AIML Gemma Modell für Nachrichten-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. The AIML Gemma model for news analysis is currently unreachable. Please try again later.';
           }
           
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
