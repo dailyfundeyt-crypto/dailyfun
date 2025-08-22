@@ -363,20 +363,18 @@ const AI = () => {
     setFilteredSuggestions(list.slice(0, 6));
   }, [inputValue, language, articleContext, quizMode]);
 
-  // Load Puter AI SDK for chat and TTS
+  // Load Puter AI SDK for chat and TTS with improved stability
   useEffect(() => {
-    const scriptId = 'puter-sdk-v2';
-    if (document.getElementById(scriptId)) {
-      setPuterReady(true);
-      return;
-    }
-    const s = document.createElement('script');
-    s.id = scriptId;
-    s.src = 'https://js.puter.com/v2/';
-    s.async = true;
-    s.onload = () => setPuterReady(true);
-    s.onerror = () => setPuterReady(false);
-    document.body.appendChild(s);
+    const initializePuter = async () => {
+      try {
+        await loadPuterSDK();
+      } catch (error) {
+        console.error('❌ Initial Puter SDK loading failed:', error);
+        setPuterReady(false);
+      }
+    };
+    
+    initializePuter();
   }, []);
 
   const generateQRCode = async (url: string): Promise<string> => {
@@ -864,15 +862,81 @@ const AI = () => {
     }
   };
 
-  // Ensure Puter SDK is ready before using it
-  const waitForPuterReady = async (timeoutMs = 10000): Promise<void> => {
+  // Ensure Puter SDK is ready before using it with better error handling
+  const waitForPuterReady = async (timeoutMs = 15000): Promise<void> => {
     const start = Date.now();
+    let lastError: any = null;
+    
     while (Date.now() - start < timeoutMs) {
-      const puter = (window as any).puter;
-      if (puter?.ai?.chat) return;
-      await new Promise(r => setTimeout(r, 150));
+      try {
+        const puter = (window as any).puter;
+        if (puter?.ai?.chat) {
+          console.log('✅ Puter SDK is ready');
+          return;
+        }
+        
+        // If script exists but puter object is not ready, wait more
+        if (document.getElementById('puter-sdk-v2')) {
+          await new Promise(r => setTimeout(r, 200));
+          continue;
+        }
+        
+        // If script doesn't exist, try to reload it
+        await loadPuterSDK();
+        await new Promise(r => setTimeout(r, 500));
+        
+      } catch (error) {
+        lastError = error;
+        await new Promise(r => setTimeout(r, 300));
+      }
     }
-    throw new Error('Puter SDK not ready within timeout');
+    
+    throw new Error(`Puter SDK not ready within ${timeoutMs}ms. Last error: ${lastError}`);
+  };
+
+  // Load Puter SDK with retry mechanism
+  const loadPuterSDK = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      // Remove existing script if any
+      const existing = document.getElementById('puter-sdk-v2');
+      if (existing) existing.remove();
+      
+      const script = document.createElement('script');
+      script.id = 'puter-sdk-v2';
+      script.src = 'https://js.puter.com/v2/';
+      script.async = true;
+      
+      script.onload = () => {
+        console.log('✅ Puter SDK loaded successfully');
+        setPuterReady(true);
+        resolve();
+      };
+      
+      script.onerror = (error) => {
+        console.error('❌ Failed to load Puter SDK:', error);
+        setPuterReady(false);
+        reject(error);
+      };
+      
+      document.head.appendChild(script);
+    });
+  };
+
+  // Initialize Puter connection when switching to Internet Search mode
+  const initializePuterForInternet = async (): Promise<boolean> => {
+    try {
+      console.log('🔄 Initializing Puter SDK for Internet Search...');
+      await waitForPuterReady();
+      
+      // Test the connection
+      const puter = (window as any).puter;
+      const testResponse = await puter.ai.chat('Test', { model: 'grok-beta', max_tokens: 1 });
+      console.log('✅ Puter connection test successful');
+      return true;
+    } catch (error) {
+      console.error('❌ Puter initialization failed:', error);
+      return false;
+    }
   };
 
   // Extract topic from user query using Claude 4 Sonnet for better accuracy
@@ -2558,7 +2622,21 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
                   Daily Fun (Local)
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setSearchMode('internet')}
+                  onClick={async () => {
+                    setSearchMode('internet');
+                    // Initialize Puter connection when switching to Internet mode
+                    try {
+                      console.log('🔄 Switching to Internet Search mode...');
+                      const success = await initializePuterForInternet();
+                      if (success) {
+                        console.log('✅ Internet Search mode ready');
+                      } else {
+                        console.warn('⚠️ Internet Search mode activated but Puter connection may be unstable');
+                      }
+                    } catch (error) {
+                      console.error('❌ Failed to initialize Internet Search mode:', error);
+                    }
+                  }}
                   className="flex items-center gap-2"
                 >
                   <Globe className="w-4 h-4" />
