@@ -1738,61 +1738,44 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
-          // Generate AI Analysis using AIML API (optimized for news and current events)
+          // Generate AI Analysis using Grok Beta (best for current news and events)
           const aiAnalysisPrompt = language === 'de' 
             ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Ignoriere jegliche Wikipedia-Informationen und suche nach aktuellen Nachrichten, Berichten und Fakten. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
             : `You are an expert journalist with access to current information. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Ignore any Wikipedia information and search for current news, reports, and facts. Answer in 2-3 comprehensive sentences: ${userInput}`;
           
           let aiAnalysisContent = '';
           
-          // Use only AIML API (best for news and current events)
+          // Use Grok Beta for current news analysis (has access to real-time X/Twitter data)
           try {
-            console.log('🤖 Using AIML Gemma API for news analysis');
+            console.log('🤖 Using Grok Beta for current news analysis');
             
-            const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': 'Bearer b1e7ed5d35304c83b9691f980d7a4432',
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: 'google/gemma-3n-e4b-it',
-                messages: [
-                  {
-                    role: 'user',
-                    content: aiAnalysisPrompt
-                  }
-                ],
-                temperature: 0.7,
-                top_p: 0.7,
-                frequency_penalty: 1,
-                top_k: 50,
-                max_tokens: 400
-              }),
+            await waitForPuterReady();
+            const puter = (window as any).puter;
+            
+            const aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
+              model: 'grok-beta',
+              max_tokens: 400,
+              temperature: 0.7
             });
-
-            if (!response.ok) {
-              throw new Error(`AIML API error: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || '';
             
-            console.log('✅ AIML API response received:', aiResponse);
+            console.log('✅ Grok Beta response received:', aiResponse);
+            
+            // Parse response
+            const extractedText = typeof aiResponse === 'string' ? aiResponse.trim() : '';
             
             // Validate response quality
-            if (aiResponse && aiResponse.trim().length > 10) {
-              aiAnalysisContent = aiResponse.trim();
-              console.log('✅ AI Analysis completed successfully using AIML Gemma');
+            if (extractedText && extractedText.trim().length > 10) {
+              aiAnalysisContent = extractedText;
+              console.log('✅ AI Analysis completed successfully using Grok Beta');
             } else {
-              throw new Error('Invalid response from AIML API');
+              throw new Error('Invalid response from Grok Beta');
             }
             
           } catch (error) {
-            console.error('❌ AIML API failed:', error);
+            console.error('❌ Grok Beta failed:', error);
             aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Das AIML Gemma Modell für Nachrichten-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. The AIML Gemma model for news analysis is currently unreachable. Please try again later.';
+              ? 'KI-Analyse momentan nicht verfügbar. Das Grok Beta Modell für aktuelle Nachrichten-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. The Grok Beta model for current news analysis is currently unreachable. Please try again later.';
           }
           
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
