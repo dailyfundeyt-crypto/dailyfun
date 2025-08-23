@@ -367,15 +367,29 @@ const AI = () => {
   useEffect(() => {
     const initializePuter = async () => {
       try {
-        await loadPuterSDK();
+        // Only load if switching to internet mode
+        if (searchMode === 'internet') {
+          console.log('🔄 Loading Puter SDK for Internet Search mode...');
+          await loadPuterSDK();
+          
+          // Test the connection immediately
+          const connectionOK = await testPuterConnection();
+          if (connectionOK) {
+            console.log('✅ Puter SDK loaded and tested successfully');
+            setPuterReady(true);
+          } else {
+            console.error('❌ Puter connection test failed');
+            setPuterReady(false);
+          }
+        }
       } catch (error) {
-        console.error('❌ Initial Puter SDK loading failed:', error);
+        console.error('❌ Puter SDK initialization failed:', error);
         setPuterReady(false);
       }
     };
     
     initializePuter();
-  }, []);
+  }, [searchMode]); // Only re-run when search mode changes
 
   const generateQRCode = async (url: string): Promise<string> => {
     try {
@@ -863,81 +877,125 @@ const AI = () => {
   };
 
   // Ensure Puter SDK is ready before using it with better error handling
-  const waitForPuterReady = async (timeoutMs = 15000): Promise<void> => {
+  const waitForPuterReady = async (timeoutMs = 10000): Promise<void> => {
     const start = Date.now();
-    let lastError: any = null;
     
     while (Date.now() - start < timeoutMs) {
       try {
         const puter = (window as any).puter;
         if (puter?.ai?.chat) {
-          console.log('✅ Puter SDK is ready');
+          console.log('✅ Puter SDK is ready for use');
           return;
         }
         
-        // If script exists but puter object is not ready, wait more
-        if (document.getElementById('puter-sdk-v2')) {
-          await new Promise(r => setTimeout(r, 200));
-          continue;
-        }
-        
-        // If script doesn't exist, try to reload it
-        await loadPuterSDK();
-        await new Promise(r => setTimeout(r, 500));
+        // Wait and retry
+        await new Promise(r => setTimeout(r, 200));
         
       } catch (error) {
-        lastError = error;
         await new Promise(r => setTimeout(r, 300));
       }
     }
     
-    throw new Error(`Puter SDK not ready within ${timeoutMs}ms. Last error: ${lastError}`);
+    throw new Error(`Puter SDK not ready within ${timeoutMs}ms`);
   };
 
-  // Load Puter SDK with retry mechanism
+  // Test Puter connection with actual API call
+  const testPuterConnection = async (): Promise<boolean> => {
+    try {
+      await waitForPuterReady(10000); // 10 second timeout
+      const puter = (window as any).puter;
+      
+      if (!puter?.ai?.chat) {
+        console.error('❌ Puter AI chat not available');
+        return false;
+      }
+      
+      // Test with a simple prompt
+      console.log('🔄 Testing Puter connection...');
+      const testResponse = await puter.ai.chat('Test', { 
+        model: 'grok-beta', 
+        max_tokens: 1,
+        temperature: 0.1 
+      });
+      
+      console.log('✅ Puter connection test successful:', testResponse);
+      return true;
+    } catch (error) {
+      console.error('❌ Puter connection test failed:', error);
+      return false;
+    }
+  };
+
+  // Load Puter SDK with retry mechanism and improved error handling
   const loadPuterSDK = (): Promise<void> => {
     return new Promise((resolve, reject) => {
+      // Check if already available
+      if ((window as any).puter?.ai?.chat) {
+        console.log('✅ Puter SDK already available');
+        setPuterReady(true);
+        resolve();
+        return;
+      }
+      
       // Remove existing script if any
       const existing = document.getElementById('puter-sdk-v2');
-      if (existing) existing.remove();
+      if (existing) {
+        console.log('🔄 Removing existing Puter SDK script');
+        existing.remove();
+      }
       
       const script = document.createElement('script');
       script.id = 'puter-sdk-v2';
       script.src = 'https://js.puter.com/v2/';
       script.async = true;
+      script.defer = true;
+      
+      let resolved = false;
       
       script.onload = () => {
-        console.log('✅ Puter SDK loaded successfully');
-        setPuterReady(true);
-        resolve();
+        if (resolved) return;
+        resolved = true;
+        
+        console.log('✅ Puter SDK script loaded');
+        
+        // Wait for puter object to be available
+        const checkPuter = () => {
+          if ((window as any).puter?.ai?.chat) {
+            console.log('✅ Puter SDK fully initialized');
+            setPuterReady(true);
+            resolve();
+          } else {
+            setTimeout(checkPuter, 100);
+          }
+        };
+        
+        checkPuter();
       };
       
       script.onerror = (error) => {
+        if (resolved) return;
+        resolved = true;
+        
         console.error('❌ Failed to load Puter SDK:', error);
         setPuterReady(false);
-        reject(error);
+        reject(new Error('Failed to load Puter SDK script'));
       };
       
+      // Timeout fallback
+      setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          console.error('❌ Puter SDK loading timeout');
+          setPuterReady(false);
+          reject(new Error('Puter SDK loading timeout'));
+        }
+      }, 15000);
+      
+      console.log('🔄 Loading Puter SDK...');
       document.head.appendChild(script);
     });
   };
 
-  // Initialize Puter connection when switching to Internet Search mode
-  const initializePuterForInternet = async (): Promise<boolean> => {
-    try {
-      console.log('🔄 Initializing Puter SDK for Internet Search...');
-      await waitForPuterReady();
-      
-      // Test the connection
-      const puter = (window as any).puter;
-      const testResponse = await puter.ai.chat('Test', { model: 'grok-beta', max_tokens: 1 });
-      console.log('✅ Puter connection test successful');
-      return true;
-    } catch (error) {
-      console.error('❌ Puter initialization failed:', error);
-      return false;
-    }
-  };
 
   // Extract topic from user query using Claude 4 Sonnet for better accuracy
   const extractTopicFromQuery = async (userQuery: string): Promise<string> => {
@@ -1809,37 +1867,73 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
           
           let aiAnalysisContent = '';
           
-          // Use Grok Beta for current news analysis (has access to real-time X/Twitter data)
-          try {
-            console.log('🤖 Using Grok Beta for current news analysis');
-            
-            await waitForPuterReady();
-            const puter = (window as any).puter;
-            
-            const aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
-              model: 'grok-beta',
-              max_tokens: 400,
-              temperature: 0.7
-            });
-            
-            console.log('✅ Grok Beta response received:', aiResponse);
-            
-            // Parse response
-            const extractedText = typeof aiResponse === 'string' ? aiResponse.trim() : '';
-            
-            // Validate response quality
-            if (extractedText && extractedText.trim().length > 10) {
-              aiAnalysisContent = extractedText;
-              console.log('✅ AI Analysis completed successfully using Grok Beta');
-            } else {
-              throw new Error('Invalid response from Grok Beta');
+          // Ensure Puter SDK is ready before attempting AI call
+          if (!puterReady) {
+            console.log('🔄 Puter SDK not ready, attempting to initialize...');
+            try {
+              await loadPuterSDK();
+              const connectionOK = await testPuterConnection();
+              if (!connectionOK) {
+                throw new Error('Puter connection test failed');
+              }
+              setPuterReady(true);
+            } catch (initError) {
+              console.error('❌ Failed to initialize Puter SDK:', initError);
+              aiAnalysisContent = language === 'de' 
+                ? 'KI-Analyse momentan nicht verfügbar. Die Verbindung zu Puter.com konnte nicht hergestellt werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut.'
+                : 'AI analysis currently unavailable. Could not establish connection to Puter.com. Please refresh the page and try again.';
             }
-            
-          } catch (error) {
-            console.error('❌ Grok Beta failed:', error);
-            aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Das Grok Beta Modell für aktuelle Nachrichten-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. The Grok Beta model for current news analysis is currently unreachable. Please try again later.';
+          }
+          
+          // Use Grok Beta for current news analysis (has access to real-time X/Twitter data)
+          if (puterReady && !aiAnalysisContent) {
+            try {
+              console.log('🤖 Using Grok Beta for current news analysis');
+              
+              const puter = (window as any).puter;
+              
+              if (!puter?.ai?.chat) {
+                throw new Error('Puter AI chat not available');
+              }
+              
+              const aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
+                model: 'grok-beta',
+                max_tokens: 400,
+                temperature: 0.7
+              });
+              
+              console.log('✅ Grok Beta response received:', aiResponse);
+              
+              // Parse response properly
+              let extractedText = '';
+              if (typeof aiResponse === 'string') {
+                extractedText = aiResponse.trim();
+              } else if (aiResponse?.message?.content) {
+                extractedText = aiResponse.message.content.trim();
+              } else if (aiResponse?.text) {
+                extractedText = aiResponse.text.trim();
+              } else if (aiResponse?.content) {
+                extractedText = aiResponse.content.trim();
+              }
+              
+              // Validate response quality
+              if (extractedText && 
+                  extractedText.length > 10 && 
+                  !extractedText.includes('[object Object]') &&
+                  extractedText !== 'undefined' &&
+                  extractedText !== 'null') {
+                aiAnalysisContent = extractedText;
+                console.log('✅ AI Analysis completed successfully using Grok Beta');
+              } else {
+                throw new Error('Invalid response from Grok Beta: ' + JSON.stringify(aiResponse));
+              }
+              
+            } catch (error) {
+              console.error('❌ Grok Beta failed:', error);
+              aiAnalysisContent = language === 'de' 
+                ? 'KI-Analyse momentan nicht verfügbar. Das Grok Beta Modell für aktuelle Nachrichten-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+                : 'AI analysis currently unavailable. The Grok Beta model for current news analysis is currently unreachable. Please try again later.';
+            }
           }
           
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
@@ -2622,20 +2716,9 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
                   Daily Fun (Local)
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={async () => {
+                  onClick={() => {
+                    console.log('🔄 Switching to Internet Search mode...');
                     setSearchMode('internet');
-                    // Initialize Puter connection when switching to Internet mode
-                    try {
-                      console.log('🔄 Switching to Internet Search mode...');
-                      const success = await initializePuterForInternet();
-                      if (success) {
-                        console.log('✅ Internet Search mode ready');
-                      } else {
-                        console.warn('⚠️ Internet Search mode activated but Puter connection may be unstable');
-                      }
-                    } catch (error) {
-                      console.error('❌ Failed to initialize Internet Search mode:', error);
-                    }
                   }}
                   className="flex items-center gap-2"
                 >
