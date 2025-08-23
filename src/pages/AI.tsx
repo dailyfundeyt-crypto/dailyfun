@@ -363,33 +363,21 @@ const AI = () => {
     setFilteredSuggestions(list.slice(0, 6));
   }, [inputValue, language, articleContext, quizMode]);
 
-  // Load Puter AI SDK for chat and TTS with improved stability
+  // Load Puter AI SDK for chat and TTS
   useEffect(() => {
-    const initializePuter = async () => {
-      try {
-        // Only load if switching to internet mode
-        if (searchMode === 'internet') {
-          console.log('🔄 Loading Puter SDK for Internet Search mode...');
-          await loadPuterSDK();
-          
-          // Test the connection immediately
-          const connectionOK = await testPuterConnection();
-          if (connectionOK) {
-            console.log('✅ Puter SDK loaded and tested successfully');
-            setPuterReady(true);
-          } else {
-            console.error('❌ Puter connection test failed');
-            setPuterReady(false);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Puter SDK initialization failed:', error);
-        setPuterReady(false);
-      }
-    };
-    
-    initializePuter();
-  }, [searchMode]); // Only re-run when search mode changes
+    const scriptId = 'puter-sdk-v2';
+    if (document.getElementById(scriptId)) {
+      setPuterReady(true);
+      return;
+    }
+    const s = document.createElement('script');
+    s.id = scriptId;
+    s.src = 'https://js.puter.com/v2/';
+    s.async = true;
+    s.onload = () => setPuterReady(true);
+    s.onerror = () => setPuterReady(false);
+    document.body.appendChild(s);
+  }, []);
 
   const generateQRCode = async (url: string): Promise<string> => {
     try {
@@ -876,161 +864,16 @@ const AI = () => {
     }
   };
 
-  // Ensure Puter SDK is ready before using it with better error handling
+  // Ensure Puter SDK is ready before using it
   const waitForPuterReady = async (timeoutMs = 10000): Promise<void> => {
     const start = Date.now();
-    
     while (Date.now() - start < timeoutMs) {
-      try {
-        const puter = (window as any).puter;
-        if (puter?.ai?.chat) {
-          console.log('✅ Puter SDK is ready for use');
-          return;
-        }
-        
-        // Wait and retry
-        await new Promise(r => setTimeout(r, 200));
-        
-      } catch (error) {
-        await new Promise(r => setTimeout(r, 300));
-      }
-    }
-    
-    throw new Error(`Puter SDK not ready within ${timeoutMs}ms`);
-  };
-
-  // Test Puter connection with actual API call
-  const testPuterConnection = async (): Promise<boolean> => {
-    try {
-      await waitForPuterReady(10000); // 10 second timeout
       const puter = (window as any).puter;
-      
-      if (!puter?.ai?.chat) {
-        console.error('❌ Puter AI chat not available');
-        return false;
-      }
-      
-      // Test with a simple prompt
-      console.log('🔄 Testing Puter connection...');
-      const testResponse = await puter.ai.chat('Test', { 
-        model: 'grok-beta', 
-        max_tokens: 1,
-        temperature: 0.1 
-      });
-      
-      console.log('✅ Puter connection test successful:', testResponse);
-      return true;
-    } catch (error) {
-      console.error('❌ Puter connection test failed:', error);
-      return false;
+      if (puter?.ai?.chat) return;
+      await new Promise(r => setTimeout(r, 150));
     }
+    throw new Error('Puter SDK not ready within timeout');
   };
-
-  // Load Puter SDK with retry mechanism and improved error handling
-  const loadPuterSDK = (): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      // Check if already available
-      if ((window as any).puter?.ai?.chat) {
-        console.log('✅ Puter SDK already available');
-        setPuterReady(true);
-        resolve();
-        return;
-      }
-      
-      // Remove existing script if any
-      const existing = document.getElementById('puter-sdk-v2');
-      if (existing) {
-        console.log('🔄 Removing existing Puter SDK script');
-        existing.remove();
-      }
-      
-      const script = document.createElement('script');
-      script.id = 'puter-sdk-v2';
-      script.src = 'https://js.puter.com/v2/';
-      script.async = true;
-      script.defer = true;
-      
-      let resolved = false;
-      
-      script.onload = async () => {
-        if (resolved) return;
-        resolved = true;
-        
-        console.log('✅ Puter SDK script loaded');
-        
-        // Wait for puter object to be available
-        const checkPuter = async () => {
-          if ((window as any).puter?.ai?.chat) {
-            console.log('✅ Puter SDK fully initialized');
-            
-            // Open Puter authentication window for connection
-            try {
-              console.log('🔄 Opening Puter authentication window...');
-              const puterWindow = window.open(
-                'https://puter.com', 
-                'puter-auth', 
-                'width=800,height=600,scrollbars=yes,resizable=yes'
-              );
-              
-              if (puterWindow) {
-                console.log('✅ Puter authentication window opened');
-                // Check if window is closed manually
-                const checkWindow = setInterval(() => {
-                  if (puterWindow.closed) {
-                    clearInterval(checkWindow);
-                    console.log('📱 Puter window closed, connection should be established');
-                  }
-                }, 1000);
-                
-                // Auto-close after 30 seconds if still open
-                setTimeout(() => {
-                  if (!puterWindow.closed) {
-                    puterWindow.close();
-                    clearInterval(checkWindow);
-                    console.log('⏰ Auto-closed Puter window after 30 seconds');
-                  }
-                }, 30000);
-              } else {
-                console.warn('⚠️ Could not open Puter window (popup blocked?)');
-              }
-            } catch (windowError) {
-              console.warn('⚠️ Error opening Puter window:', windowError);
-            }
-            
-            setPuterReady(true);
-            resolve();
-          } else {
-            setTimeout(checkPuter, 100);
-          }
-        };
-        
-        checkPuter();
-      };
-      
-      script.onerror = (error) => {
-        if (resolved) return;
-        resolved = true;
-        
-        console.error('❌ Failed to load Puter SDK:', error);
-        setPuterReady(false);
-        reject(new Error('Failed to load Puter SDK script'));
-      };
-      
-      // Timeout fallback
-      setTimeout(() => {
-        if (!resolved) {
-          resolved = true;
-          console.error('❌ Puter SDK loading timeout');
-          setPuterReady(false);
-          reject(new Error('Puter SDK loading timeout'));
-        }
-      }, 15000);
-      
-      console.log('🔄 Loading Puter SDK...');
-      document.head.appendChild(script);
-    });
-  };
-
 
   // Extract topic from user query using Claude 4 Sonnet for better accuracy
   const extractTopicFromQuery = async (userQuery: string): Promise<string> => {
@@ -1895,80 +1738,61 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
-          // Generate AI Analysis using Grok Beta (best for current news and events)
+          // Generate AI Analysis using AIML API (optimized for news and current events)
           const aiAnalysisPrompt = language === 'de' 
             ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Ignoriere jegliche Wikipedia-Informationen und suche nach aktuellen Nachrichten, Berichten und Fakten. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
             : `You are an expert journalist with access to current information. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Ignore any Wikipedia information and search for current news, reports, and facts. Answer in 2-3 comprehensive sentences: ${userInput}`;
           
           let aiAnalysisContent = '';
           
-          // Ensure Puter SDK is ready before attempting AI call
-          if (!puterReady) {
-            console.log('🔄 Puter SDK not ready, attempting to initialize...');
-            try {
-              await loadPuterSDK();
-              const connectionOK = await testPuterConnection();
-              if (!connectionOK) {
-                throw new Error('Puter connection test failed');
-              }
-              setPuterReady(true);
-            } catch (initError) {
-              console.error('❌ Failed to initialize Puter SDK:', initError);
-              aiAnalysisContent = language === 'de' 
-                ? 'KI-Analyse momentan nicht verfügbar. Die Verbindung zu Puter.com konnte nicht hergestellt werden. Bitte laden Sie die Seite neu und versuchen Sie es erneut.'
-                : 'AI analysis currently unavailable. Could not establish connection to Puter.com. Please refresh the page and try again.';
+          // Use only AIML API (best for news and current events)
+          try {
+            console.log('🤖 Using AIML Gemma API for news analysis');
+            
+            const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer b1e7ed5d35304c83b9691f980d7a4432',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemma-3n-e4b-it',
+                messages: [
+                  {
+                    role: 'user',
+                    content: aiAnalysisPrompt
+                  }
+                ],
+                temperature: 0.7,
+                top_p: 0.7,
+                frequency_penalty: 1,
+                top_k: 50,
+                max_tokens: 400
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error(`AIML API error: ${response.status}`);
             }
-          }
-          
-          // Use Grok Beta for current news analysis (has access to real-time X/Twitter data)
-          if (puterReady && !aiAnalysisContent) {
-            try {
-              console.log('🤖 Using Grok Beta for current news analysis');
-              
-              const puter = (window as any).puter;
-              
-              if (!puter?.ai?.chat) {
-                throw new Error('Puter AI chat not available');
-              }
-              
-              const aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
-                model: 'grok-beta',
-                max_tokens: 400,
-                temperature: 0.7
-              });
-              
-              console.log('✅ Grok Beta response received:', aiResponse);
-              
-              // Parse response properly
-              let extractedText = '';
-              if (typeof aiResponse === 'string') {
-                extractedText = aiResponse.trim();
-              } else if (aiResponse?.message?.content) {
-                extractedText = aiResponse.message.content.trim();
-              } else if (aiResponse?.text) {
-                extractedText = aiResponse.text.trim();
-              } else if (aiResponse?.content) {
-                extractedText = aiResponse.content.trim();
-              }
-              
-              // Validate response quality
-              if (extractedText && 
-                  extractedText.length > 10 && 
-                  !extractedText.includes('[object Object]') &&
-                  extractedText !== 'undefined' &&
-                  extractedText !== 'null') {
-                aiAnalysisContent = extractedText;
-                console.log('✅ AI Analysis completed successfully using Grok Beta');
-              } else {
-                throw new Error('Invalid response from Grok Beta: ' + JSON.stringify(aiResponse));
-              }
-              
-            } catch (error) {
-              console.error('❌ Grok Beta failed:', error);
-              aiAnalysisContent = language === 'de' 
-                ? 'KI-Analyse momentan nicht verfügbar. Das Grok Beta Modell für aktuelle Nachrichten-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-                : 'AI analysis currently unavailable. The Grok Beta model for current news analysis is currently unreachable. Please try again later.';
+
+            const data = await response.json();
+            const aiResponse = data.choices?.[0]?.message?.content || '';
+            
+            console.log('✅ AIML API response received:', aiResponse);
+            
+            // Validate response quality
+            if (aiResponse && aiResponse.trim().length > 10) {
+              aiAnalysisContent = aiResponse.trim();
+              console.log('✅ AI Analysis completed successfully using AIML Gemma');
+            } else {
+              throw new Error('Invalid response from AIML API');
             }
+            
+          } catch (error) {
+            console.error('❌ AIML API failed:', error);
+            aiAnalysisContent = language === 'de' 
+              ? 'KI-Analyse momentan nicht verfügbar. Das AIML Gemma Modell für Nachrichten-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. The AIML Gemma model for news analysis is currently unreachable. Please try again later.';
           }
           
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
@@ -2751,10 +2575,7 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
                   Daily Fun (Local)
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => {
-                    console.log('🔄 Switching to Internet Search mode...');
-                    setSearchMode('internet');
-                  }}
+                  onClick={() => setSearchMode('internet')}
                   className="flex items-center gap-2"
                 >
                   <Globe className="w-4 h-4" />
