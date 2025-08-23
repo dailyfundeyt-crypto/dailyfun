@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puter.ai API Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .status.loading {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid rgba(255, 193, 7, 0.5);
+        }
+        .status.ready {
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid rgba(40, 167, 69, 0.5);
+        }
+        .status.error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+        }
+        .test-area {
+            margin-bottom: 30px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .response {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 4px solid #4ecdc4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .loading-dots {
+            display: inline-block;
+        }
+        .loading-dots::after {
+            content: '...';
+            animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Puter.ai API Test</h1>
+        
+        <div id="status" class="status loading">
+            Puter.ai SDK wird geladen<span class="loading-dots"></span>
+        </div>
+        
+        <div class="test-area">
+            <input type="text" id="prompt" placeholder="Stelle eine Frage an die KI..." value="Was sind die neuesten Nachrichten heute?">
+            <button id="sendBtn" disabled>KI-Anfrage senden</button>
+        </div>
+        
+        <div id="response" class="response" style="display: none;"></div>
+    </div>
+
+    <script>
+        class PuterTester {
+            constructor() {
+                this.puterLoaded = false;
+                this.statusEl = document.getElementById('status');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.promptEl = document.getElementById('prompt');
+                this.responseEl = document.getElementById('response');
+                
+                this.loadPuterSDK();
+                this.bindEvents();
+            }
+
+            async loadPuterSDK() {
+                try {
+                    // Prüfen ob Puter bereits geladen ist
+                    if (window.puter) {
+                        this.onPuterReady();
+                        return;
+                    }
+
+                    // Dynamisch laden
+                    const script = document.createElement('script');
+                    script.src = 'https://js.puter.com/v2/';
+                    script.async = true;
+                    
+                    script.onload = () => {
+                        // Warten bis puter verfügbar ist
+                        const checkPuter = () => {
+                            if (window.puter) {
+                                this.onPuterReady();
+                            } else {
+                                setTimeout(checkPuter, 100);
+                            }
+                        };
+                        checkPuter();
+                    };
+                    
+                    script.onerror = () => {
+                        this.onPuterError('Fehler beim Laden des Puter.ai SDK');
+                    };
+                    
+                    document.head.appendChild(script);
+                    
+                } catch (error) {
+                    this.onPuterError('Unerwarteter Fehler: ' + error.message);
+                }
+            }
+
+            onPuterReady() {
+                this.puterLoaded = true;
+                this.statusEl.className = 'status ready';
+                this.statusEl.textContent = '✅ Puter.ai SDK erfolgreich geladen und bereit!';
+                this.sendBtn.disabled = false;
+                console.log('Puter.ai SDK bereit:', window.puter);
+            }
+
+            onPuterError(message) {
+                this.statusEl.className = 'status error';
+                this.statusEl.textContent = '❌ ' + message;
+                this.sendBtn.disabled = true;
+            }
+
+            bindEvents() {
+                this.sendBtn.addEventListener('click', () => this.testAPI());
+                this.promptEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !this.sendBtn.disabled) {
+                        this.testAPI();
+                    }
+                });
+            }
+
+            async testAPI() {
+                if (!this.puterLoaded) return;
+
+                const prompt = this.promptEl.value.trim();
+                if (!prompt) return;
+
+                try {
+                    this.sendBtn.disabled = true;
+                    this.sendBtn.textContent = 'Sende Anfrage...';
+                    this.responseEl.style.display = 'block';
+                    this.responseEl.textContent = 'KI denkt nach...';
+
+                    console.log('Sende Anfrage mit Prompt:', prompt);
+
+                    const response = await window.puter.ai.chat(prompt, {
+                        model: 'grok-beta',
+                        temperature: 0.7,
+                        max_tokens: 500
+                    });
+
+                    console.log('API Antwort erhalten:', response);
+
+                    const message = response.message || response.content || response.text || 'Keine Antwort erhalten.';
+                    this.responseEl.textContent = '🤖 KI Antwort:\n\n' + message;
+
+                } catch (error) {
+                    console.error('API Fehler:', error);
+                    this.responseEl.textContent = '❌ Fehler: ' + error.message;
+                } finally {
+                    this.sendBtn.disabled = false;
+                    this.sendBtn.textContent = 'KI-Anfrage senden';
+                }
+            }
+        }
+
+        // App starten wenn DOM bereit ist
+        document.addEventListener('DOMContentLoaded', () => {
+            new PuterTester();
+        });
+    </script>
+</body>
+</html>
