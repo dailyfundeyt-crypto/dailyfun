@@ -952,16 +952,51 @@ const AI = () => {
       
       let resolved = false;
       
-      script.onload = () => {
+      script.onload = async () => {
         if (resolved) return;
         resolved = true;
         
         console.log('✅ Puter SDK script loaded');
         
         // Wait for puter object to be available
-        const checkPuter = () => {
+        const checkPuter = async () => {
           if ((window as any).puter?.ai?.chat) {
             console.log('✅ Puter SDK fully initialized');
+            
+            // Open Puter authentication window for connection
+            try {
+              console.log('🔄 Opening Puter authentication window...');
+              const puterWindow = window.open(
+                'https://puter.com', 
+                'puter-auth', 
+                'width=800,height=600,scrollbars=yes,resizable=yes'
+              );
+              
+              if (puterWindow) {
+                console.log('✅ Puter authentication window opened');
+                // Check if window is closed manually
+                const checkWindow = setInterval(() => {
+                  if (puterWindow.closed) {
+                    clearInterval(checkWindow);
+                    console.log('📱 Puter window closed, connection should be established');
+                  }
+                }, 1000);
+                
+                // Auto-close after 30 seconds if still open
+                setTimeout(() => {
+                  if (!puterWindow.closed) {
+                    puterWindow.close();
+                    clearInterval(checkWindow);
+                    console.log('⏰ Auto-closed Puter window after 30 seconds');
+                  }
+                }, 30000);
+              } else {
+                console.warn('⚠️ Could not open Puter window (popup blocked?)');
+              }
+            } catch (windowError) {
+              console.warn('⚠️ Error opening Puter window:', windowError);
+            }
+            
             setPuterReady(true);
             resolve();
           } else {
