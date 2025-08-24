@@ -29,6 +29,7 @@ interface Message {
   endConversationAvailable?: boolean;
   isSelected?: boolean;
   showSummaryButton?: boolean;
+  showQuizButton?: boolean;
 }
 
 interface ActionCard {
@@ -189,7 +190,15 @@ const AI = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
   const [showModeDropdown, setShowModeDropdown] = useState(false);
+  const [internetSeed, setInternetSeed] = useState<{ firstQuery: string; title?: string; lang: 'de' | 'en'; link?: string } | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<number | null>(null);
+  const [puterReady, setPuterReady] = useState(false);
+  const [summaryMode, setSummaryMode] = useState(false);
+  const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
+  const [quizInfoMode, setQuizInfoMode] = useState(false);
 
   const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
     setMessages(prev => prev.map(msg => {
@@ -287,6 +296,9 @@ const AI = () => {
 
   // Initialize welcome message based on language and context
   useEffect(() => {
+    // Clear internet seed when language changes to prevent context mixing
+    setInternetSeed(null);
+    
     if (articleContext) {
       const contextMessage = {
         id: '1',
@@ -301,8 +313,8 @@ const AI = () => {
       const welcomeMessage = {
         id: '1',
         text: language === 'de' 
-          ? 'Hallo! Ich bin Daily Fun AI. Ich kann Ihnen bei Kontaktinformationen, Team-Details, Firmen-Informationen und Artikeln helfen. Für Internet-Suche wechseln Sie zu "Daily Fun (Internet Search)". Fragen Sie mich zum Beispiel: "Wer ist Stefan Kunc?" oder "Wie kann ich euch kontaktieren?"'
-          : 'Hello! I\'m Daily Fun AI. I can help you with contact information, team details, company information and articles. For Internet search, switch to "Daily Fun (Internet Search)". Try asking me: "Who is Stefan Kunc?" or "How can I contact you?"',
+          ? 'Hallo! Ich bin Daily Fun AI. Ich kann Ihnen bei Kontaktinformationen, Team-Details, Firmen-Informationen und Artikeln helfen. Fragen Sie mich zum Beispiel: "Wer ist Stefan Kunc?" oder "Wie kann ich euch kontaktieren?"'
+          : 'Hello! I\'m Daily Fun AI. I can help you with contact information, team details, company information and articles. Try asking me: "Who is Stefan Kunc?" or "How can I contact you?"',
         isUser: false,
         timestamp: new Date()
       };
@@ -351,6 +363,22 @@ const AI = () => {
     setFilteredSuggestions(list.slice(0, 6));
   }, [inputValue, language, articleContext, quizMode]);
 
+  // Load Puter AI SDK for chat and TTS
+  useEffect(() => {
+    const scriptId = 'puter-sdk-v2';
+    if (document.getElementById(scriptId)) {
+      setPuterReady(true);
+      return;
+    }
+    const s = document.createElement('script');
+    s.id = scriptId;
+    s.src = 'https://js.puter.com/v2/';
+    s.async = true;
+    s.onload = () => setPuterReady(true);
+    s.onerror = () => setPuterReady(false);
+    document.body.appendChild(s);
+  }, []);
+
   const generateQRCode = async (url: string): Promise<string> => {
     try {
       return await QRCode.toDataURL(url, {
@@ -368,16 +396,24 @@ const AI = () => {
   };
 
   const handleMessageClick = (messageId: string) => {
-    setVisibleCopyButtons(prev => 
-      prev.includes(messageId) 
-        ? prev.filter(id => id !== messageId)
-        : [...prev, messageId]
-    );
-    
-    // Hide after 3 seconds
-    setTimeout(() => {
-      setVisibleCopyButtons(prev => prev.filter(id => id !== messageId));
-    }, 3000);
+    if (summaryMode || quizInfoMode) {
+      setSelectedMessages(prev => 
+        prev.includes(messageId)
+          ? prev.filter(id => id !== messageId)
+          : [...prev, messageId]
+      );
+    } else {
+      setVisibleCopyButtons(prev => 
+        prev.includes(messageId) 
+          ? prev.filter(id => id !== messageId)
+          : [...prev, messageId]
+      );
+      
+      // Hide after 3 seconds
+      setTimeout(() => {
+        setVisibleCopyButtons(prev => prev.filter(id => id !== messageId));
+      }, 3000);
+    }
   };
 
   const copyToClipboard = async (text: string) => {
@@ -396,6 +432,676 @@ const AI = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const generateGermanQuiz = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
+    const input = userInput.toLowerCase();
+    
+    // Determine topic from input
+    let topic = 'Allgemeinwissen';
+    if (input.includes('katzen')) topic = 'Katzen';
+    else if (input.includes('hunde')) topic = 'Hunde';
+    else if (input.includes('geschichte')) topic = 'Geschichte';
+    else if (input.includes('wissenschaft')) topic = 'Wissenschaft';
+    else if (input.includes('sport')) topic = 'Sport';
+    else if (input.includes('filme')) topic = 'Filme';
+    else if (input.includes('musik')) topic = 'Musik';
+    
+    try {
+      // Call Supabase Edge Function for Perplexity API
+      const response = await fetch('/api/generate-german-quiz', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ topic }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('API call failed');
+      }
+      
+      const data = await response.json();
+      
+      if (data.quiz) {
+        return {
+          text: 'INTERACTIVE_QUIZ',
+          quizData: {
+            question: data.quiz.question,
+            answers: data.quiz.answers,
+            correctAnswer: data.quiz.correctAnswer,
+            explanation: data.quiz.explanation
+          }
+        };
+      } else {
+        throw new Error('No quiz data returned');
+      }
+    } catch (error) {
+      console.error('German quiz generation failed:', error);
+      // Fallback to translated English quiz
+      return generateEnglishQuizWithTranslation(userInput);
+    }
+  };
+
+  const generateEnglishQuizWithTranslation = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
+    const input = userInput.toLowerCase();
+    
+    // Determine quiz category
+    let category = '';
+    
+    if (input.includes('katzen') || input.includes('cat')) {
+      category = '27'; // Animals
+    } else if (input.includes('hunde') || input.includes('dog')) {
+      category = '27'; // Animals  
+    } else if (input.includes('geschichte') || input.includes('history')) {
+      category = '23'; // History
+    } else if (input.includes('wissenschaft') || input.includes('science')) {
+      category = '17'; // Science & Nature
+    } else if (input.includes('sport')) {
+      category = '21'; // Sports
+    } else if (input.includes('filme') || input.includes('movie')) {
+      category = '11'; // Movies
+    } else if (input.includes('musik') || input.includes('music')) {
+      category = '12'; // Music
+    }
+    
+    try {
+      const apiUrl = `https://opentdb.com/api.php?amount=1&type=multiple${category ? `&category=${category}` : ''}`;
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+      
+      if (data.response_code === 0 && data.results.length > 0) {
+        const quiz = data.results[0];
+        
+        // Decode HTML entities
+        const decodeHtml = (html: string) => {
+          const txt = document.createElement('textarea');
+          txt.innerHTML = html;
+          return txt.value;
+        };
+        
+        const question = decodeHtml(quiz.question);
+        const correctAnswer = decodeHtml(quiz.correct_answer);
+        const incorrectAnswers = quiz.incorrect_answers.map((ans: string) => decodeHtml(ans));
+        
+        // Improved translation for German
+        const translatedContent = language === 'de' ? await improvedTranslateToGerman(question, correctAnswer, incorrectAnswers) : {
+          question,
+          correct: correctAnswer,
+          incorrect: incorrectAnswers
+        };
+        
+        const allAnswers = [translatedContent.correct, ...translatedContent.incorrect].sort(() => Math.random() - 0.5);
+        
+        // Create quiz data for interactive display
+        const quizData = {
+          question: translatedContent.question,
+          answers: allAnswers,
+          correctAnswer: translatedContent.correct,
+          explanation: language === 'de' 
+            ? `Die richtige Antwort ist "${translatedContent.correct}".`
+            : `The correct answer is "${translatedContent.correct}".`
+        };
+        
+        return { 
+          text: 'INTERACTIVE_QUIZ',
+          quizData 
+        };
+      } else {
+        const errorText = language === 'de'
+          ? '❌ Entschuldigung, ich konnte kein Quiz für dieses Thema generieren. Versuchen Sie es mit einem anderen Thema!'
+          : '❌ Sorry, I couldn\'t generate a quiz for this topic. Try another topic!';
+        return { text: errorText };
+      }
+    } catch (error) {
+      const errorText = language === 'de'
+        ? '❌ Fehler beim Laden des Quiz. Bitte versuchen Sie es später erneut.'
+        : '❌ Error loading quiz. Please try again later.';
+      return { text: errorText };
+    }
+  };
+
+  const generateQuiz = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
+    if (language === 'de') {
+      return generateGermanQuiz(userInput);
+    } else {
+      return generateEnglishQuizWithTranslation(userInput);
+    }
+  };
+
+  const improvedTranslateToGerman = async (question: string, correct: string, incorrect: string[]) => {
+    // Enhanced translation dictionary
+    const translations: { [key: string]: string } = {
+      // Question words
+      'What': 'Was', 'Who': 'Wer', 'Where': 'Wo', 'When': 'Wann', 'Why': 'Warum', 'How': 'Wie',
+      'Which': 'Welche', 'Whose': 'Wessen',
+      
+      // Common quiz terms
+      'the smallest': 'die kleinste', 'the largest': 'die größte', 'the first': 'die erste',
+      'the last': 'die letzte', 'the most': 'die meisten', 'the least': 'die wenigsten',
+      'smallest': 'kleinste', 'largest': 'größte', 'biggest': 'größte', 'tiniest': 'winzigste',
+      
+      // Animals
+      'dog': 'Hund', 'cat': 'Katze', 'dogs': 'Hunde', 'cats': 'Katzen',
+      'breed': 'Rasse', 'breeds': 'Rassen', 'animal': 'Tier', 'animals': 'Tiere',
+      
+      // Science terms
+      'temperature': 'Temperatur', 'degree': 'Grad', 'degrees': 'Grad',
+      'Celsius': 'Celsius', 'Fahrenheit': 'Fahrenheit',
+      
+      // Common words
+      'is': 'ist', 'are': 'sind', 'was': 'war', 'were': 'waren',
+      'in': 'in', 'on': 'auf', 'at': 'bei', 'by': 'von',
+      'world': 'Welt', 'country': 'Land', 'countries': 'Länder',
+      'year': 'Jahr', 'years': 'Jahre', 'century': 'Jahrhundert',
+      
+      // Verbs
+      'considered': 'gilt als', 'known': 'bekannt', 'called': 'genannt',
+      'reach': 'erreichen', 'produce': 'produzieren', 'burn': 'brennen',
+      
+      // Adjectives
+      'bright': 'hell', 'white': 'weiß', 'small': 'klein', 'large': 'groß',
+      'high': 'hoch', 'low': 'niedrig', 'hot': 'heiß', 'cold': 'kalt'
+    };
+
+    const translateText = (text: string): string => {
+      let translated = text;
+      
+      // Replace whole words only
+      Object.entries(translations).forEach(([en, de]) => {
+        const regex = new RegExp(`\\b${en}\\b`, 'gi');
+        translated = translated.replace(regex, de);
+      });
+      
+      return translated;
+    };
+
+    return {
+      question: translateText(question),
+      correct: translateText(correct),
+      incorrect: incorrect.map(translateText)
+    };
+  };
+
+  // Helpers to create nicer, more logical answers
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  const toSentences = (text: string) => text.split(/(?<=\p{L}[.!?])\s+/u).filter(Boolean);
+  const summarize = (text: string, maxSentences = 4) => {
+    const s = toSentences(text);
+    return s.slice(0, Math.min(maxSentences, s.length)).join(' ');
+  };
+  const keyPoints = (text: string, tags?: string[], count = 3) => {
+    const s = toSentences(text).slice(1, 10);
+    const unique = Array.from(new Set(s.map(v => v.trim()))).filter(Boolean);
+    const pts = unique.slice(0, count);
+    if (pts.length < count && tags && tags.length) {
+      const filler = tags.slice(0, count - pts.length).map(tag => language === 'de' ? `Thema: ${tag}` : `Topic: ${tag}`);
+      return [...pts, ...filler];
+    }
+    return pts;
+  };
+
+  // Internet mode helpers (Wikipedia deep-dive for follow-up questions)
+  const STOPWORDS = {
+    de: ['der','die','das','und','ist','eine','einen','einem','den','des','im','in','am','an','auf','mit','für','von','oder','nicht','auch','wie','was','wer','wo','warum'],
+    en: ['the','and','is','are','a','an','in','on','at','for','with','from','to','of','or','not','also','how','what','who','where','why']
+  } as const;
+
+  const getWikiExtract = async (title: string, lang: 'de' | 'en'): Promise<string> => {
+    try {
+      // Use correct German Wikipedia API endpoint
+      const apiUrl = lang === 'de' 
+        ? `https://de.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=${encodeURIComponent(title)}&format=json&origin=*&exsectionformat=plain`
+        : `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&redirects=1&titles=${encodeURIComponent(title)}&format=json&origin=*&exsectionformat=plain`;
+      
+      const res = await fetch(apiUrl);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      
+      const data = await res.json();
+      const pages = data?.query?.pages;
+      const page = pages ? pages[Object.keys(pages)[0]] : null;
+      
+      if (page && page.pageid && page.extract) {
+        return page.extract;
+      }
+      
+      return '';
+    } catch (error) {
+      console.error('Wikipedia API error:', error);
+      return '';
+    }
+  };
+
+  const pickRelevantSentences = (extract: string, question: string, lang: 'de' | 'en', max = 4): string[] => {
+    const sentences = toSentences(extract);
+    const words = question.toLowerCase().split(/[^\p{L}0-9]+/u).filter(Boolean);
+    const keywords = words.filter(w => w.length >= 4 && !STOPWORDS[lang].includes(w as any));
+    const ranked = sentences
+      .map(s => ({ s, score: keywords.reduce((acc, kw) => acc + (s.toLowerCase().includes(kw) ? 1 : 0), 0) }))
+      .filter(r => r.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, max)
+      .map(r => r.s.trim());
+    if (ranked.length > 0) return ranked;
+    return sentences.slice(0, max).map(s => s.trim());
+  };
+
+  const answerInternetFollowUp = async (question: string): Promise<string> => {
+    if (!internetSeed?.title) {
+      return language === 'de' ? 'Bitte nenne erst ein Thema, dann kann ich Nachfragen beantworten.' : 'Please provide a topic first, then I can answer follow-ups.';
+    }
+    try {
+      // Use current UI language instead of seed language for better user experience
+      const currentLang = language === 'de' ? 'de' : 'en';
+      const extract = await getWikiExtract(internetSeed.title, currentLang);
+      const rel = pickRelevantSentences(extract, question, currentLang, 4);
+      const header = language === 'de'
+        ? `🤖 Vertiefung zum Thema "${internetSeed.title}"\n\nAusgehend von deiner Erstfrage: "${internetSeed.firstQuery}"\nNeue Frage: "${question}"`
+        : `🤖 Deep dive on "${internetSeed.title}"\n\nFrom your initial question: "${internetSeed.firstQuery}"\nNew question: "${question}"`;
+      const link = internetSeed.link ? `\n\n🔗 ${internetSeed.link}` : '';
+      return `${header}\n\n${rel.map(s => `• ${s}`).join('\n')}${link}`;
+    } catch (e) {
+      return language === 'de' ? 'Es gab ein Problem bei der vertieften Antwort.' : 'There was a problem generating the deepened answer.';
+    }
+  };
+
+  // Parse 'Weitere Treffer' or 'Other results' lines from a Wikipedia message
+  const parseWikiOtherResults = (text: string): string[] => {
+    const markerDe = 'Weitere Treffer:';
+    const markerEn = 'Other results:';
+    const idx = text.indexOf(markerDe) !== -1 ? text.indexOf(markerDe) : text.indexOf(markerEn);
+    if (idx === -1) return [];
+    const after = text.slice(idx).split('\n').slice(1); // lines after the marker
+    const titles = after
+      .map(l => l.trim())
+      .filter(l => l.startsWith('- '))
+      .map(l => l.replace(/^-\s+/, '').trim())
+      .filter(Boolean);
+    return titles;
+  };
+
+  // Fetch a Wikipedia summary for a given title and build the same formatted message
+  const fetchWikiSummaryForTitle = async (title: string): Promise<{ text: string; title: string; link: string; lang: 'de' | 'en' }> => {
+    const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en';
+    
+    try {
+      // Search again to get a fresh related list with better error handling
+      const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(title)}&utf8=&format=json&origin=*`;
+      const sRes = await fetch(searchUrl);
+      
+      if (!sRes.ok) {
+        throw new Error(`Search failed: ${sRes.status}`);
+      }
+      
+      const sData = await sRes.json() as any;
+      const first = sData?.query?.search?.[0];
+      
+      if (!first) {
+        const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.';
+        return { text: `🌐 ${notFound}`, title, link: '', lang: langCode };
+      }
+      
+      const finalTitle = first.title as string;
+      
+      // Try REST API first, fallback to extract API
+      let extract = '';
+      let link = `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(finalTitle)}`;
+      
+      try {
+        const sumUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(finalTitle)}`;
+        const sumRes = await fetch(sumUrl);
+        
+        if (sumRes.ok) {
+          const sumData = await sumRes.json() as any;
+          extract = sumData?.extract || '';
+          link = sumData?.content_urls?.desktop?.page || link;
+        }
+      } catch (restError) {
+        console.warn('REST API failed, trying extract API:', restError);
+      }
+      
+      // Fallback to extract API if REST failed
+      if (!extract) {
+        extract = await getWikiExtract(finalTitle, langCode);
+      }
+      
+      const summary = extract ? summarize(extract, 3) : (language === 'de' ? 'Keine Zusammenfassung verfügbar.' : 'No summary available.');
+      const heading = language === 'de' ? `🌐 Wikipedia: ${finalTitle}\n\nKurzfassung:` : `🌐 Wikipedia: ${finalTitle}\n\nSummary:`;
+      const others = (sData?.query?.search || []).slice(1, 3).map((r: any) => `- ${r.title}`).join('\n');
+      const othersHeader = others ? (language === 'de' ? '\n\nWeitere Treffer:\n' : '\n\nOther results:\n') : '';
+      
+      return { text: `${heading}\n${summary}\n\n🔗 ${link}${othersHeader}${others}`, title: finalTitle, link, lang: langCode };
+    } catch (error) {
+      console.error('fetchWikiSummaryForTitle error:', error);
+      const errorText = language === 'de' ? 'Fehler beim Laden der Wikipedia-Daten.' : 'Error loading Wikipedia data.';
+      return { text: `🌐 ${errorText}`, title, link: '', lang: langCode };
+    }
+  };
+
+  // Handle clicks on 'Weitere Treffer' buttons: only Wikipedia, no AI, and update seed for follow-ups
+  const handleWikiResultClick = async (title: string) => {
+    try {
+      const res = await fetchWikiSummaryForTitle(title);
+      // Update seed so that follow-up questions refer to this latest topic
+      setInternetSeed({ firstQuery: res.title, title: res.title, lang: res.lang, link: res.link });
+      const aiMessage: Message = {
+        id: (Date.now()).toString(),
+        text: res.text,
+        isUser: false,
+        timestamp: new Date(),
+        endConversationAvailable: true,
+      };
+      setMessages(prev => [...prev, aiMessage]);
+    } catch (e) {
+      const errText = language === 'de' ? 'Fehler beim Laden des Wikipedia-Artikels.' : 'Error loading Wikipedia article.';
+      setMessages(prev => [...prev, { id: Date.now().toString(), text: `❌ ${errText}`, isUser: false, timestamp: new Date() }]);
+    }
+  };
+
+  // Speak mode helpers (speech recognition + AI chat + TTS)
+  const getSpeechLanguage = (): string => (language === 'de' ? 'de-DE' : 'en-GB');
+
+  const playTTSGerman = async (text: string) => {
+    try {
+      await waitForPuterReady();
+      const puter = (window as any).puter;
+      if (!puter?.ai?.txt2speech) {
+        console.warn('TTS not available');
+        return;
+      }
+      
+      // Remove markdown and clean text
+      const cleanText = text.replace(/[*_#`]/g, '').replace(/\n+/g, ' ').trim();
+      if (!cleanText) return;
+      
+      const audio = await puter.ai.txt2speech(cleanText, {
+        language: "de-DE",
+        engine: "neural"
+      });
+      
+      if (audio && typeof audio.play === 'function') {
+        audio.play();
+      }
+    } catch (error) {
+      console.error('German TTS error:', error);
+    }
+  };
+
+  const playTTSEnglish = async (text: string) => {
+    try {
+      await waitForPuterReady();
+      const puter = (window as any).puter;
+      if (!puter?.ai?.txt2speech) {
+        console.warn('TTS not available');
+        return;
+      }
+      
+      // Remove markdown and clean text
+      const cleanText = text.replace(/[*_#`]/g, '').replace(/\n+/g, ' ').trim();
+      if (!cleanText) return;
+      
+      const audio = await puter.ai.txt2speech(cleanText, {
+        voice: "Joanna",
+        language: "en-US",
+        engine: "neural"
+      });
+      
+      if (audio && typeof audio.play === 'function') {
+        audio.play();
+      }
+    } catch (error) {
+      console.error('English TTS error:', error);
+    }
+  };
+
+  const playTTS = async (text: string) => {
+    if (language === 'de') {
+      await playTTSGerman(text);
+    } else {
+      await playTTSEnglish(text);
+    }
+  };
+
+  // Ensure Puter SDK is ready before using it
+  const waitForPuterReady = async (timeoutMs = 10000): Promise<void> => {
+    const start = Date.now();
+    while (Date.now() - start < timeoutMs) {
+      const puter = (window as any).puter;
+      if (puter?.ai?.chat) return;
+      await new Promise(r => setTimeout(r, 150));
+    }
+    throw new Error('Puter SDK not ready within timeout');
+  };
+
+  // Extract topic from user query using Claude 4 Sonnet for better accuracy
+  const extractTopicFromQuery = async (userQuery: string): Promise<string> => {
+    try {
+      await waitForPuterReady();
+      const puter = (window as any).puter;
+      
+      const prompt = language === 'de' 
+        ? `Extrahiere das Hauptthema aus dieser Frage für eine Wikipedia-Suche. Antworte nur mit dem Namen oder Begriff, keine Erklärung.
+
+Beispiele:
+"Wer ist Albert Einstein?" → "Albert Einstein"
+"Was ist die Relativitätstheorie?" → "Relativitätstheorie" 
+"Erzähl mir von Paris" → "Paris"
+"Wer ist Olaf Scholz?" → "Olaf Scholz"
+"Was war die Ampelkoalition?" → "Ampelkoalition"
+
+Frage: "${userQuery}"
+Antwort:`
+        : `Extract the main topic from this question for a Wikipedia search. Answer only with the name or term, no explanation.
+
+Examples:
+"Who is Albert Einstein?" → "Albert Einstein"
+"What is relativity theory?" → "relativity theory"
+"Tell me about Paris" → "Paris"
+
+Question: "${userQuery}"
+Answer:`;
+        
+      const response = await puter.ai.chat(prompt, { model: 'claude-sonnet-4' });
+      const topic = typeof response === 'string' ? response.trim() : (response?.text ?? userQuery).trim();
+      const cleanTopic = topic.replace(/["""''`]/g, '').replace(/^(der|die|das|the|a|an)\s+/i, '').trim();
+      
+      console.log('Extracted topic:', cleanTopic, 'from query:', userQuery);
+      return cleanTopic || userQuery;
+    } catch (e) {
+      console.error('Topic extraction failed:', e);
+      // Fallback extraction
+      const words = userQuery.toLowerCase().split(' ');
+      for (let i = 0; i < words.length; i++) {
+        if (['ist', 'is', 'war', 'was', 'wer', 'who', 'what', 'wie', 'how'].includes(words[i]) && words[i + 1]) {
+          return words.slice(i + 1).join(' ');
+        }
+      }
+      return userQuery;
+    }
+  };
+
+  // Search for news articles about a topic
+  const searchNewsArticles = async (topic: string): Promise<string[]> => {
+    try {
+      const searchQuery = encodeURIComponent(`${topic} news article`);
+      // Simple web search for news mentions
+      const searches = [
+        `site:spiegel.de ${topic}`,
+        `site:zeit.de ${topic}`,
+        `site:faz.net ${topic}`,
+        `site:bbc.com ${topic}`,
+        `site:cnn.com ${topic}`
+      ];
+      
+      const newsLinks: string[] = [];
+      for (const search of searches.slice(0, 3)) { // Limit to avoid rate limits
+        try {
+          // This is a simplified approach - in reality you'd use a proper news API
+          const url = `https://www.google.com/search?q=${encodeURIComponent(search)}`;
+          newsLinks.push(`🔗 ${search.split(' ')[0].replace('site:', '')}`);
+        } catch (e) {
+          console.error('News search error:', e);
+        }
+      }
+      return newsLinks;
+    } catch (e) {
+      console.error('News search failed:', e);
+      return [];
+    }
+  };
+
+  // Ask the AI using Puter AI
+  const askPuterAI = async (prompt: string): Promise<string> => {
+    try {
+      const puter = (window as any).puter;
+      if (!puter?.ai?.chat) {
+        throw new Error('Puter AI not available');
+      }
+
+      // Nudge language explicitly
+      const localizedPrompt = language === 'de'
+        ? `Antworte auf Deutsch. Frage: ${prompt}`
+        : `Answer in English. Question: ${prompt}`;
+
+      const response = await puter.ai.chat(localizedPrompt, { 
+        model: 'claude-sonnet-4'
+      });
+      
+      // Fix the [object] [object] issue by properly extracting the response text
+      let responseText = '';
+      if (typeof response === 'string') {
+        responseText = response;
+      } else if (response?.message?.content) {
+        responseText = response.message.content;
+      } else if (response?.text) {
+        responseText = response.text;
+      } else if (response?.content) {
+        responseText = response.content;
+      } else {
+        responseText = JSON.stringify(response) || 'No response';
+      }
+      
+      return responseText;
+    } catch (e) {
+      console.error('askPuterAI failed', e);
+      return language === 'de' ? '❌ Fehler bei der KI-Antwort.' : '❌ Error getting AI response.';
+    }
+  };
+
+  const stopListening = () => {
+    setIsListening(false);
+    if (silenceTimerRef.current) {
+      window.clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+      recognitionRef.current = null;
+    }
+  };
+
+  const startListening = async () => {
+    try { 
+      // Request microphone permission with enhanced mobile settings
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        } 
+      }); 
+      // Stop the stream immediately as we just needed permission
+      stream.getTracks().forEach(track => track.stop());
+    } catch (e) {
+      alert(language === 'de' 
+        ? 'Mikrofon-Zugriff verweigert. Bitte erlauben Sie den Mikrofon-Zugriff in den Browser-Einstellungen.'
+        : 'Microphone access denied. Please allow microphone access in browser settings.'
+      );
+      return;
+    }
+    
+    const SpeechRecognition: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setMessages(prev => [...prev, { id: Date.now().toString(), text: language === 'de' ? 'Spracherkennung wird von deinem Browser nicht unterstützt.' : 'Speech recognition is not supported by your browser.', isUser: false, timestamp: new Date() }]);
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = getSpeechLanguage();
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = true;
+    
+    // Mobile specific settings
+    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      recognition.continuous = false;
+      recognition.interimResults = false;
+    }
+    
+    recognitionRef.current = recognition;
+    setIsListening(true);
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[event.results.length - 1][0].transcript;
+      setInputValue(transcript);
+      
+      // If final result, send it
+      if (event.results[event.results.length - 1].isFinal || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        stopListening();
+        sendSpeakPrompt(transcript);
+      }
+    };
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      stopListening();
+    };
+    recognition.onend = () => {};
+    recognition.start();
+  };
+
+  const toggleSpeakMode = async () => {
+    if (!puterReady) return;
+    
+    if (isListening) {
+      stopListening();
+    } else {
+      await startListening();
+    }
+  };
+
+  const sendSpeakPrompt = async (promptText: string) => {
+    const text = promptText.trim();
+    if (!text) return;
+    
+    // Speech mode: Pass text directly to processAIResponse like the input field
+    const userMessage: Message = { id: Date.now().toString(), text, isUser: true, timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
+    setInputValue('');
+    setIsTyping(true);
+    
+    try {
+      const response = await processAIResponse(text);
+      const aiMessage: Message = { 
+        id: (Date.now()+1).toString(), 
+        text: response.text, 
+        isUser: false, 
+        timestamp: new Date(), 
+        qrCode: response.qrCode,
+        quizData: response.quizData,
+        endConversationAvailable: searchMode === 'internet'
+      };
+      setTimeout(() => {
+        setMessages(prev => [...prev, aiMessage]);
+        setIsTyping(false);
+        // Always play TTS when using speech mode
+        if (response.text && response.text.trim()) {
+          playTTS(response.text);
+        }
+      }, 600);
+    } catch (e) {
+      setIsTyping(false);
+    }
   };
 
   const searchArticles = (query: string) => {
@@ -417,113 +1123,516 @@ const AI = () => {
     });
     return filtered.slice(0, 8);
   };
+  const detectLanguage = (text: string): 'de' | 'en' => {
+    const germanWords = ['der', 'die', 'das', 'und', 'ist', 'ein', 'eine', 'ich', 'sie', 'er', 'wir', 'für', 'auf', 'mit', 'von', 'zu', 'am', 'im', 'über', 'dass', 'können', 'haben', 'werden', 'sein', 'nicht'];
+    const englishWords = ['the', 'and', 'is', 'a', 'an', 'i', 'you', 'he', 'she', 'we', 'for', 'on', 'with', 'from', 'to', 'at', 'in', 'about', 'that', 'can', 'have', 'will', 'be', 'not'];
+    
+    const words = text.toLowerCase().split(/\s+/);
+    let germanScore = 0;
+    let englishScore = 0;
+    
+    words.forEach(word => {
+      if (germanWords.includes(word)) germanScore++;
+      if (englishWords.includes(word)) englishScore++;
+    });
+    
+    return germanScore > englishScore ? 'de' : 'en';
+  };
 
-  const callOpenRouterAI = async (prompt: string, useInternetSearch: boolean = false): Promise<string> => {
+  const summarizeSelectedMessages = async () => {
+    if (selectedMessages.length === 0) return;
+    
+    const messagesToSummarize = messages
+      .filter(msg => selectedMessages.includes(msg.id))
+      .map(msg => `${msg.isUser ? (language === 'de' ? 'Benutzer' : 'User') : 'AI'}: ${msg.text}`)
+      .join('\n\n');
+    
     try {
-      const systemPrompt = useInternetSearch 
-        ? (language === 'de' 
-          ? "Du bist ein hilfsreicher AI-Assistent mit Internetzugang. Du kannst aktuelle Informationen suchen und bereitstellen. Antworte immer in deutscher Sprache und verwende Markdown-Formatierung. Du hast Zugang zu aktuellen Nachrichten, Websites und Datenbanken."
-          : "You are a helpful AI assistant with internet access. You can search for and provide current information. Always respond in English and use Markdown formatting. You have access to current news, websites, and databases.")
-        : (language === 'de'
-          ? "Du bist ein hilfsreicher AI-Assistent. Antworte immer in deutscher Sprache und verwende Markdown-Formatierung."
-          : "You are a helpful AI assistant. Always respond in English and use Markdown formatting.");
+      setIsTyping(true);
+      
+      const prompt = language === 'de' 
+        ? `Du bist ein Experte für die präzise Zusammenfassung von Texten. Deine Aufgabe ist es, den folgenden Text klar, strukturiert und verständlich zusammenzufassen. Stelle sicher, dass alle wesentlichen Informationen und Kernaussagen erhalten bleiben, aber entferne Füllwörter und unwichtige Details. Gib nur die Zusammenfassung aus.
 
-      const enhancedPrompt = useInternetSearch 
-        ? (language === 'de'
-          ? `${prompt}\n\nBitte führe eine umfassende Internetsuche durch und stelle aktuelle, detaillierte Informationen bereit. Gib Quellen an, wo möglich.`
-          : `${prompt}\n\nPlease conduct a comprehensive internet search and provide current, detailed information. Include sources where possible.`)
-        : prompt;
+Der zusammenzufassende Text lautet:
+"${messagesToSummarize}"`
+        : `You are an expert at precise text summarization. Your task is to summarize the following text clearly, structurally and comprehensibly. Make sure all essential information and key statements are preserved, but remove filler words and unimportant details. Only output the summary.
 
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer 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",
-          "HTTP-Referer": window.location.origin,
-          "X-Title": "Daily Fun AI - Internet Search",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          "model": "meta-llama/llama-3.1-405b-instruct:free",
-          "messages": [
-            {
-              "role": "system",
-              "content": systemPrompt
+The text to be summarized is:
+"${messagesToSummarize}"`;
+      
+      // Enhanced AI models - try kostenlosen models first, AIML as last resort
+      const aiModels = [
+        { name: 'GPT-5', model: 'gpt-5' },
+        { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
+        { name: 'GPT-4.1', model: 'gpt-4.1' },
+        { name: 'Claude Opus 4', model: 'claude-opus-4' },
+        { name: 'GPT-4o', model: 'gpt-4o' },
+        { name: 'o3-mini', model: 'o3-mini' },
+        { name: 'o1-mini', model: 'o1-mini' },
+        { name: 'Deepseek Chat', model: 'deepseek-chat' },
+        { name: 'Deepseek Reasoner', model: 'deepseek-reasoner' },
+        { name: 'Gemini 2.0 Flash', model: 'gemini-2.0-flash' },
+        { name: 'Meta Llama 3.1 70B', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' },
+        { name: 'Mistral Large', model: 'mistral-large-latest' },
+        { name: 'Grok Beta', model: 'grok-beta' },
+        { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
+      ];
+
+      // Custom AIML API function
+      const callAIMLAPI = async (promptText: string): Promise<string> => {
+        try {
+          const response = await fetch('https://api.aimlapi.com/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + 'b95c22b2537e4e31893073c2bad3e2bc',
+              'Content-Type': 'application/json',
             },
-            {
-              "role": "user",
-              "content": enhancedPrompt
+            body: JSON.stringify({
+              model: 'google/gemma-3n-e4b-it',
+              messages: [
+                {
+                  role: 'user',
+                  content: promptText
+                }
+              ],
+              temperature: 0.7,
+              top_p: 0.7,
+              frequency_penalty: 1,
+              top_k: 50,
+              max_tokens: 400
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`AIML API error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data.choices?.[0]?.message?.content || '';
+        } catch (error) {
+          console.error('AIML API call failed:', error);
+          throw error;
+        }
+      };
+      
+      const puter = (window as any).puter;
+      let summaryText = '';
+      let successfulModel = null;
+      let lastError = null;
+      
+      // Try all AI models sequentially until one succeeds
+      for (const aiModel of aiModels) {
+        try {
+          console.log(`🤖 Trying AI model for summary: ${aiModel.name} (${aiModel.model})`);
+          
+          let aiResponse;
+          
+          if (aiModel.isAIML) {
+            aiResponse = await callAIMLAPI(prompt);
+          } else {
+            if (!puter?.ai?.chat) {
+              throw new Error('Puter AI not available');
             }
-          ],
-          "temperature": 0.7,
-          "max_tokens": 2000,
-          "top_p": 0.9
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`OpenRouter API error: ${response.status} - ${response.statusText}`);
+            aiResponse = await puter.ai.chat(prompt, {
+              model: aiModel.model,
+              max_tokens: 400,
+              temperature: 0.7
+            });
+          }
+          
+          // Parse response
+          let extractedText = '';
+          if (typeof aiResponse === 'string') {
+            extractedText = aiResponse.trim();
+          } else if (aiResponse?.message?.content) {
+            extractedText = aiResponse.message.content.trim();
+          } else if (aiResponse?.text) {
+            extractedText = aiResponse.text.trim();
+          }
+          
+          // Validate response quality
+          if (extractedText && 
+              extractedText.length > 10 && 
+              !extractedText.includes('[object Object]') &&
+              extractedText !== 'undefined' &&
+              extractedText !== 'null') {
+            
+            summaryText = extractedText;
+            successfulModel = aiModel.name;
+            console.log(`✅ Successfully got summary from ${aiModel.name}`);
+            break;
+          } else {
+            console.log(`❌ Invalid response from ${aiModel.name}`);
+            lastError = new Error(`Invalid response from ${aiModel.name}`);
+          }
+          
+        } catch (modelError) {
+          console.error(`❌ Model ${aiModel.name} failed:`, modelError);
+          lastError = modelError;
+        }
       }
-
-      const data = await response.json();
-      const aiResponse = data.choices?.[0]?.message?.content;
-
-      if (!aiResponse) {
-        throw new Error('No response content from OpenRouter AI');
+      
+      if (!successfulModel) {
+        throw new Error('All AI models failed for summarization');
       }
-
-      return aiResponse;
-
+      
+      const summaryMessage: Message = {
+        id: Date.now().toString(),
+        text: language === 'de' 
+          ? `📝 **Zusammenfassung ausgewählter Nachrichten** (${successfulModel})\n\n${summaryText}`
+          : `📝 **Summary of Selected Messages** (${successfulModel})\n\n${summaryText}`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      
+      setMessages(prev => [...prev, summaryMessage]);
+      setSelectedMessages([]);
+      setSummaryMode(false);
     } catch (error) {
-      console.error('OpenRouter AI API call failed:', error);
-      throw error;
+      console.error('Summarization failed:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: language === 'de' 
+          ? '❌ Fehler beim Zusammenfassen der Nachrichten. Alle verfügbaren AI-Modelle sind momentan nicht erreichbar. Versuchen Sie es später erneut.'
+          : '❌ Error summarizing messages. All available AI models are currently unreachable. Try again later.',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
     }
   };
 
+  const checkForSummaryCommand = (text: string): boolean => {
+    const normalizedText = text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ');
+    
+    // German keywords
+    if (language === 'de') {
+      const germanWords = ['fasse', 'informationen', 'zusammen'];
+      const hasAllGermanWords = germanWords.every(word => 
+        normalizedText.includes(word) || normalizedText.includes(word.replace('ß', 'ss'))
+      );
+      if (hasAllGermanWords) return true;
+    }
+    
+    // English keywords
+    const englishWords = ['summarize', 'information'];
+    const hasAllEnglishWords = englishWords.every(word => normalizedText.includes(word));
+    
+    return hasAllEnglishWords;
+  };
+
+  const checkForQuizCommand = (text: string): boolean => {
+    const normalizedText = text.toLowerCase().replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ');
+    
+    // German keywords
+    if (language === 'de') {
+      const germanWords = ['erstelle', 'informations', 'quiz'];
+      const hasAllGermanWords = germanWords.every(word => normalizedText.includes(word));
+      if (hasAllGermanWords) return true;
+    }
+    
+    // English keywords
+    const englishWords = ['create', 'information', 'quiz'];
+    const hasAllEnglishWords = englishWords.every(word => normalizedText.includes(word));
+    
+    return hasAllEnglishWords;
+  };
+
+  const generateInformationQuiz = async () => {
+    if (selectedMessages.length === 0) return;
+    
+    const messagesToQuiz = messages
+      .filter(msg => selectedMessages.includes(msg.id))
+      .map(msg => `${msg.isUser ? (language === 'de' ? 'Benutzer' : 'User') : 'AI'}: ${msg.text}`)
+      .join('\n\n');
+    
+    try {
+      setIsTyping(true);
+      
+      const prompt = language === 'de' 
+        ? `Du bist eine Quiz-Erstellungs-Engine. Deine einzige Aufgabe ist es, aus dem gegebenen Kontext ein Quiz im JSON-Format zu erstellen. Gib ausschließlich den JSON-Code aus, ohne jeglichen begleitenden Text, Erklärungen oder Formatierungszeichen wie \`\`\`json.
+
+**Beispiel für das Ausgabeformat:**
+{
+  "quizTitle": "Titel des Quiz",
+  "questions": [
+    {
+      "questionText": "Was ist die Hauptstadt von Deutschland?",
+      "options": ["München", "Hamburg", "Berlin", "Köln"],
+      "correctAnswer": "Berlin"
+    },
+    {
+      "questionText": "Welcher Fluss fließt durch London?",
+      "options": ["Themse", "Seine", "Donau", "Rhein"],
+      "correctAnswer": "Themse"
+    }
+  ]
+}
+
+**Kontext für das zu erstellende Quiz:**
+"${messagesToQuiz}"
+
+Erstelle jetzt ein Quiz basierend auf dem bereitgestellten Kontext in exakt dem oben gezeigten JSON-Format.`
+        : `You are a quiz creation engine. Your only task is to create a quiz in JSON format from the given context. Output exclusively the JSON code, without any accompanying text, explanations or formatting characters like \`\`\`json.
+
+**Example output format:**
+{
+  "quizTitle": "Quiz Title",
+  "questions": [
+    {
+      "questionText": "What is the capital of Germany?",
+      "options": ["Munich", "Hamburg", "Berlin", "Cologne"],
+      "correctAnswer": "Berlin"
+    },
+    {
+      "questionText": "Which river flows through London?",
+      "options": ["Thames", "Seine", "Danube", "Rhine"],
+      "correctAnswer": "Thames"
+    }
+  ]
+}
+
+**Context for the quiz to be created:**
+"${messagesToQuiz}"
+
+Now create a quiz based on the provided context in exactly the JSON format shown above.`;
+      
+      // Enhanced AI models - try kostenlosen models first, AIML as last resort
+      const aiModels = [
+        { name: 'GPT-5', model: 'gpt-5' },
+        { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
+        { name: 'GPT-4.1', model: 'gpt-4.1' },
+        { name: 'Claude Opus 4', model: 'claude-opus-4' },
+        { name: 'GPT-4o', model: 'gpt-4o' },
+        { name: 'o3-mini', model: 'o3-mini' },
+        { name: 'o1-mini', model: 'o1-mini' },
+        { name: 'Deepseek Chat', model: 'deepseek-chat' },
+        { name: 'Deepseek Reasoner', model: 'deepseek-reasoner' },
+        { name: 'Gemini 2.0 Flash', model: 'gemini-2.0-flash' },
+        { name: 'Meta Llama 3.1 70B', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' },
+        { name: 'Mistral Large', model: 'mistral-large-latest' },
+        { name: 'Grok Beta', model: 'grok-beta' },
+        { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
+      ];
+
+      // Custom AIML API function
+      const callAIMLAPI = async (promptText: string): Promise<string> => {
+        try {
+          const response = await fetch('https://api.aimlapi.com/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer ' + 'b95c22b2537e4e31893073c2bad3e2bc',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'google/gemma-3n-e4b-it',
+              messages: [
+                {
+                  role: 'user',
+                  content: promptText
+                }
+              ],
+              temperature: 0.7,
+              top_p: 0.7,
+              frequency_penalty: 1,
+              top_k: 50,
+              max_tokens: 400
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`AIML API error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data.choices?.[0]?.message?.content || '';
+        } catch (error) {
+          console.error('AIML API call failed:', error);
+          throw error;
+        }
+      };
+      
+      const puter = (window as any).puter;
+      let quizText = '';
+      let successfulModel = null;
+      let lastError = null;
+      
+      // Try all AI models sequentially until one succeeds
+      for (const aiModel of aiModels) {
+        try {
+          console.log(`🤖 Trying AI model for quiz: ${aiModel.name} (${aiModel.model})`);
+          
+          let aiResponse;
+          
+          if (aiModel.isAIML) {
+            aiResponse = await callAIMLAPI(prompt);
+          } else {
+            if (!puter?.ai?.chat) {
+              throw new Error('Puter AI not available');
+            }
+            aiResponse = await puter.ai.chat(prompt, {
+              model: aiModel.model,
+              max_tokens: 400,
+              temperature: 0.7
+            });
+          }
+          
+          // Parse response
+          let extractedText = '';
+          if (typeof aiResponse === 'string') {
+            extractedText = aiResponse.trim();
+          } else if (aiResponse?.message?.content) {
+            extractedText = aiResponse.message.content.trim();
+          } else if (aiResponse?.text) {
+            extractedText = aiResponse.text.trim();
+          }
+          
+          // Validate response quality
+          if (extractedText && 
+              extractedText.length > 10 && 
+              !extractedText.includes('[object Object]') &&
+              extractedText !== 'undefined' &&
+              extractedText !== 'null') {
+            
+            quizText = extractedText;
+            successfulModel = aiModel.name;
+            console.log(`✅ Successfully got quiz from ${aiModel.name}`);
+            break;
+          } else {
+            console.log(`❌ Invalid response from ${aiModel.name}`);
+            lastError = new Error(`Invalid response from ${aiModel.name}`);
+          }
+          
+        } catch (modelError) {
+          console.error(`❌ Model ${aiModel.name} failed:`, modelError);
+          lastError = modelError;
+        }
+      }
+      
+      if (!successfulModel) {
+        throw new Error('All AI models failed for quiz generation');
+      }
+      
+      // Try to parse JSON response
+      try {
+        const jsonData = JSON.parse(quizText);
+        if (jsonData.questions && Array.isArray(jsonData.questions)) {
+          // Convert to our internal format
+          const formattedQuiz = jsonData.questions.map((q: any, index: number) => {
+            const correctIndex = q.options.findIndex((opt: string) => opt === q.correctAnswer);
+            const correctLetter = ['A', 'B', 'C', 'D'][correctIndex] || 'A';
+            
+            return `QUESTION_${index + 1}: ${q.questionText}
+A) ${q.options[0] || ''}
+B) ${q.options[1] || ''}
+C) ${q.options[2] || ''}
+D) ${q.options[3] || ''}
+CORRECT_${index + 1}: ${correctLetter}
+EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
+          }).join('\n\n');
+          
+          const quizMessage: Message = {
+            id: Date.now().toString(),
+            text: `INTERACTIVE_INFO_QUIZ:QUIZ_START\n${formattedQuiz}\nQUIZ_END`,
+            isUser: false,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, quizMessage]);
+        } else {
+          throw new Error('Invalid JSON structure');
+        }
+      } catch (jsonError) {
+        // Fallback to old format if JSON parsing fails
+        const quizMessage: Message = {
+          id: Date.now().toString(),
+          text: `INTERACTIVE_INFO_QUIZ:${quizText}`,
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, quizMessage]);
+      }
+      
+      setSelectedMessages([]);
+      setQuizInfoMode(false);
+    } catch (error) {
+      console.error('Quiz generation failed:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: language === 'de' 
+          ? '❌ Fehler beim Erstellen des Quiz. Alle verfügbaren AI-Modelle sind momentan nicht erreichbar. Versuchen Sie es später erneut.'
+          : '❌ Error creating quiz. All available AI models are currently unreachable. Try again later.',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const parseInteractiveQuiz = (text: string) => {
+    if (!text.startsWith('INTERACTIVE_INFO_QUIZ:')) return null;
+    
+    const quizContent = text.replace('INTERACTIVE_INFO_QUIZ:', '');
+    const quizStart = quizContent.indexOf('QUIZ_START');
+    const quizEnd = quizContent.indexOf('QUIZ_END');
+    
+    if (quizStart === -1 || quizEnd === -1) return null;
+    
+    const quizData = quizContent.substring(quizStart + 10, quizEnd);
+    const questions = [];
+    
+    for (let i = 1; i <= 3; i++) {
+      const questionMatch = quizData.match(new RegExp(`QUESTION_${i}: (.+?)(?=A\\))`));
+      const answersMatch = quizData.match(new RegExp(`A\\) (.+?)\\s*B\\) (.+?)\\s*C\\) (.+?)\\s*D\\) (.+?)\\s*CORRECT_${i}:`));
+      const correctMatch = quizData.match(new RegExp(`CORRECT_${i}: ([ABCD])`));
+      const explanationMatch = quizData.match(new RegExp(`EXPLANATION_${i}: (.+?)(?=QUESTION_|QUIZ_END|$)`));
+      
+      if (questionMatch && answersMatch && correctMatch && explanationMatch) {
+        questions.push({
+          question: questionMatch[1].trim(),
+          answers: [
+            answersMatch[1].trim(),
+            answersMatch[2].trim(),
+            answersMatch[3].trim(),
+            answersMatch[4].trim()
+          ],
+          correctAnswer: correctMatch[1],
+          explanation: explanationMatch[1].trim(),
+          selectedAnswer: null,
+          showResult: false
+        });
+      }
+    }
+    
+    return questions.length === 3 ? questions : null;
+  };
+
+  const [quizStates, setQuizStates] = useState<{ [messageId: string]: any[] }>({});
+
   const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string; quizData?: any }> => {
     const input = userInput.toLowerCase();
+    const detectedLanguage = detectLanguage(userInput);
+    
+    // Check for summary command
+    if (checkForSummaryCommand(userInput)) {
+      await summarizeSelectedMessages();
+      return { text: '' }; // Return empty to prevent duplicate message
+    }
+    
+    // Check for quiz command
+    if (checkForQuizCommand(userInput)) {
+      await generateInformationQuiz();
+      return { text: '' }; // Return empty to prevent duplicate message
+    }
     
     // Quiz generation
     if (quizMode || input.includes('quiz')) {
       setQuizMode(false);
-      try {
-        const quizPrompt = language === 'de'
-          ? `Erstelle ein Quiz zum Thema: ${userInput}. Das Quiz soll eine Frage mit 4 Antwortmöglichkeiten haben. Gib die Antwort im folgenden JSON-Format zurück:
-{
-  "question": "Die Quizfrage hier",
-  "answers": ["Antwort A", "Antwort B", "Antwort C", "Antwort D"],
-  "correctAnswer": "Die richtige Antwort hier",
-  "explanation": "Erklärung warum diese Antwort richtig ist"
-}`
-          : `Create a quiz about: ${userInput}. The quiz should have one question with 4 answer options. Return the answer in this JSON format:
-{
-  "question": "The quiz question here",
-  "answers": ["Answer A", "Answer B", "Answer C", "Answer D"],
-  "correctAnswer": "The correct answer here",
-  "explanation": "Explanation why this answer is correct"
-}`;
-
-        const quizResponse = await callOpenRouterAI(quizPrompt);
-        
-        try {
-          const quizData = JSON.parse(quizResponse);
-          return {
-            text: 'INTERACTIVE_QUIZ',
-            quizData: {
-              question: quizData.question,
-              answers: quizData.answers,
-              correctAnswer: quizData.correctAnswer,
-              explanation: quizData.explanation
-            }
-          };
-        } catch (e) {
-          return { text: quizResponse };
-        }
-      } catch (error) {
-        const errorText = language === 'de'
-          ? 'Fehler beim Erstellen des Quiz. Bitte versuchen Sie es erneut.'
-          : 'Error creating quiz. Please try again.';
-        return { text: errorText };
-      }
+      return await generateQuiz(userInput);
     }
 
     // QR Code generation
@@ -555,88 +1664,348 @@ const AI = () => {
       }
     }
 
-    // Daily Fun (Internet Search) Mode - OpenRouter AI with Internet capabilities
+    // Internet search mode (Wikipedia + AI analysis + News search)
     if (searchMode === 'internet') {
+      const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en'
       try {
-        console.log('🌐 Using OpenRouter AI with Internet Search for:', userInput);
-        
-        const aiResponse = await callOpenRouterAI(userInput, true);
-        
-        // Add search suggestions
-        const searchQuery = encodeURIComponent(userInput);
-        const searchSuggestion = language === 'de'
-          ? `\n\n🔍 **Für weitere aktuelle Informationen:**\n• [Google Suche](https://www.google.com/search?q=${searchQuery})\n• [DuckDuckGo](https://duckduckgo.com/?q=${searchQuery})\n• [Wikipedia](https://de.wikipedia.org/wiki/Spezial:Suche?search=${searchQuery})`
-          : `\n\n🔍 **For more current information:**\n• [Google Search](https://www.google.com/search?q=${searchQuery})\n• [DuckDuckGo](https://duckduckgo.com/?q=${searchQuery})\n• [Wikipedia](https://en.wikipedia.org/wiki/Special:Search?search=${searchQuery})`;
-        
-        const finalResponse = `🤖 **Daily Fun AI (Internet Search)**\n\n${aiResponse}${searchSuggestion}`;
+        // REMOVED DEEP DIVE FUNCTIONALITY - Always start fresh search
+        // No more follow-up context to prevent unwanted deep dives
 
-        return { text: finalResponse };
-
-      } catch (error) {
-        console.error('❌ OpenRouter AI Internet Search failed:', error);
-        const errorMessage = language === 'de'
-          ? `❌ **Fehler bei der Internet-Suche**\n\nDie OpenRouter AI konnte Ihre Anfrage nicht verarbeiten. Dies kann verschiedene Gründe haben:\n\n• Netzwerkprobleme\n• API-Begrenzungen erreicht\n• Temporäre Serverprobleme\n\n**Versuchen Sie es erneut oder fragen Sie etwas anderes.**`
-          : `❌ **Internet Search Error**\n\nOpenRouter AI could not process your request. This could be due to:\n\n• Network issues\n• API limits reached\n• Temporary server problems\n\n**Please try again or ask something else.**`;
+        // Extract main topic from user's question using AI
+        const extractedTopic = await extractTopicFromQuery(userInput);
+        console.log('Searching Wikipedia for:', extractedTopic);
         
-        return { text: errorMessage };
+        // Search Wikipedia using extracted topic with better error handling
+        const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic)}&utf8=&format=json&origin=*&srlimit=3`
+        let sRes, sData, first;
+        
+        try {
+          sRes = await fetch(searchUrl);
+          if (!sRes.ok) throw new Error(`Search failed: ${sRes.status}`);
+          sData = await sRes.json() as any;
+          first = sData?.query?.search?.[0];
+        } catch (searchError) {
+          console.error('Wikipedia search error:', searchError);
+          // Try fallback search with simpler query
+          const fallbackUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic.split(' ')[0])}&utf8=&format=json&origin=*&srlimit=1`
+          try {
+            sRes = await fetch(fallbackUrl);
+            sData = await sRes.json() as any;
+            first = sData?.query?.search?.[0];
+          } catch (fallbackError) {
+            console.error('Fallback search also failed:', fallbackError);
+          }
+        }
+        
+        if (first) {
+          const title = first.title as string
+          console.log('Found Wikipedia article:', title);
+          
+          // Get full article summary with better error handling
+          const sumUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
+          let sumRes, sumData;
+          
+          try {
+            sumRes = await fetch(sumUrl);
+            if (!sumRes.ok) throw new Error(`Summary fetch failed: ${sumRes.status}`);
+            sumData = await sumRes.json() as any;
+          } catch (summaryError) {
+            console.error('Wikipedia summary error:', summaryError);
+            // Use search snippet as fallback
+            sumData = { extract: first.snippet?.replace(/<[^>]*>/g, '') || 'Keine Zusammenfassung verfügbar.' };
+          }
+          const extract = sumData?.extract || (language === 'de' ? 'Keine Zusammenfassung verfügbar.' : 'No summary available.');
+          console.log('Wikipedia extract:', extract);
+          
+          // Set seed for future questions
+          setInternetSeed({ 
+            firstQuery: userInput, 
+            title, 
+            lang: langCode, 
+            link: `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}` 
+          });
+          
+          // Use the optimized three-part response format
+          await waitForPuterReady();
+          const puter = (window as any).puter;
+          
+          // First show Wikipedia content
+          const wikipediaHeader = language === 'de' ? '🌐 **Wikipedia:**' : '🌐 **Wikipedia:**';
+          let wikipediaContent = `${wikipediaHeader}\n${extract}`;
+          
+          // Add Wikipedia source link
+          const linkText = language === 'de' 
+            ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
+            : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
+          
+          // Generate AI Analysis using AIML API (optimized for news and current events)
+          const aiAnalysisPrompt = language === 'de' 
+            ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Ignoriere jegliche Wikipedia-Informationen und suche nach aktuellen Nachrichten, Berichten und Fakten. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
+            : `You are an expert journalist with access to current information. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Ignore any Wikipedia information and search for current news, reports, and facts. Answer in 2-3 comprehensive sentences: ${userInput}`;
+          
+          let aiAnalysisContent = '';
+          
+          // Use only AIML API (best for news and current events)
+          try {
+            console.log('🤖 Using AIML Gemma API for news analysis');
+            
+            const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Bearer b1e7ed5d35304c83b9691f980d7a4432',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'google/gemma-3n-e4b-it',
+                messages: [
+                  {
+                    role: 'user',
+                    content: aiAnalysisPrompt
+                  }
+                ],
+                temperature: 0.7,
+                top_p: 0.7,
+                frequency_penalty: 1,
+                top_k: 50,
+                max_tokens: 400
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error(`AIML API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const aiResponse = data.choices?.[0]?.message?.content || '';
+            
+            console.log('✅ AIML API response received:', aiResponse);
+            
+            // Validate response quality
+            if (aiResponse && aiResponse.trim().length > 10) {
+              aiAnalysisContent = aiResponse.trim();
+              console.log('✅ AI Analysis completed successfully using AIML Gemma');
+            } else {
+              throw new Error('Invalid response from AIML API');
+            }
+            
+          } catch (error) {
+            console.error('❌ AIML API failed:', error);
+            aiAnalysisContent = language === 'de' 
+              ? 'KI-Analyse momentan nicht verfügbar. Das AIML Gemma Modell für Nachrichten-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. The AIML Gemma model for news analysis is currently unreachable. Please try again later.';
+          }
+          
+          const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
+          const aiAnalysisSection = `${aiAnalysisHeader}\n${aiAnalysisContent}`;
+          
+          // Fetch real articles with fallback system (Guardian API -> GNews API)
+          let articlesSection = '';
+          let successfulNewsAPI = null;
+          let lastNewsError = null;
+          
+          // Try Guardian API first
+          try {
+            console.log('🗞️ Trying Guardian API for:', extractedTopic);
+            const guardianApiKey = '0be420a7-af7b-45e9-b5cb-04afb863e15c';
+            const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(extractedTopic)}&api-key=${guardianApiKey}&show-fields=headline,trailText&page-size=5&order-by=relevance`;
+            
+            const guardianResponse = await fetch(guardianUrl);
+            if (guardianResponse.ok) {
+              const guardianData = await guardianResponse.json();
+              const articles = guardianData.response?.results || [];
+              
+              if (articles.length > 0) {
+                console.log('✅ Guardian API successful, found', articles.length, 'articles');
+                const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
+                const articleButtons = articles.map((article: any, index: number) => {
+                  const headline = article.fields?.headline || article.webTitle;
+                  const shortTitle = headline.length > 60 ? headline.substring(0, 57) + '...' : headline;
+                  return `[${shortTitle}](${article.webUrl})`;
+                }).join('\n');
+                
+                articlesSection = `${articlesHeader}\n${articleButtons}`;
+                successfulNewsAPI = 'Guardian';
+              } else {
+                throw new Error('No articles found in Guardian API');
+              }
+            } else {
+              throw new Error(`Guardian API error: ${guardianResponse.status}`);
+            }
+          } catch (guardianError) {
+            console.error('❌ Guardian API failed:', guardianError);
+            lastNewsError = guardianError;
+            
+            // Fallback to GNews API (costs money, so only used when Guardian fails)
+            try {
+              console.log('🗞️ Trying GNews API as fallback for:', extractedTopic);
+              const gnewsApiKey = '494b5937247cd56ede96dd66842f802d';
+              const gnewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(extractedTopic)}&token=${gnewsApiKey}&lang=${language === 'de' ? 'de' : 'en'}&country=${language === 'de' ? 'de' : 'us'}&max=5&sortby=relevance`;
+              
+              const gnewsResponse = await fetch(gnewsUrl);
+              if (gnewsResponse.ok) {
+                const gnewsData = await gnewsResponse.json();
+                const articles = gnewsData.articles || [];
+                
+                if (articles.length > 0) {
+                  console.log('✅ GNews API successful, found', articles.length, 'articles');
+                  const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
+                  const articleButtons = articles.map((article: any, index: number) => {
+                    const title = article.title;
+                    const shortTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
+                    return `[${shortTitle}](${article.url})`;
+                  }).join('\n');
+                  
+                  articlesSection = `${articlesHeader}\n${articleButtons}`;
+                  successfulNewsAPI = 'GNews';
+                } else {
+                  throw new Error('No articles found in GNews API');
+                }
+              } else {
+                throw new Error(`GNews API error: ${gnewsResponse.status}`);
+              }
+            } catch (gnewsError) {
+              console.error('❌ GNews API also failed:', gnewsError);
+              lastNewsError = gnewsError;
+              
+              // Both APIs failed, provide manual search links
+              const fallbackText = language === 'de'
+                ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
+                : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
+              articlesSection = fallbackText;
+            }
+          }
+          
+          // Log which API was successful
+          if (successfulNewsAPI) {
+            console.log(`🎉 Articles fetched successfully using ${successfulNewsAPI} API`);
+          } else {
+            console.error('🚨 All news APIs failed. Last error:', lastNewsError);
+          }
+          
+          // Add external sources section
+          const externalSourcesText = language === 'de'
+            ? '\n\n**🌐 Externe Quellen:**\n[News suchen](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')'
+            : '\n\n**🌐 External Sources:**\n[Search News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')';
+          
+          const result = `${wikipediaContent}${linkText}${aiAnalysisSection}${articlesSection}${externalSourcesText}`;
+          
+          return { text: result }
+        } else {
+          const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.'
+          return { text: `🌐 ${notFound}` }
+        }
+      } catch (e) {
+        console.error('Wikipedia search error:', e);
+        const err = language === 'de' ? 'Fehler bei der Wikipedia-Suche.' : 'Error during Wikipedia search.'
+        return { text: `❌ ${err}` }
       }
     }
 
-    // Local mode - Handle Daily Fun specific queries
+
+    // Article-specific Q&A and summarization when context is present
+    if (searchMode === 'local' && (contextArticleId || articleContext)) {
+      const ctxArticle = contextArticleId
+        ? articles.find(a => a.id === contextArticleId)
+        : articles.find(a => {
+            const ctx = (articleContext || '').toLowerCase();
+            const titles = [a.title || '', a.titleEn || ''].map(t => t.toLowerCase());
+            return titles.includes(ctx) || titles.some(t => t.includes(ctx));
+          });
+      if (ctxArticle) {
+        const title = language === 'de' ? ctxArticle.title : (ctxArticle.titleEn || ctxArticle.title);
+        const raw = language === 'de' ? (ctxArticle.content || ctxArticle.excerpt) : (ctxArticle.contentEn || ctxArticle.excerptEn || ctxArticle.excerpt);
+        const clean = stripHtml(raw || '');
+        const sum = summarize(clean, 4);
+        const points = keyPoints(clean, ctxArticle.tags, 3);
+        const ask = input;
+        if (ask.includes('autor') || ask.includes('author')) {
+          const res = language === 'de' ? `Autor: ${ctxArticle.author}` : `Author: ${ctxArticle.author}`;
+          return { text: `🧑‍💻 ${res}\n\n🔗 /article/${ctxArticle.id}` };
+        }
+        if (ask.includes('datum') || ask.includes('date')) {
+          const dateStr = new Date(ctxArticle.publishedAt).toLocaleDateString();
+          const res = language === 'de' ? `Veröffentlichungsdatum: ${dateStr}` : `Published on: ${dateStr}`;
+          return { text: `📅 ${res}\n\n🔗 /article/${ctxArticle.id}` };
+        }
+        if (ask.includes('kategorie') || ask.includes('category')) {
+          const cat = language === 'de' ? (ctxArticle.category) : (ctxArticle.categoryEn || ctxArticle.category);
+          const res = language === 'de' ? `Kategorie: ${cat}` : `Category: ${cat}`;
+          return { text: `🏷️ ${res}\n\n🔗 /article/${ctxArticle.id}` };
+        }
+        const header = language === 'de' ? `📰 ${title}\n\nKurz zusammengefasst:` : `📰 ${title}\n\nIn short:`;
+        const pointsHeader = language === 'de' ? '\n\nWichtige Punkte:' : '\n\nKey takeaways:';
+        const factsHeader = language === 'de' ? '\n\nFakten:' : '\n\nFacts:';
+        const facts = [
+          language === 'de' ? `Autor: ${ctxArticle.author}` : `Author: ${ctxArticle.author}`,
+          language === 'de' ? `Kategorie: ${ctxArticle.category}` : `Category: ${ctxArticle.categoryEn || ctxArticle.category}`,
+          `${language === 'de' ? 'Datum' : 'Date'}: ${new Date(ctxArticle.publishedAt).toLocaleDateString()}`,
+        ].join('\n- ');
+        const link = `\n\n🔗 ${language === 'de' ? 'Zum Artikel' : 'Open article'}: /article/${ctxArticle.id}`;
+        return { text: `${header}\n${sum}${pointsHeader}\n${points.map(p => `- ${p}`).join('\n')}${factsHeader}\n- ${facts}${link}` };
+      }
+    }
+
+    // Local article search for search mode (all articles)
     if (searchMode === 'local') {
-      // Contact information
-      if (input.includes('kontakt') || input.includes('contact') || input.includes('email')) {
-        const contactText = language === 'de'
-          ? `📧 **Kontakt:**\n\n**Deutsch:** ${companyDatabase.contact.german}\n**English:** ${companyDatabase.contact.english}\n\nWir freuen uns auf Ihre Nachricht!`
-          : `📧 **Contact:**\n\n**German:** ${companyDatabase.contact.german}\n**English:** ${companyDatabase.contact.english}\n\nWe look forward to hearing from you!`;
-        
-        return { text: contactText };
+      const results = searchArticles(userInput);
+      if (results.length > 0) {
+        const resultText = language === 'de' 
+          ? `📰 Ich habe ${results.length} passende Artikel gefunden:\n\n`
+          : `📰 I found ${results.length} matching articles:\n\n`;
+        const articleList = results.map((article, index) => {
+          const title = language === 'de' ? (article.title) : (article.titleEn || article.title);
+          const excerpt = language === 'de' ? (article.excerpt) : (article.excerptEn || article.excerpt);
+          return `${index + 1}. **${title}**\n   ${excerpt}\n   🔗 /article/${article.id} \n   📝 ${article.author} • 📅 ${new Date(article.publishedAt).toLocaleDateString()}\n`;
+        }).join('\n');
+        const footer = language === 'de'
+          ? '\n💡 Fragen Sie nach mehr Details zu einem bestimmten Artikel!'
+          : '\n💡 Ask for more details about a specific article!';
+        return { text: resultText + articleList + footer };
       }
-
-      // Team information
-      if (input.includes('team') || input.includes('mitarbeiter') || input.includes('staff')) {
-        const teamText = language === 'de'
-          ? `👥 **Unser Team:**\n\n**${companyDatabase.founder.name}** - ${companyDatabase.founder.role}\n${companyDatabase.founder.vision}\n\n${companyDatabase.team.map(member => `**${member.name}** - ${member.role} (${member.type})\n${member.description}`).join('\n\n')}`
-          : `👥 **Our Team:**\n\n**${companyDatabase.founder.name}** - ${companyDatabase.founder.role}\n${companyDatabase.founder.vision}\n\n${companyDatabase.team.map(member => `**${member.name}** - ${member.role} (${member.type})\n${member.description}`).join('\n\n')}`;
-        
-        return { text: teamText };
-      }
-
-      // Stefan Kunc specific
-      if (input.includes('stefan kunc') || input.includes('founder') || input.includes('gründer')) {
+    }
+    
+    // Check for contact information requests
+    if (input.includes('contact') || input.includes('email') || input.includes('kontakt') || input.includes('mail')) {
+      const contactText = language === 'de'
+        ? `Hier sind unsere Kontaktinformationen:\n\n📧 Für deutsche Anfragen: ${companyDatabase.contact.german}\n📧 Für englische Anfragen: ${companyDatabase.contact.english}\n\nWir freuen uns auf Ihre Nachricht!`
+        : `Here is our contact information:\n\n📧 For German inquiries: ${companyDatabase.contact.german}\n📧 For English inquiries: ${companyDatabase.contact.english}\n\nWe look forward to hearing from you!`;
+      return { text: contactText };
+    }
+    
+    // Check for team information requests
+    if (input.includes('team') || input.includes('staff') || input.includes('who') || input.includes('wer') || input.includes('mitarbeiter')) {
+      if (input.includes('stefan') || input.includes('kunc')) {
         const stefanText = language === 'de'
-          ? `👨‍💼 **Stefan Kunc - Gründer & Vision Leader**\n\n${companyDatabase.founder.vision}\n\nStefan ist der kreative Kopf hinter Daily Fun und sorgt dafür, dass Informationen nie langweilig werden!`
-          : `👨‍💼 **Stefan Kunc - Founder & Vision Leader**\n\n${companyDatabase.founder.vision}\n\nStefan is the creative mind behind Daily Fun and ensures that information is never boring!`;
-        
+          ? `Stefan Kunc - Gründer & Visionär von Daily Fun:\n\n"${companyDatabase.founder.vision}"\n\nStefan ist der kreative Kopf hinter Daily Fun und hat die Plattform mit dem Ziel gegründet, Nachrichten unterhaltsam und vertrauenswürdig zu gestalten.`
+          : `Stefan Kunc - Founder & Visionary of Daily Fun:\n\n"${companyDatabase.founder.vision}"\n\nStefan is the creative mind behind Daily Fun and founded the platform with the goal of making news entertaining and trustworthy.`;
         return { text: stefanText };
       }
-
-      // Article search
-      if (input.includes('artikel') || input.includes('article') || input.includes('alle') || input.includes('all') || input.includes('zeig') || input.includes('show')) {
-        const results = searchArticles(userInput);
-        if (results.length > 0) {
-          const articlesText = language === 'de'
-            ? `📚 **Gefundene Artikel (${results.length}):**\n\n${results.map(article => `**${article.title}**\n${article.excerpt}\n👤 ${article.author} | 📅 ${new Date(article.publishedAt).toLocaleDateString()} | 👀 ${article.views.toLocaleString()} Aufrufe\n🔗 [Artikel lesen](/article/${article.id})`).join('\n\n')}`
-            : `📚 **Found Articles (${results.length}):**\n\n${results.map(article => `**${article.titleEn || article.title}**\n${article.excerptEn || article.excerpt}\n👤 ${article.author} | 📅 ${new Date(article.publishedAt).toLocaleDateString()} | 👀 ${article.views.toLocaleString()} views\n🔗 [Read article](/article/${article.id})`).join('\n\n')}`;
-          
-          return { text: articlesText };
-        }
-      }
-
-      // Company information
-      if (input.includes('mission') || input.includes('vision') || input.includes('unternehmen') || input.includes('company') || input.includes('daily fun')) {
-        const aboutText = language === 'de'
-          ? `🏢 **Über Daily Fun:**\n\n**Mission:** ${companyDatabase.company.mission}\n\n**Vision:** ${companyDatabase.company.vision}\n\n**Unsere Werte:** ${companyDatabase.company.values.join(', ')}`
-          : `🏢 **About Daily Fun:**\n\n**Mission:** ${companyDatabase.company.mission}\n\n**Vision:** ${companyDatabase.company.vision}\n\n**Our Values:** ${companyDatabase.company.values.join(', ')}`;
-        
-        return { text: aboutText };
-      }
+      
+      // General team overview
+      const teamList = companyDatabase.team.map((member, index) => 
+        `${index + 1}. ${member.name} (${member.type}) - ${member.role}`
+      ).join('\n');
+      
+      const teamText = language === 'de'
+        ? `Unser Daily Fun Team:\n\n${teamList}\n\nJedes Teammitglied trägt mit einzigartigen Fähigkeiten dazu bei, Daily Fun zu der vertrauenswürdigen und unterhaltsamen Plattform zu machen, die sie heute ist!`
+        : `Our Daily Fun Team:\n\n${teamList}\n\nEach team member contributes unique skills to make Daily Fun the trustworthy and entertaining platform it is today!`;
+      
+      return { text: teamText };
+    }
+    
+    // Check for company information requests
+    if (input.includes('about') || input.includes('company') || input.includes('mission') || input.includes('über') || input.includes('firma') || input.includes('unternehmen')) {
+      const aboutText = language === 'de'
+        ? `Über Daily Fun:\n\n${companyDatabase.company.mission}\n\nDaily Fun Mission: ${companyDatabase.company.vision}\n\nUnsere Werte: ${companyDatabase.company.values.join(', ')}`
+        : `About Daily Fun:\n\n${companyDatabase.company.mission}\n\nDaily Fun Mission: ${companyDatabase.company.vision}\n\nOur Values: ${companyDatabase.company.values.join(', ')}`;
+      
+      return { text: aboutText };
     }
     
     // Default response for unmatched queries
     const defaultText = language === 'de'
-      ? 'Ich kann Ihnen helfen mit:\n\n• Kontaktinformationen\n• Team-Informationen\n• Artikel-Quellen und Details\n• Liste aller Artikel\n\nFragen Sie mich zum Beispiel:\n• "Wer ist Stefan Kunc?"\n• "Wie kann ich euch kontaktieren?"\n• "Zeig mir alle Artikel"\n• "Was ist die Mission von Daily Fun?"\n\n💡 **Tipp:** Wechseln Sie zu "Daily Fun (Internet Search)" für aktuelle Informationen aus dem Internet!'
-      : 'I can help you with:\n\n• Contact information\n• Team information\n• Article sources and details\n• List of all articles\n\nTry asking:\n• "Who is Stefan Kunc?"\n• "How can I contact you?"\n• "Show me all articles"\n• "What is Daily Fun\'s mission?"\n\n💡 **Tip:** Switch to "Daily Fun (Internet Search)" for current information from the internet!';
+      ? 'Ich kann Ihnen helfen mit:\n\n• Kontaktinformationen\n• Team-Informationen\n• Artikel-Quellen und Details\n• Liste aller Artikel\n\nFragen Sie mich zum Beispiel:\n• "Wer ist Stefan Kunc?"\n• "Wie kann ich euch kontaktieren?"\n• "Zeig mir alle Artikel"\n• "Was ist die Mission von Daily Fun?"'
+      : 'I can help you with:\n\n• Contact information\n• Team information\n• Article sources and details\n• List of all articles\n\nTry asking:\n• "Who is Stefan Kunc?"\n• "How can I contact you?"\n• "Show me all articles"\n• "What is Daily Fun\'s mission?"';
     
     return { text: defaultText };
   };
@@ -717,6 +2086,7 @@ const AI = () => {
           qrCode: response.qrCode,
           quizData: response.quizData,
           endConversationAvailable: searchMode === 'internet',
+          showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
         setTimeout(() => {
@@ -743,12 +2113,11 @@ const AI = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    const currentInput = inputValue;
     setInputValue('');
     setIsTyping(true);
 
     try {
-      const response = await processAIResponse(currentInput);
+      const response = await processAIResponse(inputValue);
       setLastAIResponse(response.text);
 
       // Only add AI message if there's actual text content
@@ -761,6 +2130,7 @@ const AI = () => {
           qrCode: response.qrCode,
           quizData: response.quizData,
           endConversationAvailable: searchMode === 'internet',
+          showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
         setTimeout(() => {
@@ -774,6 +2144,16 @@ const AI = () => {
       console.error('Error processing AI response:', error);
       setIsTyping(false);
     }
+  };
+
+  const endInternetConversation = () => {
+    setInternetSeed(null);
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      text: language === 'de' ? '🛑 Konversation beendet. Bitte nenne ein neues Thema für die Internet-Suche.' : '🛑 Conversation ended. Please provide a new topic for Internet search.',
+      isUser: false,
+      timestamp: new Date()
+    }]);
   };
 
   return (
@@ -801,216 +2181,349 @@ const AI = () => {
                     message.isUser
                       ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg'
                       : 'bg-white text-gray-800 border border-gray-100 shadow-sm'
+                  } ${
+                    selectedMessages.includes(message.id) 
+                      ? `ring-2 ${summaryMode ? 'ring-orange-400' : 'ring-blue-400'} ${message.isUser ? '' : 'bg-orange-50'}` 
+                      : ''
                   }`}
-                  onClick={() => handleMessageClick(message.id)}
-                >
-                  {/* Interactive Quiz Display */}
-                  {message.text === 'INTERACTIVE_QUIZ' && message.quizData ? (
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        {message.quizData.question}
-                      </h3>
-                      <div className="space-y-2">
-                        {message.quizData.answers.map((answer: string, index: number) => {
-                          const answerLetter = String.fromCharCode(65 + index);
-                          const isCorrect = answer === message.quizData.correctAnswer;
-                          const isSelected = answer === message.quizData.selectedAnswer;
-                          const showResults = message.quizData.showResults;
-                         
-                         let buttonClass = "w-full text-left p-3 rounded-lg border transition-all duration-200 ";
-                         
-                         if (showResults) {
-                           if (isCorrect) {
-                             buttonClass += "bg-green-100 border-green-300 text-green-800";
-                           } else if (isSelected && !isCorrect) {
-                             buttonClass += "bg-red-100 border-red-300 text-red-800";
-                           } else {
-                             buttonClass += "bg-gray-100 border-gray-200 text-gray-600";
-                           }
-                         } else {
-                           buttonClass += "bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-800";
-                         }
-                         
-                         return (
-                           <button
-                             key={index}
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               !showResults && handleQuizAnswer(message.id, answer);
+                   onClick={() => handleMessageClick(message.id)}
+                  >
+                    {/* Interactive Information Quiz Display */}
+                    {message.text.startsWith('INTERACTIVE_INFO_QUIZ:') ? (
+                      <div className="space-y-6">
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">
+                          {language === 'de' ? '🧠 Informations-Quiz' : '🧠 Information Quiz'}
+                        </h2>
+                        {(() => {
+                          const quizQuestions = parseInteractiveQuiz(message.text);
+                          if (!quizQuestions) {
+                            return <p className="text-red-600">{language === 'de' ? 'Fehler beim Laden des Quiz' : 'Error loading quiz'}</p>;
+                          }
+                          
+                          if (!quizStates[message.id]) {
+                            setQuizStates(prev => ({ ...prev, [message.id]: quizQuestions }));
+                            return <div>Loading...</div>;
+                          }
+                          
+                          const currentQuiz = quizStates[message.id];
+                          
+                          return currentQuiz.map((q: any, qIndex: number) => (
+                            <div key={qIndex} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                              <h3 className="font-semibold text-gray-800 mb-3">
+                                {qIndex + 1}. {q.question}
+                              </h3>
+                              <div className="space-y-2">
+                                {q.answers.map((answer: string, aIndex: number) => {
+                                  const letter = ['A', 'B', 'C', 'D'][aIndex];
+                                  const isCorrect = letter === q.correctAnswer;
+                                  const isSelected = q.selectedAnswer === letter;
+                                  
+                                  return (
+                                    <button
+                                      key={aIndex}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setQuizStates(prev => ({
+                                          ...prev,
+                                          [message.id]: prev[message.id].map((quiz: any, idx: number) => 
+                                            idx === qIndex 
+                                              ? { ...quiz, selectedAnswer: letter, showResult: true }
+                                              : quiz
+                                          )
+                                        }));
+                                      }}
+                                      disabled={q.showResult}
+                                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                                        q.showResult
+                                          ? isCorrect
+                                            ? 'bg-green-100 border-green-400 text-green-800'
+                                            : isSelected
+                                            ? 'bg-red-100 border-red-400 text-red-800'
+                                            : 'bg-gray-100 border-gray-300 text-gray-600'
+                                          : 'bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                                      }`}
+                                    >
+                                      <div className="flex items-start gap-3">
+                                        <span className="font-semibold">
+                                          {letter}.
+                                        </span>
+                                        <span className="flex-1">{answer}</span>
+                                        {q.showResult && isCorrect && (
+                                          <span className="text-green-600 font-semibold">
+                                            ✓ {language === 'de' ? 'Richtig' : 'Correct'}
+                                          </span>
+                                        )}
+                                        {q.showResult && isSelected && !isCorrect && (
+                                          <span className="text-red-600 font-semibold">
+                                            ✗ {language === 'de' ? 'Falsch' : 'Wrong'}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              
+                              {q.showResult && (
+                                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                  <p className="text-blue-800">
+                                    <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {q.explanation}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ));
+                        })()}
+                      </div>
+                    ) : message.text === 'INTERACTIVE_QUIZ' && message.quizData ? (
+                       <div className="space-y-4">
+                         <h3 className="text-lg font-semibold text-gray-800">
+                           {message.quizData.question}
+                         </h3>
+                         <div className="space-y-2">
+                           {message.quizData.answers.map((answer: string, index: number) => {
+                             const answerLetter = String.fromCharCode(65 + index);
+                             const isCorrect = answer === message.quizData.correctAnswer;
+                             const isSelected = answer === message.quizData.selectedAnswer;
+                             const showResults = message.quizData.showResults;
+                            
+                            let buttonClass = "w-full text-left p-3 rounded-lg border transition-all duration-200 ";
+                            
+                            if (showResults) {
+                              if (isCorrect) {
+                                buttonClass += "bg-green-100 border-green-300 text-green-800";
+                              } else if (isSelected && !isCorrect) {
+                                buttonClass += "bg-red-100 border-red-300 text-red-800";
+                              } else {
+                                buttonClass += "bg-gray-100 border-gray-200 text-gray-600";
+                              }
+                            } else {
+                              buttonClass += "bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-800";
+                            }
+                            
+                            return (
+                              <button
+                                key={index}
+                                onClick={() => !showResults && handleQuizAnswer(message.id, answer)}
+                                disabled={showResults}
+                                className={buttonClass}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <span className="font-semibold text-lg">
+                                    {answerLetter}.
+                                  </span>
+                                  <span className="flex-1">{answer}</span>
+                                  {showResults && isCorrect && (
+                                    <span className="text-green-600 font-semibold">
+                                      ✓ {language === 'de' ? 'Richtige Antwort' : 'Correct Answer'}
+                                    </span>
+                                  )}
+                                  {showResults && isSelected && !isCorrect && (
+                                    <span className="text-red-600 font-semibold">
+                                      ✗ {language === 'de' ? 'Nicht ganz' : 'Not quite'}
+                                    </span>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        
+                        {message.quizData.showResults && (
+                          <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <p className="text-blue-800">
+                              <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {message.quizData.explanation}
+                            </p>
+                            <div className="mt-3">
+                              <Button
+                                onClick={() => sendPrompt(language === 'de' ? 'Random Quiz' : 'Random Quiz')}
+                                size="sm"
+                                variant="outline"
+                                className="bg-white"
+                              >
+                                {language === 'de' ? 'Nächste Frage' : 'Next Question'}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                     ) : (
+                       <div>
+                         <div className="text-sm leading-relaxed">
+                           <ReactMarkdown 
+                             className="prose prose-sm max-w-none"
+                             components={{
+                               p: ({ children }) => <p className="mb-2">{children}</p>,
+                               h1: ({ children }) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
+                               h2: ({ children }) => <h2 className="text-lg font-semibold mb-2">{children}</h2>,
+                               h3: ({ children }) => <h3 className="text-base font-medium mb-1">{children}</h3>,
+                               ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
+                               ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
+                               li: ({ children }) => <li className="mb-1">{children}</li>,
+                               strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                               em: ({ children }) => <em className="italic">{children}</em>,
+                               blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic">{children}</blockquote>,
+                               code: ({ children }) => <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">{children}</code>,
+                               a: ({ children, href }) => <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>
                              }}
-                             disabled={showResults}
-                             className={buttonClass}
                            >
-                             <div className="flex items-start gap-3">
-                               <span className="font-semibold text-lg">
-                                 {answerLetter}.
-                               </span>
-                               <span className="flex-1">{answer}</span>
-                               {showResults && isCorrect && (
-                                 <span className="text-green-600 font-semibold">
-                                   ✓ {language === 'de' ? 'Richtige Antwort' : 'Correct Answer'}
-                                 </span>
-                               )}
-                               {showResults && isSelected && !isCorrect && (
-                                 <span className="text-red-600 font-semibold">
-                                   ✗ {language === 'de' ? 'Nicht ganz' : 'Not quite'}
-                                 </span>
-                               )}
-                             </div>
-                           </button>
-                         );
-                       })}
-                     </div>
-                     
-                     {message.quizData.showResults && (
-                       <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                         <p className="text-blue-800">
-                           <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {message.quizData.explanation}
-                         </p>
-                         <div className="mt-3">
-                           <Button
-                             onClick={(e) => {
-                               e.stopPropagation();
-                               sendPrompt(language === 'de' ? 'Random Quiz' : 'Random Quiz');
-                             }}
-                             size="sm"
-                             variant="outline"
-                             className="bg-white"
-                           >
-                             {language === 'de' ? 'Nächste Frage' : 'Next Question'}
-                           </Button>
+                             {message.text}
+                           </ReactMarkdown>
                          </div>
+                        {parseWikiOtherResults(message.text).length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {parseWikiOtherResults(message.text).map((title, idx) => (
+                              <Button
+                                key={idx}
+                                size="sm"
+                                variant="outline"
+                                className="bg-white"
+                                onClick={(e) => { e.stopPropagation(); handleWikiResultClick(title); }}
+                              >
+                                {title}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                   
+                   {/* Article Search Component */}
+                   {message.articleSearch && (
+                     <div className="mt-4 space-y-4">
+                       <div className="relative">
+                         <Input
+                           type="text"
+                           onChange={(e) => handleArticleSearchInput(message.id, e.target.value)}
+                           placeholder={language === 'de' ? 'Stichwort oder Kategorie eingeben...' : 'Enter keyword or category...'}
+                           className="pl-10 bg-gray-50 border-gray-200"
+                         />
+                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                       </div>
+                       
+                       {searchResults[message.id] && searchResults[message.id].length > 0 && (
+                         <div className="space-y-3 max-h-96 overflow-y-auto">
+                           {searchResults[message.id].map((article) => {
+                             const title = language === 'de' ? t(`article.${article.id}.title`) : article.title;
+                             const excerpt = language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt;
+                             const imageUrl = article.imageUrl?.startsWith('/') 
+                               ? article.imageUrl 
+                               : `https://images.unsplash.com/${article.imageUrl}?w=300&h=200&fit=crop`;
+                             
+                             return (
+                               <div
+                                 key={article.id}
+                                 onClick={(e) => {
+                                   e.stopPropagation();
+                                   handleArticleClick(article);
+                                 }}
+                                 className="flex gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 cursor-pointer transition-colors border"
+                               >
+                                 <img
+                                   src={imageUrl}
+                                   alt={title}
+                                   className="w-20 h-14 object-cover rounded-lg flex-shrink-0"
+                                   onError={(e) => {
+                                     e.currentTarget.src = '/placeholder.svg';
+                                   }}
+                                 />
+                                 <div className="flex-1 min-w-0">
+                                   <h3 className="font-semibold text-gray-800 text-sm line-clamp-2 mb-1">
+                                     {title}
+                                   </h3>
+                                   <p className="text-gray-600 text-xs line-clamp-2 mb-2">
+                                     {excerpt}
+                                   </p>
+                                   <div className="flex items-center gap-2 text-xs text-gray-500">
+                                     <span>{article.author}</span>
+                                     <span>•</span>
+                                     <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
+                                   </div>
+                                 </div>
+                               </div>
+                             );
+                           })}
+                         </div>
+                       )}
+                     </div>
+                   )}
+                   
+                   {message.qrCode && (
+                     <div className="mt-4 text-center relative">
+                       <img 
+                         src={message.qrCode} 
+                         alt="Generated QR Code" 
+                         className="mx-auto rounded-xl shadow-lg border max-w-[200px] h-auto"
+                       />
+                       <Button
+                         onClick={(e) => {
+                           e.stopPropagation();
+                           downloadQRCode(message.qrCode!);
+                         }}
+                         size="sm"
+                         variant="outline"
+                         className="mt-3 bg-white/90 hover:bg-white"
+                       >
+                         <Download className="w-4 h-4 mr-2" />
+                         {language === 'de' ? 'Herunterladen' : 'Download'}
+                       </Button>
+                     </div>
+                    )}
+                    {message.endConversationAvailable && (
+                      <div className="mt-3">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-white"
+                          onClick={(e) => { e.stopPropagation(); endInternetConversation(); }}
+                        >
+                          {language === 'de' ? 'Konversation beenden' : 'End conversation'}
+                        </Button>
+                      </div>
+                    )}
+                    
+                      {/* Summarize button - only show in activation message AND when messages are selected */}
+                     {message.showSummaryButton && summaryMode && selectedMessages.length > 0 && 
+                      (message.text.includes('Zusammenfassungs-Modus aktiviert') || message.text.includes('Summary Mode Activated')) && (
+                       <div className="mt-3">
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           className="bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200"
+                           onClick={(e) => { e.stopPropagation(); summarizeSelectedMessages(); }}
+                         >
+                           {language === 'de' ? `${selectedMessages.length} Nachrichten zusammenfassen` : `Summarize ${selectedMessages.length} messages`}
+                         </Button>
                        </div>
                      )}
+                     
+                     {/* Quiz button - only show in activation message AND when messages are selected */}
+                     {message.showQuizButton && quizInfoMode && selectedMessages.length > 0 && 
+                      (message.text.includes('Quiz-Modus aktiviert') || message.text.includes('Quiz Mode Activated')) && (
+                       <div className="mt-3">
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           className="bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200"
+                           onClick={(e) => { e.stopPropagation(); generateInformationQuiz(); }}
+                         >
+                           {language === 'de' ? `Quiz aus ${selectedMessages.length} Nachrichten erstellen` : `Create quiz from ${selectedMessages.length} messages`}
+                         </Button>
+                       </div>
+                     )}
+                   <div className="text-xs opacity-70 mt-3">
+                     {message.timestamp.toLocaleTimeString()}
                    </div>
-                  ) : (
-                    <div>
-                      <div className="text-sm leading-relaxed">
-                        <ReactMarkdown 
-                          className="prose prose-sm max-w-none"
-                          components={{
-                            p: ({ children }) => <p className="mb-2">{children}</p>,
-                            h1: ({ children }) => <h1 className="text-xl font-bold mb-2">{children}</h1>,
-                            h2: ({ children }) => <h2 className="text-lg font-semibold mb-2">{children}</h2>,
-                            h3: ({ children }) => <h3 className="text-base font-medium mb-1">{children}</h3>,
-                            ul: ({ children }) => <ul className="list-disc ml-4 mb-2">{children}</ul>,
-                            ol: ({ children }) => <ol className="list-decimal ml-4 mb-2">{children}</ol>,
-                            li: ({ children }) => <li className="mb-1">{children}</li>,
-                            strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                            em: ({ children }) => <em className="italic">{children}</em>,
-                            a: ({ href, children }) => (
-                              <a 
-                                href={href} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
-                                className="text-blue-600 hover:text-blue-800 underline"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                {children}
-                              </a>
-                            ),
-                          }}
-                        >
-                          {message.text}
-                        </ReactMarkdown>
-                      </div>
-                      
-                      {/* QR Code Display */}
-                      {message.qrCode && (
-                        <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
-                          <img 
-                            src={message.qrCode} 
-                            alt="QR Code" 
-                            className="mx-auto mb-3 rounded-lg border border-gray-300" 
-                          />
-                          <Button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              downloadQRCode(message.qrCode!);
-                            }}
-                            size="sm"
-                            variant="outline"
-                            className="bg-white"
-                          >
-                            <Download className="w-4 h-4 mr-2" />
-                            {language === 'de' ? 'QR Code herunterladen' : 'Download QR Code'}
-                          </Button>
-                        </div>
-                      )}
-
-                      {/* Article Search Interface */}
-                      {message.articleSearch && (
-                        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                          <div className="flex gap-2 mb-3">
-                            <Input
-                              placeholder={language === 'de' ? 'Artikel suchen...' : 'Search articles...'}
-                              value={searchQuery}
-                              onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                handleArticleSearchInput(message.id, e.target.value);
-                              }}
-                              className="flex-1"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleArticleSearchInput(message.id, searchQuery);
-                              }}
-                            >
-                              <Search className="w-4 h-4" />
-                            </Button>
-                          </div>
-                          
-                          {searchResults[message.id] && searchResults[message.id].length > 0 && (
-                            <div className="space-y-2">
-                              <p className="text-sm font-medium text-blue-800">
-                                {language === 'de' 
-                                  ? `${searchResults[message.id].length} Artikel gefunden:`
-                                  : `${searchResults[message.id].length} articles found:`
-                                }
-                              </p>
-                              {searchResults[message.id].map((article: any) => (
-                                <button
-                                  key={article.id}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleArticleClick(article);
-                                  }}
-                                  className="w-full text-left p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
-                                >
-                                  <h4 className="font-medium text-gray-900 mb-1">
-                                    {language === 'de' ? article.title : (article.titleEn || article.title)}
-                                  </h4>
-                                  <p className="text-sm text-gray-600 mb-2">
-                                    {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
-                                  </p>
-                                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                                    <span>👤 {article.author}</span>
-                                    <span>📅 {new Date(article.publishedAt).toLocaleDateString()}</span>
-                                    <span>👀 {article.views.toLocaleString()} {language === 'de' ? 'Aufrufe' : 'views'}</span>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Copy button */}
-                  {!message.isUser && visibleCopyButtons.includes(message.id) && (
+                  {/* Copy button - only visible on click/hover */}
+                  {visibleCopyButtons.includes(message.id) && (
                     <Button
                       onClick={(e) => {
                         e.stopPropagation();
                         copyToClipboard(message.text);
                       }}
                       size="sm"
-                      variant="ghost"
-                      className="absolute -bottom-2 right-2 opacity-80 hover:opacity-100"
+                      variant="outline"
+                      className="absolute -bottom-2 -right-2 opacity-90 bg-white shadow-lg"
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
@@ -1018,169 +2531,225 @@ const AI = () => {
                 </div>
               </div>
             ))}
-
-            {/* Typing indicator */}
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-white text-gray-800 border border-gray-100 shadow-sm p-4 rounded-2xl">
-                  <div className="flex items-center gap-2">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {searchMode === 'internet' 
-                        ? (language === 'de' ? 'Suche im Internet...' : 'Searching the internet...')
-                        : (language === 'de' ? 'Denke nach...' : 'Thinking...')
-                      }
-                    </span>
+                <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {/* Action cards */}
-            {messages.length === 1 && !isTyping && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-                {actionCards.map((card) => (
-                  <button
-                    key={card.id}
-                    onClick={() => handleActionCardClick(card)}
-                    className="p-6 bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 text-left group"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-blue-50 rounded-lg group-hover:bg-blue-100 transition-colors">
-                        <card.icon className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <h3 className="font-semibold text-gray-900">
-                        {language === 'de' ? card.titleDe : card.titleEn}
-                      </h3>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {language === 'de' ? card.promptDe : card.promptEn}
-                    </p>
-                  </button>
-                ))}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Input area */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4">
-        <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSubmit} className="flex gap-3 items-end">
-            <div className="flex-1 relative">
-              {/* Mode selector */}
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
-                <DropdownMenu open={showModeDropdown} onOpenChange={setShowModeDropdown}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 text-xs font-medium hover:bg-gray-100"
-                    >
-                      {searchMode === 'internet' ? (
-                        <>
-                          <Globe className="w-3 h-3 mr-1" />
-                          {language === 'de' ? 'Internet' : 'Internet'}
-                        </>
-                      ) : (
-                        <>
-                          <Home className="w-3 h-3 mr-1" />
-                          {language === 'de' ? 'Lokal' : 'Local'}
-                        </>
-                      )}
-                      <ChevronDown className="w-3 h-3 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-64">
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSearchMode('local');
-                        setShowModeDropdown(false);
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <Home className="w-4 h-4" />
-                      <div>
-                        <div className="font-medium">
-                          {language === 'de' ? 'Daily Fun (Lokal)' : 'Daily Fun (Local)'}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {language === 'de' 
-                            ? 'Artikel, Team-Info, Kontakt'
-                            : 'Articles, team info, contact'
-                          }
-                        </div>
-                      </div>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setSearchMode('internet');
-                        setShowModeDropdown(false);
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <Globe className="w-4 h-4" />
-                      <div>
-                        <div className="font-medium">
-                          {language === 'de' ? 'Daily Fun (Internet Search)' : 'Daily Fun (Internet Search)'}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {language === 'de' 
-                            ? 'OpenRouter AI mit Internetzugang'
-                            : 'OpenRouter AI with internet access'
-                          }
-                        </div>
-                      </div>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+
+      {/* Floating bottom container with action cards, mode switcher and input */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50">
+        <div className="max-w-4xl mx-auto p-4 space-y-4">
+          
+
+          {/* Combined row with mode dropdown and action buttons */}
+          <div className="flex items-center justify-center gap-2 md:gap-3">
+            {/* Mode selector dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="justify-between bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10">
+                  <div className="flex items-center gap-1 md:gap-2">
+                    <Home className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="hidden sm:inline">{searchMode === 'internet' ? 'Daily Fun (Internet Search)' : 'Daily Fun (Local)'}</span>
+                    <span className="sm:hidden">{searchMode === 'internet' ? 'Internet' : 'Local'}</span>
+                  </div>
+                  <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="bg-background border z-50">
+                <DropdownMenuItem
+                  onClick={() => setSearchMode('local')}
+                  className="flex items-center gap-2"
+                >
+                  <Home className="w-4 h-4" />
+                  Daily Fun (Local)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setSearchMode('internet')}
+                  className="flex items-center gap-2"
+                >
+                  <Globe className="w-4 h-4" />
+                  Daily Fun (Internet Search)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Action buttons */}
+            {searchMode === 'internet' ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (summaryMode) {
+                      setSummaryMode(false);
+                      setSelectedMessages([]);
+                      setQuizInfoMode(false); // Ensure quiz mode is also disabled
+                      const msg = language === 'de' 
+                        ? '❌ Zusammenfassungs-Modus deaktiviert.'
+                        : '❌ Summary mode disabled.';
+                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                    } else {
+                      setSummaryMode(true);
+                      setQuizInfoMode(false); // Disable quiz mode when enabling summary
+                      setSelectedMessages([]);
+                      const msg = language === 'de' 
+                        ? '📝 **Zusammenfassungs-Modus aktiviert**\n\nSo funktioniert es:\n1. Klicken Sie auf die Nachrichten, die Sie zusammenfassen möchten\n2. Ausgewählte Nachrichten werden mit einem Rahmen markiert\n3. Klicken Sie auf den "Zusammenfassen" Button in einer AI-Nachricht\n4. Oder schreiben Sie "fasse die Informationen zusammen"\n\nWählen Sie jetzt die Nachrichten aus, die zusammengefasst werden sollen.'
+                        : '📝 **Summary Mode Activated**\n\nHow it works:\n1. Click on the messages you want to summarize\n2. Selected messages will be highlighted with a border\n3. Click the "Summarize" button in an AI message\n4. Or type "summarize the information"\n\nNow select the messages you want to summarize.';
+                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date(), showSummaryButton: true }]);
+                    }
+                  }}
+                  className={`flex items-center gap-1 md:gap-2 shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 ${
+                    summaryMode ? 'bg-orange-100 border-orange-300 text-orange-700' : 'bg-white'
+                  }`}
+                >
+                  <MessageCircle className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">{language === 'de' ? (summaryMode ? 'Modus beenden' : 'Informationen zusammenfassen') : (summaryMode ? 'Exit mode' : 'Summarize information')}</span>
+                  <span className="sm:hidden">{summaryMode ? 'Exit' : 'Sum'}</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (quizInfoMode) {
+                      setQuizInfoMode(false);
+                      setSelectedMessages([]);
+                      setSummaryMode(false); // Ensure summary mode is also disabled
+                      const msg = language === 'de' 
+                        ? '❌ Quiz-Modus deaktiviert.'
+                        : '❌ Quiz mode disabled.';
+                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                    } else {
+                      setQuizInfoMode(true);
+                      setSummaryMode(false); // Disable summary mode when enabling quiz
+                      setSelectedMessages([]);
+                      const msg = language === 'de' 
+                        ? '🧠 **Quiz-Modus aktiviert**\n\nSo funktioniert es:\n1. Klicken Sie auf die Nachrichten, die Sie für das Quiz verwenden möchten\n2. Ausgewählte Nachrichten werden mit einem Rahmen markiert\n3. Klicken Sie auf den "Quiz erstellen" Button in einer AI-Nachricht\n4. Oder schreiben Sie "erstelle informations quiz"\n\nWählen Sie jetzt die Nachrichten aus, die für das Quiz verwendet werden sollen.'
+                        : '🧠 **Quiz Mode Activated**\n\nHow it works:\n1. Click on the messages you want to use for the quiz\n2. Selected messages will be highlighted with a border\n3. Click the "Create Quiz" button in an AI message\n4. Or type "create information quiz"\n\nNow select the messages you want to use for the quiz.';
+                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date(), showQuizButton: true }]);
+                    }
+                  }}
+                  className={`flex items-center gap-1 md:gap-2 shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 ${
+                    quizInfoMode ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white'
+                  }`}
+                >
+                  <Brain className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">{language === 'de' ? (quizInfoMode ? 'Modus beenden' : 'Informations-Quiz') : (quizInfoMode ? 'Exit mode' : 'Information Quiz')}</span>
+                  <span className="sm:hidden">{quizInfoMode ? 'Exit' : 'Quiz'}</span>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => handleActionCardClick(actionCards[0])}
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                >
+                  <Search className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Article Search</span>
+                  <span className="sm:hidden">Search</span>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => handleActionCardClick(actionCards[1])}
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                >
+                  <QrCode className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Generate QR Code</span>
+                  <span className="sm:hidden">QR</span>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => handleActionCardClick(actionCards[2])}
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                >
+                  <Brain className="w-3 h-3 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline">Quiz</span>
+                  <span className="sm:hidden">Quiz</span>
+                </Button>
+              </>
+            )}
+          </div>
+
+          {/* Suggestions (like examples) */}
+          {showSuggestions && filteredSuggestions.length > 0 && searchMode !== 'internet' && (
+            <div className="flex justify-center">
+              <div className="w-full md:w-[80%] bg-white/90 border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                {filteredSuggestions.map((s, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      sendPrompt(s);
+                      setShowSuggestions(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
+                  >
+                    <Search className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm">{s}</span>
+                  </button>
+                ))}
               </div>
-
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={
-                  searchMode === 'internet'
-                    ? (language === 'de' ? 'Fragen Sie alles - ich habe Internetzugang!' : 'Ask anything - I have internet access!')
-                    : (language === 'de' ? 'Fragen Sie mich über Daily Fun...' : 'Ask me about Daily Fun...')
-                }
-                className="pl-32 pr-4 py-3 text-base rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                disabled={isTyping}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-              />
-
-              {/* Suggestions dropdown */}
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <div className="absolute bottom-full left-0 right-0 mb-2 bg-white rounded-lg border border-gray-200 shadow-lg max-h-48 overflow-y-auto">
-                  {filteredSuggestions.map((suggestion, index) => (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setInputValue(suggestion);
-                        setShowSuggestions(false);
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm first:rounded-t-lg last:rounded-b-lg"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
+          )}
 
-            <Button
-              type="submit"
-              disabled={!inputValue.trim() || isTyping}
-              className="h-12 px-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl"
-            >
-              <Send className="w-5 h-5" />
-            </Button>
+          {/* WhatsApp-style Input */}
+          <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+            <div className="flex-1 bg-gray-100 rounded-2xl border border-gray-200 p-2">
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => {
+                  setInputValue(e.target.value);
+                  setShowSuggestions(searchMode !== 'internet');
+                }}
+                onFocus={() => setShowSuggestions(searchMode !== 'internet')}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                placeholder={language === 'de' ? 'Nachricht...' : 'Message...'}
+                className="w-full bg-transparent border-none outline-none text-sm px-2 py-1"
+                disabled={isTyping}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+              />
+            </div>
+            {/* Send button - only visible when there's text */}
+            {inputValue.trim() !== '' && (
+              <Button 
+                type="submit" 
+                disabled={!inputValue.trim() || isTyping}
+                className="rounded-full w-10 h-10 p-0 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 shadow-lg"
+              >
+                <Send className="w-4 h-4" />
+              </Button>
+            )}
+            
+            {/* Speak mode button - positioned where send button normally is when input is empty */}
+            {inputValue.trim() === '' && (
+              <Button
+                variant="outline"
+                onClick={toggleSpeakMode}
+                disabled={!puterReady}
+                className={`rounded-full w-10 h-10 p-0 border ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-white shadow-sm'} ${!puterReady ? 'opacity-60 cursor-not-allowed' : ''}`}
+              >
+                <Mic className="w-4 h-4" />
+              </Button>
+            )}
           </form>
         </div>
       </div>
