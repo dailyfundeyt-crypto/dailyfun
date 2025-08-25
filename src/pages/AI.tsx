@@ -1162,6 +1162,7 @@ The text to be summarized is:
       
       // Enhanced AI models - try kostenlosen models first, AIML as last resort
       const aiModels = [
+        { name: 'OpenRouter Llama 3.1 405B', model: 'openrouter-llama', isOpenRouter: true },
         { name: 'GPT-5', model: 'gpt-5' },
         { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
         { name: 'GPT-4.1', model: 'gpt-4.1' },
@@ -1174,43 +1175,48 @@ The text to be summarized is:
         { name: 'Gemini 2.0 Flash', model: 'gemini-2.0-flash' },
         { name: 'Meta Llama 3.1 70B', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' },
         { name: 'Mistral Large', model: 'mistral-large-latest' },
-        { name: 'Grok Beta', model: 'grok-beta' },
-        { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
+        { name: 'Grok Beta', model: 'grok-beta' }
       ];
 
-      // Custom AIML API function
-      const callAIMLAPI = async (promptText: string): Promise<string> => {
+      // Custom OpenRouter API function  
+      const callOpenRouterAPI = async (promptText: string): Promise<string> => {
         try {
-          const response = await fetch('https://api.aimlapi.com/chat/completions', {
+          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
-              'Authorization': 'Bearer ' + 'b95c22b2537e4e31893073c2bad3e2bc',
+              'Authorization': 'Bearer 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',
               'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://dailyfun.app',
+              'X-Title': 'Daily Fun - AI Summary'
             },
             body: JSON.stringify({
-              model: 'google/gemma-3n-e4b-it',
+              model: 'meta-llama/llama-3.1-405b-instruct:free',
               messages: [
+                {
+                  role: 'system',
+                  content: language === 'de' 
+                    ? 'Du bist ein Experte für präzise Textzusammenfassung. Deine Aufgabe ist es, Texte klar, strukturiert und verständlich zusammenzufassen.'
+                    : 'You are an expert at precise text summarization. Your task is to summarize texts clearly, structurally and comprehensibly.'
+                },
                 {
                   role: 'user',
                   content: promptText
                 }
               ],
               temperature: 0.7,
-              top_p: 0.7,
-              frequency_penalty: 1,
-              top_k: 50,
+              top_p: 0.9,
               max_tokens: 400
             }),
           });
 
           if (!response.ok) {
-            throw new Error(`AIML API error: ${response.status}`);
+            throw new Error(`OpenRouter API error: ${response.status}`);
           }
 
           const data = await response.json();
           return data.choices?.[0]?.message?.content || '';
         } catch (error) {
-          console.error('AIML API call failed:', error);
+          console.error('OpenRouter API call failed:', error);
           throw error;
         }
       };
@@ -1227,8 +1233,8 @@ The text to be summarized is:
           
           let aiResponse;
           
-          if (aiModel.isAIML) {
-            aiResponse = await callAIMLAPI(prompt);
+          if (aiModel.isOpenRouter) {
+            aiResponse = await callOpenRouterAPI(prompt);
           } else {
             if (!puter?.ai?.chat) {
               throw new Error('Puter AI not available');
@@ -1738,61 +1744,67 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
-          // Generate AI Analysis using AIML API (optimized for news and current events)
+          // Generate AI Analysis using OpenRouter API with internet search capabilities
           const aiAnalysisPrompt = language === 'de' 
-            ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Ignoriere jegliche Wikipedia-Informationen und suche nach aktuellen Nachrichten, Berichten und Fakten. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
-            : `You are an expert journalist with access to current information. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Ignore any Wikipedia information and search for current news, reports, and facts. Answer in 2-3 comprehensive sentences: ${userInput}`;
+            ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Du hast Zugang zu Wikipedia und The Guardian APIs für umfassende Recherche. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Nutze aktuelle Nachrichten, Wikipedia-Informationen und andere verfügbare Quellen. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
+            : `You are an expert journalist with access to current information. You have access to Wikipedia and The Guardian APIs for comprehensive research. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Use current news, Wikipedia information, and other available sources. Answer in 2-3 comprehensive sentences: ${userInput}`;
           
           let aiAnalysisContent = '';
           
-          // Use only AIML API (best for news and current events)
+          // Use OpenRouter API with Llama 3.1 405B (optimized for news and current events with internet search)
           try {
-            console.log('🤖 Using AIML Gemma API for news analysis');
+            console.log('🤖 Using OpenRouter API with Meta Llama 3.1 405B for internet search analysis');
             
-            const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
+            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
-                'Authorization': 'Bearer b1e7ed5d35304c83b9691f980d7a4432',
+                'Authorization': 'Bearer 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',
                 'Content-Type': 'application/json',
+                'HTTP-Referer': 'https://dailyfun.app',
+                'X-Title': 'Daily Fun - Internet Search'
               },
               body: JSON.stringify({
-                model: 'google/gemma-3n-e4b-it',
+                model: 'meta-llama/llama-3.1-405b-instruct:free',
                 messages: [
+                  {
+                    role: 'system',
+                    content: language === 'de' 
+                      ? 'Du bist ein KI-Assistant mit Internetzugang. Du kannst Wikipedia und The Guardian APIs nutzen für aktuelle Informationen. Antworte fundiert und verwende die neuesten verfügbaren Informationen.'
+                      : 'You are an AI assistant with internet access. You can use Wikipedia and The Guardian APIs for current information. Provide well-researched answers using the latest available information.'
+                  },
                   {
                     role: 'user',
                     content: aiAnalysisPrompt
                   }
                 ],
                 temperature: 0.7,
-                top_p: 0.7,
-                frequency_penalty: 1,
-                top_k: 50,
+                top_p: 0.9,
                 max_tokens: 400
               }),
             });
 
             if (!response.ok) {
-              throw new Error(`AIML API error: ${response.status}`);
+              throw new Error(`OpenRouter API error: ${response.status}`);
             }
 
             const data = await response.json();
             const aiResponse = data.choices?.[0]?.message?.content || '';
             
-            console.log('✅ AIML API response received:', aiResponse);
+            console.log('✅ OpenRouter API response received:', aiResponse);
             
             // Validate response quality
             if (aiResponse && aiResponse.trim().length > 10) {
               aiAnalysisContent = aiResponse.trim();
-              console.log('✅ AI Analysis completed successfully using AIML Gemma');
+              console.log('✅ AI Analysis completed successfully using OpenRouter Llama 3.1 405B');
             } else {
-              throw new Error('Invalid response from AIML API');
+              throw new Error('Invalid response from OpenRouter API');
             }
             
           } catch (error) {
-            console.error('❌ AIML API failed:', error);
+            console.error('❌ OpenRouter API failed:', error);
             aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Das AIML Gemma Modell für Nachrichten-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. The AIML Gemma model for news analysis is currently unreachable. Please try again later.';
+              ? 'KI-Analyse momentan nicht verfügbar. Das OpenRouter Llama 3.1 405B Modell für Internet-Suche ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. The OpenRouter Llama 3.1 405B model for internet search is currently unreachable. Please try again later.';
           }
           
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
