@@ -1358,207 +1358,76 @@ The text to be summarized is:
       setIsTyping(true);
       
       const prompt = language === 'de' 
-        ? `Du bist eine Quiz-Erstellungs-Engine. Deine einzige Aufgabe ist es, aus dem gegebenen Kontext ein Quiz im JSON-Format zu erstellen. Gib ausschließlich den JSON-Code aus, ohne jeglichen begleitenden Text, Erklärungen oder Formatierungszeichen wie \`\`\`json.
+        ? `Du bist eine Quiz-Erstellungs-Engine. Erstelle aus dem gegebenen Kontext ein Quiz im folgenden Format:
+Frage1;Frage2;Frage3;Frage4;Lösung
 
-**Beispiel für das Ausgabeformat:**
-{
-  "quizTitle": "Titel des Quiz",
-  "questions": [
-    {
-      "questionText": "Was ist die Hauptstadt von Deutschland?",
-      "options": ["München", "Hamburg", "Berlin", "Köln"],
-      "correctAnswer": "Berlin"
-    },
-    {
-      "questionText": "Welcher Fluss fließt durch London?",
-      "options": ["Themse", "Seine", "Donau", "Rhein"],
-      "correctAnswer": "Themse"
-    }
-  ]
-}
+Beispiel:
+Was ist die Hauptstadt von Deutschland?;München;Hamburg;Berlin;Köln;Berlin
 
 **Kontext für das zu erstellende Quiz:**
 "${messagesToQuiz}"
 
-Erstelle jetzt ein Quiz basierend auf dem bereitgestellten Kontext in exakt dem oben gezeigten JSON-Format.`
-        : `You are a quiz creation engine. Your only task is to create a quiz in JSON format from the given context. Output exclusively the JSON code, without any accompanying text, explanations or formatting characters like \`\`\`json.
+Erstelle jetzt ein Quiz basierend auf dem bereitgestellten Kontext. Gib NUR das Quiz im Format Frage;Option1;Option2;Option3;Option4;Richtige_Antwort aus, ohne zusätzlichen Text.`
+        : `You are a quiz creation engine. Create a quiz from the given context in the following format:
+Question;Option1;Option2;Option3;Option4;Correct_Answer
 
-**Example output format:**
-{
-  "quizTitle": "Quiz Title",
-  "questions": [
-    {
-      "questionText": "What is the capital of Germany?",
-      "options": ["Munich", "Hamburg", "Berlin", "Cologne"],
-      "correctAnswer": "Berlin"
-    },
-    {
-      "questionText": "Which river flows through London?",
-      "options": ["Thames", "Seine", "Danube", "Rhine"],
-      "correctAnswer": "Thames"
-    }
-  ]
-}
+Example:
+What is the capital of Germany?;Munich;Hamburg;Berlin;Cologne;Berlin
 
 **Context for the quiz to be created:**
 "${messagesToQuiz}"
 
-Now create a quiz based on the provided context in exactly the JSON format shown above.`;
+Now create a quiz based on the provided context. Output ONLY the quiz in the format Question;Option1;Option2;Option3;Option4;Correct_Answer, without additional text.`;
       
-      // Enhanced AI models - try kostenlosen models first, AIML as last resort
-      const aiModels = [
-        { name: 'GPT-5', model: 'gpt-5' },
-        { name: 'Claude Sonnet 4', model: 'claude-sonnet-4' },
-        { name: 'GPT-4.1', model: 'gpt-4.1' },
-        { name: 'Claude Opus 4', model: 'claude-opus-4' },
-        { name: 'GPT-4o', model: 'gpt-4o' },
-        { name: 'o3-mini', model: 'o3-mini' },
-        { name: 'o1-mini', model: 'o1-mini' },
-        { name: 'Deepseek Chat', model: 'deepseek-chat' },
-        { name: 'Deepseek Reasoner', model: 'deepseek-reasoner' },
-        { name: 'Gemini 2.0 Flash', model: 'gemini-2.0-flash' },
-        { name: 'Meta Llama 3.1 70B', model: 'meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo' },
-        { name: 'Mistral Large', model: 'mistral-large-latest' },
-        { name: 'Grok Beta', model: 'grok-beta' },
-        { name: 'AIML Gemma', model: 'aiml-gemma', isAIML: true }
-      ];
-
-      // Custom AIML API function
-      const callAIMLAPI = async (promptText: string): Promise<string> => {
-        try {
-          const response = await fetch('https://api.aimlapi.com/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer ' + 'b95c22b2537e4e31893073c2bad3e2bc',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'google/gemma-3n-e4b-it',
-              messages: [
-                {
-                  role: 'user',
-                  content: promptText
-                }
-              ],
-              temperature: 0.7,
-              top_p: 0.7,
-              frequency_penalty: 1,
-              top_k: 50,
-              max_tokens: 400
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error(`AIML API error: ${response.status}`);
-          }
-
-          const data = await response.json();
-          return data.choices?.[0]?.message?.content || '';
-        } catch (error) {
-          console.error('AIML API call failed:', error);
-          throw error;
-        }
-      };
-      
-      const puter = (window as any).puter;
-      let quizText = '';
-      let successfulModel = null;
-      let lastError = null;
-      
-      // Try all AI models sequentially until one succeeds
-      for (const aiModel of aiModels) {
-        try {
-          console.log(`🤖 Trying AI model for quiz: ${aiModel.name} (${aiModel.model})`);
-          
-          let aiResponse;
-          
-          if (aiModel.isAIML) {
-            aiResponse = await callAIMLAPI(prompt);
-          } else {
-            if (!puter?.ai?.chat) {
-              throw new Error('Puter AI not available');
-            }
-            aiResponse = await puter.ai.chat(prompt, {
-              model: aiModel.model,
-              max_tokens: 400,
-              temperature: 0.7
-            });
-          }
-          
-          // Parse response
-          let extractedText = '';
-          if (typeof aiResponse === 'string') {
-            extractedText = aiResponse.trim();
-          } else if (aiResponse?.message?.content) {
-            extractedText = aiResponse.message.content.trim();
-          } else if (aiResponse?.text) {
-            extractedText = aiResponse.text.trim();
-          }
-          
-          // Validate response quality
-          if (extractedText && 
-              extractedText.length > 10 && 
-              !extractedText.includes('[object Object]') &&
-              extractedText !== 'undefined' &&
-              extractedText !== 'null') {
-            
-            quizText = extractedText;
-            successfulModel = aiModel.name;
-            console.log(`✅ Successfully got quiz from ${aiModel.name}`);
-            break;
-          } else {
-            console.log(`❌ Invalid response from ${aiModel.name}`);
-            lastError = new Error(`Invalid response from ${aiModel.name}`);
-          }
-          
-        } catch (modelError) {
-          console.error(`❌ Model ${aiModel.name} failed:`, modelError);
-          lastError = modelError;
-        }
-      }
-      
-      if (!successfulModel) {
-        throw new Error('All AI models failed for quiz generation');
-      }
-      
-      // Try to parse JSON response
       try {
-        const jsonData = JSON.parse(quizText);
-        if (jsonData.questions && Array.isArray(jsonData.questions)) {
-          // Convert to our internal format
-          const formattedQuiz = jsonData.questions.map((q: any, index: number) => {
-            const correctIndex = q.options.findIndex((opt: string) => opt === q.correctAnswer);
-            const correctLetter = ['A', 'B', 'C', 'D'][correctIndex] || 'A';
-            
-            return `QUESTION_${index + 1}: ${q.questionText}
-A) ${q.options[0] || ''}
-B) ${q.options[1] || ''}
-C) ${q.options[2] || ''}
-D) ${q.options[3] || ''}
-CORRECT_${index + 1}: ${correctLetter}
-EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
-          }).join('\n\n');
-          
+        console.log('🤖 Using OpenRouter API for quiz generation');
+        
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer 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',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://dailyfun.app',
+            'X-Title': 'Daily Fun - Quiz Generation'
+          },
+          body: JSON.stringify({
+            model: 'meta-llama/llama-3.1-405b-instruct:free',
+            messages: [
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: 0.7,
+            max_tokens: 500
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`OpenRouter API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const quizText = data.choices?.[0]?.message?.content?.trim() || '';
+        
+        if (quizText && quizText.length > 10) {
+          // Parse the semicolon-separated format
           const quizMessage: Message = {
             id: Date.now().toString(),
-            text: `INTERACTIVE_INFO_QUIZ:QUIZ_START\n${formattedQuiz}\nQUIZ_END`,
+            text: `SEMICOLON_QUIZ:${quizText}`,
             isUser: false,
             timestamp: new Date()
           };
           
           setMessages(prev => [...prev, quizMessage]);
+          console.log('✅ Successfully created quiz');
         } else {
-          throw new Error('Invalid JSON structure');
+          throw new Error('Invalid quiz response');
         }
-      } catch (jsonError) {
-        // Fallback to old format if JSON parsing fails
-        const quizMessage: Message = {
-          id: Date.now().toString(),
-          text: `INTERACTIVE_INFO_QUIZ:${quizText}`,
-          isUser: false,
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, quizMessage]);
+        
+      } catch (error) {
+        console.error('OpenRouter API failed:', error);
+        throw error;
       }
       
       setSelectedMessages([]);
@@ -1568,8 +1437,8 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
       const errorMessage: Message = {
         id: Date.now().toString(),
         text: language === 'de' 
-          ? '❌ Fehler beim Erstellen des Quiz. Alle verfügbaren AI-Modelle sind momentan nicht erreichbar. Versuchen Sie es später erneut.'
-          : '❌ Error creating quiz. All available AI models are currently unreachable. Try again later.',
+          ? '❌ Fehler beim Erstellen des Quiz. Versuchen Sie es später erneut.'
+          : '❌ Error creating quiz. Try again later.',
         isUser: false,
         timestamp: new Date()
       };
@@ -1577,6 +1446,30 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
     } finally {
       setIsTyping(false);
     }
+  };
+
+  const parseSemicolonQuiz = (text: string) => {
+    if (!text.startsWith('SEMICOLON_QUIZ:')) return null;
+    
+    const quizContent = text.replace('SEMICOLON_QUIZ:', '').trim();
+    const parts = quizContent.split(';');
+    
+    if (parts.length !== 6) return null;
+    
+    const [question, option1, option2, option3, option4, correctAnswer] = parts;
+    
+    return [{
+      question: question.trim(),
+      answers: [
+        option1.trim(),
+        option2.trim(),
+        option3.trim(),
+        option4.trim()
+      ],
+      correctAnswer: correctAnswer.trim(),
+      selectedAnswer: null,
+      showResult: false
+    }];
   };
 
   const parseInteractiveQuiz = (text: string) => {
@@ -2200,93 +2093,96 @@ EXPLANATION_${index + 1}: ${q.correctAnswer} ist die richtige Antwort.`;
                   }`}
                    onClick={() => handleMessageClick(message.id)}
                   >
-                    {/* Interactive Information Quiz Display */}
-                    {message.text.startsWith('INTERACTIVE_INFO_QUIZ:') ? (
-                      <div className="space-y-6">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">
-                          {language === 'de' ? '🧠 Informations-Quiz' : '🧠 Information Quiz'}
-                        </h2>
-                        {(() => {
-                          const quizQuestions = parseInteractiveQuiz(message.text);
-                          if (!quizQuestions) {
-                            return <p className="text-red-600">{language === 'de' ? 'Fehler beim Laden des Quiz' : 'Error loading quiz'}</p>;
-                          }
-                          
-                          if (!quizStates[message.id]) {
-                            setQuizStates(prev => ({ ...prev, [message.id]: quizQuestions }));
-                            return <div>Loading...</div>;
-                          }
-                          
-                          const currentQuiz = quizStates[message.id];
-                          
-                          return currentQuiz.map((q: any, qIndex: number) => (
-                            <div key={qIndex} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                              <h3 className="font-semibold text-gray-800 mb-3">
-                                {qIndex + 1}. {q.question}
-                              </h3>
-                              <div className="space-y-2">
-                                {q.answers.map((answer: string, aIndex: number) => {
-                                  const letter = ['A', 'B', 'C', 'D'][aIndex];
-                                  const isCorrect = letter === q.correctAnswer;
-                                  const isSelected = q.selectedAnswer === letter;
-                                  
-                                  return (
-                                    <button
-                                      key={aIndex}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setQuizStates(prev => ({
-                                          ...prev,
-                                          [message.id]: prev[message.id].map((quiz: any, idx: number) => 
-                                            idx === qIndex 
-                                              ? { ...quiz, selectedAnswer: letter, showResult: true }
-                                              : quiz
-                                          )
-                                        }));
-                                      }}
-                                      disabled={q.showResult}
-                                      className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                                        q.showResult
-                                          ? isCorrect
-                                            ? 'bg-green-100 border-green-400 text-green-800'
-                                            : isSelected
-                                            ? 'bg-red-100 border-red-400 text-red-800'
-                                            : 'bg-gray-100 border-gray-300 text-gray-600'
-                                          : 'bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300'
-                                      }`}
-                                    >
-                                      <div className="flex items-start gap-3">
-                                        <span className="font-semibold">
-                                          {letter}.
-                                        </span>
-                                        <span className="flex-1">{answer}</span>
-                                        {q.showResult && isCorrect && (
-                                          <span className="text-green-600 font-semibold">
-                                            ✓ {language === 'de' ? 'Richtig' : 'Correct'}
-                                          </span>
-                                        )}
-                                        {q.showResult && isSelected && !isCorrect && (
-                                          <span className="text-red-600 font-semibold">
-                                            ✗ {language === 'de' ? 'Falsch' : 'Wrong'}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                              
-                              {q.showResult && (
-                                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                  <p className="text-blue-800">
-                                    <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {q.explanation}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          ));
-                        })()}
-                      </div>
+                     {/* Interactive Information Quiz Display */}
+                     {message.text.startsWith('INTERACTIVE_INFO_QUIZ:') || message.text.startsWith('SEMICOLON_QUIZ:') ? (
+                       <div className="space-y-6">
+                         <h2 className="text-xl font-bold text-gray-800 mb-4">
+                           {language === 'de' ? '🧠 Informations-Quiz' : '🧠 Information Quiz'}
+                         </h2>
+                         {(() => {
+                           const quizQuestions = message.text.startsWith('SEMICOLON_QUIZ:') 
+                             ? parseSemicolonQuiz(message.text)
+                             : parseInteractiveQuiz(message.text);
+                           
+                           if (!quizQuestions) {
+                             return <p className="text-red-600">{language === 'de' ? 'Fehler beim Laden des Quiz' : 'Error loading quiz'}</p>;
+                           }
+                           
+                           if (!quizStates[message.id]) {
+                             setQuizStates(prev => ({ ...prev, [message.id]: quizQuestions }));
+                             return <div>Loading...</div>;
+                           }
+                           
+                           const currentQuiz = quizStates[message.id];
+                           
+                           return currentQuiz.map((q: any, qIndex: number) => (
+                             <div key={qIndex} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                               <h3 className="font-semibold text-gray-800 mb-3">
+                                 {qIndex + 1}. {q.question}
+                               </h3>
+                               <div className="space-y-2">
+                                 {q.answers.map((answer: string, aIndex: number) => {
+                                   const letter = ['A', 'B', 'C', 'D'][aIndex];
+                                   const isCorrect = answer === q.correctAnswer;
+                                   const isSelected = q.selectedAnswer === letter || q.selectedAnswer === answer;
+                                   
+                                   return (
+                                     <button
+                                       key={aIndex}
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         setQuizStates(prev => ({
+                                           ...prev,
+                                           [message.id]: prev[message.id].map((quiz: any, idx: number) => 
+                                             idx === qIndex 
+                                               ? { ...quiz, selectedAnswer: answer, showResult: true }
+                                               : quiz
+                                           )
+                                         }));
+                                       }}
+                                       disabled={q.showResult}
+                                       className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                                         q.showResult
+                                           ? isCorrect
+                                             ? 'bg-green-100 border-green-400 text-green-800'
+                                             : isSelected
+                                             ? 'bg-red-100 border-red-400 text-red-800'
+                                             : 'bg-gray-100 border-gray-300 text-gray-600'
+                                           : 'bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                                       }`}
+                                     >
+                                       <div className="flex items-start gap-3">
+                                         <span className="font-semibold">
+                                           {letter}.
+                                         </span>
+                                         <span className="flex-1">{answer}</span>
+                                         {q.showResult && isCorrect && (
+                                           <span className="text-green-600 font-semibold">
+                                             ✓ {language === 'de' ? 'Richtig' : 'Correct'}
+                                           </span>
+                                         )}
+                                         {q.showResult && isSelected && !isCorrect && (
+                                           <span className="text-red-600 font-semibold">
+                                             ✗ {language === 'de' ? 'Falsch' : 'Wrong'}
+                                           </span>
+                                         )}
+                                       </div>
+                                     </button>
+                                   );
+                                 })}
+                               </div>
+                               
+                               {q.showResult && (
+                                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                   <p className="text-blue-800">
+                                     <strong>{language === 'de' ? 'Richtige Antwort:' : 'Correct Answer:'}</strong> {q.correctAnswer}
+                                   </p>
+                                 </div>
+                               )}
+                             </div>
+                           ));
+                         })()}
+                       </div>
                     ) : message.text === 'INTERACTIVE_QUIZ' && message.quizData ? (
                        <div className="space-y-4">
                          <h3 className="text-lg font-semibold text-gray-800">
