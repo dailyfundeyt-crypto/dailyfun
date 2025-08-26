@@ -177,7 +177,7 @@ const AI = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [searchMode, setSearchMode] = useState<'local' | 'internet'>('local');
+  const [searchMode, setSearchMode] = useState<'local' | 'internet'>('internet');
   const [lastAIResponse, setLastAIResponse] = useState<string>('');
   const [searchResults, setSearchResults] = useState<{ [messageId: string]: any[] }>({});
   const [searchQuery, setSearchQuery] = useState('');
