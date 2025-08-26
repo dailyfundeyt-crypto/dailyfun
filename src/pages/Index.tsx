@@ -3,7 +3,6 @@ import { useMemo } from 'react';
 import Header from '../components/Header';
 import ArticleSection from '../components/ArticleSection';
 import InstallSidebar from '../components/InstallSidebar';
-import PhoneHero from '../components/PhoneHero';
 import { articles } from '../data/articles';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -25,9 +24,6 @@ const Index = () => {
     <div className="min-h-screen bg-white text-black">
       <Header />
       <InstallSidebar />
-      
-      {/* 3D Phone Hero Section */}
-      <PhoneHero />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
