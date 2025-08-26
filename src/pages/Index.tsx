@@ -1,14 +1,33 @@
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ArticleSection from '../components/ArticleSection';
 import InstallSidebar from '../components/InstallSidebar';
+import PhoneHero from '../components/PhoneHero';
 import { articles } from '../data/articles';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Index = () => {
   const { t, language } = useLanguage();
+  const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
+
+  // Loading animation effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          setTimeout(() => setLoading(false), 500);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 50);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Memoize sorted articles to prevent unnecessary recalculations
   const sortedArticles = useMemo(() => {
@@ -20,10 +39,51 @@ const Index = () => {
   const featuredArticle = sortedArticles[0];
   const otherArticles = sortedArticles.slice(1);
 
+  // Loading Screen Component
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+        {/* Logo and Title */}
+        <div className="text-center mb-12 animate-fade-in">
+          <h1 className="text-6xl md:text-8xl font-bold text-black mb-4 font-serif">
+            Daily Fun
+          </h1>
+          <p className="text-2xl md:text-3xl text-gray-600 font-serif italic">
+            Make News Fun Again
+          </p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-80 max-w-md mx-auto">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm text-gray-600">Loading...</span>
+            <span className="text-sm text-gray-600">{progress}%</span>
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-gradient-to-r from-red-accent to-blue-accent h-2 rounded-full transition-all duration-100 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Loading Text */}
+        <div className="mt-8 text-center">
+          <p className="text-gray-500 animate-pulse">
+            {language === 'de' ? 'Artikel werden geladen...' : 'Loading articles...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-white text-black animate-fade-in">
       <Header />
       <InstallSidebar />
+      
+      {/* 3D Phone Hero Section */}
+      <PhoneHero />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
@@ -35,7 +95,7 @@ const Index = () => {
           </div>
 
           {/* Full-width Articles with alternating backgrounds */}
-          <div className="space-y-0">
+          <div className="space-y-0 animate-scale-in">
             {sortedArticles.map((article, index) => (
               <ArticleSection
                 key={article.id}
