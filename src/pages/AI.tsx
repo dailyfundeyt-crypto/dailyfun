@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/articles';
 import Header from '@/components/Header';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import QRCode from 'qrcode';
 import ReactMarkdown from 'react-markdown';
 
@@ -171,6 +171,7 @@ const QUIZ_SUGGESTIONS = {
 
 const AI = () => {
   const { language, t } = useLanguage();
+  const location = useLocation();
   const articleDatabase = createArticleDatabase();
   const companyDatabase = createCompanyDatabase();
   
@@ -215,6 +216,28 @@ const AI = () => {
       return msg;
     }));
   };
+
+  // Handle article content from navigation state (Ask AI from article)
+  useEffect(() => {
+    if (location.state?.articleContent) {
+      const articleContent = location.state.articleContent;
+      const articleTitle = location.state.articleTitle;
+      
+      // Set to internet search mode
+      setSearchMode('internet');
+      
+      // Create the message with the required format
+      const messageText = `${articleContent}\n\n>>Was willst du dazu wissen?<<`;
+      
+      // Clear the navigation state first
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Send the article content automatically
+      setTimeout(() => {
+        sendPrompt(messageText);
+      }, 500);
+    }
+  }, [location.state]);
 
   // Check for article/articleId/prefill parameters in URL and initialize context
   useEffect(() => {

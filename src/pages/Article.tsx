@@ -78,11 +78,15 @@ const Article = () => {
   };
 
   const handleAIClick = () => {
-    const defaultPrefill = language === 'de'
-      ? 'Bitte gib mir eine klare, kurze Zusammenfassung dieses Artikels in 3-5 Sätzen und liste 3 wichtige Erkenntnisse auf.'
-      : 'Please provide a clear, concise 3-5 sentence summary of this article and list 3 key takeaways.';
-    const aiUrl = `/ai?articleId=${encodeURIComponent(article.id)}&prefill=${encodeURIComponent(defaultPrefill)}`;
-    window.open(aiUrl, '_blank', 'noopener,noreferrer');
+    const translatedContent = language === 'de' ? article.content : (article.contentEn || article.content);
+    const fullArticleText = `${translatedTitle}\n\n${translatedExcerpt}\n\n${translatedContent}`;
+    
+    navigate('/ai', {
+      state: {
+        articleContent: fullArticleText,
+        articleTitle: translatedTitle
+      }
+    });
   };
 
   const navigateToAI = () => {
