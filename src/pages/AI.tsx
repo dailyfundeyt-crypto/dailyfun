@@ -1359,7 +1359,7 @@ The text to be summarized is:
       
       const prompt = language === 'de' 
         ? `Du bist eine Quiz-Erstellungs-Engine. Erstelle aus dem gegebenen Kontext ein Quiz im folgenden Format:
-Frage1;Frage2;Frage3;Frage4;Lösung
+Frage;Antwort1;Antwort2;Antwort3;Antwort4;Richtige_Antwort
 
 Beispiel:
 Was ist die Hauptstadt von Deutschland?;München;Hamburg;Berlin;Köln;Berlin
@@ -1367,7 +1367,7 @@ Was ist die Hauptstadt von Deutschland?;München;Hamburg;Berlin;Köln;Berlin
 **Kontext für das zu erstellende Quiz:**
 "${messagesToQuiz}"
 
-Erstelle jetzt ein Quiz basierend auf dem bereitgestellten Kontext. Gib NUR das Quiz im Format Frage;Option1;Option2;Option3;Option4;Richtige_Antwort aus, ohne zusätzlichen Text.`
+Wichtig: Erstelle GENAU ein Quiz basierend auf dem bereitgestellten Kontext. Gib NUR das Quiz im exakten Format "Frage;Option1;Option2;Option3;Option4;Richtige_Antwort" aus, ohne zusätzlichen Text, Erklärungen oder Kommentare. Die richtige Antwort muss eine der vier Optionen sein.`
         : `You are a quiz creation engine. Create a quiz from the given context in the following format:
 Question;Option1;Option2;Option3;Option4;Correct_Answer
 
@@ -1377,7 +1377,7 @@ What is the capital of Germany?;Munich;Hamburg;Berlin;Cologne;Berlin
 **Context for the quiz to be created:**
 "${messagesToQuiz}"
 
-Now create a quiz based on the provided context. Output ONLY the quiz in the format Question;Option1;Option2;Option3;Option4;Correct_Answer, without additional text.`;
+Important: Create EXACTLY one quiz based on the provided context. Output ONLY the quiz in the exact format "Question;Option1;Option2;Option3;Option4;Correct_Answer", without additional text, explanations, or comments. The correct answer must be one of the four options.`;
       
       try {
         console.log('🤖 Using OpenRouter API for quiz generation');
@@ -1452,21 +1452,45 @@ Now create a quiz based on the provided context. Output ONLY the quiz in the for
     if (!text.startsWith('SEMICOLON_QUIZ:')) return null;
     
     const quizContent = text.replace('SEMICOLON_QUIZ:', '').trim();
-    const parts = quizContent.split(';');
     
-    if (parts.length !== 6) return null;
+    // Handle potential extra text from AI - find the line with semicolons
+    const lines = quizContent.split('\n');
+    let quizLine = '';
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      // Look for a line with exactly 5 semicolons (6 parts total)
+      if (trimmedLine.includes(';') && trimmedLine.split(';').length === 6) {
+        quizLine = trimmedLine;
+        break;
+      }
+    }
+    
+    if (!quizLine) {
+      console.error('Could not find valid quiz format in response:', quizContent);
+      return null;
+    }
+    
+    const parts = quizLine.split(';').map(part => part.trim());
+    
+    if (parts.length !== 6) {
+      console.error('Invalid quiz format - expected 6 parts, got:', parts.length, parts);
+      return null;
+    }
     
     const [question, option1, option2, option3, option4, correctAnswer] = parts;
     
+    // Validate that correct answer is one of the options
+    const options = [option1, option2, option3, option4];
+    if (!options.includes(correctAnswer)) {
+      console.error('Correct answer not found in options:', correctAnswer, options);
+      return null;
+    }
+    
     return [{
-      question: question.trim(),
-      answers: [
-        option1.trim(),
-        option2.trim(),
-        option3.trim(),
-        option4.trim()
-      ],
-      correctAnswer: correctAnswer.trim(),
+      question: question,
+      answers: options,
+      correctAnswer: correctAnswer,
       selectedAnswer: null,
       showResult: false
     }];
