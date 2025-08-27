@@ -3,7 +3,6 @@ import { useMemo, useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ArticleSection from '../components/ArticleSection';
 import InstallSidebar from '../components/InstallSidebar';
-import PhoneHero from '../components/PhoneHero';
 import { articles } from '../data/articles';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -45,12 +44,14 @@ const Index = () => {
       <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
         {/* Logo and Title */}
         <div className="text-center mb-12 animate-fade-in">
-          <h1 className="text-6xl md:text-8xl font-bold text-black mb-4 font-serif">
-            Daily Fun
+          <h1 className="text-4xl md:text-6xl font-bold text-black mb-6 font-serif">
+            Daily Fun Makes News Fun Again
           </h1>
-          <p className="text-2xl md:text-3xl text-gray-600 font-serif italic">
-            Make News Fun Again
-          </p>
+          <div className="text-lg md:text-xl text-gray-600 font-serif space-y-2">
+            <p className="font-medium">Daily Fun: Make News Fun Again.</p>
+            <p>Your daily dose of trustworthy entertainment</p>
+            <p className="font-signature text-2xl md:text-3xl" style={{ color: '#5E40E3' }}>Stefan Kunc</p>
+          </div>
         </div>
 
         {/* Progress Bar */}
@@ -81,9 +82,6 @@ const Index = () => {
     <div className="min-h-screen bg-white text-black animate-fade-in">
       <Header />
       <InstallSidebar />
-      
-      {/* 3D Phone Hero Section */}
-      <PhoneHero />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
