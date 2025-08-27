@@ -3,7 +3,7 @@ import { useMemo, useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ArticleSection from '../components/ArticleSection';
 import InstallSidebar from '../components/InstallSidebar';
-import { articles } from '../data/articles';
+import { articles, Article } from '../data/articles';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -11,29 +11,32 @@ const Index = () => {
   const { t, language } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [loadedArticles, setLoadedArticles] = useState<Article[]>([]);
 
-  // Loading animation effect
+  // Loading animation effect with actual article loading
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setTimeout(() => setLoading(false), 500);
-          return 100;
+    const loadArticles = async () => {
+      const sortedArticles = [...articles]
+        .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+        .slice(0, 7);
+
+      // Simulate loading articles progressively
+      for (let i = 0; i <= sortedArticles.length; i++) {
+        await new Promise(resolve => setTimeout(resolve, 150));
+        setProgress((i / sortedArticles.length) * 100);
+        if (i < sortedArticles.length) {
+          setLoadedArticles(prev => [...prev, sortedArticles[i]]);
         }
-        return prev + 2;
-      });
-    }, 50);
+      }
+      
+      setTimeout(() => setLoading(false), 300);
+    };
 
-    return () => clearInterval(timer);
+    loadArticles();
   }, []);
 
-  // Memoize sorted articles to prevent unnecessary recalculations
-  const sortedArticles = useMemo(() => {
-    return [...articles]
-      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-      .slice(0, 7);
-  }, []);
+  // Use loaded articles instead of memoized ones
+  const sortedArticles = loadedArticles;
 
   const featuredArticle = sortedArticles[0];
   const otherArticles = sortedArticles.slice(1);
@@ -42,36 +45,26 @@ const Index = () => {
   if (loading) {
     return (
       <div className="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
-        {/* Logo and Title */}
-        <div className="text-center mb-12 animate-fade-in">
-          <h1 className="text-4xl md:text-6xl font-bold text-black mb-6 font-serif">
-            Daily Fun Makes News Fun Again
+        {/* Minimalistic Logo */}
+        <div className="text-center mb-16 animate-fade-in">
+          <h1 className="text-5xl md:text-7xl font-bold text-black mb-4 font-serif tracking-tight">
+            Daily Fun
           </h1>
-          <div className="text-lg md:text-xl text-gray-600 font-serif space-y-2">
-            <p className="font-medium">Daily Fun: Make News Fun Again.</p>
-            <p>Your daily dose of trustworthy entertainment</p>
-            <p className="font-signature text-2xl md:text-3xl" style={{ color: '#5E40E3' }}>Stefan Kunc</p>
-          </div>
+          <p className="text-xl md:text-2xl text-gray-500 font-light">
+            Make News Fun Again
+          </p>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-80 max-w-md mx-auto">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-gray-600">Loading...</span>
-            <span className="text-sm text-gray-600">{progress}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+        {/* Minimalistic Progress Bar */}
+        <div className="w-64 mx-auto">
+          <div className="w-full bg-gray-100 rounded-full h-1 mb-4">
             <div 
-              className="bg-gradient-to-r from-red-accent to-blue-accent h-2 rounded-full transition-all duration-100 ease-out"
+              className="bg-gradient-to-r from-[#5E40E3] to-[#2EEAE0] h-1 rounded-full transition-all duration-150 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
-        </div>
-
-        {/* Loading Text */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-500 animate-pulse">
-            {language === 'de' ? 'Artikel werden geladen...' : 'Loading articles...'}
+          <p className="text-center text-sm text-gray-400">
+            {Math.round(progress)}% • {language === 'de' ? 'Artikel laden' : 'Loading articles'}
           </p>
         </div>
       </div>
