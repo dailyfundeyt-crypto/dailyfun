@@ -1610,7 +1610,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
       }
     }
 
-    // Internet search mode (Wikipedia + AI analysis + News search)
+    // Internet search mode (Wikipedia + AI analysis + News search + Realtime Data)
     if (searchMode === 'internet') {
       const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en'
       try {
@@ -1619,7 +1619,33 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
 
         // Extract main topic from user's question using AI
         const extractedTopic = await extractTopicFromQuery(userInput);
-        console.log('Searching Wikipedia for:', extractedTopic);
+        console.log('Searching for realtime data:', extractedTopic);
+        
+        // NEW: Call realtime search edge function for comprehensive data
+        let realtimeData;
+        try {
+          console.log('🔍 Calling realtime-search edge function...');
+          const realtimeResponse = await fetch(`https://hryzyehzesessmdkxpxq.supabase.co/functions/v1/realtime-search`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyeXp5ZWh6ZXNlc3NtZGt4cHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzNDQ4MjYsImV4cCI6MjA3MTkyMDgyNn0.qEKMsQtji7ILZXn63VDBTF1OQVvGEpggYR77ZfS-QzI`
+            },
+            body: JSON.stringify({ 
+              query: extractedTopic,
+              language: langCode
+            })
+          });
+          
+          if (realtimeResponse.ok) {
+            realtimeData = await realtimeResponse.json();
+            console.log('✅ Realtime data received:', realtimeData);
+          } else {
+            console.error('Realtime search failed:', realtimeResponse.status);
+          }
+        } catch (realtimeError) {
+          console.error('Realtime search error:', realtimeError);
+        }
         
         // Search Wikipedia using extracted topic with better error handling
         const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic)}&utf8=&format=json&origin=*&srlimit=3`
@@ -1675,19 +1701,45 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           await waitForPuterReady();
           const puter = (window as any).puter;
           
-          // First show Wikipedia content
-          const wikipediaHeader = language === 'de' ? '🌐 **Wikipedia:**' : '🌐 **Wikipedia:**';
-          let wikipediaContent = `${wikipediaHeader}\n${extract}`;
+          // Show realtime data summary if available, otherwise fallback to Wikipedia
+          let primaryContent = '';
           
-          // Add Wikipedia source link
-          const linkText = language === 'de' 
-            ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
-            : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
-          
-          // Generate AI Analysis using OpenRouter API with internet search capabilities
+          if (realtimeData && realtimeData.summary && realtimeData.summary.length > 50) {
+            // Use realtime data as primary content
+            const realtimeHeader = language === 'de' ? '📡 **Aktuelle Echtzeit-Informationen:**' : '📡 **Current Real-time Information:**';
+            primaryContent = `${realtimeHeader}\n${realtimeData.summary}`;
+            
+            // Add sources from realtime search
+            if (realtimeData.wikipedia && realtimeData.wikipedia.length > 0) {
+              primaryContent += `\n\n🔗 **Wikipedia:** ${realtimeData.wikipedia[0].url || ''}`;
+            }
+            if (realtimeData.guardian && realtimeData.guardian.length > 0) {
+              primaryContent += `\n🔗 **The Guardian:** ${realtimeData.guardian[0].url || ''}`;
+            }
+          } else {
+            // Fallback to Wikipedia if realtime data unavailable
+            const wikipediaHeader = language === 'de' ? '🌐 **Wikipedia:**' : '🌐 **Wikipedia:**';
+            primaryContent = `${wikipediaHeader}\n${extract}`;
+            
+            // Add Wikipedia source link
+            const linkText = language === 'de' 
+              ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
+              : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
+            primaryContent += linkText;
+          }
+          // Generate AI Analysis using realtime data + OpenRouter API with internet search capabilities
+          const realtimeContext = realtimeData?.summary || '';
           const aiAnalysisPrompt = language === 'de' 
-            ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Du hast Zugang zu Wikipedia und The Guardian APIs für umfassende Recherche. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Nutze aktuelle Nachrichten, Wikipedia-Informationen und andere verfügbare Quellen. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
-            : `You are an expert journalist with access to current information. You have access to Wikipedia and The Guardian APIs for comprehensive research. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Use current news, Wikipedia information, and other available sources. Answer in 2-3 comprehensive sentences: ${userInput}`;
+            ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Echtzeit-Informationen. Du hast folgende aktuelle Informationen erhalten:
+
+${realtimeContext}
+
+Nutze diese aktuellen Informationen zusammen mit deinem Wissen, um eine fundierte, sachliche Antwort zu geben. Beziehe die neuesten Daten mit ein und antworte in 2-3 ausführlichen Sätzen auf: ${userInput}`
+            : `You are an expert journalist with access to current real-time information. You have received the following current information:
+
+${realtimeContext}
+
+Use this current information along with your knowledge to provide a well-founded, factual answer. Include the latest data and answer in 2-3 comprehensive sentences to: ${userInput}`;
           
           let aiAnalysisContent = '';
           
@@ -1701,7 +1753,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                 'Authorization': 'Bearer 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',
                 'Content-Type': 'application/json',
                 'HTTP-Referer': 'https://dailyfun.app',
-                'X-Title': 'Daily Fun - Internet Search'
+                'X-Title': 'Daily Fun - Realtime Analysis'
               },
               body: JSON.stringify({
                 model: 'meta-llama/llama-3.1-405b-instruct:free',
@@ -1709,8 +1761,8 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                   {
                     role: 'system',
                     content: language === 'de' 
-                      ? 'Du bist ein KI-Assistant mit Internetzugang. Du kannst Wikipedia und The Guardian APIs nutzen für aktuelle Informationen. Antworte fundiert und verwende die neuesten verfügbaren Informationen.'
-                      : 'You are an AI assistant with internet access. You can use Wikipedia and The Guardian APIs for current information. Provide well-researched answers using the latest available information.'
+                      ? 'Du bist ein KI-Assistant mit Zugang zu Echtzeit-Informationen von Wikipedia, The Guardian und anderen Nachrichtenquellen. Verwende diese aktuellen Daten für fundierte, sachliche Antworten.'
+                      : 'You are an AI assistant with access to real-time information from Wikipedia, The Guardian and other news sources. Use this current data for well-founded, factual answers.'
                   },
                   {
                     role: 'user',
@@ -1743,8 +1795,8 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           } catch (error) {
             console.error('❌ OpenRouter API failed:', error);
             aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Das OpenRouter Llama 3.1 405B Modell für Internet-Suche ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. The OpenRouter Llama 3.1 405B model for internet search is currently unreachable. Please try again later.';
+              ? 'KI-Analyse momentan nicht verfügbar. Das OpenRouter Llama 3.1 405B Modell für Echtzeit-Analyse ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
+              : 'AI analysis currently unavailable. The OpenRouter Llama 3.1 405B model for real-time analysis is currently unreachable. Please try again later.';
           }
           
           const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
@@ -1839,7 +1891,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             ? '\n\n**🌐 Externe Quellen:**\n[News suchen](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')'
             : '\n\n**🌐 External Sources:**\n[Search News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')';
           
-          const result = `${wikipediaContent}${linkText}${aiAnalysisSection}${articlesSection}${externalSourcesText}`;
+          const result = `${primaryContent}${aiAnalysisSection}${articlesSection}${externalSourcesText}`;
           
           return { text: result }
         } else {
