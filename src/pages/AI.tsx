@@ -1610,246 +1610,109 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
       }
     }
 
-    // Internet search mode (Wikipedia + AI analysis + News search)
+    // Internet search mode (Real-time data from multiple sources)
     if (searchMode === 'internet') {
-      const langCode: 'de' | 'en' = language === 'de' ? 'de' : 'en'
       try {
-        // REMOVED DEEP DIVE FUNCTIONALITY - Always start fresh search
-        // No more follow-up context to prevent unwanted deep dives
-
-        // Extract main topic from user's question using AI
+        // Extract main topic from user's question
         const extractedTopic = await extractTopicFromQuery(userInput);
-        console.log('Searching Wikipedia for:', extractedTopic);
+        console.log('Searching real-time sources for:', extractedTopic);
         
-        // Search Wikipedia using extracted topic with better error handling
-        const searchUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic)}&utf8=&format=json&origin=*&srlimit=3`
-        let sRes, sData, first;
-        
-        try {
-          sRes = await fetch(searchUrl);
-          if (!sRes.ok) throw new Error(`Search failed: ${sRes.status}`);
-          sData = await sRes.json() as any;
-          first = sData?.query?.search?.[0];
-        } catch (searchError) {
-          console.error('Wikipedia search error:', searchError);
-          // Try fallback search with simpler query
-          const fallbackUrl = `https://${langCode}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(extractedTopic.split(' ')[0])}&utf8=&format=json&origin=*&srlimit=1`
-          try {
-            sRes = await fetch(fallbackUrl);
-            sData = await sRes.json() as any;
-            first = sData?.query?.search?.[0];
-          } catch (fallbackError) {
-            console.error('Fallback search also failed:', fallbackError);
-          }
+        // Call the realtime search Edge Function
+        const response = await fetch('https://hryzyehzesessmdkxpxq.supabase.co/functions/v1/realtime-search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhyeXp5ZWh6ZXNlc3NtZGt4cHhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYzNDQ4MjYsImV4cCI6MjA3MTkyMDgyNn0.qEKMsQtji7ILZXn63VDBTF1OQVvGEpggYR77ZfS-QzI`,
+          },
+          body: JSON.stringify({
+            query: extractedTopic,
+            language: language
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        const data = await response.json();
         
-        if (first) {
-          const title = first.title as string
-          console.log('Found Wikipedia article:', title);
-          
-          // Get full article summary with better error handling
-          const sumUrl = `https://${langCode}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
-          let sumRes, sumData;
-          
-          try {
-            sumRes = await fetch(sumUrl);
-            if (!sumRes.ok) throw new Error(`Summary fetch failed: ${sumRes.status}`);
-            sumData = await sumRes.json() as any;
-          } catch (summaryError) {
-            console.error('Wikipedia summary error:', summaryError);
-            // Use search snippet as fallback
-            sumData = { extract: first.snippet?.replace(/<[^>]*>/g, '') || 'Keine Zusammenfassung verfügbar.' };
-          }
-          const extract = sumData?.extract || (language === 'de' ? 'Keine Zusammenfassung verfügbar.' : 'No summary available.');
-          console.log('Wikipedia extract:', extract);
+        if (data.success && data.results && data.results.length > 0) {
+          console.log(`✅ Found ${data.results.length} real-time results`);
           
           // Set seed for future questions
           setInternetSeed({ 
             firstQuery: userInput, 
-            title, 
-            lang: langCode, 
-            link: `https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}` 
+            title: extractedTopic, 
+            lang: language === 'de' ? 'de' : 'en', 
+            link: data.results[0]?.url 
           });
-          
-          // Use the optimized three-part response format
-          await waitForPuterReady();
-          const puter = (window as any).puter;
-          
-          // First show Wikipedia content
-          const wikipediaHeader = language === 'de' ? '🌐 **Wikipedia:**' : '🌐 **Wikipedia:**';
-          let wikipediaContent = `${wikipediaHeader}\n${extract}`;
-          
-          // Add Wikipedia source link
-          const linkText = language === 'de' 
-            ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
-            : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
-          
-          // Generate AI Analysis using OpenRouter API with internet search capabilities
-          const aiAnalysisPrompt = language === 'de' 
-            ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Du hast Zugang zu Wikipedia und The Guardian APIs für umfassende Recherche. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Nutze aktuelle Nachrichten, Wikipedia-Informationen und andere verfügbare Quellen. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
-            : `You are an expert journalist with access to current information. You have access to Wikipedia and The Guardian APIs for comprehensive research. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Use current news, Wikipedia information, and other available sources. Answer in 2-3 comprehensive sentences: ${userInput}`;
-          
-          let aiAnalysisContent = '';
-          
-          // Use OpenRouter API with Llama 3.1 405B (optimized for news and current events with internet search)
-          try {
-            console.log('🤖 Using OpenRouter API with Meta Llama 3.1 405B for internet search analysis');
-            
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': 'Bearer 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',
-                'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://dailyfun.app',
-                'X-Title': 'Daily Fun - Internet Search'
-              },
-              body: JSON.stringify({
-                model: 'meta-llama/llama-3.1-405b-instruct:free',
-                messages: [
-                  {
-                    role: 'system',
-                    content: language === 'de' 
-                      ? 'Du bist ein KI-Assistant mit Internetzugang. Du kannst Wikipedia und The Guardian APIs nutzen für aktuelle Informationen. Antworte fundiert und verwende die neuesten verfügbaren Informationen.'
-                      : 'You are an AI assistant with internet access. You can use Wikipedia and The Guardian APIs for current information. Provide well-researched answers using the latest available information.'
-                  },
-                  {
-                    role: 'user',
-                    content: aiAnalysisPrompt
-                  }
-                ],
-                temperature: 0.7,
-                top_p: 0.9,
-                max_tokens: 400
-              }),
+
+          // Format results by source
+          const resultsBySource: { [key: string]: any[] } = {};
+          data.results.forEach((result: any) => {
+            if (!resultsBySource[result.source]) {
+              resultsBySource[result.source] = [];
+            }
+            resultsBySource[result.source].push(result);
+          });
+
+          let formattedResponse = language === 'de' 
+            ? `🔍 **Echtzeit-Informationen zu "${extractedTopic}":**\n\n`
+            : `🔍 **Real-time information about "${extractedTopic}":**\n\n`;
+
+          // Add Wikipedia results first if available
+          if (resultsBySource['Wikipedia']) {
+            const wikiHeader = language === 'de' ? '🌐 **Wikipedia:**' : '🌐 **Wikipedia:**';
+            formattedResponse += `${wikiHeader}\n`;
+            resultsBySource['Wikipedia'].forEach((result: any) => {
+              formattedResponse += `${result.content}\n`;
+              if (result.url) {
+                formattedResponse += `🔗 [${result.title}](${result.url})\n\n`;
+              }
             });
-
-            if (!response.ok) {
-              throw new Error(`OpenRouter API error: ${response.status}`);
-            }
-
-            const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || '';
-            
-            console.log('✅ OpenRouter API response received:', aiResponse);
-            
-            // Validate response quality
-            if (aiResponse && aiResponse.trim().length > 10) {
-              aiAnalysisContent = aiResponse.trim();
-              console.log('✅ AI Analysis completed successfully using OpenRouter Llama 3.1 405B');
-            } else {
-              throw new Error('Invalid response from OpenRouter API');
-            }
-            
-          } catch (error) {
-            console.error('❌ OpenRouter API failed:', error);
-            aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Das OpenRouter Llama 3.1 405B Modell für Internet-Suche ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. The OpenRouter Llama 3.1 405B model for internet search is currently unreachable. Please try again later.';
           }
-          
-          const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
-          const aiAnalysisSection = `${aiAnalysisHeader}\n${aiAnalysisContent}`;
-          
-          // Fetch real articles with fallback system (Guardian API -> GNews API)
-          let articlesSection = '';
-          let successfulNewsAPI = null;
-          let lastNewsError = null;
-          
-          // Try Guardian API first
-          try {
-            console.log('🗞️ Trying Guardian API for:', extractedTopic);
-            const guardianApiKey = '0be420a7-af7b-45e9-b5cb-04afb863e15c';
-            const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(extractedTopic)}&api-key=${guardianApiKey}&show-fields=headline,trailText&page-size=5&order-by=relevance`;
-            
-            const guardianResponse = await fetch(guardianUrl);
-            if (guardianResponse.ok) {
-              const guardianData = await guardianResponse.json();
-              const articles = guardianData.response?.results || [];
-              
-              if (articles.length > 0) {
-                console.log('✅ Guardian API successful, found', articles.length, 'articles');
-                const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
-                const articleButtons = articles.map((article: any, index: number) => {
-                  const headline = article.fields?.headline || article.webTitle;
-                  const shortTitle = headline.length > 60 ? headline.substring(0, 57) + '...' : headline;
-                  return `[${shortTitle}](${article.webUrl})`;
-                }).join('\n');
-                
-                articlesSection = `${articlesHeader}\n${articleButtons}`;
-                successfulNewsAPI = 'Guardian';
-              } else {
-                throw new Error('No articles found in Guardian API');
+
+          // Add news sources
+          const newsHeader = language === 'de' ? '📰 **Aktuelle Nachrichten:**' : '📰 **Current News:**';
+          let hasNews = false;
+          Object.keys(resultsBySource).forEach(source => {
+            if (source !== 'Wikipedia' && resultsBySource[source].length > 0) {
+              if (!hasNews) {
+                formattedResponse += `${newsHeader}\n`;
+                hasNews = true;
               }
-            } else {
-              throw new Error(`Guardian API error: ${guardianResponse.status}`);
-            }
-          } catch (guardianError) {
-            console.error('❌ Guardian API failed:', guardianError);
-            lastNewsError = guardianError;
-            
-            // Fallback to GNews API (costs money, so only used when Guardian fails)
-            try {
-              console.log('🗞️ Trying GNews API as fallback for:', extractedTopic);
-              const gnewsApiKey = '494b5937247cd56ede96dd66842f802d';
-              const gnewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(extractedTopic)}&token=${gnewsApiKey}&lang=${language === 'de' ? 'de' : 'en'}&country=${language === 'de' ? 'de' : 'us'}&max=5&sortby=relevance`;
-              
-              const gnewsResponse = await fetch(gnewsUrl);
-              if (gnewsResponse.ok) {
-                const gnewsData = await gnewsResponse.json();
-                const articles = gnewsData.articles || [];
-                
-                if (articles.length > 0) {
-                  console.log('✅ GNews API successful, found', articles.length, 'articles');
-                  const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
-                  const articleButtons = articles.map((article: any, index: number) => {
-                    const title = article.title;
-                    const shortTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
-                    return `[${shortTitle}](${article.url})`;
-                  }).join('\n');
-                  
-                  articlesSection = `${articlesHeader}\n${articleButtons}`;
-                  successfulNewsAPI = 'GNews';
-                } else {
-                  throw new Error('No articles found in GNews API');
+              resultsBySource[source].forEach((result: any, index: number) => {
+                formattedResponse += `**${result.title}** (${result.source})\n${result.content}\n`;
+                if (result.url) {
+                  formattedResponse += `🔗 [${language === 'de' ? 'Quelle' : 'Source'}](${result.url})\n\n`;
                 }
-              } else {
-                throw new Error(`GNews API error: ${gnewsResponse.status}`);
-              }
-            } catch (gnewsError) {
-              console.error('❌ GNews API also failed:', gnewsError);
-              lastNewsError = gnewsError;
-              
-              // Both APIs failed, provide manual search links
-              const fallbackText = language === 'de'
-                ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
-                : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
-              articlesSection = fallbackText;
+              });
             }
-          }
-          
-          // Log which API was successful
-          if (successfulNewsAPI) {
-            console.log(`🎉 Articles fetched successfully using ${successfulNewsAPI} API`);
-          } else {
-            console.error('🚨 All news APIs failed. Last error:', lastNewsError);
-          }
-          
+          });
+
           // Add external sources section
           const externalSourcesText = language === 'de'
-            ? '\n\n**🌐 Externe Quellen:**\n[News suchen](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')'
-            : '\n\n**🌐 External Sources:**\n[Search News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')';
+            ? '\n**🌐 Weitere Quellen:**\n[Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')'
+            : '\n**🌐 Additional Sources:**\n[Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')';
           
-          const result = `${wikipediaContent}${linkText}${aiAnalysisSection}${articlesSection}${externalSourcesText}`;
-          
-          return { text: result }
+          formattedResponse += externalSourcesText;
+
+          return { text: formattedResponse };
         } else {
-          const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.'
-          return { text: `🌐 ${notFound}` }
+          // Fallback if no results found
+          const fallbackText = language === 'de' 
+            ? `🔍 Ich konnte keine aktuellen Informationen zu "${extractedTopic}" finden. Bitte versuchen Sie es mit anderen Suchbegriffen.`
+            : `🔍 I couldn't find current information about "${extractedTopic}". Please try different search terms.`;
+          
+          return { text: fallbackText };
         }
-      } catch (e) {
-        console.error('Wikipedia search error:', e);
-        const err = language === 'de' ? 'Fehler bei der Wikipedia-Suche.' : 'Error during Wikipedia search.'
-        return { text: `❌ ${err}` }
+      } catch (error) {
+        console.error('Real-time search error:', error);
+        const errorText = language === 'de' 
+          ? `❌ Entschuldigung, bei der Echtzeit-Suche ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.`
+          : `❌ Sorry, there was an error with the real-time search. Please try again later.`;
+        
+        return { text: errorText };
       }
     }
 
