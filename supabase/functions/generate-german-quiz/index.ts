@@ -110,6 +110,8 @@ serve(async (req) => {
         }
       }
     )
+  }
+
   } catch (error) {
     console.error('Error generating German quiz:', error)
     return new Response(
