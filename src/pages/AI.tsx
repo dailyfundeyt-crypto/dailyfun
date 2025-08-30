@@ -2637,7 +2637,9 @@ ${currentArticleText}`
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="justify-between bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10">
                   <div className="flex items-center gap-1 md:gap-2">
-                    {articleDiscussionMode ? <Newspaper className="w-3 h-3 md:w-4 md:h-4" /> : <Home className="w-3 h-3 md:w-4 md:h-4" />}
+                    {articleDiscussionMode ? <Newspaper className="w-3 h-3 md:w-4 md:h-4" /> 
+                      : searchMode === 'internet' ? <Globe className="w-3 h-3 md:w-4 md:h-4" />
+                      : <Home className="w-3 h-3 md:w-4 md:h-4" />}
                     <span className="hidden sm:inline">
                       {articleDiscussionMode ? 'Daily Fun (Article)' 
                         : searchMode === 'internet' ? 'Daily Fun (Internet Search)' 
