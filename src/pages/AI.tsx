@@ -2654,14 +2654,38 @@ ${currentArticleText}`
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="bg-background border z-50">
                 <DropdownMenuItem
-                  onClick={() => setSearchMode('local')}
+                  onClick={() => {
+                    setSearchMode('local');
+                    if (articleDiscussionMode) {
+                      setArticleDiscussionMode(false);
+                      setCurrentArticleText(null);
+                      setMessages(prev => [...prev, {
+                        id: Date.now().toString(),
+                        text: language === 'de' ? '🛑 Artikel-Diskussion beendet. Ich bin wieder im normalen Modus und kann bei allen Themen helfen.' : '🛑 Article discussion ended. I\'m back to normal mode and can help with any topics.',
+                        isUser: false,
+                        timestamp: new Date()
+                      }]);
+                    }
+                  }}
                   className="flex items-center gap-2"
                 >
                   <Home className="w-4 h-4" />
                   Daily Fun (Local)
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setSearchMode('internet')}
+                  onClick={() => {
+                    setSearchMode('internet');
+                    if (articleDiscussionMode) {
+                      setArticleDiscussionMode(false);
+                      setCurrentArticleText(null);
+                      setMessages(prev => [...prev, {
+                        id: Date.now().toString(),
+                        text: language === 'de' ? '🛑 Artikel-Diskussion beendet. Ich bin wieder im normalen Modus und kann bei allen Themen helfen.' : '🛑 Article discussion ended. I\'m back to normal mode and can help with any topics.',
+                        isUser: false,
+                        timestamp: new Date()
+                      }]);
+                    }
+                  }}
                   className="flex items-center gap-2"
                 >
                   <Globe className="w-4 h-4" />
