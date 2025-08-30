@@ -229,20 +229,73 @@ const AI = () => {
       setArticleDiscussionMode(true);
       setCurrentArticleText(articleContent);
       
-      // Create welcome message for article discussion
-      const welcomeText = language === 'de' 
-        ? `🤖 Hallo! Ich habe den Artikel "${articleTitle}" gelesen. Stelle mir gerne Fragen dazu! Ich kann dir bei allem rund um diesen Artikel helfen.` 
-        : `🤖 Hello! I've read the article "${articleTitle}". Feel free to ask me questions about it! I can help you with anything related to this article.`;
-      
-      const welcomeMessage: Message = {
-        id: Date.now().toString(),
-        text: welcomeText,
-        isUser: false,
-        timestamp: new Date(),
-        endConversationAvailable: true
+      // Auto-send article content to AI and get welcome response
+      const sendArticleToAI = async () => {
+        setIsTyping(true);
+        
+        try {
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-with-article`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messages: [
+                {
+                  role: 'system',
+                  content: language === 'de' 
+                    ? 'Du bist ein hilfsreicher Assistent, der Fragen zu Artikeln beantwortet. Antworte auf Deutsch.'
+                    : 'You are a helpful assistant who answers questions about articles. Respond in English.'
+                },
+                {
+                  role: 'user',
+                  content: `${language === 'de' ? 'Artikel:' : 'Article:'} "${articleTitle}"\n\n${articleContent}`
+                }
+              ],
+              articleTitle: articleTitle
+            })
+          });
+
+          const data = await response.json();
+          
+          if (data.success) {
+            const welcomeText = language === 'de' 
+              ? `Ich habe Ihren Artikel "${articleTitle}" erhalten. Welche Fragen haben Sie dazu?`
+              : `I have received your article "${articleTitle}". What questions do you have about it?`;
+            
+            const welcomeMessage: Message = {
+              id: Date.now().toString(),
+              text: welcomeText,
+              isUser: false,
+              timestamp: new Date(),
+              endConversationAvailable: true
+            };
+            
+            setMessages([welcomeMessage]);
+          } else {
+            throw new Error(data.error || 'API error');
+          }
+        } catch (error) {
+          console.error('Error sending article to AI:', error);
+          const welcomeText = language === 'de' 
+            ? `🤖 Hallo! Ich habe den Artikel "${articleTitle}" gelesen. Stelle mir gerne Fragen dazu! Ich kann dir bei allem rund um diesen Artikel helfen.` 
+            : `🤖 Hello! I've read the article "${articleTitle}". Feel free to ask me questions about it! I can help you with anything related to this article.`;
+          
+          const welcomeMessage: Message = {
+            id: Date.now().toString(),
+            text: welcomeText,
+            isUser: false,
+            timestamp: new Date(),
+            endConversationAvailable: true
+          };
+          
+          setMessages([welcomeMessage]);
+        } finally {
+          setIsTyping(false);
+        }
       };
-      
-      setMessages([welcomeMessage]);
+
+      sendArticleToAI();
       
       // Clear the navigation state
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -1589,47 +1642,40 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
     // Article discussion mode - AI answers questions about the article text
     if (articleDiscussionMode && currentArticleText) {
       try {
-        const prompt = language === 'de'
-          ? `Du bist ein Experte für Textanalyse. Beantworte die Frage basierend auf dem folgenden Artikel. Antworte präzise und beziehe dich direkt auf den Artikelinhalt.
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-with-article`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            messages: [
+              {
+                role: 'system',
+                content: language === 'de' 
+                  ? `Du bist ein Experte für Textanalyse. Beantworte die Frage basierend auf dem folgenden Artikel. Antworte präzise und beziehe dich direkt auf den Artikelinhalt. Antworte auf Deutsch und beziehe dich nur auf die Informationen aus dem Artikel.
 
 ARTIKEL:
-${currentArticleText}
-
-FRAGE: ${userInput}
-
-Antworte auf Deutsch und beziehe dich nur auf die Informationen aus dem Artikel.`
-          : `You are an expert in text analysis. Answer the question based on the following article. Respond precisely and refer directly to the article content.
+${currentArticleText}`
+                  : `You are an expert in text analysis. Answer the question based on the following article. Respond precisely and refer directly to the article content. Answer in English and refer only to information from the article.
 
 ARTICLE:
-${currentArticleText}
-
-QUESTION: ${userInput}
-
-Answer in English and refer only to information from the article.`;
-
-        await waitForPuterReady();
-        const puter = (window as any).puter;
-        
-        const response = await puter.ai.chat(prompt, { 
-          model: 'claude-sonnet-4',
-          max_tokens: 600,
-          temperature: 0.7
+${currentArticleText}`
+              },
+              {
+                role: 'user',
+                content: userInput
+              }
+            ]
+          })
         });
+
+        const data = await response.json();
         
-        let responseText = '';
-        if (typeof response === 'string') {
-          responseText = response;
-        } else if (response?.message?.content) {
-          responseText = response.message.content;
-        } else if (response?.text) {
-          responseText = response.text;
-        } else if (response?.content) {
-          responseText = response.content;
+        if (data.success) {
+          return { text: data.text };
         } else {
-          responseText = language === 'de' ? '❌ Fehler bei der Antwort.' : '❌ Error in response.';
+          throw new Error(data.error || 'API error');
         }
-        
-        return { text: responseText };
       } catch (error) {
         console.error('Article discussion AI error:', error);
         const errorText = language === 'de' 
