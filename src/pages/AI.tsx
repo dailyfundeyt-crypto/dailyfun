@@ -200,8 +200,6 @@ const AI = () => {
   const [summaryMode, setSummaryMode] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [quizInfoMode, setQuizInfoMode] = useState(false);
-  const [articleDiscussionMode, setArticleDiscussionMode] = useState(false);
-  const [currentArticleText, setCurrentArticleText] = useState<string | null>(null);
 
   const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
     setMessages(prev => prev.map(msg => {
@@ -225,29 +223,21 @@ const AI = () => {
       const articleContent = location.state.articleContent;
       const articleTitle = location.state.articleTitle;
       
-      // Set article discussion mode
-      setArticleDiscussionMode(true);
-      setCurrentArticleText(articleContent);
+      // Set to internet search mode
+      setSearchMode('internet');
       
-      // Create welcome message for article discussion
-      const welcomeText = language === 'de' 
-        ? `🤖 Hallo! Ich habe den Artikel "${articleTitle}" gelesen. Stelle mir gerne Fragen dazu! Ich kann dir bei allem rund um diesen Artikel helfen.` 
-        : `🤖 Hello! I've read the article "${articleTitle}". Feel free to ask me questions about it! I can help you with anything related to this article.`;
+      // Create the message with the required format
+      const messageText = `${articleContent}\n\n>>Was willst du dazu wissen?<<`;
       
-      const welcomeMessage: Message = {
-        id: Date.now().toString(),
-        text: welcomeText,
-        isUser: false,
-        timestamp: new Date(),
-        endConversationAvailable: true
-      };
-      
-      setMessages([welcomeMessage]);
-      
-      // Clear the navigation state
+      // Clear the navigation state first
       window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // Send the article content automatically
+      setTimeout(() => {
+        sendPrompt(messageText);
+      }, 500);
     }
-  }, [location.state, language]);
+  }, [location.state]);
 
   // Check for article/articleId/prefill parameters in URL and initialize context
   useEffect(() => {
@@ -313,7 +303,6 @@ const AI = () => {
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: articleDiscussionMode
         };
         setTimeout(() => {
           setMessages(prev => [...prev, aiMessage]);
@@ -1123,7 +1112,7 @@ Answer:`;
         timestamp: new Date(), 
         qrCode: response.qrCode,
         quizData: response.quizData,
-        endConversationAvailable: searchMode === 'internet' || articleDiscussionMode
+        endConversationAvailable: searchMode === 'internet'
       };
       setTimeout(() => {
         setMessages(prev => [...prev, aiMessage]);
@@ -1584,59 +1573,6 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
     if (checkForQuizCommand(userInput)) {
       await generateInformationQuiz();
       return { text: '' }; // Return empty to prevent duplicate message
-    }
-    
-    // Article discussion mode - AI answers questions about the article text
-    if (articleDiscussionMode && currentArticleText) {
-      try {
-        const prompt = language === 'de'
-          ? `Du bist ein Experte für Textanalyse. Beantworte die Frage basierend auf dem folgenden Artikel. Antworte präzise und beziehe dich direkt auf den Artikelinhalt.
-
-ARTIKEL:
-${currentArticleText}
-
-FRAGE: ${userInput}
-
-Antworte auf Deutsch und beziehe dich nur auf die Informationen aus dem Artikel.`
-          : `You are an expert in text analysis. Answer the question based on the following article. Respond precisely and refer directly to the article content.
-
-ARTICLE:
-${currentArticleText}
-
-QUESTION: ${userInput}
-
-Answer in English and refer only to information from the article.`;
-
-        await waitForPuterReady();
-        const puter = (window as any).puter;
-        
-        const response = await puter.ai.chat(prompt, { 
-          model: 'claude-sonnet-4',
-          max_tokens: 600,
-          temperature: 0.7
-        });
-        
-        let responseText = '';
-        if (typeof response === 'string') {
-          responseText = response;
-        } else if (response?.message?.content) {
-          responseText = response.message.content;
-        } else if (response?.text) {
-          responseText = response.text;
-        } else if (response?.content) {
-          responseText = response.content;
-        } else {
-          responseText = language === 'de' ? '❌ Fehler bei der Antwort.' : '❌ Error in response.';
-        }
-        
-        return { text: responseText };
-      } catch (error) {
-        console.error('Article discussion AI error:', error);
-        const errorText = language === 'de' 
-          ? '❌ Fehler bei der KI-Antwort zum Artikel.'
-          : '❌ Error getting AI response about the article.';
-        return { text: errorText };
-      }
     }
     
     // Quiz generation
@@ -2101,7 +2037,7 @@ Answer in English and refer only to information from the article.`;
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: searchMode === 'internet' || articleDiscussionMode,
+          endConversationAvailable: searchMode === 'internet',
           showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
@@ -2145,7 +2081,7 @@ Answer in English and refer only to information from the article.`;
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: searchMode === 'internet' || articleDiscussionMode,
+          endConversationAvailable: searchMode === 'internet',
           showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
@@ -2163,26 +2099,13 @@ Answer in English and refer only to information from the article.`;
   };
 
   const endInternetConversation = () => {
-    if (articleDiscussionMode) {
-      // End article discussion mode
-      setArticleDiscussionMode(false);
-      setCurrentArticleText(null);
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        text: language === 'de' ? '🛑 Artikel-Diskussion beendet. Ich bin wieder im normalen Modus und kann bei allen Themen helfen.' : '🛑 Article discussion ended. I\'m back to normal mode and can help with any topics.',
-        isUser: false,
-        timestamp: new Date()
-      }]);
-    } else {
-      // End internet conversation mode
-      setInternetSeed(null);
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        text: language === 'de' ? '🛑 Konversation beendet. Bitte nenne ein neues Thema für die Internet-Suche.' : '🛑 Conversation ended. Please provide a new topic for Internet search.',
-        isUser: false,
-        timestamp: new Date()
-      }]);
-    }
+    setInternetSeed(null);
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      text: language === 'de' ? '🛑 Konversation beendet. Bitte nenne ein neues Thema für die Internet-Suche.' : '🛑 Conversation ended. Please provide a new topic for Internet search.',
+      isUser: false,
+      timestamp: new Date()
+    }]);
   };
 
   return (
@@ -2592,16 +2515,8 @@ Answer in English and refer only to information from the article.`;
                 <Button variant="outline" className="justify-between bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10">
                   <div className="flex items-center gap-1 md:gap-2">
                     <Home className="w-3 h-3 md:w-4 md:h-4" />
-                    <span className="hidden sm:inline">
-                      {articleDiscussionMode ? 'Daily Fun (Articles)' 
-                        : searchMode === 'internet' ? 'Daily Fun (Internet Search)' 
-                        : 'Daily Fun (Local)'}
-                    </span>
-                    <span className="sm:hidden">
-                      {articleDiscussionMode ? 'Articles'
-                        : searchMode === 'internet' ? 'Internet' 
-                        : 'Local'}
-                    </span>
+                    <span className="hidden sm:inline">{searchMode === 'internet' ? 'Daily Fun (Internet Search)' : 'Daily Fun (Local)'}</span>
+                    <span className="sm:hidden">{searchMode === 'internet' ? 'Internet' : 'Local'}</span>
                   </div>
                   <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
                 </Button>
