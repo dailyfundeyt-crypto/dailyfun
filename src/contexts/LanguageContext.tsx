@@ -323,7 +323,13 @@ const translations = {
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<'en' | 'de'>('en');
 
-  // Always start with English - no localStorage loading
+  // Load saved language preference on component mount
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('daily-fun-language') as 'en' | 'de';
+    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'de')) {
+      setLanguage(savedLanguage);
+    }
+  }, []);
 
   // Save language preference whenever it changes
   useEffect(() => {
