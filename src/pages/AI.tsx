@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown, Brain, Mic, Image as ImageIcon } from 'lucide-react';
+import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown, Brain, Mic, Image as ImageIcon, Newspaper } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -200,6 +200,7 @@ const AI = () => {
   const [summaryMode, setSummaryMode] = useState(false);
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [quizInfoMode, setQuizInfoMode] = useState(false);
+  const [isArticleMode, setIsArticleMode] = useState(false);
 
   const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
     setMessages(prev => prev.map(msg => {
@@ -223,8 +224,9 @@ const AI = () => {
       const articleContent = location.state.articleContent;
       const articleTitle = location.state.articleTitle;
       
-      // Set to internet search mode
+      // Set to internet search mode and enable article mode
       setSearchMode('internet');
+      setIsArticleMode(true);
       
       // Store article context without sending it
       setArticleContext(articleContent);
@@ -311,6 +313,7 @@ const AI = () => {
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
+          endConversationAvailable: response.endConversationAvailable
         };
         setTimeout(() => {
           setMessages(prev => [...prev, aiMessage]);
@@ -1120,7 +1123,7 @@ Answer:`;
         timestamp: new Date(), 
         qrCode: response.qrCode,
         quizData: response.quizData,
-        endConversationAvailable: searchMode === 'internet'
+        endConversationAvailable: response.endConversationAvailable || (searchMode === 'internet' && !isArticleMode)
       };
       setTimeout(() => {
         setMessages(prev => [...prev, aiMessage]);
@@ -1567,7 +1570,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
 
   const [quizStates, setQuizStates] = useState<{ [messageId: string]: any[] }>({});
 
-  const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string; quizData?: any }> => {
+  const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string; quizData?: any; endConversationAvailable?: boolean }> => {
     const input = userInput.toLowerCase();
     const detectedLanguage = detectLanguage(userInput);
     
@@ -1674,7 +1677,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
         
         if (aiResponse && aiResponse.trim().length > 10) {
           const responseHeader = language === 'de' ? '🤖 **AI-Antwort basierend auf dem Artikel:**' : '🤖 **AI Answer based on the article:**';
-          return { text: `${responseHeader}\n\n${aiResponse.trim()}` };
+          return { text: `${responseHeader}\n\n${aiResponse.trim()}`, endConversationAvailable: true };
         } else {
           throw new Error('Invalid response from OpenRouter API');
         }
@@ -2114,7 +2117,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: searchMode === 'internet',
+          endConversationAvailable: response.endConversationAvailable || (searchMode === 'internet' && !isArticleMode),
           showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
@@ -2158,7 +2161,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: searchMode === 'internet',
+          endConversationAvailable: response.endConversationAvailable || (searchMode === 'internet' && !isArticleMode),
           showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
@@ -2180,6 +2183,20 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
     setMessages(prev => [...prev, {
       id: Date.now().toString(),
       text: language === 'de' ? '🛑 Konversation beendet. Bitte nenne ein neues Thema für die Internet-Suche.' : '🛑 Conversation ended. Please provide a new topic for Internet search.',
+      isUser: false,
+      timestamp: new Date()
+    }]);
+  };
+
+  const endArticleConversation = () => {
+    setArticleContext(null);
+    setIsArticleMode(false);
+    setSearchMode('internet');
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      text: language === 'de' 
+        ? '🛑 Artikel-Konversation beendet. Sie sind zurück im normalen Daily Fun (Internet Search) Modus.'
+        : '🛑 Article conversation ended. You are back in normal Daily Fun (Internet Search) mode.',
       isUser: false,
       timestamp: new Date()
     }]);
@@ -2501,18 +2518,25 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                        </Button>
                      </div>
                     )}
-                    {message.endConversationAvailable && (
-                      <div className="mt-3">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-white"
-                          onClick={(e) => { e.stopPropagation(); endInternetConversation(); }}
-                        >
-                          {language === 'de' ? 'Konversation beenden' : 'End conversation'}
-                        </Button>
-                      </div>
-                    )}
+                     {message.endConversationAvailable && (
+                       <div className="mt-3">
+                         <Button
+                           size="sm"
+                           variant="outline"
+                           className="bg-white"
+                           onClick={(e) => { 
+                             e.stopPropagation(); 
+                             if (isArticleMode) {
+                               endArticleConversation();
+                             } else {
+                               endInternetConversation();
+                             }
+                           }}
+                         >
+                           {language === 'de' ? 'Konversation beenden' : 'End conversation'}
+                         </Button>
+                       </div>
+                     )}
                     
                       {/* Summarize button - only show in activation message AND when messages are selected */}
                      {message.showSummaryButton && summaryMode && selectedMessages.length > 0 && 
@@ -2591,9 +2615,29 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="justify-between bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10">
                   <div className="flex items-center gap-1 md:gap-2">
-                    <Home className="w-3 h-3 md:w-4 md:h-4" />
-                    <span className="hidden sm:inline">{searchMode === 'internet' ? 'Daily Fun (Internet Search)' : 'Daily Fun (Local)'}</span>
-                    <span className="sm:hidden">{searchMode === 'internet' ? 'Internet' : 'Local'}</span>
+                    {isArticleMode ? (
+                      <Newspaper className="w-3 h-3 md:w-4 md:h-4" />
+                    ) : searchMode === 'internet' ? (
+                      <Globe className="w-3 h-3 md:w-4 md:h-4" />
+                    ) : (
+                      <Home className="w-3 h-3 md:w-4 md:h-4" />
+                    )}
+                    <span className="hidden sm:inline">
+                      {isArticleMode 
+                        ? 'Daily Fun (Article)' 
+                        : searchMode === 'internet' 
+                          ? 'Daily Fun (Internet Search)' 
+                          : 'Daily Fun (Local)'
+                      }
+                    </span>
+                    <span className="sm:hidden">
+                      {isArticleMode 
+                        ? 'Article' 
+                        : searchMode === 'internet' 
+                          ? 'Internet' 
+                          : 'Local'
+                      }
+                    </span>
                   </div>
                   <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
                 </Button>
@@ -2607,7 +2651,13 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                   Daily Fun (Local)
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setSearchMode('internet')}
+                  onClick={() => {
+                    setSearchMode('internet');
+                    if (isArticleMode) {
+                      setIsArticleMode(false);
+                      setArticleContext(null);
+                    }
+                  }}
                   className="flex items-center gap-2"
                 >
                   <Globe className="w-4 h-4" />
