@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown, Brain, Mic, Image as ImageIcon, Newspaper } from 'lucide-react';
+import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown, Brain, Mic, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -229,73 +229,20 @@ const AI = () => {
       setArticleDiscussionMode(true);
       setCurrentArticleText(articleContent);
       
-      // Auto-send article content to AI and get welcome response
-      const sendArticleToAI = async () => {
-        setIsTyping(true);
-        
-        try {
-          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-with-article`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              messages: [
-                {
-                  role: 'system',
-                  content: language === 'de' 
-                    ? 'Du bist ein hilfsreicher Assistent, der Fragen zu Artikeln beantwortet. Antworte auf Deutsch.'
-                    : 'You are a helpful assistant who answers questions about articles. Respond in English.'
-                },
-                {
-                  role: 'user',
-                  content: `${language === 'de' ? 'Artikel:' : 'Article:'} "${articleTitle}"\n\n${articleContent}`
-                }
-              ],
-              articleTitle: articleTitle
-            })
-          });
-
-          const data = await response.json();
-          
-          if (data.success) {
-            const welcomeText = language === 'de' 
-              ? `Ich habe Ihren Artikel "${articleTitle}" erhalten. Welche Fragen haben Sie dazu?`
-              : `I have received your article "${articleTitle}". What questions do you have about it?`;
-            
-            const welcomeMessage: Message = {
-              id: Date.now().toString(),
-              text: welcomeText,
-              isUser: false,
-              timestamp: new Date(),
-              endConversationAvailable: true
-            };
-            
-            setMessages([welcomeMessage]);
-          } else {
-            throw new Error(data.error || 'API error');
-          }
-        } catch (error) {
-          console.error('Error sending article to AI:', error);
-          const welcomeText = language === 'de' 
-            ? `🤖 Hallo! Ich habe den Artikel "${articleTitle}" gelesen. Stelle mir gerne Fragen dazu! Ich kann dir bei allem rund um diesen Artikel helfen.` 
-            : `🤖 Hello! I've read the article "${articleTitle}". Feel free to ask me questions about it! I can help you with anything related to this article.`;
-          
-          const welcomeMessage: Message = {
-            id: Date.now().toString(),
-            text: welcomeText,
-            isUser: false,
-            timestamp: new Date(),
-            endConversationAvailable: true
-          };
-          
-          setMessages([welcomeMessage]);
-        } finally {
-          setIsTyping(false);
-        }
+      // Create welcome message for article discussion
+      const welcomeText = language === 'de' 
+        ? `🤖 Hallo! Ich habe den Artikel "${articleTitle}" gelesen. Stelle mir gerne Fragen dazu! Ich kann dir bei allem rund um diesen Artikel helfen.` 
+        : `🤖 Hello! I've read the article "${articleTitle}". Feel free to ask me questions about it! I can help you with anything related to this article.`;
+      
+      const welcomeMessage: Message = {
+        id: Date.now().toString(),
+        text: welcomeText,
+        isUser: false,
+        timestamp: new Date(),
+        endConversationAvailable: true
       };
-
-      sendArticleToAI();
+      
+      setMessages([welcomeMessage]);
       
       // Clear the navigation state
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -366,7 +313,6 @@ const AI = () => {
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: articleDiscussionMode
         };
         setTimeout(() => {
           setMessages(prev => [...prev, aiMessage]);
@@ -1176,7 +1122,7 @@ Answer:`;
         timestamp: new Date(), 
         qrCode: response.qrCode,
         quizData: response.quizData,
-        endConversationAvailable: searchMode === 'internet' || articleDiscussionMode
+        endConversationAvailable: searchMode === 'internet'
       };
       setTimeout(() => {
         setMessages(prev => [...prev, aiMessage]);
@@ -1642,40 +1588,47 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
     // Article discussion mode - AI answers questions about the article text
     if (articleDiscussionMode && currentArticleText) {
       try {
-        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-with-article`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            messages: [
-              {
-                role: 'system',
-                content: language === 'de' 
-                  ? `Du bist ein Experte für Textanalyse. Beantworte die Frage basierend auf dem folgenden Artikel. Antworte präzise und beziehe dich direkt auf den Artikelinhalt. Antworte auf Deutsch und beziehe dich nur auf die Informationen aus dem Artikel.
+        const prompt = language === 'de'
+          ? `Du bist ein Experte für Textanalyse. Beantworte die Frage basierend auf dem folgenden Artikel. Antworte präzise und beziehe dich direkt auf den Artikelinhalt.
 
 ARTIKEL:
-${currentArticleText}`
-                  : `You are an expert in text analysis. Answer the question based on the following article. Respond precisely and refer directly to the article content. Answer in English and refer only to information from the article.
+${currentArticleText}
+
+FRAGE: ${userInput}
+
+Antworte auf Deutsch und beziehe dich nur auf die Informationen aus dem Artikel.`
+          : `You are an expert in text analysis. Answer the question based on the following article. Respond precisely and refer directly to the article content.
 
 ARTICLE:
-${currentArticleText}`
-              },
-              {
-                role: 'user',
-                content: userInput
-              }
-            ]
-          })
-        });
+${currentArticleText}
 
-        const data = await response.json();
+QUESTION: ${userInput}
+
+Answer in English and refer only to information from the article.`;
+
+        await waitForPuterReady();
+        const puter = (window as any).puter;
         
-        if (data.success) {
-          return { text: data.text };
+        const response = await puter.ai.chat(prompt, { 
+          model: 'claude-sonnet-4',
+          max_tokens: 600,
+          temperature: 0.7
+        });
+        
+        let responseText = '';
+        if (typeof response === 'string') {
+          responseText = response;
+        } else if (response?.message?.content) {
+          responseText = response.message.content;
+        } else if (response?.text) {
+          responseText = response.text;
+        } else if (response?.content) {
+          responseText = response.content;
         } else {
-          throw new Error(data.error || 'API error');
+          responseText = language === 'de' ? '❌ Fehler bei der Antwort.' : '❌ Error in response.';
         }
+        
+        return { text: responseText };
       } catch (error) {
         console.error('Article discussion AI error:', error);
         const errorText = language === 'de' 
@@ -2147,7 +2100,7 @@ ${currentArticleText}`
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: searchMode === 'internet' || articleDiscussionMode,
+          endConversationAvailable: searchMode === 'internet',
           showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
@@ -2191,7 +2144,7 @@ ${currentArticleText}`
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: searchMode === 'internet' || articleDiscussionMode,
+          endConversationAvailable: searchMode === 'internet',
           showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
@@ -2637,57 +2590,23 @@ ${currentArticleText}`
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="justify-between bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10">
                   <div className="flex items-center gap-1 md:gap-2">
-                    {articleDiscussionMode ? <Newspaper className="w-3 h-3 md:w-4 md:h-4" /> 
-                      : searchMode === 'internet' ? <Globe className="w-3 h-3 md:w-4 md:h-4" />
-                      : <Home className="w-3 h-3 md:w-4 md:h-4" />}
-                    <span className="hidden sm:inline">
-                      {articleDiscussionMode ? 'Daily Fun (Article)' 
-                        : searchMode === 'internet' ? 'Daily Fun (Internet Search)' 
-                        : 'Daily Fun (Local)'}
-                    </span>
-                    <span className="sm:hidden">
-                      {articleDiscussionMode ? 'Article'
-                        : searchMode === 'internet' ? 'Internet' 
-                        : 'Local'}
-                    </span>
+                    <Home className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="hidden sm:inline">{searchMode === 'internet' ? 'Daily Fun (Internet Search)' : 'Daily Fun (Local)'}</span>
+                    <span className="sm:hidden">{searchMode === 'internet' ? 'Internet' : 'Local'}</span>
                   </div>
                   <ChevronDown className="w-3 h-3 md:w-4 md:h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="bg-background border z-50">
                 <DropdownMenuItem
-                  onClick={() => {
-                    setSearchMode('local');
-                    if (articleDiscussionMode) {
-                      setArticleDiscussionMode(false);
-                      setCurrentArticleText(null);
-                      setMessages(prev => [...prev, {
-                        id: Date.now().toString(),
-                        text: language === 'de' ? '🛑 Artikel-Diskussion beendet. Ich bin wieder im normalen Modus und kann bei allen Themen helfen.' : '🛑 Article discussion ended. I\'m back to normal mode and can help with any topics.',
-                        isUser: false,
-                        timestamp: new Date()
-                      }]);
-                    }
-                  }}
+                  onClick={() => setSearchMode('local')}
                   className="flex items-center gap-2"
                 >
                   <Home className="w-4 h-4" />
                   Daily Fun (Local)
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => {
-                    setSearchMode('internet');
-                    if (articleDiscussionMode) {
-                      setArticleDiscussionMode(false);
-                      setCurrentArticleText(null);
-                      setMessages(prev => [...prev, {
-                        id: Date.now().toString(),
-                        text: language === 'de' ? '🛑 Artikel-Diskussion beendet. Ich bin wieder im normalen Modus und kann bei allen Themen helfen.' : '🛑 Article discussion ended. I\'m back to normal mode and can help with any topics.',
-                        isUser: false,
-                        timestamp: new Date()
-                      }]);
-                    }
-                  }}
+                  onClick={() => setSearchMode('internet')}
                   className="flex items-center gap-2"
                 >
                   <Globe className="w-4 h-4" />
