@@ -226,18 +226,26 @@ const AI = () => {
       // Set to internet search mode
       setSearchMode('internet');
       
-      // Create the message with the required format
-      const messageText = `${articleContent}\n\n>>Was willst du dazu wissen?<<`;
+      // Store article context without sending it
+      setArticleContext(articleContent);
       
       // Clear the navigation state first
       window.history.replaceState({}, document.title, window.location.pathname);
       
-      // Send the article content automatically
-      setTimeout(() => {
-        sendPrompt(messageText);
-      }, 500);
+      // Add a welcome message asking what the user wants to know
+      const welcomeMessage: Message = {
+        id: Date.now().toString(),
+        text: language === 'de' 
+          ? `📄 **Artikel geladen:** ${articleTitle}\n\nIch habe den Artikel gelesen. Was möchten Sie dazu wissen?`
+          : `📄 **Article loaded:** ${articleTitle}\n\nI have read the article. What would you like to know about it?`,
+        isUser: false,
+        timestamp: new Date(),
+        endConversationAvailable: false
+      };
+      
+      setMessages([welcomeMessage]);
     }
-  }, [location.state]);
+  }, [location.state, language]);
 
   // Check for article/articleId/prefill parameters in URL and initialize context
   useEffect(() => {
@@ -1607,6 +1615,75 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           ? 'Bitte senden Sie mir einen gültigen Link (beginnend mit http:// oder https://), um einen QR Code zu erstellen.\n\nBeispiel: https://www.example.com'
           : 'Please send me a valid link (starting with http:// or https://) to create a QR code.\n\nExample: https://www.example.com';
         return { text: helpText };
+      }
+    }
+
+    // If we have article context, use it with the user's question
+    if (articleContext && searchMode === 'internet') {
+      try {
+        // Clean article content by removing image filenames and prompts
+        const cleanArticleContent = articleContext
+          .replace(/<img[^>]*>/g, '') // Remove img tags
+          .replace(/\/lovable-uploads\/[^"'\s]*/g, '') // Remove image paths
+          .replace(/>>.*?<</g, '') // Remove >>prompt<< patterns
+          .replace(/\n\s*\n/g, '\n') // Clean up extra newlines
+          .trim();
+
+        // Combine user question with clean article content
+        const combinedPrompt = language === 'de' 
+          ? `Basierend auf folgendem Artikel-Inhalt: "${cleanArticleContent}"\n\nBitte beantworte diese Frage: ${userInput}`
+          : `Based on the following article content: "${cleanArticleContent}"\n\nPlease answer this question: ${userInput}`;
+
+        // Use OpenRouter API with Llama 3.1 405B for article-based analysis
+        console.log('🤖 Using OpenRouter API with Meta Llama 3.1 405B for article analysis');
+        
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Bearer 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',
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://dailyfun.app',
+            'X-Title': 'Daily Fun - Article Analysis'
+          },
+          body: JSON.stringify({
+            model: 'meta-llama/llama-3.1-405b-instruct:free',
+            messages: [
+              {
+                role: 'system',
+                content: language === 'de' 
+                  ? 'Du bist ein hilfreicher AI-Assistent, der Fragen zu Artikeln beantwortet. Gib fundierte, informative Antworten basierend auf dem bereitgestellten Artikel-Inhalt.'
+                  : 'You are a helpful AI assistant that answers questions about articles. Provide well-informed, informative answers based on the provided article content.'
+              },
+              {
+                role: 'user',
+                content: combinedPrompt
+              }
+            ],
+            temperature: 0.7,
+            top_p: 0.9,
+            max_tokens: 500
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`OpenRouter API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const aiResponse = data.choices?.[0]?.message?.content || '';
+        
+        if (aiResponse && aiResponse.trim().length > 10) {
+          const responseHeader = language === 'de' ? '🤖 **AI-Antwort basierend auf dem Artikel:**' : '🤖 **AI Answer based on the article:**';
+          return { text: `${responseHeader}\n\n${aiResponse.trim()}` };
+        } else {
+          throw new Error('Invalid response from OpenRouter API');
+        }
+      } catch (error) {
+        console.error('❌ Article analysis failed:', error);
+        const errorText = language === 'de' 
+          ? 'Entschuldigung, die Artikel-Analyse ist momentan nicht verfügbar. Bitte versuchen Sie es später erneut.'
+          : 'Sorry, article analysis is currently unavailable. Please try again later.';
+        return { text: errorText };
       }
     }
 
