@@ -323,11 +323,13 @@ const translations = {
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<'en' | 'de'>('en');
 
-  // Load saved language preference on component mount
+  // Load saved language preference on component mount, defaulting to English
   useEffect(() => {
     const savedLanguage = localStorage.getItem('daily-fun-language') as 'en' | 'de';
-    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'de')) {
+    if (savedLanguage && savedLanguage === 'de') {
       setLanguage(savedLanguage);
+    } else {
+      setLanguage('en'); // Ensure English is always the default
     }
   }, []);
 
