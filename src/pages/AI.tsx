@@ -471,18 +471,43 @@ const AI = () => {
   const generateGermanQuiz = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
     const input = userInput.toLowerCase();
     
-    // Determine topic from input
+    // Enhanced topic detection using AI-like approach
     let topic = 'Allgemeinwissen';
-    if (input.includes('katzen')) topic = 'Katzen';
-    else if (input.includes('hunde')) topic = 'Hunde';
-    else if (input.includes('geschichte')) topic = 'Geschichte';
-    else if (input.includes('wissenschaft')) topic = 'Wissenschaft';
+    
+    // Direct topic matching
+    if (input.includes('katzen') || input.includes('cat')) topic = 'Katzen';
+    else if (input.includes('hunde') || input.includes('dog')) topic = 'Hunde';
+    else if (input.includes('geschichte') || input.includes('history')) topic = 'Geschichte';
+    else if (input.includes('wissenschaft') || input.includes('science')) topic = 'Wissenschaft';
     else if (input.includes('sport')) topic = 'Sport';
-    else if (input.includes('filme')) topic = 'Filme';
-    else if (input.includes('musik')) topic = 'Musik';
+    else if (input.includes('filme') || input.includes('movie')) topic = 'Filme';
+    else if (input.includes('musik') || input.includes('music')) topic = 'Musik';
+    else if (input.includes('geographie') || input.includes('länder') || input.includes('städte')) topic = 'Geographie';
+    else if (input.includes('technik') || input.includes('technologie')) topic = 'Technik';
+    else if (input.includes('kunst')) topic = 'Kunst';
+    else if (input.includes('literatur') || input.includes('bücher')) topic = 'Literatur';
+    else if (input.includes('politik')) topic = 'Politik';
+    else if (input.includes('medizin') || input.includes('gesundheit')) topic = 'Medizin';
+    else if (input.includes('natur') || input.includes('umwelt')) topic = 'Natur und Umwelt';
+    else if (input.includes('essen') || input.includes('kochen')) topic = 'Essen und Kochen';
+    else if (input.includes('auto') || input.includes('fahrzeug')) topic = 'Automobile';
+    else if (input.includes('weltraum') || input.includes('astronomie')) topic = 'Weltraum';
+    else if (input.includes('mathematik') || input.includes('mathe')) topic = 'Mathematik';
+    else {
+      // Try to extract topic from free-form text
+      const words = input.split(' ');
+      for (const word of words) {
+        if (word.length > 4 && !['quiz', 'frage', 'über', 'einem', 'eine', 'einem'].includes(word)) {
+          topic = word.charAt(0).toUpperCase() + word.slice(1);
+          break;
+        }
+      }
+    }
     
     try {
-      // Call Supabase Edge Function for Perplexity API
+      console.log('Generating German quiz for topic:', topic);
+      
+      // Call improved Supabase Edge Function with Llama 3.1 API
       const response = await fetch('/api/generate-german-quiz', {
         method: 'POST',
         headers: {
@@ -492,12 +517,21 @@ const AI = () => {
       });
       
       if (!response.ok) {
-        throw new Error('API call failed');
+        const errorText = await response.text();
+        console.error('API call failed:', response.status, errorText);
+        throw new Error(`API call failed: ${response.status}`);
       }
       
       const data = await response.json();
       
+      if (data.error) {
+        console.error('API returned error:', data.error);
+        throw new Error(data.error);
+      }
+      
       if (data.quiz) {
+        console.log('Successfully generated quiz:', data.quiz);
+        
         return {
           text: 'INTERACTIVE_QUIZ',
           quizData: {
@@ -508,12 +542,27 @@ const AI = () => {
           }
         };
       } else {
-        throw new Error('No quiz data returned');
+        throw new Error('No quiz data returned from API');
       }
     } catch (error) {
       console.error('German quiz generation failed:', error);
-      // Fallback to translated English quiz
-      return generateEnglishQuizWithTranslation(userInput);
+      
+      // Enhanced fallback message
+      const fallbackMessage = `❌ Entschuldigung, ich konnte kein Quiz zum Thema "${topic}" generieren. Das kann verschiedene Gründe haben:
+
+🔄 **Versuchen Sie:**
+- Ein anderes Thema (z.B. "Geschichte", "Sport", "Wissenschaft")
+- Eine spezifischere Formulierung
+- Es in ein paar Minuten erneut
+
+💡 **Beliebte Quiz-Themen:**
+- Tiere (Hunde, Katzen)
+- Geschichte
+- Geographie
+- Filme & Musik
+- Wissenschaft & Technik`;
+
+      return { text: fallbackMessage };
     }
   };
 
