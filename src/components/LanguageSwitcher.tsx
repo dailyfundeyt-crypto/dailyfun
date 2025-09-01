@@ -12,7 +12,7 @@ const LanguageSwitcher = () => {
       aria-label="Toggle language"
     >
       <span className="mr-1">🌐</span>
-      {language === 'en' ? 'EN' : 'DE'}
+      {language === 'en' ? 'DE' : 'EN'}
     </button>
   );
 };
