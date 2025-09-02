@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Calendar, User, Bot } from 'lucide-react';
+import { ArrowLeft, Calendar, Bot } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { getEmployeeByAuthor } from '../data/employees';
 import ReactMarkdown from 'react-markdown';
@@ -169,7 +169,6 @@ const Article = () => {
                   onClick={handleAuthorClick}
                   className="font-medium text-gray-800 hover:text-red-accent transition-colors cursor-pointer flex items-center"
                 >
-                  <User className="h-4 w-4 mr-2" />
                   {article.author}
                 </button>
               </div>
