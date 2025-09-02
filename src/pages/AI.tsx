@@ -9,6 +9,8 @@ import Header from '@/components/Header';
 import { Link, useLocation } from 'react-router-dom';
 import QRCode from 'qrcode';
 import ReactMarkdown from 'react-markdown';
+import jsPDF from 'jspdf';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -30,6 +32,7 @@ interface Message {
   isSelected?: boolean;
   showSummaryButton?: boolean;
   showQuizButton?: boolean;
+  showPdfDownloadButton?: boolean;
 }
 
 interface ActionCard {
@@ -174,11 +177,80 @@ const AI = () => {
   const location = useLocation();
   const articleDatabase = createArticleDatabase();
   const companyDatabase = createCompanyDatabase();
+  const { toast } = useToast();
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [searchMode, setSearchMode] = useState<'local' | 'internet'>('internet');
+  
+  // PDF download function
+  const downloadSummaryAsPDF = (messageText: string) => {
+    try {
+      const doc = new jsPDF();
+      
+      // Remove markdown formatting and extract clean text
+      const cleanText = messageText
+        .replace(/^\*\*.*?\*\*/g, '') // Remove bold headers
+        .replace(/📝/g, '') // Remove emojis
+        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold formatting
+        .trim();
+      
+      // Extract title and content
+      const lines = cleanText.split('\n');
+      const titleLine = lines.find(line => 
+        line.includes('Zusammenfassung') || 
+        line.includes('Summary')
+      ) || (language === 'de' ? 'Zusammenfassung' : 'Summary');
+      
+      const summaryContent = lines
+        .filter(line => 
+          !line.includes('Zusammenfassung') && 
+          !line.includes('Summary') && 
+          !line.includes('(') && 
+          line.trim().length > 0
+        )
+        .join('\n')
+        .trim();
+      
+      // Set PDF title
+      const title = language === 'de' ? 'Daily Fun - Zusammenfassung' : 'Daily Fun - Summary';
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.text(title, 20, 30);
+      
+      // Add date
+      doc.setFontSize(12);
+      const dateStr = new Date().toLocaleDateString();
+      doc.text(`${language === 'de' ? 'Erstellt am' : 'Created on'}: ${dateStr}`, 20, 45);
+      
+      // Add content
+      doc.setFontSize(11);
+      const splitText = doc.splitTextToSize(summaryContent, 170);
+      doc.text(splitText, 20, 65);
+      
+      // Save PDF
+      const filename = language === 'de' 
+        ? `Daily_Fun_Zusammenfassung_${dateStr.replace(/\//g, '-')}.pdf`
+        : `Daily_Fun_Summary_${dateStr.replace(/\//g, '-')}.pdf`;
+      
+      doc.save(filename);
+      
+      // Show success toast
+      toast({
+        title: language === 'de' ? 'PDF heruntergeladen' : 'PDF downloaded',
+        description: language === 'de' ? 'Die Zusammenfassung wurde als PDF gespeichert.' : 'The summary has been saved as PDF.',
+      });
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      toast({
+        title: language === 'de' ? 'Fehler' : 'Error',
+        description: language === 'de' ? 'PDF konnte nicht erstellt werden.' : 'PDF could not be created.',
+        variant: 'destructive',
+      });
+    }
+  };
   const [lastAIResponse, setLastAIResponse] = useState<string>('');
   const [searchResults, setSearchResults] = useState<{ [messageId: string]: any[] }>({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -1371,7 +1443,8 @@ The text to be summarized is:
           ? `📝 **Zusammenfassung ausgewählter Nachrichten** (${successfulModel})\n\n${summaryText}`
           : `📝 **Summary of Selected Messages** (${successfulModel})\n\n${summaryText}`,
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        showPdfDownloadButton: true
       };
       
       setMessages(prev => [...prev, summaryMessage]);
@@ -2585,9 +2658,27 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                            {language === 'de' ? 'Konversation beenden' : 'End conversation'}
                          </Button>
                        </div>
-                     )}
-                    
-                      {/* Summarize button - only show in activation message AND when messages are selected */}
+                      )}
+                     
+                      {/* PDF Download button for summaries */}
+                      {message.showPdfDownloadButton && (
+                        <div className="mt-3">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-white"
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              downloadSummaryAsPDF(message.text);
+                            }}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            {language === 'de' ? 'Als PDF herunterladen' : 'Download as PDF'}
+                          </Button>
+                        </div>
+                      )}
+                     
+                       {/* Summarize button - only show in activation message AND when messages are selected */}
                      {message.showSummaryButton && summaryMode && selectedMessages.length > 0 && 
                       (message.text.includes('Zusammenfassungs-Modus aktiviert') || message.text.includes('Summary Mode Activated')) && (
                        <div className="mt-3">
