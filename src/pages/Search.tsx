@@ -1,41 +1,28 @@
 
-import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
 import ProfileShareMenu from '../components/ProfileShareMenu';
 import { articles } from '../data/articles';
 import { useLanguage } from '../contexts/LanguageContext';
+import { employees } from '../data/employees';
 
 const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
   const { t, language } = useLanguage();
+  const [searchParams] = useSearchParams();
 
-  // Employee profiles data
-  const employees = [
-    {
-      id: 'stefan',
-      name: 'Stefan Kunc',
-      image: '/lovable-uploads/dd996217-e9c4-456c-af16-469f05791ad2.png'
-    },
-    {
-      id: 'elke',
-      name: 'Dr. Elke Schneider',
-      image: '/lovable-uploads/2679b50f-c4f9-40d5-bbce-828296880ba2.png'
-    },
-    {
-      id: 'karl',
-      name: 'Herr Karl Bergmann',
-      image: '/lovable-uploads/afb210bd-6729-403e-857a-9271499984f4.png'
-    },
-    {
-      id: 'jonas',
-      name: 'Herr Jonas Richter',
-      image: '/lovable-uploads/3e2b5f3d-bb10-4914-847d-e40fa0928943.png'
+  // Handle URL parameters for author filtering
+  useEffect(() => {
+    const authorFromUrl = searchParams.get('author');
+    if (authorFromUrl && employees.some(emp => emp.id === authorFromUrl)) {
+      setSelectedAuthor(authorFromUrl);
+      setShowProfileInfo(true);
     }
-  ];
+  }, [searchParams]);
 
   const filteredArticles = useMemo(() => {
     let filtered = articles;

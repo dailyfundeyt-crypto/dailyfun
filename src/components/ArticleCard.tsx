@@ -1,8 +1,10 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { incrementViews } from '../utils/viewTracker';
 import { useLanguage } from '../contexts/LanguageContext';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { getEmployeeByAuthor } from '../data/employees';
 
 interface Article {
   id: string;
@@ -26,10 +28,23 @@ interface ArticleCardProps {
 const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
 
   const handleClick = () => {
     incrementViews(article.id);
   };
+
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const employee = getEmployeeByAuthor(article.author);
+    if (employee) {
+      navigate(`/search?author=${employee.id}`);
+    }
+  };
+
+  const employee = getEmployeeByAuthor(article.author);
 
 
   // Get translated title for display
@@ -71,7 +86,20 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
           </p>
           
           <div className="flex items-center text-sm text-gray-600">
-            <span className="font-medium text-gray-800">{article.author}</span>
+            <div className="flex items-center">
+              {employee && (
+                <Avatar className="h-6 w-6 mr-2">
+                  <AvatarImage src={employee.image} alt={employee.name} />
+                  <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+              )}
+              <button 
+                onClick={handleAuthorClick}
+                className="font-medium text-gray-800 hover:text-red-accent transition-colors cursor-pointer"
+              >
+                {article.author}
+              </button>
+            </div>
             <span className="ml-4">{new Date(article.publishedAt).toLocaleDateString()}</span>
           </div>
         </div>

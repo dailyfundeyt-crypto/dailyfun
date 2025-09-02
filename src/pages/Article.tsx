@@ -1,6 +1,8 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Calendar, User, Bot } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
+import { getEmployeeByAuthor } from '../data/employees';
 import ReactMarkdown from 'react-markdown';
 import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
@@ -29,6 +31,17 @@ const Article = () => {
   const navigate = useNavigate();
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const handleAuthorClick = () => {
+    if (article) {
+      const employee = getEmployeeByAuthor(article.author);
+      if (employee) {
+        navigate(`/search?author=${employee.id}`);
+      }
+    }
+  };
+
+  const employee = article ? getEmployeeByAuthor(article.author) : null;
 
   useEffect(() => {
     // Scroll to top when article loads
@@ -146,8 +159,19 @@ const Article = () => {
 
             <div className="flex items-center text-sm text-gray-600 mb-8 pb-6 border-b border-gray-200">
               <div className="flex items-center">
-                <User className="h-4 w-4 mr-2" />
-                <span className="font-medium text-gray-800">{article.author}</span>
+                {employee && (
+                  <Avatar className="h-6 w-6 mr-2">
+                    <AvatarImage src={employee.image} alt={employee.name} />
+                    <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                )}
+                <button 
+                  onClick={handleAuthorClick}
+                  className="font-medium text-gray-800 hover:text-red-accent transition-colors cursor-pointer flex items-center"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  {article.author}
+                </button>
               </div>
               <div className="flex items-center ml-6">
                 <Calendar className="h-4 w-4 mr-2" />
