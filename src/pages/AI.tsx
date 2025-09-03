@@ -27,6 +27,7 @@ interface Message {
     explanation: string;
     selectedAnswer?: string;
     showResults?: boolean;
+    topic?: string;
   };
   endConversationAvailable?: boolean;
   isSelected?: boolean;
@@ -656,7 +657,8 @@ const AI = () => {
             question: data.quiz.question,
             answers: data.quiz.answers,
             correctAnswer: data.quiz.correctAnswer,
-            explanation: data.quiz.explanation
+            explanation: data.quiz.explanation,
+            topic: topic
           }
         };
       } else {
@@ -687,23 +689,31 @@ const AI = () => {
   const generateEnglishQuizWithTranslation = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
     const input = userInput.toLowerCase();
     
-    // Determine quiz category
+    // Determine quiz category and topic name
     let category = '';
+    let topic = 'Random';
     
     if (input.includes('katzen') || input.includes('cat')) {
       category = '27'; // Animals
+      topic = language === 'de' ? 'Katzen' : 'Cats';
     } else if (input.includes('hunde') || input.includes('dog')) {
       category = '27'; // Animals  
+      topic = language === 'de' ? 'Hunde' : 'Dogs';
     } else if (input.includes('geschichte') || input.includes('history')) {
       category = '23'; // History
+      topic = language === 'de' ? 'Geschichte' : 'History';
     } else if (input.includes('wissenschaft') || input.includes('science')) {
       category = '17'; // Science & Nature
+      topic = language === 'de' ? 'Wissenschaft' : 'Science';
     } else if (input.includes('sport')) {
       category = '21'; // Sports
+      topic = 'Sport';
     } else if (input.includes('filme') || input.includes('movie')) {
       category = '11'; // Movies
+      topic = language === 'de' ? 'Filme' : 'Movies';
     } else if (input.includes('musik') || input.includes('music')) {
       category = '12'; // Music
+      topic = 'Musik';
     }
     
     try {
@@ -741,7 +751,8 @@ const AI = () => {
           correctAnswer: translatedContent.correct,
           explanation: language === 'de' 
             ? `Die richtige Antwort ist "${translatedContent.correct}".`
-            : `The correct answer is "${translatedContent.correct}".`
+            : `The correct answer is "${translatedContent.correct}".`,
+          topic: topic
         };
         
         return { 
@@ -2546,23 +2557,33 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                           })}
                         </div>
                         
-                        {message.quizData.showResults && (
-                          <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                            <p className="text-blue-800">
-                              <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {message.quizData.explanation}
-                            </p>
-                            <div className="mt-3">
-                              <Button
-                                onClick={() => sendPrompt(language === 'de' ? 'Random Quiz' : 'Random Quiz')}
-                                size="sm"
-                                variant="outline"
-                                className="bg-white"
-                              >
-                                {language === 'de' ? 'Nächste Frage' : 'Next Question'}
-                              </Button>
-                            </div>
-                          </div>
-                        )}
+                         {message.quizData.showResults && (
+                           <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                             <p className="text-blue-800">
+                               <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {message.quizData.explanation}
+                             </p>
+                             <div className="mt-3 space-y-2">
+                               <div className="flex gap-2">
+                                 <Button
+                                   onClick={() => sendPrompt(message.quizData.topic ? `${message.quizData.topic} Quiz` : (language === 'de' ? 'Random Quiz' : 'Random Quiz'))}
+                                   size="sm"
+                                   variant="default"
+                                   className="flex-1"
+                                 >
+                                   {language === 'de' ? 'Nächstes Quiz' : 'Next Quiz'}
+                                 </Button>
+                                 <Button
+                                   onClick={() => sendPrompt(language === 'de' ? 'Random Quiz' : 'Random Quiz')}
+                                   size="sm"
+                                   variant="outline"
+                                   className="bg-white flex-1"
+                                 >
+                                   {language === 'de' ? 'Random Quiz' : 'Random Quiz'}
+                                 </Button>
+                               </div>
+                             </div>
+                           </div>
+                         )}
                       </div>
                      ) : (
                        <div>
