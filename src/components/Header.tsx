@@ -10,8 +10,7 @@ const Header = () => {
   const { language, toggleLanguage } = useLanguage();
 
   const navigation = useMemo(() => [
-    { icon: Home, href: '/', label: 'Home' },
-    { icon: Search, href: '/search', label: 'Search' },
+    { icon: Home, href: '/search', label: 'Home' },
     { icon: Info, href: '/about', label: 'About' },
     { icon: ShoppingCart, href: '/products', label: 'Products' },
     { icon: Zap, href: '/weird', label: 'Strange News' },
@@ -39,7 +38,7 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Left side - Daily Fun logo */}
           <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-black hover:text-red-accent transition-colors">
+            <Link to="/search" className="text-2xl font-bold text-black hover:text-red-accent transition-colors">
               Daily Fun
             </Link>
           </div>
@@ -48,7 +47,7 @@ const Header = () => {
           <nav className="hidden md:flex items-center space-x-6">
             {navigation.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.href;
+              const isActive = (item.href === '/search' && (location.pathname === '/' || location.pathname === '/search')) || (item.href !== '/search' && location.pathname === item.href);
               
               if (item.action === 'language') {
                 return (
@@ -102,7 +101,7 @@ const Header = () => {
               <div className="grid grid-cols-4 gap-4">
                 {navigation.map((item) => {
                   const Icon = item.icon;
-                  const isActive = location.pathname === item.href;
+                  const isActive = (item.href === '/search' && (location.pathname === '/' || location.pathname === '/search')) || (item.href !== '/search' && location.pathname === item.href);
                   
                   if (item.action === 'language') {
                     return (

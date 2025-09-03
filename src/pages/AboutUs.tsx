@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import { Card, CardContent } from '../components/ui/card';
@@ -27,6 +26,112 @@ const AboutUs = () => {
             <p className="text-lg md:text-xl leading-relaxed text-gray-700 font-serif">
               {t('about.intro')}
             </p>
+          </div>
+        </section>
+
+        {/* Latest Product Section - Integrated from Home */}
+        <section className="mb-16">
+          <div className="bg-gradient-to-r from-[#5E40E3] to-[#FFFFFF] rounded-lg shadow-sm border border-gray-200 p-8">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              {/* Product Image */}
+              <div className="flex-shrink-0">
+                <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-lg overflow-hidden shadow-md border border-gray-100">
+                  <img
+                    src="/lovable-uploads/d60c8951-db95-4a1b-bd2e-35466f8bb081.png"
+                    alt="Our latest product"
+                    className="w-full h-full object-contain p-2"
+                  />
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl md:text-3xl font-bold text-[#1A1A1A] mb-4 font-sans">
+                  {t('home.product.title')}
+                </h3>
+                <p className="text-[#1A1A1A] text-lg mb-6 font-sans">
+                  {t('home.product.description')}
+                </p>
+                <Link
+                  to="/products"
+                  className="inline-flex items-center bg-[#5E40E3] text-[#FFFFFF] px-6 py-3 rounded-md font-medium hover:shadow-[0_0_15px_rgba(46,234,224,0.5)] transition-all duration-300"
+                >
+                  {t('home.product.button')}
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Goals Section - Premium Design - Integrated from Home */}
+        <section className="relative py-24 bg-gradient-to-br from-[#5E40E3] via-[#4533C8] to-[#2EEAE0] overflow-hidden mb-16">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-0 left-0 w-full h-full bg-pattern"></div>
+          </div>
+          
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            {/* Header */}
+            <div className="text-center mb-16">
+              <h2 className="text-5xl md:text-6xl font-bold text-white mb-6 font-sans tracking-tight">
+                {t('home.goals.title')}
+              </h2>
+              <div className="w-32 h-1 bg-gradient-to-r from-white to-[#2EEAE0] mx-auto mb-6"></div>
+              <p className="text-xl text-white/90 max-w-3xl mx-auto font-sans leading-relaxed">
+                {t('home.tagline')}
+              </p>
+            </div>
+
+            {/* Goals Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="group relative">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-3xl">🎯</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.inspire')}</h3>
+                  </div>
+                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.inspire.desc')}</p>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-3xl">😂</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.laughter')}</h3>
+                  </div>
+                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.laughter.desc')}</p>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-3xl">🌍</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.talent')}</h3>
+                  </div>
+                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.talent.desc')}</p>
+                </div>
+              </div>
+
+              <div className="group relative">
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 h-full border border-white/20 hover:bg-white/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                  <div className="mb-6">
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#2EEAE0] to-white rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-3xl">⚡</span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3 font-sans">{t('home.goals.fun')}</h3>
+                  </div>
+                  <p className="text-white/90 text-base leading-relaxed font-sans">{t('home.goals.fun.desc')}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -159,7 +264,7 @@ const AboutUs = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link 
-                  to="/search"
+                  to="/"
                   className="bg-red-accent hover:bg-red-accent/90 text-white px-8 py-3 rounded-md font-semibold transition-colors"
                 >
                   {t('about.explore.button')}
