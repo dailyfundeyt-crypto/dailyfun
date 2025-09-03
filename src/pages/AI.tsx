@@ -196,13 +196,40 @@ const AI = () => {
         .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold formatting
         .trim();
       
+      // Extract topic from the summary content for dynamic title
+      const extractTopicFromSummary = (text: string): string => {
+        const lines = text.split('\n');
+        
+        // Look for key topics in the first few lines of content
+        for (const line of lines.slice(0, 5)) {
+          const trimmed = line.trim();
+          if (trimmed.length > 10 && trimmed.length < 80) {
+            // Extract potential topic keywords
+            const words = trimmed.split(' ').filter(word => 
+              word.length > 2 && 
+              !['der', 'die', 'das', 'ein', 'eine', 'und', 'oder', 'für', 'von', 'mit', 'zu', 'auf', 'in', 'an', 'bei', 'nach', 'über', 'unter', 'vor', 'zwischen', 'durch', 'gegen', 'ohne', 'um', 'während', 'wegen', 'trotz', 'statt', 'außerhalb', 'innerhalb', 'oberhalb', 'unterhalb', 'the', 'and', 'or', 'for', 'of', 'with', 'to', 'on', 'in', 'at', 'by', 'from', 'about', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'between', 'among', 'against', 'without', 'within'].includes(word.toLowerCase())
+            );
+            
+            if (words.length >= 2) {
+              // Return first few meaningful words as topic
+              return words.slice(0, 3).join(' ');
+            }
+          }
+        }
+        
+        // Fallback to looking for quoted terms or capitalized words
+        const quotedMatch = text.match(/"([^"]{3,50})"/);
+        if (quotedMatch) return quotedMatch[1];
+        
+        const capitalizedWords = text.match(/\b[A-Z][a-zA-Z]{2,}\s+[A-Z][a-zA-Z]{2,}/);
+        if (capitalizedWords) return capitalizedWords[0];
+        
+        // Final fallback
+        return language === 'de' ? 'Zusammenfassung' : 'Summary';
+      };
+      
       // Extract title and content
       const lines = cleanText.split('\n');
-      const titleLine = lines.find(line => 
-        line.includes('Zusammenfassung') || 
-        line.includes('Summary')
-      ) || (language === 'de' ? 'Zusammenfassung' : 'Summary');
-      
       const summaryContent = lines
         .filter(line => 
           !line.includes('Zusammenfassung') && 
@@ -213,12 +240,13 @@ const AI = () => {
         .join('\n')
         .trim();
       
-      // Set PDF title
-      const title = language === 'de' ? 'Daily Fun - Zusammenfassung' : 'Daily Fun - Summary';
+      // Generate dynamic title based on content
+      const topicFromContent = extractTopicFromSummary(summaryContent);
+      const dynamicTitle = `${topicFromContent} - ${language === 'de' ? 'Zusammenfassung' : 'Summary'}`;
       
       // Add title
       doc.setFontSize(18);
-      doc.text(title, 20, 30);
+      doc.text(dynamicTitle, 20, 30);
       
       // Add date
       doc.setFontSize(12);
@@ -230,17 +258,35 @@ const AI = () => {
       const splitText = doc.splitTextToSize(summaryContent, 170);
       doc.text(splitText, 20, 65);
       
-      // Save PDF
-      const filename = language === 'de' 
-        ? `Daily_Fun_Zusammenfassung_${dateStr.replace(/\//g, '-')}.pdf`
-        : `Daily_Fun_Summary_${dateStr.replace(/\//g, '-')}.pdf`;
+      // Generate filename with topic
+      const safeTopicName = topicFromContent.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+      const filename = `${safeTopicName}_${language === 'de' ? 'Zusammenfassung' : 'Summary'}_${dateStr.replace(/\//g, '-')}.pdf`;
       
-      doc.save(filename);
+      // Create blob and open PDF in new tab automatically
+      const pdfBlob = doc.output('blob');
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Open in new tab
+      const newWindow = window.open(pdfUrl, '_blank');
+      if (newWindow) {
+        newWindow.focus();
+      }
+      
+      // Also trigger download
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up URL after some time
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
       
       // Show success toast
       toast({
-        title: language === 'de' ? 'PDF heruntergeladen' : 'PDF downloaded',
-        description: language === 'de' ? 'Die Zusammenfassung wurde als PDF gespeichert.' : 'The summary has been saved as PDF.',
+        title: language === 'de' ? 'PDF erstellt und geöffnet' : 'PDF created and opened',
+        description: language === 'de' ? 'Die Zusammenfassung wurde als PDF heruntergeladen und automatisch geöffnet.' : 'The summary has been downloaded as PDF and opened automatically.',
       });
     } catch (error) {
       console.error('PDF generation failed:', error);
