@@ -22,6 +22,8 @@ const Search = () => {
       setSelectedAuthor(authorFromUrl);
       setShowProfileInfo(true);
     }
+    // Scroll to top when page loads or author parameter changes
+    window.scrollTo(0, 0);
   }, [searchParams]);
 
   const filteredArticles = useMemo(() => {
