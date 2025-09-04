@@ -81,7 +81,7 @@ const Search = () => {
     const getRole = (id: string) => {
       switch (id) {
         case 'stefan':
-          return 'Gründer & Chefredakteur';
+          return t('about.founder.title');
         case 'elke':
           return t('about.elke.role');
         case 'karl':
@@ -123,7 +123,7 @@ const Search = () => {
               }`}>
                 ALL
               </div>
-              <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-16 sm:max-w-20">Alle Artikel</span>
+              <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-16 sm:max-w-20">{t('search.all')}</span>
             </div>
 
             {/* Employee Profiles */}
@@ -170,7 +170,7 @@ const Search = () => {
                     {filteredArticles.length}
                   </div>
                   <div className="text-xs sm:text-sm text-gray-600">
-                    Beiträge
+                    {t('search.posts')}
                   </div>
                 </div>
               </div>
@@ -204,10 +204,10 @@ const Search = () => {
         {/* Latest Articles Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-black mb-8 font-serif text-center">
-            Neueste Artikel
+            {t('home.latest')}
             {selectedAuthor !== 'all' && (
               <span className="text-lg font-normal text-gray-600 block mt-2">
-                von {employees.find(emp => emp.id === selectedAuthor)?.name}
+                {t('search.by')} {employees.find(emp => emp.id === selectedAuthor)?.name}
               </span>
             )}
           </h2>
@@ -262,11 +262,11 @@ const Search = () => {
 
         {filteredArticles.length === 0 && (
           <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-black mb-2">Keine Artikel gefunden</h3>
+            <h3 className="text-lg font-medium text-black mb-2">{t('search.no.results')}</h3>
             <p className="text-gray-600">
               {selectedAuthor !== 'all' 
-                ? `Keine Artikel von ${employees.find(emp => emp.id === selectedAuthor)?.name} verfügbar.`
-                : 'Keine Artikel verfügbar.'
+                ? `${t('search.no.author.articles')} ${employees.find(emp => emp.id === selectedAuthor)?.name}.`
+                : t('search.no.articles.available')
               }
             </p>
           </div>

@@ -44,6 +44,10 @@ const translations = {
     'search.results.for': 'for',
     'search.no.results': 'No articles found',
     'search.no.results.desc': 'Try adjusting your search terms or filters',
+    'search.posts': 'Posts',
+    'search.by': 'by',
+    'search.no.author.articles': 'No articles by',
+    'search.no.articles.available': 'No articles available.',
     
     // About Us Page
     'about.title': 'About Us',
@@ -198,6 +202,10 @@ const translations = {
     'search.results.for': 'für',
     'search.no.results': 'Keine Artikel gefunden',
     'search.no.results.desc': 'Versuchen Sie, Ihre Suchbegriffe oder Filter anzupassen',
+    'search.posts': 'Beiträge',
+    'search.by': 'von',
+    'search.no.author.articles': 'Keine Artikel von',
+    'search.no.articles.available': 'Keine Artikel verfügbar.',
     
     // About Us Page
     'about.title': 'Über Uns',
