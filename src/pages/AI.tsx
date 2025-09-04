@@ -2642,8 +2642,8 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                        {searchResults[message.id] && searchResults[message.id].length > 0 && (
                          <div className="space-y-3 max-h-96 overflow-y-auto">
                            {searchResults[message.id].map((article) => {
-                             const title = language === 'de' ? t(`article.${article.id}.title`) : article.title;
-                             const excerpt = language === 'de' ? t(`article.${article.id}.excerpt`) : article.excerpt;
+                              const title = language === 'de' ? article.title : (article.titleEn || article.title);
+                              const excerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
                              const imageUrl = article.imageUrl?.startsWith('/') 
                                ? article.imageUrl 
                                : `https://images.unsplash.com/${article.imageUrl}?w=300&h=200&fit=crop`;
