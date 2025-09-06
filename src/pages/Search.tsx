@@ -220,7 +220,7 @@ const Search = () => {
         <div className="mb-8">
           <div className="flex flex-col items-center space-y-4">
             <h2 className="text-3xl font-bold text-black font-serif text-center">
-              {sortMode === 'latest' ? t('home.latest') : 'Random Articles'}
+              {sortMode === 'latest' ? t('home.latest') : t('home.random')}
               {selectedAuthor !== 'all' && (
                 <span className="text-lg font-normal text-gray-600 block mt-2">
                   {t('search.by')} {employees.find(emp => emp.id === selectedAuthor)?.name}
@@ -238,7 +238,7 @@ const Search = () => {
                     : 'text-gray-600 hover:text-black'
                 }`}
               >
-                Latest Articles
+                {t('home.latest')}
               </button>
               <button
                 onClick={() => setSortMode('random')}
@@ -248,7 +248,7 @@ const Search = () => {
                     : 'text-gray-600 hover:text-black'
                 }`}
               >
-                Random Articles
+                {t('home.random')}
               </button>
             </div>
           </div>
