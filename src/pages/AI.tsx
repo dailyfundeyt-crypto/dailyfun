@@ -627,7 +627,7 @@ const AI = () => {
       console.log('Generating German quiz for topic:', topic);
       
       // Call improved Supabase Edge Function with Llama 3.1 API
-      const response = await fetch('/api/generate-german-quiz', {
+      const response = await fetch('https://hryzyehzesessmdkxpxq.supabase.co/functions/v1/generate-german-quiz', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
