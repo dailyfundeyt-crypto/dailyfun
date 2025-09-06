@@ -716,61 +716,121 @@ const AI = () => {
       topic = 'Musik';
     }
     
-    try {
-      const apiUrl = `https://opentdb.com/api.php?amount=1&type=multiple${category ? `&category=${category}` : ''}`;
-      const response = await fetch(apiUrl);
-      const data = await response.json();
-      
-      if (data.response_code === 0 && data.results.length > 0) {
-        const quiz = data.results[0];
-        
-        // Decode HTML entities
-        const decodeHtml = (html: string) => {
-          const txt = document.createElement('textarea');
-          txt.innerHTML = html;
-          return txt.value;
-        };
-        
-        const question = decodeHtml(quiz.question);
-        const correctAnswer = decodeHtml(quiz.correct_answer);
-        const incorrectAnswers = quiz.incorrect_answers.map((ans: string) => decodeHtml(ans));
-        
-        // Improved translation for German
-        const translatedContent = language === 'de' ? await improvedTranslateToGerman(question, correctAnswer, incorrectAnswers) : {
-          question,
-          correct: correctAnswer,
-          incorrect: incorrectAnswers
-        };
-        
-        const allAnswers = [translatedContent.correct, ...translatedContent.incorrect].sort(() => Math.random() - 0.5);
-        
-        // Create quiz data for interactive display
-        const quizData = {
-          question: translatedContent.question,
-          answers: allAnswers,
-          correctAnswer: translatedContent.correct,
-          explanation: language === 'de' 
-            ? `Die richtige Antwort ist "${translatedContent.correct}".`
-            : `The correct answer is "${translatedContent.correct}".`,
-          topic: topic
-        };
-        
-        return { 
-          text: 'INTERACTIVE_QUIZ',
-          quizData 
-        };
-      } else {
-        const errorText = language === 'de'
-          ? '❌ Entschuldigung, ich konnte kein Quiz für dieses Thema generieren. Versuchen Sie es mit einem anderen Thema!'
-          : '❌ Sorry, I couldn\'t generate a quiz for this topic. Try another topic!';
-        return { text: errorText };
+    // Try multiple quiz sources with fallback system
+    const quizSources = [
+      {
+        name: 'Open Trivia Database',
+        method: async () => {
+          console.log('🎯 Trying Open Trivia Database for English quiz:', topic);
+          
+          const apiUrl = `https://opentdb.com/api.php?amount=1&type=multiple${category ? `&category=${category}` : ''}`;
+          const response = await fetch(apiUrl);
+          const data = await response.json();
+          
+          if (data.response_code !== 0 || !data.results.length) {
+            throw new Error('No quiz data from Open Trivia Database');
+          }
+          
+          const quiz = data.results[0];
+          
+          // Decode HTML entities
+          const decodeHtml = (html: string) => {
+            const txt = document.createElement('textarea');
+            txt.innerHTML = html;
+            return txt.value;
+          };
+          
+          const question = decodeHtml(quiz.question);
+          const correctAnswer = decodeHtml(quiz.correct_answer);
+          const incorrectAnswers = quiz.incorrect_answers.map((ans: string) => decodeHtml(ans));
+          
+          return { question, correctAnswer, incorrectAnswers };
+        }
+      },
+      {
+        name: 'Fallback Quiz Database',
+        method: async () => {
+          console.log('🎲 Using fallback English quiz database for topic:', topic);
+          
+          const fallbackQuizzes = {
+            'Cats': {
+              question: 'How many hours do cats sleep on average per day?',
+              correctAnswer: '12-16 hours',
+              incorrectAnswers: ['8-10 hours', '18-20 hours', '6-8 hours']
+            },
+            'Dogs': {
+              question: 'Which dog breed is considered the most intelligent?',
+              correctAnswer: 'Border Collie',
+              incorrectAnswers: ['Golden Retriever', 'German Shepherd', 'Labrador']
+            },
+            'History': {
+              question: 'In which year did World War II end?',
+              correctAnswer: '1945',
+              incorrectAnswers: ['1944', '1946', '1943']
+            },
+            'Science': {
+              question: 'What is the chemical symbol for gold?',
+              correctAnswer: 'Au',
+              incorrectAnswers: ['Go', 'Gd', 'Ag']
+            },
+            'Default': {
+              question: `What is an interesting fact about ${topic}?`,
+              correctAnswer: `${topic} is fascinating`,
+              incorrectAnswers: [`${topic} is important`, `${topic} is complex`, `${topic} is interesting`]
+            }
+          };
+          
+          return fallbackQuizzes[topic] || fallbackQuizzes['Default'];
+        }
       }
-    } catch (error) {
-      const errorText = language === 'de'
-        ? '❌ Fehler beim Laden des Quiz. Bitte versuchen Sie es später erneut.'
-        : '❌ Error loading quiz. Please try again later.';
-      return { text: errorText };
+    ];
+    
+    // Try each quiz source sequentially
+    for (const source of quizSources) {
+      try {
+        const quizData = await source.method();
+        
+        if (quizData && quizData.question && quizData.correctAnswer && quizData.incorrectAnswers) {
+          // Improved translation for German
+          const translatedContent = language === 'de' ? 
+            await improvedTranslateToGerman(quizData.question, quizData.correctAnswer, quizData.incorrectAnswers) : 
+            {
+              question: quizData.question,
+              correct: quizData.correctAnswer,
+              incorrect: quizData.incorrectAnswers
+            };
+          
+          const allAnswers = [translatedContent.correct, ...translatedContent.incorrect].sort(() => Math.random() - 0.5);
+          
+          console.log(`✅ Successfully generated English quiz using ${source.name}`);
+          
+          // Create quiz data for interactive display
+          const finalQuizData = {
+            question: translatedContent.question,
+            answers: allAnswers,
+            correctAnswer: translatedContent.correct,
+            explanation: language === 'de' 
+              ? `Die richtige Antwort ist "${translatedContent.correct}".`
+              : `The correct answer is "${translatedContent.correct}".`,
+            topic: topic
+          };
+          
+          return { 
+            text: 'INTERACTIVE_QUIZ',
+            quizData: finalQuizData
+          };
+        }
+      } catch (error) {
+        console.error(`❌ ${source.name} failed:`, error);
+      }
     }
+    
+    // If all sources failed
+    console.error('❌ All English quiz sources failed');
+    const errorText = language === 'de'
+      ? '❌ Entschuldigung, ich konnte kein Quiz für dieses Thema generieren. Versuchen Sie es mit einem anderen Thema oder später erneut!'
+      : '❌ Sorry, I couldn\'t generate a quiz for this topic. Try another topic or try again later!';
+    return { text: errorText };
   };
 
   const generateQuiz = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
@@ -1943,70 +2003,126 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
-          // Generate AI Analysis using OpenRouter API with internet search capabilities
+          // Generate AI Analysis using multiple AI models with fallback system
           const aiAnalysisPrompt = language === 'de' 
-            ? `Du bist ein Experte und Journalist mit Zugang zu aktuellen Informationen. Du hast Zugang zu Wikipedia und The Guardian APIs für umfassende Recherche. Führe eine UNABHÄNGIGE Internetsuche durch und beantworte diese Frage mit den neuesten verfügbaren Informationen. Nutze aktuelle Nachrichten, Wikipedia-Informationen und andere verfügbare Quellen. Antworte in 2-3 ausführlichen Sätzen: ${userInput}`
-            : `You are an expert journalist with access to current information. You have access to Wikipedia and The Guardian APIs for comprehensive research. Conduct an INDEPENDENT internet search and answer this question with the latest available information. Use current news, Wikipedia information, and other available sources. Answer in 2-3 comprehensive sentences: ${userInput}`;
+            ? `Basierend auf der Wikipedia-Information über "${title}", beantworte folgende Frage umfassend und fundiert: ${userInput}. Nutze die bereitgestellten Informationen und dein Wissen, um eine detaillierte Antwort in 2-3 ausführlichen Sätzen zu geben.`
+            : `Based on the Wikipedia information about "${title}", answer the following question comprehensively and well-founded: ${userInput}. Use the provided information and your knowledge to give a detailed answer in 2-3 comprehensive sentences.`;
           
           let aiAnalysisContent = '';
+          let successfulAIModel = null;
           
-          // Use OpenRouter API with Llama 3.1 405B (optimized for news and current events with internet search)
-          try {
-            console.log('🤖 Using OpenRouter API with Meta Llama 3.1 405B for internet search analysis');
-            
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': 'Bearer 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',
-                'Content-Type': 'application/json',
-                'HTTP-Referer': 'https://dailyfun.app',
-                'X-Title': 'Daily Fun - Internet Search'
-              },
-              body: JSON.stringify({
-                model: 'meta-llama/llama-3.1-405b-instruct:free',
-                messages: [
-                  {
-                    role: 'system',
-                    content: language === 'de' 
-                      ? 'Du bist ein KI-Assistant mit Internetzugang. Du kannst Wikipedia und The Guardian APIs nutzen für aktuelle Informationen. Antworte fundiert und verwende die neuesten verfügbaren Informationen.'
-                      : 'You are an AI assistant with internet access. You can use Wikipedia and The Guardian APIs for current information. Provide well-researched answers using the latest available information.'
+          // Enhanced AI models array with multiple fallbacks
+          const aiModels = [
+            { name: 'OpenRouter Llama 3.1 405B', type: 'openrouter', model: 'meta-llama/llama-3.1-405b-instruct:free' },
+            { name: 'OpenRouter Llama 3.1 70B', type: 'openrouter', model: 'meta-llama/llama-3.1-70b-instruct:free' },
+            { name: 'GPT-5', type: 'puter', model: 'gpt-5' },
+            { name: 'Claude Sonnet 4', type: 'puter', model: 'claude-sonnet-4' },
+            { name: 'GPT-4.1', type: 'puter', model: 'gpt-4.1' },
+            { name: 'Claude Opus 4', type: 'puter', model: 'claude-opus-4' },
+            { name: 'Gemini 2.0 Flash', type: 'puter', model: 'gemini-2.0-flash' },
+            { name: 'Deepseek Chat', type: 'puter', model: 'deepseek-chat' }
+          ];
+          
+          // Try AI models sequentially until one succeeds
+          for (const aiModel of aiModels) {
+            try {
+              console.log(`🤖 Trying AI model for internet analysis: ${aiModel.name}`);
+              
+              let modelResponse = '';
+              
+              if (aiModel.type === 'openrouter') {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': 'Bearer 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',
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': 'https://dailyfun.app',
+                    'X-Title': 'Daily Fun - Internet Search'
                   },
-                  {
-                    role: 'user',
-                    content: aiAnalysisPrompt
-                  }
-                ],
-                temperature: 0.7,
-                top_p: 0.9,
-                max_tokens: 400
-              }),
-            });
+                  body: JSON.stringify({
+                    model: aiModel.model,
+                    messages: [
+                      {
+                        role: 'system',
+                        content: language === 'de' 
+                          ? `Du bist ein KI-Assistant mit fundiertem Wissen. Analysiere die gegebenen Wikipedia-Informationen und beantworte die Frage präzise. Wikipedia-Information: ${extract}`
+                          : `You are an AI assistant with solid knowledge. Analyze the given Wikipedia information and answer the question precisely. Wikipedia information: ${extract}`
+                      },
+                      {
+                        role: 'user',
+                        content: aiAnalysisPrompt
+                      }
+                    ],
+                    temperature: 0.7,
+                    top_p: 0.9,
+                    max_tokens: 400
+                  }),
+                });
 
-            if (!response.ok) {
-              throw new Error(`OpenRouter API error: ${response.status}`);
-            }
+                if (!response.ok) {
+                  throw new Error(`OpenRouter API error: ${response.status}`);
+                }
 
-            const data = await response.json();
-            const aiResponse = data.choices?.[0]?.message?.content || '';
-            
-            console.log('✅ OpenRouter API response received:', aiResponse);
-            
-            // Validate response quality
-            if (aiResponse && aiResponse.trim().length > 10) {
-              aiAnalysisContent = aiResponse.trim();
-              console.log('✅ AI Analysis completed successfully using OpenRouter Llama 3.1 405B');
-            } else {
-              throw new Error('Invalid response from OpenRouter API');
+                const data = await response.json();
+                modelResponse = data.choices?.[0]?.message?.content?.trim() || '';
+              } 
+              else if (aiModel.type === 'puter') {
+                await waitForPuterReady();
+                const puter = (window as any).puter;
+                
+                if (!puter?.ai?.chat) {
+                  throw new Error('Puter AI not available');
+                }
+                
+                const contextualPrompt = language === 'de' 
+                  ? `Kontext aus Wikipedia: ${extract}\n\nFrage: ${aiAnalysisPrompt}`
+                  : `Context from Wikipedia: ${extract}\n\nQuestion: ${aiAnalysisPrompt}`;
+                
+                const aiResponse = await puter.ai.chat(contextualPrompt, {
+                  model: aiModel.model,
+                  max_tokens: 400,
+                  temperature: 0.7
+                });
+                
+                if (typeof aiResponse === 'string') {
+                  modelResponse = aiResponse.trim();
+                } else if (aiResponse?.message?.content) {
+                  modelResponse = aiResponse.message.content.trim();
+                } else if (aiResponse?.text) {
+                  modelResponse = aiResponse.text.trim();
+                }
+              }
+              
+              // Validate response quality
+              if (modelResponse && 
+                  modelResponse.length > 20 && 
+                  !modelResponse.includes('[object Object]') &&
+                  modelResponse !== 'undefined' &&
+                  modelResponse !== 'null') {
+                
+                aiAnalysisContent = modelResponse;
+                successfulAIModel = aiModel.name;
+                console.log(`✅ AI Analysis completed successfully using ${aiModel.name}`);
+                break;
+              } else {
+                console.log(`❌ Invalid response from ${aiModel.name}`);
+              }
+              
+            } catch (modelError) {
+              console.error(`❌ Model ${aiModel.name} failed:`, modelError);
             }
-            
-          } catch (error) {
-            console.error('❌ OpenRouter API failed:', error);
-            aiAnalysisContent = language === 'de' 
-              ? 'KI-Analyse momentan nicht verfügbar. Das OpenRouter Llama 3.1 405B Modell für Internet-Suche ist derzeit nicht erreichbar. Bitte versuchen Sie es später erneut.'
-              : 'AI analysis currently unavailable. The OpenRouter Llama 3.1 405B model for internet search is currently unreachable. Please try again later.';
           }
           
-          const aiAnalysisHeader = language === 'de' ? '\n\n🤖 **KI-Analyse:**' : '\n\n🤖 **AI Analysis:**';
+          // If all models failed, provide a basic fallback analysis
+          if (!successfulAIModel) {
+            console.error('❌ All AI models failed for internet analysis');
+            aiAnalysisContent = language === 'de' 
+              ? `Basierend auf der Wikipedia-Information zu "${title}": ${summarize(extract, 2)} Weitere Details finden Sie in den unten stehenden Quellen.`
+              : `Based on Wikipedia information about "${title}": ${summarize(extract, 2)} Find more details in the sources below.`;
+            successfulAIModel = 'Fallback Summary';
+          }
+          
+          const aiAnalysisHeader = language === 'de' ? `\n\n🤖 **KI-Analyse** (${successfulAIModel}):` : `\n\n🤖 **AI Analysis** (${successfulAIModel}):`;
           const aiAnalysisSection = `${aiAnalysisHeader}\n${aiAnalysisContent}`;
           
           // Fetch real articles with fallback system (Guardian API -> GNews API)
