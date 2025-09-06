@@ -12,6 +12,7 @@ import { employees } from '../data/employees';
 const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
+  const [sortMode, setSortMode] = useState<'latest' | 'random'>('latest');
   const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
 
@@ -46,9 +47,13 @@ const Search = () => {
       );
     }
 
-    // Sort by publication date
-    return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-  }, [selectedAuthor]);
+    // Sort articles based on selected mode
+    if (sortMode === 'random') {
+      return [...filtered].sort(() => Math.random() - 0.5);
+    } else {
+      return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    }
+  }, [selectedAuthor, sortMode]);
 
   const handleEmployeeClick = (employeeId: string) => {
     setSelectedAuthor(employeeId);
@@ -203,16 +208,42 @@ const Search = () => {
           </div>
         )}
 
-        {/* Latest Articles Section */}
+        {/* Articles Section with Sort Toggle */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-black mb-8 font-serif text-center">
-            {t('home.latest')}
-            {selectedAuthor !== 'all' && (
-              <span className="text-lg font-normal text-gray-600 block mt-2">
-                {t('search.by')} {employees.find(emp => emp.id === selectedAuthor)?.name}
-              </span>
-            )}
-          </h2>
+          <div className="flex flex-col items-center space-y-4">
+            <h2 className="text-3xl font-bold text-black font-serif text-center">
+              {sortMode === 'latest' ? t('home.latest') : 'Random Articles'}
+              {selectedAuthor !== 'all' && (
+                <span className="text-lg font-normal text-gray-600 block mt-2">
+                  {t('search.by')} {employees.find(emp => emp.id === selectedAuthor)?.name}
+                </span>
+              )}
+            </h2>
+            
+            {/* Sort Mode Toggle */}
+            <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setSortMode('latest')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  sortMode === 'latest'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-600 hover:text-black'
+                }`}
+              >
+                Latest Articles
+              </button>
+              <button
+                onClick={() => setSortMode('random')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  sortMode === 'random'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-600 hover:text-black'
+                }`}
+              >
+                Random Articles
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Articles Grid with alternating backgrounds */}
