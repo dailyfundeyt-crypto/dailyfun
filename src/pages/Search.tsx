@@ -28,7 +28,7 @@ const Search = () => {
   }, [searchParams]);
 
   // Generate random seed to keep random order stable during re-renders
-  const [randomSeed] = useState(() => Math.random());
+  const [randomSeed, setRandomSeed] = useState(() => Math.random());
 
   const filteredArticles = useMemo(() => {
     let filtered = articles;
@@ -52,16 +52,26 @@ const Search = () => {
 
     // Sort articles based on selected mode
     if (sortMode === 'random') {
-      // Use stable random sort with seed to prevent re-shuffling
-      return [...filtered].sort((a, b) => {
-        const seedA = (a.id.charCodeAt(0) + randomSeed) % 1;
-        const seedB = (b.id.charCodeAt(0) + randomSeed) % 1;
-        return seedA - seedB;
-      });
+      // Create a true random shuffle
+      const shuffled = [...filtered];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor((randomSeed + i) * 1000) % (i + 1);
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
     } else {
+      // Sort by publication date (newest first)
       return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     }
   }, [selectedAuthor, sortMode, randomSeed]);
+
+  // Update random seed when switching to random mode
+  const handleSortModeChange = (mode: 'latest' | 'random') => {
+    setSortMode(mode);
+    if (mode === 'random') {
+      setRandomSeed(Math.random());
+    }
+  };
 
   const handleEmployeeClick = (employeeId: string) => {
     setSelectedAuthor(employeeId);
@@ -231,7 +241,7 @@ const Search = () => {
             {/* Sort Mode Toggle */}
             <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
               <button
-                onClick={() => setSortMode('latest')}
+                onClick={() => handleSortModeChange('latest')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   sortMode === 'latest'
                     ? 'bg-white text-black shadow-sm'
@@ -241,7 +251,7 @@ const Search = () => {
                 {t('home.latest')}
               </button>
               <button
-                onClick={() => setSortMode('random')}
+                onClick={() => handleSortModeChange('random')}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   sortMode === 'random'
                     ? 'bg-white text-black shadow-sm'
