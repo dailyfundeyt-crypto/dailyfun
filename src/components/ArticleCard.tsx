@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { incrementViews } from '../utils/viewTracker';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -25,16 +25,16 @@ interface ArticleCardProps {
   featured?: boolean;
 }
 
-const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
+const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const { t, language } = useLanguage();
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     incrementViews(article.id);
-  };
+  }, [article.id]);
 
-  const handleAuthorClick = (e: React.MouseEvent) => {
+  const handleAuthorClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -42,13 +42,17 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
     if (employee) {
       navigate(`/search?author=${employee.id}`);
     }
-  };
+  }, [article.author, navigate]);
 
   const employee = getEmployeeByAuthor(article.author);
 
-
   // Get translated title for display
   const translatedTitle = language === 'de' ? article.title : (article.titleEn || article.title);
+  
+  // Optimize image URL with smaller size for faster loading
+  const optimizedImageUrl = article.imageUrl.startsWith('/') 
+    ? article.imageUrl 
+    : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=600&q=75`;
 
   return (
     <Link to={`/article/${article.id}`} onClick={handleClick}>
@@ -56,12 +60,14 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
         <div className={`relative ${featured ? 'md:w-1/2' : ''}`}>
           <div className="aspect-video bg-gray-100 overflow-hidden">
             <img
-              src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
+              src={optimizedImageUrl}
               alt={translatedTitle}
               className={`w-full h-full object-cover transform hover:scale-105 transition-transform duration-500 ${
                 imageLoaded ? 'opacity-100' : 'opacity-0'
               }`}
               onLoad={() => setImageLoaded(true)}
+              loading="lazy"
+              decoding="async"
             />
             {!imageLoaded && (
               <div className="absolute inset-0 bg-gray-200 animate-pulse" />
@@ -106,6 +112,8 @@ const ArticleCard = ({ article, featured = false }: ArticleCardProps) => {
       </article>
     </Link>
   );
-};
+});
+
+ArticleCard.displayName = 'ArticleCard';
 
 export default ArticleCard;

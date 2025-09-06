@@ -27,6 +27,9 @@ const Search = () => {
     window.scrollTo(0, 0);
   }, [searchParams]);
 
+  // Generate random seed to keep random order stable during re-renders
+  const [randomSeed] = useState(() => Math.random());
+
   const filteredArticles = useMemo(() => {
     let filtered = articles;
 
@@ -49,11 +52,16 @@ const Search = () => {
 
     // Sort articles based on selected mode
     if (sortMode === 'random') {
-      return [...filtered].sort(() => Math.random() - 0.5);
+      // Use stable random sort with seed to prevent re-shuffling
+      return [...filtered].sort((a, b) => {
+        const seedA = (a.id.charCodeAt(0) + randomSeed) % 1;
+        const seedB = (b.id.charCodeAt(0) + randomSeed) % 1;
+        return seedA - seedB;
+      });
     } else {
       return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     }
-  }, [selectedAuthor, sortMode]);
+  }, [selectedAuthor, sortMode, randomSeed]);
 
   const handleEmployeeClick = (employeeId: string) => {
     setSelectedAuthor(employeeId);
@@ -260,13 +268,14 @@ const Search = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                   {/* Article Image - Left side */}
                   <div className="order-2 lg:order-1">
-                    <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
+                    <div className="aspect-video rounded-lg overflow-hidden shadow-lg bg-gray-200">
                       <img
-                        src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
+                        src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=600&q=75`}
                         alt={language === 'de' ? article.title : (article.titleEn || article.title)}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
-                          console.log('Image failed to load:', article.imageUrl);
                           e.currentTarget.src = '/placeholder.svg';
                         }}
                       />
