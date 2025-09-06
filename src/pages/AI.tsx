@@ -2003,10 +2003,55 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
+          // First, try to fetch the first article for additional context if needed
+          let firstArticleContent = '';
+          let firstArticleUrl = '';
+          
+          // Try Guardian API first to get articles
+          try {
+            console.log('🗞️ Fetching first article for context from Guardian API');
+            const guardianApiKey = '0be420a7-af7b-45e9-b5cb-04afb863e15c';
+            const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(extractedTopic)}&api-key=${guardianApiKey}&show-fields=headline,trailText,body&page-size=1&order-by=relevance`;
+            
+            const guardianResponse = await fetch(guardianUrl);
+            if (guardianResponse.ok) {
+              const guardianData = await guardianResponse.json();
+              const articles = guardianData.response?.results || [];
+              
+              if (articles.length > 0) {
+                const firstArticle = articles[0];
+                firstArticleUrl = firstArticle.webUrl;
+                // Try to get article content
+                try {
+                  const articleResponse = await fetch(`https://content.guardianapis.com/${firstArticle.id}?api-key=${guardianApiKey}&show-fields=body,headline,trailText`);
+                  if (articleResponse.ok) {
+                    const articleData = await articleResponse.json();
+                    const body = articleData.response?.content?.fields?.body || '';
+                    if (body) {
+                      // Clean HTML and limit content
+                      firstArticleContent = body.replace(/<[^>]*>/g, '').substring(0, 1000);
+                      console.log('✅ First article content fetched successfully');
+                    }
+                  }
+                } catch (contentError) {
+                  console.log('❌ Could not fetch article content:', contentError);
+                }
+              }
+            }
+          } catch (error) {
+            console.log('❌ Guardian API failed for first article:', error);
+          }
+
           // Generate AI Analysis using multiple AI models with fallback system
-          const aiAnalysisPrompt = language === 'de' 
+          const basePrompt = language === 'de' 
             ? `Basierend auf der Wikipedia-Information über "${title}", beantworte folgende Frage umfassend und fundiert: ${userInput}. Nutze die bereitgestellten Informationen und dein Wissen, um eine detaillierte Antwort in 2-3 ausführlichen Sätzen zu geben.`
             : `Based on the Wikipedia information about "${title}", answer the following question comprehensively and well-founded: ${userInput}. Use the provided information and your knowledge to give a detailed answer in 2-3 comprehensive sentences.`;
+          
+          const aiAnalysisPrompt = firstArticleContent ? 
+            (language === 'de' 
+              ? `${basePrompt}\n\nZusätzliche aktuelle Informationen (verwende nur bei Bedarf): ${firstArticleContent}\nQuelle: ${firstArticleUrl}`
+              : `${basePrompt}\n\nAdditional current information (use only if needed): ${firstArticleContent}\nSource: ${firstArticleUrl}`) 
+            : basePrompt;
           
           let aiAnalysisContent = '';
           let successfulAIModel = null;
