@@ -2003,15 +2003,21 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             ? `\n\n🔗 **Wikipedia-Quelle:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`
             : `\n\n🔗 **Wikipedia Source:** [${title}](https://${langCode}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))})`;
           
-          // First, try to fetch the first article for additional context if needed
+          // Fetch articles first to get URLs for additional context
           let firstArticleContent = '';
           let firstArticleUrl = '';
+          let relatedArticles = [];
+
+          // Fetch related articles using Guardian API first
+          let articlesSection = '';
+          let successfulNewsAPI = null;
+          let lastNewsError = null;
           
-          // Try Guardian API first to get articles
+          // Try Guardian API first
           try {
-            console.log('🗞️ Fetching first article for context from Guardian API');
+            console.log('🗞️ Trying Guardian API for:', extractedTopic);
             const guardianApiKey = '0be420a7-af7b-45e9-b5cb-04afb863e15c';
-            const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(extractedTopic)}&api-key=${guardianApiKey}&show-fields=headline,trailText,body&page-size=1&order-by=relevance`;
+            const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(extractedTopic)}&api-key=${guardianApiKey}&show-fields=headline,trailText&page-size=5&order-by=relevance`;
             
             const guardianResponse = await fetch(guardianUrl);
             if (guardianResponse.ok) {
@@ -2019,30 +2025,140 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
               const articles = guardianData.response?.results || [];
               
               if (articles.length > 0) {
-                const firstArticle = articles[0];
-                firstArticleUrl = firstArticle.webUrl;
-                // Try to get article content
+                console.log('✅ Guardian API successful, found', articles.length, 'articles');
+                
+                // Store first article for AI context
+                firstArticleUrl = articles[0].webUrl;
+                relatedArticles = articles;
+                
+                // Try to fetch content from first article using web scraping
                 try {
-                  const articleResponse = await fetch(`https://content.guardianapis.com/${firstArticle.id}?api-key=${guardianApiKey}&show-fields=body,headline,trailText`);
-                  if (articleResponse.ok) {
-                    const articleData = await articleResponse.json();
-                    const body = articleData.response?.content?.fields?.body || '';
-                    if (body) {
-                      // Clean HTML and limit content
-                      firstArticleContent = body.replace(/<[^>]*>/g, '').substring(0, 1000);
+                  console.log('🔍 Fetching content from first article:', firstArticleUrl);
+                  const proxyResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(firstArticleUrl)}`);
+                  if (proxyResponse.ok) {
+                    const proxyData = await proxyResponse.json();
+                    const htmlContent = proxyData.contents;
+                    
+                    // Extract text content from HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlContent, 'text/html');
+                    
+                    // Try to find article content (Guardian-specific selectors)
+                    const articleContent = doc.querySelector('[data-gu-name="body"]') || 
+                                         doc.querySelector('.content__article-body') ||
+                                         doc.querySelector('.article-body');
+                    
+                    if (articleContent) {
+                      firstArticleContent = articleContent.textContent?.substring(0, 1500) || '';
                       console.log('✅ First article content fetched successfully');
                     }
                   }
-                } catch (contentError) {
-                  console.log('❌ Could not fetch article content:', contentError);
+                } catch (fetchError) {
+                  console.log('❌ Could not fetch article content:', fetchError);
                 }
+                
+                const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
+                const articleButtons = articles.map((article: any, index: number) => {
+                  const headline = article.fields?.headline || article.webTitle;
+                  const shortTitle = headline.length > 60 ? headline.substring(0, 57) + '...' : headline;
+                  return `[${shortTitle}](${article.webUrl})`;
+                }).join('\n');
+                
+                articlesSection = `${articlesHeader}\n${articleButtons}`;
+                successfulNewsAPI = 'Guardian';
+              } else {
+                throw new Error('No articles found in Guardian API');
               }
+            } else {
+              throw new Error(`Guardian API error: ${guardianResponse.status}`);
             }
-          } catch (error) {
-            console.log('❌ Guardian API failed for first article:', error);
+          } catch (guardianError) {
+            console.error('❌ Guardian API failed:', guardianError);
+            lastNewsError = guardianError;
+            
+            // Fallback to GNews API (costs money, so only used when Guardian fails)
+            try {
+              console.log('🗞️ Trying GNews API as fallback for:', extractedTopic);
+              const gnewsApiKey = '494b5937247cd56ede96dd66842f802d';
+              const gnewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(extractedTopic)}&token=${gnewsApiKey}&lang=${language === 'de' ? 'de' : 'en'}&country=${language === 'de' ? 'de' : 'us'}&max=5&sortby=relevance`;
+              
+              const gnewsResponse = await fetch(gnewsUrl);
+              if (gnewsResponse.ok) {
+                const gnewsData = await gnewsResponse.json();
+                const articles = gnewsData.articles || [];
+                
+                if (articles.length > 0) {
+                  console.log('✅ GNews API successful, found', articles.length, 'articles');
+                  
+                  // Store first article for AI context if not already set
+                  if (!firstArticleUrl) {
+                    firstArticleUrl = articles[0].url;
+                    relatedArticles = articles;
+                    
+                    // Try to fetch content from first article
+                    try {
+                      console.log('🔍 Fetching content from first article:', firstArticleUrl);
+                      const proxyResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(firstArticleUrl)}`);
+                      if (proxyResponse.ok) {
+                        const proxyData = await proxyResponse.json();
+                        const htmlContent = proxyData.contents;
+                        
+                        // Extract text content from HTML
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlContent, 'text/html');
+                        
+                        // Try common article selectors
+                        const articleContent = doc.querySelector('article') || 
+                                             doc.querySelector('.article-content') ||
+                                             doc.querySelector('.post-content') ||
+                                             doc.querySelector('[role="main"]') ||
+                                             doc.querySelector('main');
+                        
+                        if (articleContent) {
+                          firstArticleContent = articleContent.textContent?.substring(0, 1500) || '';
+                          console.log('✅ First article content fetched successfully');
+                        }
+                      }
+                    } catch (fetchError) {
+                      console.log('❌ Could not fetch article content:', fetchError);
+                    }
+                  }
+                  
+                  const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
+                  const articleButtons = articles.map((article: any, index: number) => {
+                    const title = article.title;
+                    const shortTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
+                    return `[${shortTitle}](${article.url})`;
+                  }).join('\n');
+                  
+                  articlesSection = `${articlesHeader}\n${articleButtons}`;
+                  successfulNewsAPI = 'GNews';
+                } else {
+                  throw new Error('No articles found in GNews API');
+                }
+              } else {
+                throw new Error(`GNews API error: ${gnewsResponse.status}`);
+              }
+            } catch (gnewsError) {
+              console.error('❌ GNews API also failed:', gnewsError);
+              lastNewsError = gnewsError;
+              
+              // Both APIs failed, provide manual search links
+              const fallbackText = language === 'de'
+                ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
+                : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
+              articlesSection = fallbackText;
+            }
           }
-
-          // Generate AI Analysis using multiple AI models with fallback system
+          
+          // Log which API was successful
+          if (successfulNewsAPI) {
+            console.log(`🎉 Articles fetched successfully using ${successfulNewsAPI} API`);
+          } else {
+            console.error('🚨 All news APIs failed. Last error:', lastNewsError);
+          }
+          
+          // Generate AI Analysis using multiple AI models with fallback system (after articles are fetched)
           const basePrompt = language === 'de' 
             ? `Basierend auf der Wikipedia-Information über "${title}", beantworte folgende Frage umfassend und fundiert: ${userInput}. Nutze die bereitgestellten Informationen und dein Wissen, um eine detaillierte Antwort in 2-3 ausführlichen Sätzen zu geben.`
             : `Based on the Wikipedia information about "${title}", answer the following question comprehensively and well-founded: ${userInput}. Use the provided information and your knowledge to give a detailed answer in 2-3 comprehensive sentences.`;
@@ -2105,13 +2221,12 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                 });
 
                 if (!response.ok) {
-                  throw new Error(`OpenRouter API error: ${response.status}`);
+                  throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
                 }
 
                 const data = await response.json();
-                modelResponse = data.choices?.[0]?.message?.content?.trim() || '';
-              } 
-              else if (aiModel.type === 'puter') {
+                modelResponse = data.choices?.[0]?.message?.content || '';
+              } else if (aiModel.type === 'puter') {
                 await waitForPuterReady();
                 const puter = (window as any).puter;
                 
@@ -2131,128 +2246,30 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                 
                 if (typeof aiResponse === 'string') {
                   modelResponse = aiResponse.trim();
-                } else if (aiResponse?.message?.content) {
-                  modelResponse = aiResponse.message.content.trim();
                 } else if (aiResponse?.text) {
                   modelResponse = aiResponse.text.trim();
+                } else {
+                  throw new Error('Invalid AI response format');
                 }
               }
-              
-              // Validate response quality
-              if (modelResponse && 
-                  modelResponse.length > 20 && 
-                  !modelResponse.includes('[object Object]') &&
-                  modelResponse !== 'undefined' &&
-                  modelResponse !== 'null') {
-                
+
+              if (modelResponse && modelResponse.length > 10) {
                 aiAnalysisContent = modelResponse;
                 successfulAIModel = aiModel.name;
-                console.log(`✅ AI Analysis completed successfully using ${aiModel.name}`);
+                console.log(`✅ AI analysis successful with ${aiModel.name}`);
                 break;
               } else {
-                console.log(`❌ Invalid response from ${aiModel.name}`);
+                console.log(`❌ ${aiModel.name} returned empty or invalid response`);
               }
-              
-            } catch (modelError) {
-              console.error(`❌ Model ${aiModel.name} failed:`, modelError);
+            } catch (error) {
+              console.log(`❌ ${aiModel.name} failed:`, error);
+              continue;
             }
           }
           
-          // If all models failed, provide a basic fallback analysis
-          if (!successfulAIModel) {
-            console.error('❌ All AI models failed for internet analysis');
-            aiAnalysisContent = language === 'de' 
-              ? `Basierend auf der Wikipedia-Information zu "${title}": ${summarize(extract, 2)} Weitere Details finden Sie in den unten stehenden Quellen.`
-              : `Based on Wikipedia information about "${title}": ${summarize(extract, 2)} Find more details in the sources below.`;
-            successfulAIModel = 'Fallback Summary';
-          }
-          
+          // Create AI analysis section after processing
           const aiAnalysisHeader = language === 'de' ? `\n\n🤖 **KI-Analyse** (${successfulAIModel}):` : `\n\n🤖 **AI Analysis** (${successfulAIModel}):`;
           const aiAnalysisSection = `${aiAnalysisHeader}\n${aiAnalysisContent}`;
-          
-          // Fetch real articles with fallback system (Guardian API -> GNews API)
-          let articlesSection = '';
-          let successfulNewsAPI = null;
-          let lastNewsError = null;
-          
-          // Try Guardian API first
-          try {
-            console.log('🗞️ Trying Guardian API for:', extractedTopic);
-            const guardianApiKey = '0be420a7-af7b-45e9-b5cb-04afb863e15c';
-            const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(extractedTopic)}&api-key=${guardianApiKey}&show-fields=headline,trailText&page-size=5&order-by=relevance`;
-            
-            const guardianResponse = await fetch(guardianUrl);
-            if (guardianResponse.ok) {
-              const guardianData = await guardianResponse.json();
-              const articles = guardianData.response?.results || [];
-              
-              if (articles.length > 0) {
-                console.log('✅ Guardian API successful, found', articles.length, 'articles');
-                const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
-                const articleButtons = articles.map((article: any, index: number) => {
-                  const headline = article.fields?.headline || article.webTitle;
-                  const shortTitle = headline.length > 60 ? headline.substring(0, 57) + '...' : headline;
-                  return `[${shortTitle}](${article.webUrl})`;
-                }).join('\n');
-                
-                articlesSection = `${articlesHeader}\n${articleButtons}`;
-                successfulNewsAPI = 'Guardian';
-              } else {
-                throw new Error('No articles found in Guardian API');
-              }
-            } else {
-              throw new Error(`Guardian API error: ${guardianResponse.status}`);
-            }
-          } catch (guardianError) {
-            console.error('❌ Guardian API failed:', guardianError);
-            lastNewsError = guardianError;
-            
-            // Fallback to GNews API (costs money, so only used when Guardian fails)
-            try {
-              console.log('🗞️ Trying GNews API as fallback for:', extractedTopic);
-              const gnewsApiKey = '494b5937247cd56ede96dd66842f802d';
-              const gnewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(extractedTopic)}&token=${gnewsApiKey}&lang=${language === 'de' ? 'de' : 'en'}&country=${language === 'de' ? 'de' : 'us'}&max=5&sortby=relevance`;
-              
-              const gnewsResponse = await fetch(gnewsUrl);
-              if (gnewsResponse.ok) {
-                const gnewsData = await gnewsResponse.json();
-                const articles = gnewsData.articles || [];
-                
-                if (articles.length > 0) {
-                  console.log('✅ GNews API successful, found', articles.length, 'articles');
-                  const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
-                  const articleButtons = articles.map((article: any, index: number) => {
-                    const title = article.title;
-                    const shortTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
-                    return `[${shortTitle}](${article.url})`;
-                  }).join('\n');
-                  
-                  articlesSection = `${articlesHeader}\n${articleButtons}`;
-                  successfulNewsAPI = 'GNews';
-                } else {
-                  throw new Error('No articles found in GNews API');
-                }
-              } else {
-                throw new Error(`GNews API error: ${gnewsResponse.status}`);
-              }
-            } catch (gnewsError) {
-              console.error('❌ GNews API also failed:', gnewsError);
-              lastNewsError = gnewsError;
-              
-              // Both APIs failed, provide manual search links
-              const fallbackText = language === 'de'
-                ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
-                : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
-              articlesSection = fallbackText;
-            }
-          }
-          
-          // Log which API was successful
-          if (successfulNewsAPI) {
-            console.log(`🎉 Articles fetched successfully using ${successfulNewsAPI} API`);
-          } else {
-            console.error('🚨 All news APIs failed. Last error:', lastNewsError);
-          }
           
           // Add external sources section
           const externalSourcesText = language === 'de'
