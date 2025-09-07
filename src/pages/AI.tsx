@@ -590,11 +590,24 @@ const AI = () => {
   const generateGermanQuiz = async (userInput: string): Promise<{ text: string; quizData?: any }> => {
     const input = userInput.toLowerCase();
     
+    // Random topic pool for variety
+    const randomTopics = [
+      'Geschichte', 'Wissenschaft', 'Sport', 'Filme', 'Musik', 'Geographie', 
+      'Technik', 'Kunst', 'Literatur', 'Politik', 'Medizin', 'Natur und Umwelt',
+      'Essen und Kochen', 'Automobile', 'Weltraum', 'Mathematik', 'Tiere',
+      'Architektur', 'Psychologie', 'Philosophie', 'Wirtschaft', 'Mode',
+      'Fotografie', 'Reisen', 'Sprachen', 'Erfindungen', 'Kulturgeschichte'
+    ];
+    
     // Enhanced topic detection using AI-like approach
     let topic = 'Allgemeinwissen';
     
+    // Check for random quiz request
+    if (input.includes('random quiz') || input.includes('zufällig')) {
+      topic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
+    }
     // Direct topic matching
-    if (input.includes('katzen') || input.includes('cat')) topic = 'Katzen';
+    else if (input.includes('katzen') || input.includes('cat')) topic = 'Katzen';
     else if (input.includes('hunde') || input.includes('dog')) topic = 'Hunde';
     else if (input.includes('geschichte') || input.includes('history')) topic = 'Geschichte';
     else if (input.includes('wissenschaft') || input.includes('science')) topic = 'Wissenschaft';
@@ -616,7 +629,7 @@ const AI = () => {
       // Try to extract topic from free-form text
       const words = input.split(' ');
       for (const word of words) {
-        if (word.length > 4 && !['quiz', 'frage', 'über', 'einem', 'eine', 'einem'].includes(word)) {
+        if (word.length > 4 && !['quiz', 'frage', 'über', 'einem', 'eine', 'einem', 'random'].includes(word)) {
           topic = word.charAt(0).toUpperCase() + word.slice(1);
           break;
         }
@@ -3184,26 +3197,51 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                              <p className="text-blue-800">
                                <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {message.quizData.explanation}
                              </p>
-                             <div className="mt-3 space-y-2">
-                               <div className="flex gap-2">
-                                 <Button
-                                   onClick={() => sendPrompt(message.quizData.topic ? `${message.quizData.topic} Quiz` : (language === 'de' ? 'Random Quiz' : 'Random Quiz'))}
-                                   size="sm"
-                                   variant="default"
-                                   className="flex-1"
-                                 >
-                                   {language === 'de' ? 'Nächstes Quiz' : 'Next Quiz'}
-                                 </Button>
-                                 <Button
-                                   onClick={() => sendPrompt(language === 'de' ? 'Random Quiz' : 'Random Quiz')}
-                                   size="sm"
-                                   variant="outline"
-                                   className="bg-white flex-1"
-                                 >
-                                   {language === 'de' ? 'Random Quiz' : 'Random Quiz'}
-                                 </Button>
-                               </div>
-                             </div>
+                              <div className="mt-3 space-y-2">
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => {
+                                      // Generate a new random topic for variety
+                                      const randomTopics = [
+                                        'Geschichte', 'Wissenschaft', 'Sport', 'Filme', 'Musik', 'Geographie', 
+                                        'Technik', 'Kunst', 'Literatur', 'Politik', 'Medizin', 'Natur und Umwelt',
+                                        'Essen und Kochen', 'Automobile', 'Weltraum', 'Mathematik', 'Tiere',
+                                        'Architektur', 'Psychologie', 'Philosophie', 'Wirtschaft', 'Mode',
+                                        'Fotografie', 'Reisen', 'Sprachen', 'Erfindungen', 'Kulturgeschichte'
+                                      ];
+                                      const currentTopic = message.quizData.topic;
+                                      // Filter out current topic to ensure variety
+                                      const availableTopics = randomTopics.filter(topic => topic !== currentTopic);
+                                      const newTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
+                                      sendPrompt(`${newTopic} Quiz`);
+                                    }}
+                                    size="sm"
+                                    variant="default"
+                                    className="flex-1"
+                                  >
+                                    {language === 'de' ? 'Nächstes Quiz' : 'Next Quiz'}
+                                  </Button>
+                                  <Button
+                                    onClick={() => {
+                                      // Generate truly random topics
+                                      const randomTopics = [
+                                        'Geschichte', 'Wissenschaft', 'Sport', 'Filme', 'Musik', 'Geographie', 
+                                        'Technik', 'Kunst', 'Literatur', 'Politik', 'Medizin', 'Natur und Umwelt',
+                                        'Essen und Kochen', 'Automobile', 'Weltraum', 'Mathematik', 'Tiere',
+                                        'Architektur', 'Psychologie', 'Philosophie', 'Wirtschaft', 'Mode',
+                                        'Fotografie', 'Reisen', 'Sprachen', 'Erfindungen', 'Kulturgeschichte'
+                                      ];
+                                      const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
+                                      sendPrompt(`${randomTopic} Quiz`);
+                                    }}
+                                    size="sm"
+                                    variant="outline"
+                                    className="bg-white flex-1"
+                                  >
+                                    {language === 'de' ? 'Random Quiz' : 'Random Quiz'}
+                                  </Button>
+                                </div>
+                              </div>
                            </div>
                          )}
                       </div>
