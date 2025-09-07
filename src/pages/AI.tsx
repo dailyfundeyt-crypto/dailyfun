@@ -2280,8 +2280,282 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           
           return { text: result }
         } else {
-          const notFound = language === 'de' ? 'Keine Ergebnisse auf Wikipedia gefunden.' : 'No results found on Wikipedia.'
-          return { text: `🌐 ${notFound}` }
+          // No Wikipedia results, but still provide AI analysis and external sources
+          console.log('⚠️ No Wikipedia results found, but continuing with AI analysis and external sources');
+          
+          const noWikipediaText = language === 'de' 
+            ? '🌐 **Wikipedia:**\nKeine spezifischen Ergebnisse auf Wikipedia gefunden.' 
+            : '🌐 **Wikipedia:**\nNo specific results found on Wikipedia.';
+          
+          // Fetch articles first to get URLs for additional context
+          let firstArticleContent = '';
+          let firstArticleUrl = '';
+          let relatedArticles = [];
+
+          // Fetch related articles using Guardian API first
+          let articlesSection = '';
+          let successfulNewsAPI = null;
+          let lastNewsError = null;
+          
+          // Try Guardian API first
+          try {
+            console.log('🗞️ Trying Guardian API for:', extractedTopic);
+            const guardianApiKey = '0be420a7-af7b-45e9-b5cb-04afb863e15c';
+            const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(extractedTopic)}&api-key=${guardianApiKey}&show-fields=headline,trailText&page-size=5&order-by=relevance`;
+            
+            const guardianResponse = await fetch(guardianUrl);
+            if (guardianResponse.ok) {
+              const guardianData = await guardianResponse.json();
+              const articles = guardianData.response?.results || [];
+              
+              if (articles.length > 0) {
+                console.log('✅ Guardian API successful, found', articles.length, 'articles');
+                
+                // Store first article for AI context
+                firstArticleUrl = articles[0].webUrl;
+                relatedArticles = articles;
+                
+                // Try to fetch content from first article using web scraping
+                try {
+                  console.log('🔍 Fetching content from first article:', firstArticleUrl);
+                  const proxyResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(firstArticleUrl)}`);
+                  if (proxyResponse.ok) {
+                    const proxyData = await proxyResponse.json();
+                    const htmlContent = proxyData.contents;
+                    
+                    // Extract text content from HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlContent, 'text/html');
+                    
+                    // Try to find article content (Guardian-specific selectors)
+                    const articleContent = doc.querySelector('[data-gu-name="body"]') || 
+                                         doc.querySelector('.content__article-body') ||
+                                         doc.querySelector('.article-body');
+                    
+                    if (articleContent) {
+                      firstArticleContent = articleContent.textContent?.substring(0, 1500) || '';
+                      console.log('✅ First article content fetched successfully');
+                    }
+                  }
+                } catch (fetchError) {
+                  console.log('❌ Could not fetch article content:', fetchError);
+                }
+                
+                const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
+                const articleButtons = articles.map((article: any, index: number) => {
+                  const headline = article.fields?.headline || article.webTitle;
+                  const shortTitle = headline.length > 60 ? headline.substring(0, 57) + '...' : headline;
+                  return `[${shortTitle}](${article.webUrl})`;
+                }).join('\n');
+                
+                articlesSection = `${articlesHeader}\n${articleButtons}`;
+                successfulNewsAPI = 'Guardian';
+              } else {
+                throw new Error('No articles found in Guardian API');
+              }
+            } else {
+              throw new Error(`Guardian API error: ${guardianResponse.status}`);
+            }
+          } catch (guardianError) {
+            console.error('❌ Guardian API failed:', guardianError);
+            lastNewsError = guardianError;
+            
+            // Fallback to GNews API (costs money, so only used when Guardian fails)
+            try {
+              console.log('🗞️ Trying GNews API as fallback for:', extractedTopic);
+              const gnewsApiKey = '494b5937247cd56ede96dd66842f802d';
+              const gnewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(extractedTopic)}&token=${gnewsApiKey}&lang=${language === 'de' ? 'de' : 'en'}&country=${language === 'de' ? 'de' : 'us'}&max=5&sortby=relevance`;
+              
+              const gnewsResponse = await fetch(gnewsUrl);
+              if (gnewsResponse.ok) {
+                const gnewsData = await gnewsResponse.json();
+                const articles = gnewsData.articles || [];
+                
+                if (articles.length > 0) {
+                  console.log('✅ GNews API successful, found', articles.length, 'articles');
+                  
+                  // Store first article for AI context if not already set
+                  if (!firstArticleUrl) {
+                    firstArticleUrl = articles[0].url;
+                    relatedArticles = articles;
+                    
+                    // Try to fetch content from first article
+                    try {
+                      console.log('🔍 Fetching content from first article:', firstArticleUrl);
+                      const proxyResponse = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(firstArticleUrl)}`);
+                      if (proxyResponse.ok) {
+                        const proxyData = await proxyResponse.json();
+                        const htmlContent = proxyData.contents;
+                        
+                        // Extract text content from HTML
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(htmlContent, 'text/html');
+                        
+                        // Try common article selectors
+                        const articleContent = doc.querySelector('article') || 
+                                             doc.querySelector('.article-content') ||
+                                             doc.querySelector('.post-content') ||
+                                             doc.querySelector('[role="main"]') ||
+                                             doc.querySelector('main');
+                        
+                        if (articleContent) {
+                          firstArticleContent = articleContent.textContent?.substring(0, 1500) || '';
+                          console.log('✅ First article content fetched successfully');
+                        }
+                      }
+                    } catch (fetchError) {
+                      console.log('❌ Could not fetch article content:', fetchError);
+                    }
+                  }
+                  
+                  const articlesHeader = language === 'de' ? '\n\n**📰 Weitere Artikel zu diesem Thema:**' : '\n\n**📰 More Articles on this Topic:**';
+                  const articleButtons = articles.map((article: any, index: number) => {
+                    const title = article.title;
+                    const shortTitle = title.length > 60 ? title.substring(0, 57) + '...' : title;
+                    return `[${shortTitle}](${article.url})`;
+                  }).join('\n');
+                  
+                  articlesSection = `${articlesHeader}\n${articleButtons}`;
+                  successfulNewsAPI = 'GNews';
+                } else {
+                  throw new Error('No articles found in GNews API');
+                }
+              } else {
+                throw new Error(`GNews API error: ${gnewsResponse.status}`);
+              }
+            } catch (gnewsError) {
+              console.error('❌ GNews API also failed:', gnewsError);
+              lastNewsError = gnewsError;
+              
+              // Both APIs failed, provide manual search links
+              const fallbackText = language === 'de'
+                ? '\n\n**📰 Weitere Artikel zu diesem Thema:**\n[Artikel auf The Guardian suchen](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')'
+                : '\n\n**📰 More Articles on this Topic:**\n[Search articles on The Guardian](https://www.theguardian.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ')';
+              articlesSection = fallbackText;
+            }
+          }
+          
+          // Generate AI Analysis using multiple AI models with fallback system
+          const basePrompt = language === 'de' 
+            ? `Beantworte folgende Frage umfassend und fundiert: ${userInput}. Da keine spezifischen Wikipedia-Informationen verfügbar sind, nutze dein allgemeines Wissen und die verfügbaren aktuellen Informationen, um eine detaillierte Antwort in 2-3 ausführlichen Sätzen zu geben.`
+            : `Answer the following question comprehensively and well-founded: ${userInput}. Since no specific Wikipedia information is available, use your general knowledge and available current information to give a detailed answer in 2-3 comprehensive sentences.`;
+          
+          const aiAnalysisPrompt = firstArticleContent ? 
+            (language === 'de' 
+              ? `${basePrompt}\n\nAktuelle Informationen aus den Nachrichten (verwende nur bei Bedarf): ${firstArticleContent}\nQuelle: ${firstArticleUrl}`
+              : `${basePrompt}\n\nCurrent information from news (use only if needed): ${firstArticleContent}\nSource: ${firstArticleUrl}`) 
+            : basePrompt;
+          
+          let aiAnalysisContent = '';
+          let successfulAIModel = null;
+          
+          // Enhanced AI models array with multiple fallbacks
+          const aiModels = [
+            { name: 'OpenRouter Llama 3.1 405B', type: 'openrouter', model: 'meta-llama/llama-3.1-405b-instruct:free' },
+            { name: 'OpenRouter Llama 3.1 70B', type: 'openrouter', model: 'meta-llama/llama-3.1-70b-instruct:free' },
+            { name: 'GPT-5', type: 'puter', model: 'gpt-5' },
+            { name: 'Claude Sonnet 4', type: 'puter', model: 'claude-sonnet-4' },
+            { name: 'GPT-4.1', type: 'puter', model: 'gpt-4.1' },
+            { name: 'Claude Opus 4', type: 'puter', model: 'claude-opus-4' },
+            { name: 'Gemini 2.0 Flash', type: 'puter', model: 'gemini-2.0-flash' },
+            { name: 'Deepseek Chat', type: 'puter', model: 'deepseek-chat' }
+          ];
+          
+          // Try AI models sequentially until one succeeds
+          for (const aiModel of aiModels) {
+            try {
+              console.log(`🤖 Trying AI model for analysis without Wikipedia: ${aiModel.name}`);
+              
+              let modelResponse = '';
+              
+              if (aiModel.type === 'openrouter') {
+                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': 'Bearer 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',
+                    'Content-Type': 'application/json',
+                    'HTTP-Referer': 'https://dailyfun.app',
+                    'X-Title': 'Daily Fun - Internet Search'
+                  },
+                  body: JSON.stringify({
+                    model: aiModel.model,
+                    messages: [
+                      {
+                        role: 'system',
+                        content: language === 'de' 
+                          ? `Du bist ein KI-Assistant mit fundiertem Wissen. Beantworte die Frage präzise basierend auf deinem Wissen und verfügbaren aktuellen Informationen.`
+                          : `You are an AI assistant with solid knowledge. Answer the question precisely based on your knowledge and available current information.`
+                      },
+                      {
+                        role: 'user',
+                        content: aiAnalysisPrompt
+                      }
+                    ],
+                    temperature: 0.7,
+                    top_p: 0.9,
+                    max_tokens: 400
+                  }),
+                });
+
+                if (!response.ok) {
+                  throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                modelResponse = data.choices?.[0]?.message?.content || '';
+              } else if (aiModel.type === 'puter') {
+                await waitForPuterReady();
+                const puter = (window as any).puter;
+                
+                if (!puter?.ai?.chat) {
+                  throw new Error('Puter AI not available');
+                }
+                
+                const aiResponse = await puter.ai.chat(aiAnalysisPrompt, {
+                  model: aiModel.model,
+                  max_tokens: 400,
+                  temperature: 0.7
+                });
+                
+                if (typeof aiResponse === 'string') {
+                  modelResponse = aiResponse.trim();
+                } else if (aiResponse?.text) {
+                  modelResponse = aiResponse.text.trim();
+                } else {
+                  throw new Error('Invalid AI response format');
+                }
+              }
+
+              if (modelResponse && modelResponse.length > 10) {
+                aiAnalysisContent = modelResponse;
+                successfulAIModel = aiModel.name;
+                console.log(`✅ AI analysis successful with ${aiModel.name}`);
+                break;
+              } else {
+                console.log(`❌ ${aiModel.name} returned empty or invalid response`);
+              }
+            } catch (error) {
+              console.log(`❌ ${aiModel.name} failed:`, error);
+              continue;
+            }
+          }
+          
+          // Create AI analysis section
+          const aiAnalysisHeader = language === 'de' ? `\n\n🤖 **KI-Analyse** (${successfulAIModel || 'Fallback Summary'}):` : `\n\n🤖 **AI Analysis** (${successfulAIModel || 'Fallback Summary'}):`;
+          const aiAnalysisSection = aiAnalysisContent 
+            ? `${aiAnalysisHeader}\n${aiAnalysisContent}`
+            : (language === 'de' 
+              ? `${aiAnalysisHeader}\nKI-Analyse derzeit nicht verfügbar. Bitte versuchen Sie es später erneut oder nutzen Sie die unten stehenden Quellen für weitere Informationen.`
+              : `${aiAnalysisHeader}\nAI analysis currently unavailable. Please try again later or use the sources below for more information.`);
+          
+          // Add external sources section
+          const externalSourcesText = language === 'de'
+            ? '\n\n**🌐 Externe Quellen:**\n[News suchen](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')'
+            : '\n\n**🌐 External Sources:**\n[Search News](https://news.google.com/search?q=' + encodeURIComponent(extractedTopic) + ') | [Google Scholar](https://scholar.google.com/scholar?q=' + encodeURIComponent(extractedTopic) + ') | [Academic Papers](https://www.researchgate.net/search?q=' + encodeURIComponent(extractedTopic) + ')';
+          
+          const result = `${noWikipediaText}${aiAnalysisSection}${articlesSection}${externalSourcesText}`;
+          
+          return { text: result }
         }
       } catch (e) {
         console.error('Wikipedia search error:', e);
