@@ -643,12 +643,19 @@ const AI = () => {
       const prompt = `Du bist ein Experte für die Erstellung von deutschen Quiz-Fragen. Erstelle ein interessantes Multiple-Choice-Quiz zum Thema "${topic}".
 
 WICHTIGE REGELN:
-1. Die Frage muss auf Deutsch sein
+1. Die Frage muss auf Deutsch sein und spezifisch sein (keine vagen Fragen)
 2. Alle 4 Antwortmöglichkeiten müssen auf Deutsch sein
 3. Genau eine Antwort muss korrekt sein
-4. Die anderen 3 Antworten müssen plausibel aber falsch sein
-5. Füge eine kurze Erklärung zur richtigen Antwort hinzu
-6. Verwende aktuelles Wissen und interessante Fakten
+4. Die anderen 3 Antworten müssen plausibel aber eindeutig falsch sein
+5. Verwende konkrete Fakten, Zahlen, Namen oder Daten (keine Meinungen oder subjektive Aussagen)
+6. Vermeide vage Antworten wie "ist interessant", "ist wichtig", "ist komplex"
+7. Stelle sicher, dass die falschen Antworten nicht auch richtig sein könnten
+8. Füge eine kurze, präzise Erklärung zur richtigen Antwort hinzu
+
+BEISPIEL FÜR GUTE FRAGEN:
+- "Wie viele Stunden schlafen Katzen durchschnittlich pro Tag?" mit spezifischen Zahlen
+- "In welchem Jahr wurde die Berliner Mauer errichtet?" mit konkreten Jahreszahlen
+- "Welches ist das größte Organ des menschlichen Körpers?" mit eindeutigen Antworten
 
 FORMAT (verwende genau dieses JSON-Format):
 {
@@ -3201,19 +3208,9 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                                 <div className="flex gap-2">
                                   <Button
                                     onClick={() => {
-                                      // Generate a new random topic for variety
-                                      const randomTopics = [
-                                        'Geschichte', 'Wissenschaft', 'Sport', 'Filme', 'Musik', 'Geographie', 
-                                        'Technik', 'Kunst', 'Literatur', 'Politik', 'Medizin', 'Natur und Umwelt',
-                                        'Essen und Kochen', 'Automobile', 'Weltraum', 'Mathematik', 'Tiere',
-                                        'Architektur', 'Psychologie', 'Philosophie', 'Wirtschaft', 'Mode',
-                                        'Fotografie', 'Reisen', 'Sprachen', 'Erfindungen', 'Kulturgeschichte'
-                                      ];
+                                      // Keep the same topic for "Next Quiz"
                                       const currentTopic = message.quizData.topic;
-                                      // Filter out current topic to ensure variety
-                                      const availableTopics = randomTopics.filter(topic => topic !== currentTopic);
-                                      const newTopic = availableTopics[Math.floor(Math.random() * availableTopics.length)];
-                                      sendPrompt(`${newTopic} Quiz`);
+                                      sendPrompt(`${currentTopic} Quiz`);
                                     }}
                                     size="sm"
                                     variant="default"
@@ -3223,15 +3220,11 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                                   </Button>
                                   <Button
                                     onClick={() => {
-                                      // Generate truly random topics
-                                      const randomTopics = [
-                                        'Geschichte', 'Wissenschaft', 'Sport', 'Filme', 'Musik', 'Geographie', 
-                                        'Technik', 'Kunst', 'Literatur', 'Politik', 'Medizin', 'Natur und Umwelt',
-                                        'Essen und Kochen', 'Automobile', 'Weltraum', 'Mathematik', 'Tiere',
-                                        'Architektur', 'Psychologie', 'Philosophie', 'Wirtschaft', 'Mode',
-                                        'Fotografie', 'Reisen', 'Sprachen', 'Erfindungen', 'Kulturgeschichte'
+                                      // Use only the specific topics requested by user
+                                      const specificTopics = [
+                                        'Katzen', 'Hunde', 'Geschichte', 'Wissenschaft', 'Sport'
                                       ];
-                                      const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
+                                      const randomTopic = specificTopics[Math.floor(Math.random() * specificTopics.length)];
                                       sendPrompt(`${randomTopic} Quiz`);
                                     }}
                                     size="sm"
