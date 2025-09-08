@@ -639,8 +639,11 @@ const AI = () => {
     try {
       console.log('Generating German quiz for topic:', topic);
       
+      // Generate unique seed for variation
+      const uniqueSeed = Date.now() + Math.floor(Math.random() * 1000);
+      
       // Use OpenRouter API directly for better reliability (same as information quiz)
-      const prompt = `Du bist ein Experte für die Erstellung von deutschen Quiz-Fragen. Erstelle ein interessantes Multiple-Choice-Quiz zum Thema "${topic}".
+      const prompt = `Du bist ein Experte für die Erstellung von deutschen Quiz-Fragen. Erstelle ein EINZIGARTIGES Multiple-Choice-Quiz zum Thema "${topic}".
 
 WICHTIGE REGELN:
 1. Die Frage muss auf Deutsch sein und spezifisch sein (keine vagen Fragen)
@@ -651,6 +654,8 @@ WICHTIGE REGELN:
 6. Vermeide vage Antworten wie "ist interessant", "ist wichtig", "ist komplex"
 7. Stelle sicher, dass die falschen Antworten nicht auch richtig sein könnten
 8. Füge eine kurze, präzise Erklärung zur richtigen Antwort hinzu
+9. ERSTELLE JEDES MAL EINE ANDERE FRAGE - verwende verschiedene Aspekte des Themas
+10. Variation-ID: ${uniqueSeed} (verwende diese für Einzigartigkeit)
 
 BEISPIEL FÜR GUTE FRAGEN:
 - "Wie viele Stunden schlafen Katzen durchschnittlich pro Tag?" mit spezifischen Zahlen
@@ -790,47 +795,140 @@ FORMAT (verwende genau dieses JSON-Format):
       if (!quiz) {
         console.log('All AI models failed, creating fallback quiz');
         
-        const fallbackQuizzes = {
-          'Katzen': {
+        // Better fallback quizzes with multiple variations per topic
+        const katzenQuizzes = [
+          {
             question: 'Wie viele Stunden schlafen Katzen durchschnittlich pro Tag?',
             answers: ['12-16 Stunden', '8-10 Stunden', '18-20 Stunden', '6-8 Stunden'],
             correctAnswer: '12-16 Stunden',
             explanation: 'Katzen schlafen durchschnittlich 12-16 Stunden pro Tag, da sie Raubtiere sind und Energie für die Jagd sparen müssen.'
           },
-          'Hunde': {
+          {
+            question: 'Wie viele Zehen haben Katzen normalerweise an den Vorderpfoten?',
+            answers: ['5 Zehen', '4 Zehen', '6 Zehen', '3 Zehen'],
+            correctAnswer: '5 Zehen',
+            explanation: 'Katzen haben normalerweise 5 Zehen an den Vorderpfoten und 4 Zehen an den Hinterpfoten.'
+          },
+          {
+            question: 'Wie heißt das Geräusch, das Katzen machen, wenn sie zufrieden sind?',
+            answers: ['Schnurren', 'Miauen', 'Fauchen', 'Knurren'],
+            correctAnswer: 'Schnurren',
+            explanation: 'Das Schnurren ist ein Zeichen von Zufriedenheit und Entspannung bei Katzen.'
+          }
+        ];
+
+        const hundeQuizzes = [
+          {
             question: 'Welche Hunderasse gilt als die intelligenteste?',
             answers: ['Border Collie', 'Golden Retriever', 'Deutscher Schäferhund', 'Labrador'],
             correctAnswer: 'Border Collie',
             explanation: 'Border Collies gelten als die intelligenteste Hunderasse und sind besonders gut im Befolgen von Kommandos und beim Problemlösen.'
           },
-          'Geschichte': {
+          {
+            question: 'Wie viele Zähne hat ein erwachsener Hund?',
+            answers: ['42 Zähne', '32 Zähne', '36 Zähne', '48 Zähne'],
+            correctAnswer: '42 Zähne',
+            explanation: 'Ein erwachsener Hund hat 42 Zähne, während Welpen nur 28 Milchzähne haben.'
+          },
+          {
+            question: 'Welcher Sinn ist bei Hunden am stärksten ausgeprägt?',
+            answers: ['Geruchssinn', 'Gehör', 'Sehkraft', 'Tastsinn'],
+            correctAnswer: 'Geruchssinn',
+            explanation: 'Der Geruchssinn von Hunden ist etwa 10.000 bis 100.000 Mal stärker als der von Menschen.'
+          }
+        ];
+
+        const geschichteQuizzes = [
+          {
             question: 'In welchem Jahr fiel die Berliner Mauer?',
             answers: ['1989', '1987', '1991', '1985'],
             correctAnswer: '1989',
             explanation: 'Die Berliner Mauer fiel am 9. November 1989, was ein wichtiger Moment in der deutschen Geschichte war.'
           },
-          'Wissenschaft': {
+          {
+            question: 'Wer war der erste Kaiser des Deutschen Reiches?',
+            answers: ['Wilhelm I.', 'Otto von Bismarck', 'Friedrich III.', 'Wilhelm II.'],
+            correctAnswer: 'Wilhelm I.',
+            explanation: 'Wilhelm I. wurde 1871 zum ersten Kaiser des Deutschen Reiches proklamiert.'
+          },
+          {
+            question: 'In welchem Jahr begann der Zweite Weltkrieg?',
+            answers: ['1939', '1938', '1940', '1941'],
+            correctAnswer: '1939',
+            explanation: 'Der Zweite Weltkrieg begann am 1. September 1939 mit dem deutschen Überfall auf Polen.'
+          }
+        ];
+
+        const wissenschaftQuizzes = [
+          {
             question: 'Welches ist das häufigste Element im Universum?',
             answers: ['Wasserstoff', 'Sauerstoff', 'Kohlenstoff', 'Helium'],
             correctAnswer: 'Wasserstoff',
             explanation: 'Wasserstoff ist das häufigste Element im Universum und macht etwa 75% der sichtbaren Materie aus.'
           },
-          'Default': {
-            question: `Was ist ein interessanter Fakt über ${topic}?`,
-            answers: [`${topic} ist faszinierend`, `${topic} ist wichtig`, `${topic} ist komplex`, `${topic} ist spannend`],
-            correctAnswer: `${topic} ist faszinierend`,
-            explanation: `${topic} ist ein vielschichtiges Thema mit vielen interessanten Aspekten.`
+          {
+            question: 'Wie viele Knochen hat ein erwachsener Mensch?',
+            answers: ['206 Knochen', '195 Knochen', '220 Knochen', '180 Knochen'],
+            correctAnswer: '206 Knochen',
+            explanation: 'Ein erwachsener Mensch hat 206 Knochen. Babys werden mit etwa 270 Knochen geboren, die während des Wachstums zusammenwachsen.'
+          },
+          {
+            question: 'Welcher Planet ist der Erde am nächsten?',
+            answers: ['Venus', 'Mars', 'Merkur', 'Jupiter'],
+            correctAnswer: 'Venus',
+            explanation: 'Venus ist durchschnittlich der erdnächste Planet, obwohl sich dies aufgrund der Umlaufbahnen ändert.'
           }
+        ];
+
+        const sportQuizzes = [
+          {
+            question: 'Wie oft finden die Olympischen Sommerspiele statt?',
+            answers: ['Alle 4 Jahre', 'Alle 2 Jahre', 'Alle 3 Jahre', 'Alle 5 Jahre'],
+            correctAnswer: 'Alle 4 Jahre',
+            explanation: 'Die Olympischen Sommerspiele finden alle vier Jahre statt, genau wie die Winterspiele.'
+          },
+          {
+            question: 'Wie viele Spieler hat eine Fußballmannschaft auf dem Feld?',
+            answers: ['11 Spieler', '10 Spieler', '12 Spieler', '9 Spieler'],
+            correctAnswer: '11 Spieler',
+            explanation: 'Eine Fußballmannschaft hat 11 Spieler auf dem Feld, einschließlich des Torwarts.'
+          },
+          {
+            question: 'In welcher Sportart verwendet man einen Shuttlecock?',
+            answers: ['Badminton', 'Tennis', 'Tischtennis', 'Squash'],
+            correctAnswer: 'Badminton',
+            explanation: 'Ein Shuttlecock (Federball) wird beim Badminton verwendet.'
+          }
+        ];
+
+        const fallbackQuizzes = {
+          'Katzen': katzenQuizzes,
+          'Hunde': hundeQuizzes, 
+          'Geschichte': geschichteQuizzes,
+          'Wissenschaft': wissenschaftQuizzes,
+          'Sport': sportQuizzes
         };
         
         const normalizedTopic = topic.toLowerCase();
-        let selectedQuiz = fallbackQuizzes['Default'];
+        let selectedQuiz = null;
         
+        // Find matching topic and select random quiz from available options
         for (const topicKey of Object.keys(fallbackQuizzes)) {
           if (normalizedTopic.includes(topicKey.toLowerCase())) {
-            selectedQuiz = fallbackQuizzes[topicKey];
+            const quizOptions = fallbackQuizzes[topicKey];
+            selectedQuiz = quizOptions[Math.floor(Math.random() * quizOptions.length)];
             break;
           }
+        }
+        
+        // If no specific topic found, create a better default
+        if (!selectedQuiz) {
+          selectedQuiz = {
+            question: `Entschuldigung, ich konnte kein spezifisches Quiz für "${topic}" erstellen. Hier ist eine allgemeine Wissensfrage:`,
+            answers: ['Die Antwort konnte nicht generiert werden', 'Bitte versuchen Sie ein anderes Thema', 'AI-System hat einen Fehler', 'Quiz nicht verfügbar'],
+            correctAnswer: 'Bitte versuchen Sie ein anderes Thema',
+            explanation: `Bitte versuchen Sie es mit einem der folgenden Themen: Katzen, Hunde, Geschichte, Wissenschaft, oder Sport.`
+          };
         }
         
         quiz = selectedQuiz;
