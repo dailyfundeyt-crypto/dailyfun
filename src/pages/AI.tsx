@@ -3302,37 +3302,39 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                              <p className="text-blue-800">
                                <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {message.quizData.explanation}
                              </p>
-                              <div className="mt-3 space-y-2">
-                                <div className="flex gap-2">
-                                  <Button
-                                    onClick={() => {
-                                      // Keep the same topic for "Next Quiz"
-                                      const currentTopic = message.quizData.topic;
-                                      sendPrompt(`${currentTopic} Quiz`);
-                                    }}
-                                    size="sm"
-                                    variant="default"
-                                    className="flex-1"
-                                  >
-                                    {language === 'de' ? 'Nächstes Quiz' : 'Next Quiz'}
-                                  </Button>
-                                  <Button
-                                    onClick={() => {
-                                      // Use only the specific topics requested by user
-                                      const specificTopics = [
-                                        'Katzen', 'Hunde', 'Geschichte', 'Wissenschaft', 'Sport'
-                                      ];
-                                      const randomTopic = specificTopics[Math.floor(Math.random() * specificTopics.length)];
-                                      sendPrompt(`${randomTopic} Quiz`);
-                                    }}
-                                    size="sm"
-                                    variant="outline"
-                                    className="bg-white flex-1"
-                                  >
-                                    {language === 'de' ? 'Random Quiz' : 'Random Quiz'}
-                                  </Button>
-                                </div>
-                              </div>
+                               <div className="mt-3 space-y-2">
+                                 <div className="flex gap-2">
+                                   <Button
+                                     onClick={() => {
+                                       // Keep the same topic for "Next Quiz"
+                                       const currentTopic = message.quizData.topic;
+                                       sendPrompt(`${currentTopic} Quiz`);
+                                     }}
+                                     size="sm"
+                                     variant="default"
+                                     className={searchMode === 'local' ? "flex-1" : "w-full"}
+                                   >
+                                     {language === 'de' ? 'Nächstes Quiz' : 'Next Quiz'}
+                                   </Button>
+                                   {searchMode === 'local' && (
+                                     <Button
+                                       onClick={() => {
+                                         // Use only the specific topics requested by user
+                                         const specificTopics = [
+                                           'Katzen', 'Hunde', 'Geschichte', 'Wissenschaft', 'Sport'
+                                         ];
+                                         const randomTopic = specificTopics[Math.floor(Math.random() * specificTopics.length)];
+                                         sendPrompt(`${randomTopic} Quiz`);
+                                       }}
+                                       size="sm"
+                                       variant="outline"
+                                       className="bg-white flex-1"
+                                     >
+                                       {language === 'de' ? 'Random Quiz' : 'Random Quiz'}
+                                     </Button>
+                                   )}
+                                 </div>
+                               </div>
                            </div>
                          )}
                       </div>
