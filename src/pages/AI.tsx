@@ -2117,10 +2117,20 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
       return { text: '' }; // Return empty to prevent duplicate message
     }
     
-    // Check for quiz command
+    // Check for quiz command - but handle "next quiz" scenario differently
     if (checkForQuizCommand(userInput)) {
-      await generateInformationQuiz();
-      return { text: '' }; // Return empty to prevent duplicate message
+      // Check if this is a "next quiz" request in internet search or article mode
+      const isNextQuizRequest = userInput.includes('weiteres') && userInput.includes('Quiz') && 
+                               (searchMode === 'internet' || isArticleMode);
+      
+      if (isNextQuizRequest) {
+        // For next quiz in internet/article mode, continue with normal flow to generate new quiz
+        // Don't return early, let it be processed by the internet search logic below
+      } else {
+        // Regular quiz generation from selected messages
+        await generateInformationQuiz();
+        return { text: '' }; // Return empty to prevent duplicate message
+      }
     }
     
     // Quiz generation
