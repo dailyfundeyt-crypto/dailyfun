@@ -28,6 +28,9 @@ interface Message {
     selectedAnswer?: string;
     showResults?: boolean;
     topic?: string;
+    originalSource?: string;
+    quizCount?: number;
+    sourceType?: 'local' | 'internet' | 'article';
   };
   endConversationAvailable?: boolean;
   isSelected?: boolean;
@@ -946,7 +949,10 @@ FORMAT (verwende genau dieses JSON-Format):
             answers: quiz.answers,
             correctAnswer: quiz.correctAnswer,
             explanation: quiz.explanation,
-            topic: topic
+            topic: topic,
+            originalSource: userInput, // Store original user input as source
+            quizCount: 0, // Start with 0, will be incremented for next quizzes
+            sourceType: 'local' as const
           }
         };
       } else {
@@ -1100,7 +1106,10 @@ FORMAT (verwende genau dieses JSON-Format):
             explanation: language === 'de' 
               ? `Die richtige Antwort ist "${translatedContent.correct}".`
               : `The correct answer is "${translatedContent.correct}".`,
-            topic: topic
+            topic: topic,
+            originalSource: userInput, // Store original user input as source
+            quizCount: 0, // Start with 0, will be incremented for next quizzes
+            sourceType: 'local' as const
           };
           
           return { 
@@ -3297,46 +3306,66 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                           })}
                         </div>
                         
-                         {message.quizData.showResults && (
-                           <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                             <p className="text-blue-800">
-                               <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {message.quizData.explanation}
-                             </p>
-                               <div className="mt-3 space-y-2">
-                                 <div className="flex gap-2">
-                                   <Button
-                                     onClick={() => {
-                                       // Keep the same topic for "Next Quiz"
-                                       const currentTopic = message.quizData.topic;
-                                       sendPrompt(`${currentTopic} Quiz`);
-                                     }}
-                                     size="sm"
-                                     variant="default"
-                                     className={searchMode === 'local' ? "flex-1" : "w-full"}
-                                   >
-                                     {language === 'de' ? 'Nächstes Quiz' : 'Next Quiz'}
-                                   </Button>
-                                   {searchMode === 'local' && (
-                                     <Button
-                                       onClick={() => {
-                                         // Use only the specific topics requested by user
-                                         const specificTopics = [
-                                           'Katzen', 'Hunde', 'Geschichte', 'Wissenschaft', 'Sport'
-                                         ];
-                                         const randomTopic = specificTopics[Math.floor(Math.random() * specificTopics.length)];
-                                         sendPrompt(`${randomTopic} Quiz`);
-                                       }}
-                                       size="sm"
-                                       variant="outline"
-                                       className="bg-white flex-1"
-                                     >
-                                       {language === 'de' ? 'Random Quiz' : 'Random Quiz'}
-                                     </Button>
-                                   )}
-                                 </div>
-                               </div>
-                           </div>
-                         )}
+                          {message.quizData.showResults && (
+                            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                              <p className="text-blue-800">
+                                <strong>{language === 'de' ? 'Erklärung:' : 'Explanation:'}</strong> {message.quizData.explanation}
+                              </p>
+                                <div className="mt-3 space-y-2">
+                                  <div className="flex gap-2">
+                                    <Button
+                                      onClick={() => {
+                                        // Progressive quiz numbering functionality
+                                        let nextQuizPrompt;
+                                        
+                                        if (searchMode === 'local') {
+                                          // Local mode: use topic
+                                          const currentTopic = message.quizData.topic;
+                                          nextQuizPrompt = `${currentTopic} Quiz`;
+                                        } else if (searchMode === 'internet' && !isArticleMode) {
+                                          // Internet Search mode: use original source with progressive numbering
+                                          const originalSource = message.quizData.originalSource || message.quizData.topic;
+                                          const currentQuizCount = (message.quizData.quizCount || 0) + 1;
+                                          nextQuizPrompt = `Erstelle ein weiteres Quiz basierend auf "${originalSource}" - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
+                                        } else if (isArticleMode && articleContext) {
+                                          // Article mode: use current article context with progressive numbering
+                                          const currentQuizCount = (message.quizData.quizCount || 0) + 1;
+                                          nextQuizPrompt = `Erstelle ein weiteres Quiz basierend auf dem Artikel "${articleContext}" - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
+                                        } else {
+                                          // Fallback
+                                          const currentTopic = message.quizData.topic;
+                                          nextQuizPrompt = `${currentTopic} Quiz`;
+                                        }
+                                        
+                                        sendPrompt(nextQuizPrompt);
+                                      }}
+                                      size="sm"
+                                      variant="default"
+                                      className={searchMode === 'local' ? "flex-1" : "w-full"}
+                                    >
+                                      {language === 'de' ? 'Nächstes Quiz' : 'Next Quiz'}
+                                    </Button>
+                                    {searchMode === 'local' && (
+                                      <Button
+                                        onClick={() => {
+                                          // Use only the specific topics requested by user
+                                          const specificTopics = [
+                                            'Katzen', 'Hunde', 'Geschichte', 'Wissenschaft', 'Sport'
+                                          ];
+                                          const randomTopic = specificTopics[Math.floor(Math.random() * specificTopics.length)];
+                                          sendPrompt(`${randomTopic} Quiz`);
+                                        }}
+                                        size="sm"
+                                        variant="outline"
+                                        className="bg-white flex-1"
+                                      >
+                                        {language === 'de' ? 'Random Quiz' : 'Random Quiz'}
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                            </div>
+                          )}
                       </div>
                      ) : (
                        <div>
