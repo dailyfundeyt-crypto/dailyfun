@@ -37,6 +37,7 @@ interface Message {
   showSummaryButton?: boolean;
   showQuizButton?: boolean;
   showPdfDownloadButton?: boolean;
+  quizCount?: number; // Add quizCount to Message interface for multi-question quizzes
 }
 
 interface ActionCard {
@@ -3241,17 +3242,58 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                                  })}
                                </div>
                                
-                               {q.showResult && (
-                                 <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                                   <p className="text-blue-800">
-                                     <strong>{language === 'de' ? 'Richtige Antwort:' : 'Correct Answer:'}</strong> {q.correctAnswer}
-                                   </p>
-                                 </div>
-                               )}
-                             </div>
-                           ));
-                         })()}
-                       </div>
+                                {q.showResult && (
+                                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p className="text-blue-800">
+                                      <strong>{language === 'de' ? 'Richtige Antwort:' : 'Correct Answer:'}</strong> {q.correctAnswer}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            ));
+                          })()}
+                          
+                          {/* Add "Nächstes Quiz" button for multi-question format */}
+                          {(() => {
+                            const currentQuizStates = quizStates[message.id] || [];
+                            const allAnswered = currentQuizStates.length > 0 && currentQuizStates.every((q: any) => q.showResult);
+                            
+                            if (allAnswered && (searchMode === 'internet' || isArticleMode)) {
+                              return (
+                                <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                  <div className="flex gap-2">
+                                    <Button
+                                      onClick={() => {
+                                        // Progressive quiz numbering functionality for multi-question quizzes
+                                        let nextQuizPrompt;
+                                        
+                                        if (searchMode === 'internet' && !isArticleMode) {
+                                          // Internet Search mode: increment quiz count
+                                          const currentQuizCount = (message.quizCount || 0) + 1;
+                                          nextQuizPrompt = `Erstelle ein weiteres Informations-Quiz - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
+                                        } else if (isArticleMode && articleContext) {
+                                          // Article mode: use current article context with progressive numbering
+                                          const currentQuizCount = (message.quizCount || 0) + 1;
+                                          nextQuizPrompt = `Erstelle ein weiteres Informations-Quiz basierend auf dem Artikel "${articleContext}" - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
+                                        } else {
+                                          nextQuizPrompt = 'Erstelle ein weiteres Informations-Quiz.';
+                                        }
+                                        
+                                        sendPrompt(nextQuizPrompt);
+                                      }}
+                                      size="sm"
+                                      variant="default"
+                                      className="w-full"
+                                    >
+                                      {language === 'de' ? 'Nächstes Quiz' : 'Next Quiz'}
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                     ) : message.text === 'INTERACTIVE_QUIZ' && message.quizData ? (
                        <div className="space-y-4">
                          <h3 className="text-lg font-semibold text-gray-800">
