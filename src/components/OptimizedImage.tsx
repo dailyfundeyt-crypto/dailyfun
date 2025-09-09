@@ -47,38 +47,22 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     if (!baseSrc.startsWith('/lovable-uploads/')) {
       return baseSrc.startsWith('/') 
         ? baseSrc 
-        : `https://images.unsplash.com/${baseSrc}?auto=format&fit=crop&w=800&q=75&fm=webp`;
+        : `https://images.unsplash.com/${baseSrc}?auto=format&fit=crop&w=800&q=75`;
     }
     
-    // For lovable-uploads, we can't generate different sizes server-side
-    // but we can optimize the request with compression hints
-    if (isWebP) {
-      // Try WebP first, though it may not exist
-      return baseSrc.replace(/\.(png|jpg|jpeg)$/, '.webp');
-    }
-    
-    // Return original with compression hint if browser supports it
+    // For lovable-uploads, return the original image
+    // WebP conversion would need server-side support
     return baseSrc;
   };
 
-  const webpSrcSet = src.startsWith('/lovable-uploads/') 
-    ? generateSrcSet(src, true)
-    : null;
+  // Don't use WebP for lovable-uploads since we can't guarantee they exist
+  const webpSrcSet = null;
   
-  const fallbackSrcSet = src.startsWith('/lovable-uploads/')
-    ? generateSrcSet(src, false)
-    : generateSrcSet(src);
+  const fallbackSrcSet = generateSrcSet(src, false);
 
   // Calculate optimal dimensions based on common display sizes
   const getOptimalDimensions = (originalSrc: string) => {
-    // For article images that are typically displayed at 560x373
-    if (originalSrc.includes('/lovable-uploads/')) {
-      return {
-        width: 560,
-        height: 373,
-        sizes: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 560px'
-      };
-    }
+    // Use provided dimensions or defaults
     return {
       width: width,
       height: height,
@@ -94,13 +78,6 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         <div className="absolute inset-0 bg-muted animate-pulse rounded" />
       )}
       <picture>
-        {webpSrcSet && (
-          <source 
-            srcSet={webpSrcSet} 
-            type="image/webp"
-            sizes={optimalDims.sizes}
-          />
-        )}
         <img
           src={hasError ? imageSrc : src}
           alt={alt}
@@ -111,7 +88,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           onError={handleError}
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : "auto"}
-          sizes={optimalDims.sizes}
+          sizes={optimalDims.sizes || sizes}
           width={optimalDims.width || width}
           height={optimalDims.height || height}
           decoding="async"
