@@ -71,28 +71,89 @@
         0%, 100% { opacity: 1; }
         50% { opacity: .5; }
       }
-    </style>
-    
-    <!-- Make CSS non-blocking -->
-    <script>
-      // Convert render-blocking CSS to non-blocking
-      document.addEventListener('DOMContentLoaded', function() {
-        const links = document.querySelectorAll('link[rel="stylesheet"]');
-        links.forEach(link => {
-          if (link.href && !link.dataset.async) {
-            const newLink = document.createElement('link');
-            newLink.rel = 'preload';
-            newLink.as = 'style';
-            newLink.href = link.href;
-            newLink.onload = function() {
-              this.rel = 'stylesheet';
-            };
-            link.parentNode.insertBefore(newLink, link);
-            link.remove();
-          }
-        });
-      });
-    </script>
+      
+      /* Additional critical styles for above-the-fold content */
+      .transition-all { transition: all 0.3s ease; }
+      .hover\:scale-\[1\.02\]:hover { transform: scale(1.02); }
+      .rounded-lg { border-radius: 0.5rem; }
+      .overflow-hidden { overflow: hidden; }
+      .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+      .object-cover { object-fit: cover; }
+      .opacity-90 { opacity: 0.9; }
+      .opacity-75 { opacity: 0.75; }
+      .line-clamp-3 { 
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+      .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+      .font-serif { font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; }
+      .gap-8 { gap: 2rem; }
+      .items-center { align-items: center; }
+      .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+      .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .order-1 { order: 1; }
+      .order-2 { order: 2; }
+      .lg\:order-1 { order: 1; }
+      .lg\:order-2 { order: 2; }
+      @media (min-width: 1024px) {
+        .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .lg\:order-1 { order: 1; }
+        .lg\:order-2 { order: 2; }
+      }
+     </style>
+     
+     <!-- Enhanced CSS non-blocking strategy -->
+     <script>
+       // Intercept CSS loading immediately to prevent render blocking
+       (function() {
+         // Override document.write to catch Vite CSS injection
+         const originalWrite = document.write;
+         document.write = function(content) {
+           if (content.includes('rel="stylesheet"') && content.includes('assets/index-')) {
+             // Convert to preload + async loading
+             const match = content.match(/href="([^"]+)"/);
+             if (match) {
+               const href = match[1];
+               const link = document.createElement('link');
+               link.rel = 'preload';
+               link.as = 'style';
+               link.href = href;
+               link.onload = function() {
+                 this.rel = 'stylesheet';
+               };
+               document.head.appendChild(link);
+               return;
+             }
+           }
+           originalWrite.call(document, content);
+         };
+         
+         // Fallback for existing stylesheets
+         const observer = new MutationObserver(function(mutations) {
+           mutations.forEach(function(mutation) {
+             mutation.addedNodes.forEach(function(node) {
+               if (node.nodeType === 1 && node.tagName === 'LINK' && 
+                   node.rel === 'stylesheet' && node.href.includes('assets/index-')) {
+                 const href = node.href;
+                 const newLink = document.createElement('link');
+                 newLink.rel = 'preload';
+                 newLink.as = 'style';
+                 newLink.href = href;
+                 newLink.onload = function() {
+                   this.rel = 'stylesheet';
+                   node.remove();
+                 };
+                 document.head.insertBefore(newLink, node);
+               }
+             });
+           });
+         });
+         observer.observe(document.head, { childList: true });
+       })();
+     </script>
     
     <!-- Preload fonts for faster loading -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
