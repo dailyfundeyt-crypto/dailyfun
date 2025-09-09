@@ -40,23 +40,30 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     onError?.();
   }, [fallbackSrc, onError]);
 
-  // Generate WebP source set for lovable-uploads images
-  const generateSrcSet = (baseSrc: string) => {
+  // Generate optimized source sets for better performance
+  const generateSrcSet = (baseSrc: string, isWebP = false) => {
     if (!baseSrc.startsWith('/lovable-uploads/')) {
       return baseSrc.startsWith('/') 
         ? baseSrc 
         : `https://images.unsplash.com/${baseSrc}?auto=format&fit=crop&w=800&q=80`;
     }
     
-    // For lovable-uploads, create multiple sizes
-    const baseUrl = baseSrc.replace('.png', '').replace('.jpg', '').replace('.jpeg', '');
-    return `${baseUrl}.webp 800w, ${baseUrl}.png 800w`;
+    // Create multiple optimized sizes for responsive images
+    const baseUrl = baseSrc.replace(/\.(png|jpg|jpeg)$/, '');
+    const ext = isWebP ? '.webp' : baseSrc.match(/\.(png|jpg|jpeg)$/)?.[0] || '.png';
+    
+    // Generate multiple sizes for better performance
+    const sizes = [400, 560, 800, 1200];
+    return sizes.map(size => `${baseUrl}${ext}?w=${size}&q=75 ${size}w`).join(', ');
   };
 
-  const finalSrc = generateSrcSet(src);
-  const webpSrc = src.startsWith('/lovable-uploads/') 
-    ? src.replace(/\.(png|jpg|jpeg)$/, '.webp')
+  const webpSrcSet = src.startsWith('/lovable-uploads/') 
+    ? generateSrcSet(src, true)
     : null;
+  
+  const fallbackSrcSet = src.startsWith('/lovable-uploads/')
+    ? generateSrcSet(src, false)
+    : generateSrcSet(src);
 
   return (
     <div className={`relative ${className}`}>
@@ -64,15 +71,16 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         <div className="absolute inset-0 bg-muted animate-pulse rounded" />
       )}
       <picture>
-        {webpSrc && (
+        {webpSrcSet && (
           <source 
-            srcSet={webpSrc} 
+            srcSet={webpSrcSet} 
             type="image/webp"
             sizes={sizes}
           />
         )}
         <img
-          src={hasError ? imageSrc : (src.startsWith('/lovable-uploads/') ? src : finalSrc)}
+          src={hasError ? imageSrc : src}
+          srcSet={hasError ? undefined : fallbackSrcSet}
           alt={alt}
           className={`w-full h-full object-cover transition-opacity duration-300 ${
             isLoading ? 'opacity-0' : 'opacity-100'
