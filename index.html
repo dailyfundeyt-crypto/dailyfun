@@ -7,8 +7,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Daily Fun - Your source for engaging news, AI insights, and entertaining content. Stay informed and entertained with our curated articles and interactive features." />
     <title>Daily Fun</title>
+    
+    <!-- Resource hints for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://js.puter.com">
+    
+    <!-- Critical CSS inlined for faster FCP -->
+    <style>
+      * { box-sizing: border-box; }
+      body { 
+        margin: 0; 
+        padding: 0; 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: hsl(0 0% 100%);
+        color: hsl(222.2 84% 4.9%);
+        line-height: 1.5;
+      }
+      #root { min-height: 100vh; }
+      .dark body { 
+        background: hsl(222.2 84% 4.9%); 
+        color: hsl(210 40% 98%); 
+      }
+    </style>
+    
+    <!-- Preload fonts for faster loading -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet"></noscript>
   </head>
