@@ -28,6 +28,7 @@ const ArticleSection: React.FC<ArticleSectionProps> = memo(({ article, index, la
                 src={article.imageUrl}
                 alt={article.title}
                 className="w-full h-full"
+                priority={index === 0}
               />
             </div>
           </div>

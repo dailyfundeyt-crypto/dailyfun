@@ -10,6 +10,7 @@ interface OptimizedImageProps {
   sizes?: string;
   width?: number;
   height?: number;
+  priority?: boolean;
 }
 
 const OptimizedImage: React.FC<OptimizedImageProps> = ({
@@ -21,7 +22,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   onError,
   sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
   width,
-  height
+  height,
+  priority = false
 }) => {
   const [imageSrc, setImageSrc] = useState(src);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,7 +89,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           }`}
           onLoad={handleLoad}
           onError={handleError}
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
           sizes={sizes}
           width={width}
           height={height}

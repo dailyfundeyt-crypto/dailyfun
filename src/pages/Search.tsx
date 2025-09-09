@@ -277,16 +277,17 @@ const Search = () => {
                   {/* Article Image - Left side */}
                   <div className="order-2 lg:order-1">
                     <div className="aspect-video rounded-lg overflow-hidden shadow-lg bg-gray-200">
-                      <img
-                        src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=600&q=75`}
-                        alt={language === 'de' ? article.title : (article.titleEn || article.title)}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.svg';
-                        }}
-                      />
+                       <img
+                         src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=600&q=75`}
+                         alt={language === 'de' ? article.title : (article.titleEn || article.title)}
+                         className="w-full h-full object-cover"
+                         loading={index === 0 ? "eager" : "lazy"}
+                         decoding="async"
+                         fetchPriority={index === 0 ? "high" : "auto"}
+                         onError={(e) => {
+                           e.currentTarget.src = '/placeholder.svg';
+                         }}
+                       />
                     </div>
                   </div>
                   
