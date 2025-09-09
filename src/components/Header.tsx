@@ -3,11 +3,13 @@ import { useState, useCallback, useMemo } from 'react';
 import { Search, Menu, X, Home, Info, ShoppingCart, Globe, Bot, Zap } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useIsMobile } from '../hooks/use-mobile';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
+  const isMobile = useIsMobile();
 
   const navigation = useMemo(() => [
     { icon: Home, href: '/search', label: 'Home' },
@@ -83,19 +85,21 @@ const Header = () => {
             })}
           </nav>
 
-          {/* Mobile menu button */}
+          {/* Mobile menu button - hidden since we use bottom nav on mobile */}
           <div className="md:hidden">
-            <button
-              onClick={toggleMenu}
-              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            {!isMobile && (
+              <button
+                onClick={toggleMenu}
+                className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+              >
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {isMenuOpen && (
+        {/* Mobile Navigation - hidden since we use bottom nav on mobile */}
+        {isMenuOpen && !isMobile && (
           <div className="md:hidden absolute top-full left-0 right-0 z-40 shadow-lg">
             <div className="px-2 pt-2 pb-3 space-y-3 sm:px-3 bg-white border-t border-gray-200">
               <div className="grid grid-cols-4 gap-4">
