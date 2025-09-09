@@ -79,7 +79,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       )}
       <picture>
         <img
-          src={hasError ? imageSrc : src}
+          src={hasError ? imageSrc : fallbackSrcSet}
           alt={alt}
           className={`w-full h-full object-cover transition-opacity duration-300 ${
             isLoading ? 'opacity-0' : 'opacity-100'
