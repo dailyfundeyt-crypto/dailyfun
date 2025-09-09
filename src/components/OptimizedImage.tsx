@@ -59,7 +59,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const webpSrcSet = null;
   
   const fallbackSrcSet = generateSrcSet(src, false);
-
+  
   // Calculate optimal dimensions based on common display sizes
   const getOptimalDimensions = (originalSrc: string) => {
     // Use provided dimensions or defaults
