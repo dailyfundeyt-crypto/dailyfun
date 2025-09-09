@@ -157,17 +157,17 @@ const Search = () => {
                 className="flex flex-col items-center cursor-pointer group flex-shrink-0"
                 onClick={() => handleEmployeeClick(employee.id)}
               >
-                <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 overflow-hidden transition-all ${
-                  selectedAuthor === employee.id 
-                    ? 'border-red-accent' 
-                    : 'border-gray-300 group-hover:border-red-accent/50'
-                }`}>
-                  <img 
-                    src={employee.image} 
-                    alt={employee.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                 <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 overflow-hidden transition-all ${
+                   selectedAuthor === employee.id 
+                     ? 'border-red-accent' 
+                     : 'border-gray-300 group-hover:border-red-accent/50'
+                 }`}>
+                   <OptimizedImage 
+                     src={employee.image} 
+                     alt={employee.name}
+                     className="w-full h-full"
+                   />
+                 </div>
                 <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight">
                   {employee.name}
                 </span>
@@ -182,13 +182,13 @@ const Search = () => {
             {/* Profile Header with Stats */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3 sm:space-x-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
-                  <img 
-                    src={currentEmployeeInfo.image} 
-                    alt={currentEmployeeInfo.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
+                   <OptimizedImage 
+                     src={currentEmployeeInfo.image} 
+                     alt={currentEmployeeInfo.name}
+                     className="w-full h-full"
+                   />
+                 </div>
                 <div className="text-center">
                   <div className="font-bold text-base sm:text-lg text-black">
                     {filteredArticles.length}

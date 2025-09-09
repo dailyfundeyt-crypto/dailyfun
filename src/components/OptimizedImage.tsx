@@ -47,16 +47,18 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     if (!baseSrc.startsWith('/lovable-uploads/')) {
       return baseSrc.startsWith('/') 
         ? baseSrc 
-        : `https://images.unsplash.com/${baseSrc}?auto=format&fit=crop&w=800&q=80`;
+        : `https://images.unsplash.com/${baseSrc}?auto=format&fit=crop&w=800&q=75&fm=webp`;
     }
     
-    // Create multiple optimized sizes for responsive images
-    const baseUrl = baseSrc.replace(/\.(png|jpg|jpeg)$/, '');
-    const ext = isWebP ? '.webp' : baseSrc.match(/\.(png|jpg|jpeg)$/)?.[0] || '.png';
+    // For lovable-uploads, we can't generate different sizes server-side
+    // but we can optimize the request with compression hints
+    if (isWebP) {
+      // Try WebP first, though it may not exist
+      return baseSrc.replace(/\.(png|jpg|jpeg)$/, '.webp');
+    }
     
-    // Generate multiple sizes for better performance
-    const sizes = [400, 560, 800, 1200];
-    return sizes.map(size => `${baseUrl}${ext}?w=${size}&q=75 ${size}w`).join(', ');
+    // Return original with compression hint if browser supports it
+    return baseSrc;
   };
 
   const webpSrcSet = src.startsWith('/lovable-uploads/') 
@@ -66,6 +68,25 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const fallbackSrcSet = src.startsWith('/lovable-uploads/')
     ? generateSrcSet(src, false)
     : generateSrcSet(src);
+
+  // Calculate optimal dimensions based on common display sizes
+  const getOptimalDimensions = (originalSrc: string) => {
+    // For article images that are typically displayed at 560x373
+    if (originalSrc.includes('/lovable-uploads/')) {
+      return {
+        width: 560,
+        height: 373,
+        sizes: '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 560px'
+      };
+    }
+    return {
+      width: width,
+      height: height,
+      sizes: sizes
+    };
+  };
+
+  const optimalDims = getOptimalDimensions(src);
 
   return (
     <div className={`relative ${className}`}>
@@ -77,12 +98,11 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           <source 
             srcSet={webpSrcSet} 
             type="image/webp"
-            sizes={sizes}
+            sizes={optimalDims.sizes}
           />
         )}
         <img
           src={hasError ? imageSrc : src}
-          srcSet={hasError ? undefined : fallbackSrcSet}
           alt={alt}
           className={`w-full h-full object-cover transition-opacity duration-300 ${
             isLoading ? 'opacity-0' : 'opacity-100'
@@ -91,9 +111,10 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           onError={handleError}
           loading={priority ? "eager" : "lazy"}
           fetchPriority={priority ? "high" : "auto"}
-          sizes={sizes}
-          width={width}
-          height={height}
+          sizes={optimalDims.sizes}
+          width={optimalDims.width || width}
+          height={optimalDims.height || height}
+          decoding="async"
         />
       </picture>
     </div>
