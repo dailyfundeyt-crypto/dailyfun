@@ -49,6 +49,7 @@
     /* Custom accent colors */
     --red-accent: #E4002B;
     --blue-accent: #007BFF;
+    --purple-accent: 260 77% 52%; /* HSL for better contrast */
     
     /* Custom icon navigation colors */
     --icon-default: 26 26% 10%; /* #1A1A1A */
@@ -153,6 +154,10 @@
     background-color: var(--blue-accent);
   }
   
+  .bg-purple-accent {
+    background-color: hsl(var(--purple-accent));
+  }
+  
   .border-red-accent {
     border-color: var(--red-accent);
   }
@@ -161,13 +166,17 @@
     border-color: var(--blue-accent);
   }
 
+  .text-purple-accent {
+    color: hsl(var(--purple-accent));
+  }
+
   .font-signature {
     font-family: 'Great Vibes', cursive;
   }
 
   /* Liquid text animation */
   .liquid-text {
-    background: linear-gradient(45deg, #5E40E3, #8B5CF6, #A855F7, #5E40E3);
+    background: linear-gradient(45deg, hsl(var(--purple-accent)), #8B5CF6, #A855F7, hsl(var(--purple-accent)));
     background-size: 400% 400%;
     background-clip: text;
     -webkit-background-clip: text;

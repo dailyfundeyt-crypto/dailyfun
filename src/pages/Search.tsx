@@ -269,7 +269,7 @@ const Search = () => {
               key={article.id}
               to={`/article/${article.id}`}
               className={`block w-full py-16 transition-all duration-300 hover:scale-[1.02] ${
-                index % 2 === 0 ? 'bg-white' : 'bg-[#5E40E3]'
+                index % 2 === 0 ? 'bg-white' : 'bg-purple-accent'
               }`}
             >
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -62,7 +62,7 @@ const CategoryPage = () => {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-[#1A1A1A] mb-4 font-sans">{t('category.not.found')}</h1>
-            <Link to="/" className="text-[#5E40E3] hover:text-[#2EEAE0] transition-colors">
+            <Link to="/" className="text-purple-accent hover:text-[#2EEAE0] transition-colors">
               {t('category.return')}
             </Link>
           </div>
@@ -79,7 +79,7 @@ const CategoryPage = () => {
         <div className="mb-8">
           <Link
             to="/"
-            className="inline-flex items-center text-[#5E40E3] hover:text-[#2EEAE0] mb-6 transition-colors"
+            className="inline-flex items-center text-purple-accent hover:text-[#2EEAE0] mb-6 transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t('category.back')}
@@ -99,7 +99,7 @@ const CategoryPage = () => {
               key={article.id}
               to={`/article/${article.id}`}
               className={`block w-full py-16 transition-all duration-300 hover:scale-[1.02] ${
-                index % 2 === 0 ? 'bg-[#FFFFFF]' : 'bg-[#5E40E3]'
+                index % 2 === 0 ? 'bg-white' : 'bg-purple-accent'
               }`}
             >
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

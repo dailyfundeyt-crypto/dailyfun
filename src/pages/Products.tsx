@@ -73,7 +73,7 @@ const Products = () => {
                 href="https://youtube.com/@dailyfunen?feature=shared"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-full bg-[#5E40E3] text-[#FFFFFF] px-6 py-3 rounded-md font-medium hover:shadow-[0_0_15px_rgba(46,234,224,0.5)] transition-all duration-300"
+                className="inline-flex items-center justify-center w-full bg-purple-accent text-white px-6 py-3 rounded-md font-medium hover:shadow-[0_0_15px_rgba(46,234,224,0.5)] transition-all duration-300"
               >
                 <span>{t('products.learn.more')}</span>
                 <ExternalLink className="h-4 w-4 ml-2" />
