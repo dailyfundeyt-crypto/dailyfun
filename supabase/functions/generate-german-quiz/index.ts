@@ -32,10 +32,15 @@ serve(async (req) => {
       try {
         console.log(`Trying AI model: ${aiModel.name}`);
         
+        const openRouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+        if (!openRouterApiKey) {
+          throw new Error('OPENROUTER_API_KEY not configured');
+        }
+
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
           headers: {
-            'Authorization': 'Bearer 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',
+            'Authorization': `Bearer ${openRouterApiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': 'https://dailyfun.app',
             'X-Title': 'Daily Fun - German Quiz Generation'
