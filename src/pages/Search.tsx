@@ -1,7 +1,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import Header from '../components/Header';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
 import ProfileShareMenu from '../components/ProfileShareMenu';
@@ -129,7 +128,6 @@ const Search = () => {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <Header />
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

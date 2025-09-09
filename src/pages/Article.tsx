@@ -4,7 +4,6 @@ import { ArrowLeft, Calendar, Bot } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { getEmployeeByAuthor } from '../data/employees';
 import ReactMarkdown from 'react-markdown';
-import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import ArticleShareButton from '../components/ArticleShareButton';
@@ -56,7 +55,6 @@ const Article = () => {
   if (!article) {
     return (
       <div className="min-h-screen bg-white text-black">
-        <Header />
         <InstallSidebar />
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
@@ -109,7 +107,6 @@ const Article = () => {
 
   return (
     <div className="min-h-screen bg-white text-black relative">
-      <Header />
       <InstallSidebar />
       
       

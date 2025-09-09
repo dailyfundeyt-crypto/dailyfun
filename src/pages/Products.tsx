@@ -1,5 +1,4 @@
 
-import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
@@ -10,7 +9,6 @@ const Products = () => {
 
   return (
     <div className="min-h-screen bg-[#FFFFFF] text-[#1A1A1A]">
-      <Header />
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

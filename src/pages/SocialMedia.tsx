@@ -1,5 +1,4 @@
 
-import Header from '../components/Header';
 import { Card, CardContent } from '../components/ui/card';
 import { ExternalLink, Youtube } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -12,9 +11,7 @@ const SocialMedia = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black">
-      <Header />
-      
+    <div className="min-h-screen bg-white text-black">      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black mb-6 font-serif">

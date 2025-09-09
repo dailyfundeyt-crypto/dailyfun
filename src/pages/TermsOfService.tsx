@@ -1,5 +1,4 @@
 
-import Header from '../components/Header';
 import InstallSidebar from '../components/InstallSidebar';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, FileText } from 'lucide-react';
@@ -11,7 +10,6 @@ const TermsOfService = () => {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <Header />
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

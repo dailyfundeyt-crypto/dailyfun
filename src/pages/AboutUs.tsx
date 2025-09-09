@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import Header from '../components/Header';
 import { Card, CardContent } from '../components/ui/card';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import InstallSidebar from '../components/InstallSidebar';
 
 const AboutUs = () => {
   const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <Header />
+      <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Main Headline */}
