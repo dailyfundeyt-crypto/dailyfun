@@ -46,7 +46,9 @@ const MobileBottomNav = () => {
                     : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
                 }`}
               >
-                <Icon className="h-6 w-6" />
+                <span className="text-sm font-semibold">
+                  {language === 'en' ? 'DE' : 'EN'}
+                </span>
               </button>
             );
           }
