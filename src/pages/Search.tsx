@@ -278,13 +278,13 @@ const Search = () => {
                    {/* Article Image - Left side */}
                    <div className="order-2 lg:order-1">
                      <div className="aspect-video rounded-lg overflow-hidden shadow-lg bg-gray-200">
-                        <OptimizedImage
-                          src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=600&q=75`}
-                          alt={language === 'de' ? article.title : (article.titleEn || article.title)}
-                          className="w-full h-full"
-                          priority={index === 0 || article.id === '10'}
-                          fallbackSrc="/placeholder.svg"
-                        />
+                         <OptimizedImage
+                           src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=600&q=75`}
+                           alt={language === 'de' ? article.title : (article.titleEn || article.title)}
+                           className="w-full h-full"
+                           priority={index === 0 || article.imageUrl === '/lovable-uploads/086cd655-8903-494a-b43f-1041c272916b.png'}
+                           fallbackSrc="/placeholder.svg"
+                         />
                      </div>
                    </div>
                   
