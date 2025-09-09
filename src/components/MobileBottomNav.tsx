@@ -30,7 +30,7 @@ const MobileBottomNav = () => {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg md:hidden">
-      <div className="flex justify-around items-center py-2 px-4">
+      <div className="flex justify-center items-center py-3">
         {navigation.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -40,14 +40,13 @@ const MobileBottomNav = () => {
               <button
                 key={item.label}
                 onClick={toggleLanguage}
-                className={`flex flex-col items-center p-2 rounded-lg transition-colors min-w-0 ${
+                className={`flex items-center justify-center w-12 h-12 mx-2 rounded-lg transition-colors ${
                   active
                     ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
                     : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
                 }`}
               >
-                <Icon className="h-5 w-5" />
-                <span className="text-xs mt-1 font-medium">{item.label}</span>
+                <Icon className="h-6 w-6" />
               </button>
             );
           }
@@ -57,14 +56,13 @@ const MobileBottomNav = () => {
               key={item.href}
               to={item.href}
               onClick={item.href === '/search' ? handleHomeClick : undefined}
-              className={`flex flex-col items-center p-2 rounded-lg transition-colors min-w-0 ${
+              className={`flex items-center justify-center w-12 h-12 mx-2 rounded-lg transition-colors ${
                 active
                   ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
                   : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
               }`}
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs mt-1 font-medium">{item.label}</span>
+              <Icon className="h-6 w-6" />
             </Link>
           );
         })}
