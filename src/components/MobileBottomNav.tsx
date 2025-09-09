@@ -1,15 +1,10 @@
 import { Home, Bot, Zap, Info, Globe } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useIsMobile } from '../hooks/use-mobile';
 
 const MobileBottomNav = () => {
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
-  const isMobile = useIsMobile();
-
-  // Only show on mobile devices
-  if (!isMobile) return null;
 
   const navigation = [
     { icon: Home, href: '/search', label: 'Home' },

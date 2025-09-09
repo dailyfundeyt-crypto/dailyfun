@@ -3,13 +3,11 @@ import { useState, useCallback, useMemo } from 'react';
 import { Search, Menu, X, Home, Info, ShoppingCart, Globe, Bot, Zap } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useIsMobile } from '../hooks/use-mobile';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
-  const isMobile = useIsMobile();
 
   const navigation = useMemo(() => [
     { icon: Home, href: '/search', label: 'Home' },
@@ -85,68 +83,11 @@ const Header = () => {
             })}
           </nav>
 
-          {/* Mobile menu button - hidden since we use bottom nav on mobile */}
+          {/* No mobile menu needed - using bottom nav */}
           <div className="md:hidden">
-            {!isMobile && (
-              <button
-                onClick={toggleMenu}
-                className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-              >
-                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            )}
+            {/* Empty div to maintain layout */}
           </div>
         </div>
-
-        {/* Mobile Navigation - hidden since we use bottom nav on mobile */}
-        {isMenuOpen && !isMobile && (
-          <div className="md:hidden absolute top-full left-0 right-0 z-40 shadow-lg">
-            <div className="px-2 pt-2 pb-3 space-y-3 sm:px-3 bg-white border-t border-gray-200">
-              <div className="grid grid-cols-4 gap-4">
-                {navigation.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = (item.href === '/search' && (location.pathname === '/' || location.pathname === '/search')) || (item.href !== '/search' && location.pathname === item.href);
-                  
-                  if (item.action === 'language') {
-                    return (
-                      <button
-                        key={item.label}
-                        onClick={() => {
-                          handleNavigation(item);
-                          closeMenu();
-                        }}
-                        className={`flex flex-col items-center p-3 rounded-md transition-colors ${
-                          isActive
-                            ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
-                            : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))] hover:bg-gray-50'
-                        }`}
-                      >
-                        <Icon className="h-6 w-6 mb-1" />
-                        <span className="text-xs font-medium">{language === 'en' ? 'EN' : 'DE'}</span>
-                      </button>
-                    );
-                  }
-                  
-                  return (
-                    <Link
-                      key={item.label}
-                      to={item.href}
-                      className={`flex flex-col items-center p-3 rounded-md transition-colors ${
-                        isActive
-                          ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
-                          : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))] hover:bg-gray-50'
-                      }`}
-                      onClick={closeMenu}
-                    >
-                      <Icon className="h-6 w-6 mb-1" />
-                      <span className="text-xs font-medium">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   );
