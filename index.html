@@ -6,18 +6,12 @@
     <link rel="icon" href="/lovable-uploads/1e980cfa-2691-4008-bce0-c91dac549aa3.png" type="image/png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Daily Fun - Your source for engaging news, AI insights, and entertaining content. Stay informed and entertained with our curated articles and interactive features." />
-    
-    <!-- Image optimization hints -->
-    <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width">
-    <link rel="preconnect" href="https://images.unsplash.com">
-    <link rel="dns-prefetch" href="https://images.unsplash.com">
-    
     <title>Daily Fun</title>
     
     <!-- Resource hints for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
+    <link rel="dns-prefetch" href="https://js.puter.com">
     
     <!-- Preload critical LCP image for faster paint -->
     <link rel="preload" as="image" href="/lovable-uploads/086cd655-8903-494a-b43f-1041c272916b.png" type="image/png" fetchpriority="high">
@@ -111,6 +105,55 @@
       }
      </style>
      
+     <!-- Enhanced CSS non-blocking strategy -->
+     <script>
+       // Intercept CSS loading immediately to prevent render blocking
+       (function() {
+         // Override document.write to catch Vite CSS injection
+         const originalWrite = document.write;
+         document.write = function(content) {
+           if (content.includes('rel="stylesheet"') && content.includes('assets/index-')) {
+             // Convert to preload + async loading
+             const match = content.match(/href="([^"]+)"/);
+             if (match) {
+               const href = match[1];
+               const link = document.createElement('link');
+               link.rel = 'preload';
+               link.as = 'style';
+               link.href = href;
+               link.onload = function() {
+                 this.rel = 'stylesheet';
+               };
+               document.head.appendChild(link);
+               return;
+             }
+           }
+           originalWrite.call(document, content);
+         };
+         
+         // Fallback for existing stylesheets
+         const observer = new MutationObserver(function(mutations) {
+           mutations.forEach(function(mutation) {
+             mutation.addedNodes.forEach(function(node) {
+               if (node.nodeType === 1 && node.tagName === 'LINK' && 
+                   node.rel === 'stylesheet' && node.href.includes('assets/index-')) {
+                 const href = node.href;
+                 const newLink = document.createElement('link');
+                 newLink.rel = 'preload';
+                 newLink.as = 'style';
+                 newLink.href = href;
+                 newLink.onload = function() {
+                   this.rel = 'stylesheet';
+                   node.remove();
+                 };
+                 document.head.insertBefore(newLink, node);
+               }
+             });
+           });
+         });
+         observer.observe(document.head, { childList: true });
+       })();
+     </script>
     
     <!-- Preload fonts for faster loading -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -118,7 +161,7 @@
   </head>
   <body>
     <div id="root"></div>
-    
+    <script src="https://js.puter.com/v2/" defer></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

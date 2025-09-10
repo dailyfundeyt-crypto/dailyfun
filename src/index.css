@@ -170,11 +170,6 @@
     color: hsl(var(--purple-accent));
   }
 
-  /* Accessible text on purple backgrounds */
-  .text-purple-bg-accessible {
-    color: rgba(255, 255, 255, 0.85);
-  }
-
   .font-signature {
     font-family: 'Great Vibes', cursive;
   }
