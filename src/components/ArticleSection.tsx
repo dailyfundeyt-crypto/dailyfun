@@ -11,7 +11,7 @@ interface ArticleSectionProps {
 
 const ArticleSection: React.FC<ArticleSectionProps> = memo(({ article, index, language }) => {
   const isEven = index % 2 === 0;
-  const bgColor = isEven ? 'bg-white' : 'bg-purple-accent';
+  const bgColor = isEven ? 'bg-white' : 'bg-[#5E40E3]';
   const textColor = isEven ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]';
 
   return (
@@ -28,7 +28,6 @@ const ArticleSection: React.FC<ArticleSectionProps> = memo(({ article, index, la
                 src={article.imageUrl}
                 alt={article.title}
                 className="w-full h-full"
-                priority={index === 0}
               />
             </div>
           </div>

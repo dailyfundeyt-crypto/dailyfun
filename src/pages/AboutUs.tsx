@@ -3,7 +3,6 @@ import { Card, CardContent } from '../components/ui/card';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import InstallSidebar from '../components/InstallSidebar';
-import OptimizedImage from '../components/OptimizedImage';
 
 const AboutUs = () => {
   const { t } = useLanguage();
@@ -42,13 +41,10 @@ const AboutUs = () => {
                 </p>
               </div>
               <div className="order-1 lg:order-2 flex justify-center">
-                <OptimizedImage 
+                <img 
                   src="/lovable-uploads/dd996217-e9c4-456c-af16-469f05791ad2.png" 
                   alt="Stefan Kunc" 
                   className="w-64 h-64 rounded-full object-cover border-4 border-gradient-to-r from-red-accent to-blue-accent shadow-lg"
-                  width={256}
-                  height={256}
-                  sizes="256px"
                 />
               </div>
             </div>
@@ -64,11 +60,10 @@ const AboutUs = () => {
 
           {/* Team Image */}
           <div className="mb-8 flex justify-center">
-            <OptimizedImage 
+            <img 
               src="/lovable-uploads/2151975f-6840-4107-86fe-8c20727a7fef.png" 
               alt="Daily Fun Team" 
               className="max-w-full h-auto rounded-lg shadow-lg border border-gray-200"
-              sizes="(max-width: 768px) 100vw, 800px"
             />
           </div>
 
@@ -85,13 +80,10 @@ const AboutUs = () => {
             <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6 text-center">
                 <div className="mb-4 flex justify-center">
-                  <OptimizedImage 
+                  <img 
                     src="/lovable-uploads/2679b50f-c4f9-40d5-bbce-828296880ba2.png" 
                     alt="Dr. Elke Schneider" 
                     className="w-32 h-32 rounded-full border-4 border-red-accent/20"
-                    width={128}
-                    height={128}
-                    sizes="128px"
                   />
                 </div>
                 <h3 className="text-xl font-bold text-black font-serif mb-2">{t('about.elke.name')}</h3>
@@ -106,13 +98,10 @@ const AboutUs = () => {
             <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6 text-center">
                 <div className="mb-4 flex justify-center">
-                  <OptimizedImage 
+                  <img 
                     src="/lovable-uploads/afb210bd-6729-403e-857a-9271499984f4.png" 
                     alt="Mr. Karl Bergmann" 
                     className="w-32 h-32 rounded-full border-4 border-blue-accent/20"
-                    width={128}
-                    height={128}
-                    sizes="128px"
                   />
                 </div>
                 <h3 className="text-xl font-bold text-black font-serif mb-2">{t('about.karl.name')}</h3>
@@ -127,13 +116,10 @@ const AboutUs = () => {
             <Card className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6 text-center">
                 <div className="mb-4 flex justify-center">
-                  <OptimizedImage 
+                  <img 
                     src="/lovable-uploads/3e2b5f3d-bb10-4914-847d-e40fa0928943.png" 
                     alt="Mr. Jonas Richter" 
                     className="w-32 h-32 rounded-full border-4 border-red-accent/20"
-                    width={128}
-                    height={128}
-                    sizes="128px"
                   />
                 </div>
                 <h3 className="text-xl font-bold text-black font-serif mb-2">{t('about.jonas.name')}</h3>

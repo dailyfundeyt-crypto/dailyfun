@@ -11,7 +11,6 @@ import AnimatedParagraph from '../components/AnimatedParagraph';
 import { useLanguage } from '../contexts/LanguageContext';
 import { articles } from '../data/articles';
 import { incrementViews } from '../utils/viewTracker';
-import OptimizedImage from '../components/OptimizedImage';
 
 // Professional images for article detail pages
 import article1Professional from '../assets/article-1-professional.jpg';
@@ -137,13 +136,10 @@ const Article = () => {
         <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="relative">
             <div className="aspect-video bg-gray-100 overflow-hidden">
-              <OptimizedImage
+              <img
                 src={getProfessionalImage(article.id)}
                 alt={translatedTitle}
                 className="w-full h-full object-cover"
-                width={800}
-                height={450}
-                sizes="(max-width: 768px) 100vw, 800px"
               />
             </div>
             <div className="absolute top-4 left-4">

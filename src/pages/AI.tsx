@@ -10,7 +10,6 @@ import QRCode from 'qrcode';
 import ReactMarkdown from 'react-markdown';
 import jsPDF from 'jspdf';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   id: string;
@@ -2384,26 +2383,19 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             console.error('❌ Guardian API failed:', guardianError);
             lastNewsError = guardianError;
             
-            // Fallback to secure news API edge function
+            // Fallback to GNews API (costs money, so only used when Guardian fails)
             try {
-              console.log('🗞️ Trying secure news API for:', extractedTopic);
+              console.log('🗞️ Trying GNews API as fallback for:', extractedTopic);
+              const gnewsApiKey = '494b5937247cd56ede96dd66842f802d';
+              const gnewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(extractedTopic)}&token=${gnewsApiKey}&lang=${language === 'de' ? 'de' : 'en'}&country=${language === 'de' ? 'de' : 'us'}&max=5&sortby=relevance`;
               
-              const newsResponse = await supabase.functions.invoke('fetch-news', {
-                body: { 
-                  topic: extractedTopic,
-                  language: language === 'de' ? 'de' : 'en'
-                }
-              });
-              
-              if (newsResponse.error) {
-                throw new Error(newsResponse.error.message || 'News API error');
-              }
-              
-              const newsData = await newsResponse.data;
-              const articles = newsData?.articles || [];
+              const gnewsResponse = await fetch(gnewsUrl);
+              if (gnewsResponse.ok) {
+                const gnewsData = await gnewsResponse.json();
+                const articles = gnewsData.articles || [];
                 
                 if (articles.length > 0) {
-                  console.log(`✅ News API successful (${newsData.source}), found`, articles.length, 'articles');
+                  console.log('✅ GNews API successful, found', articles.length, 'articles');
                   
                   // Store first article for AI context if not already set
                   if (!firstArticleUrl) {
@@ -2447,13 +2439,16 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                   }).join('\n');
                   
                   articlesSection = `${articlesHeader}\n${articleButtons}`;
-                  successfulNewsAPI = newsData.source || 'News API';
+                  successfulNewsAPI = 'GNews';
                 } else {
-                  throw new Error('No articles found in News API');
+                  throw new Error('No articles found in GNews API');
                 }
-            } catch (newsError) {
-              console.error('❌ News API also failed:', newsError);
-              lastNewsError = newsError;
+              } else {
+                throw new Error(`GNews API error: ${gnewsResponse.status}`);
+              }
+            } catch (gnewsError) {
+              console.error('❌ GNews API also failed:', gnewsError);
+              lastNewsError = gnewsError;
               
               // Both APIs failed, provide manual search links
               const fallbackText = language === 'de'
@@ -2672,26 +2667,19 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             console.error('❌ Guardian API failed:', guardianError);
             lastNewsError = guardianError;
             
-            // Fallback to secure news API edge function
+            // Fallback to GNews API (costs money, so only used when Guardian fails)
             try {
-              console.log('🗞️ Trying secure news API for:', extractedTopic);
+              console.log('🗞️ Trying GNews API as fallback for:', extractedTopic);
+              const gnewsApiKey = '494b5937247cd56ede96dd66842f802d';
+              const gnewsUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(extractedTopic)}&token=${gnewsApiKey}&lang=${language === 'de' ? 'de' : 'en'}&country=${language === 'de' ? 'de' : 'us'}&max=5&sortby=relevance`;
               
-              const newsResponse = await supabase.functions.invoke('fetch-news', {
-                body: { 
-                  topic: extractedTopic,
-                  language: language === 'de' ? 'de' : 'en'
-                }
-              });
-              
-              if (newsResponse.error) {
-                throw new Error(newsResponse.error.message || 'News API error');
-              }
-              
-              const newsData = await newsResponse.data;
-              const articles = newsData?.articles || [];
-              
-              if (articles.length > 0) {
-                console.log(`✅ News API successful (${newsData.source}), found`, articles.length, 'articles');
+              const gnewsResponse = await fetch(gnewsUrl);
+              if (gnewsResponse.ok) {
+                const gnewsData = await gnewsResponse.json();
+                const articles = gnewsData.articles || [];
+                
+                if (articles.length > 0) {
+                  console.log('✅ GNews API successful, found', articles.length, 'articles');
                   
                   // Store first article for AI context if not already set
                   if (!firstArticleUrl) {
@@ -2735,13 +2723,16 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
                   }).join('\n');
                   
                   articlesSection = `${articlesHeader}\n${articleButtons}`;
-                  successfulNewsAPI = newsData.source || 'News API';
+                  successfulNewsAPI = 'GNews';
                 } else {
-                  throw new Error('No articles found in News API');
+                  throw new Error('No articles found in GNews API');
                 }
-            } catch (newsError) {
-              console.error('❌ News API also failed:', newsError);
-              lastNewsError = newsError;
+              } else {
+                throw new Error(`GNews API error: ${gnewsResponse.status}`);
+              }
+            } catch (gnewsError) {
+              console.error('❌ GNews API also failed:', gnewsError);
+              lastNewsError = gnewsError;
               
               // Both APIs failed, provide manual search links
               const fallbackText = language === 'de'
@@ -3651,7 +3642,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
 
 
       {/* Floating bottom container with action cards, mode switcher and input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50 pb-20 md:pb-0">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50">
         <div className="max-w-4xl mx-auto p-4 space-y-4">
           
 
