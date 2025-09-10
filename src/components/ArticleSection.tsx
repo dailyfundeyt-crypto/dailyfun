@@ -41,7 +41,7 @@ const ArticleSection: React.FC<ArticleSectionProps> = memo(({ article, index, la
              <p className="text-lg mb-6 opacity-90 line-clamp-3">
                {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
              </p>
-             <div className="text-sm opacity-75">
+             <div className={`text-sm ${isEven ? 'opacity-75' : 'text-purple-bg-accessible'}`}>
                {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {language === 'de' ? article.category : (article.categoryEn || article.category)}
              </div>
           </div>
