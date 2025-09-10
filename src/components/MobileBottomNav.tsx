@@ -11,7 +11,7 @@ const MobileBottomNav = () => {
     { icon: Bot, href: '/ai', label: 'AI Chat' },
     { icon: Zap, href: '/weird', label: 'Strange News' },
     { icon: Info, href: '/about', label: 'About' },
-    { icon: Globe, href: '#', label: language === 'en' ? 'DE' : 'EN', action: 'language' },
+    { icon: Globe, href: '#', label: language === 'en' ? 'EN' : 'DE', action: 'language' },
   ];
 
   const handleHomeClick = () => {
@@ -29,8 +29,8 @@ const MobileBottomNav = () => {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-lg md:hidden">
-      <div className="flex justify-center items-center py-3">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-border shadow-2xl md:hidden">
+      <div className="flex justify-center items-center py-4 px-4">
         {navigation.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -40,13 +40,15 @@ const MobileBottomNav = () => {
               <button
                 key={item.label}
                 onClick={toggleLanguage}
-                className={`flex items-center justify-center w-12 h-12 mx-2 rounded-lg transition-colors ${
+                className={`flex items-center justify-center min-w-[48px] h-12 mx-1 rounded-2xl transition-all duration-300 ease-out ${
                   active
-                    ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
-                    : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
+                    ? 'text-[hsl(var(--icon-hover))] bg-muted/50 scale-110 shadow-lg'
+                    : 'text-muted-foreground hover:text-[hsl(var(--icon-hover))] hover:bg-muted/30 hover:scale-105'
                 }`}
               >
-                <Icon className="h-6 w-6" />
+                <span className="text-xs font-bold tracking-wider px-1">
+                  {language === 'en' ? 'EN' : 'DE'}
+                </span>
               </button>
             );
           }
@@ -56,13 +58,13 @@ const MobileBottomNav = () => {
               key={item.href}
               to={item.href}
               onClick={item.href === '/search' ? handleHomeClick : undefined}
-              className={`flex items-center justify-center w-12 h-12 mx-2 rounded-lg transition-colors ${
+              className={`flex items-center justify-center w-12 h-12 mx-1 rounded-2xl transition-all duration-300 ease-out ${
                 active
-                  ? 'text-[hsl(var(--icon-hover))] bg-gray-100'
-                  : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
+                  ? 'text-[hsl(var(--icon-hover))] bg-muted/50 scale-110 shadow-lg'
+                  : 'text-muted-foreground hover:text-[hsl(var(--icon-hover))] hover:bg-muted/30 hover:scale-105'
               }`}
             >
-              <Icon className="h-6 w-6" />
+              <Icon className="h-5 w-5" />
             </Link>
           );
         })}
