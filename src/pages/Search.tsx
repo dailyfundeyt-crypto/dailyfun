@@ -10,6 +10,8 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { employees } from '../data/employees';
 
 const Search = () => {
+  console.log('Search.tsx: Search component rendering...');
+  
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
   const [sortMode, setSortMode] = useState<'latest' | 'random'>('latest');

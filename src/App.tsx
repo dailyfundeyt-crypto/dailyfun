@@ -33,39 +33,48 @@ const ScrollToTop = () => {
   return null;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <div className="min-h-screen bg-background">
-            <Header />
-            <main className="pb-16 md:pb-0">
-              <Routes>
-                <Route path="/" element={<Search />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/about" element={<AboutUs />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/social-media" element={<SocialMedia />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/ai" element={<AI />} />
-                <Route path="/article/:id" element={<Article />} />
-                <Route path="/weird" element={<CategoryPage />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <MobileBottomNav />
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
-    </LanguageProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log('App.tsx: App component rendering...');
+  
+  try {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <div className="min-h-screen bg-background">
+                <Header />
+                <main className="pb-16 md:pb-0">
+                  <Routes>
+                    <Route path="/" element={<Search />} />
+                    <Route path="/search" element={<Search />} />
+                    <Route path="/about" element={<AboutUs />} />
+                    <Route path="/products" element={<Products />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/social-media" element={<SocialMedia />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms-of-service" element={<TermsOfService />} />
+                    <Route path="/ai" element={<AI />} />
+                    <Route path="/article/:id" element={<Article />} />
+                    <Route path="/weird" element={<CategoryPage />} />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+                <MobileBottomNav />
+              </div>
+            </BrowserRouter>
+          </TooltipProvider>
+        </LanguageProvider>
+      </QueryClientProvider>
+    );
+  } catch (error) {
+    console.error('App.tsx: Error in App component:', error);
+    return <div style={{color: 'red', padding: '20px'}}>Error loading application: {error.message}</div>;
+  }
+};
 
 export default App;
