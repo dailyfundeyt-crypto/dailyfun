@@ -111,55 +111,6 @@
       }
      </style>
      
-     <!-- Enhanced CSS non-blocking strategy -->
-     <script>
-       // Intercept CSS loading immediately to prevent render blocking
-       (function() {
-         // Override document.write to catch Vite CSS injection
-         const originalWrite = document.write;
-         document.write = function(content) {
-           if (content.includes('rel="stylesheet"') && content.includes('assets/index-')) {
-             // Convert to preload + async loading
-             const match = content.match(/href="([^"]+)"/);
-             if (match) {
-               const href = match[1];
-               const link = document.createElement('link');
-               link.rel = 'preload';
-               link.as = 'style';
-               link.href = href;
-               link.onload = function() {
-                 this.rel = 'stylesheet';
-               };
-               document.head.appendChild(link);
-               return;
-             }
-           }
-           originalWrite.call(document, content);
-         };
-         
-         // Fallback for existing stylesheets
-         const observer = new MutationObserver(function(mutations) {
-           mutations.forEach(function(mutation) {
-             mutation.addedNodes.forEach(function(node) {
-               if (node.nodeType === 1 && node.tagName === 'LINK' && 
-                   node.rel === 'stylesheet' && node.href.includes('assets/index-')) {
-                 const href = node.href;
-                 const newLink = document.createElement('link');
-                 newLink.rel = 'preload';
-                 newLink.as = 'style';
-                 newLink.href = href;
-                 newLink.onload = function() {
-                   this.rel = 'stylesheet';
-                   node.remove();
-                 };
-                 document.head.insertBefore(newLink, node);
-               }
-             });
-           });
-         });
-         observer.observe(document.head, { childList: true });
-       })();
-     </script>
     
     <!-- Preload fonts for faster loading -->
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
