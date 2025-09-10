@@ -2127,6 +2127,79 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
       return { text: responseText };
     }
     
+    // Check for article search in local mode
+    if (searchMode === 'local') {
+      const articleSearchPatterns = [
+        /(?:finde|suche|zeige?)\s+artikel\s+(?:über|zu|von|mit|zum\s+thema)\s+(.+)/i,
+        /(?:find|search|show)\s+articles?\s+(?:about|on|with|for|regarding)\s+(.+)/i,
+        /artikel\s+(?:über|zu|zum\s+thema)\s+(.+)/i,
+        /articles?\s+(?:about|on|regarding)\s+(.+)/i
+      ];
+      
+      let searchTopic = null;
+      for (const pattern of articleSearchPatterns) {
+        const match = userInput.match(pattern);
+        if (match && match[1]) {
+          searchTopic = match[1].trim().toLowerCase();
+          break;
+        }
+      }
+      
+      if (searchTopic) {
+        console.log('Searching articles for topic:', searchTopic);
+        
+        // Search through articles
+        const matchingArticles = articles.filter(article => {
+          const titleDe = article.title?.toLowerCase() || '';
+          const titleEn = article.titleEn?.toLowerCase() || '';
+          const categoryDe = article.category?.toLowerCase() || '';
+          const categoryEn = article.categoryEn?.toLowerCase() || '';
+          const excerptDe = article.excerpt?.toLowerCase() || '';
+          const excerptEn = article.excerptEn?.toLowerCase() || '';
+          const tags = article.tags?.map(tag => tag.toLowerCase()) || [];
+          const contentDe = article.content?.toLowerCase() || '';
+          const contentEn = article.contentEn?.toLowerCase() || '';
+          
+          // Check for matches in various fields
+          return titleDe.includes(searchTopic) ||
+                 titleEn.includes(searchTopic) ||
+                 categoryDe.includes(searchTopic) ||
+                 categoryEn.includes(searchTopic) ||
+                 excerptDe.includes(searchTopic) ||
+                 excerptEn.includes(searchTopic) ||
+                 tags.some(tag => tag.includes(searchTopic)) ||
+                 contentDe.includes(searchTopic) ||
+                 contentEn.includes(searchTopic);
+        });
+        
+        if (matchingArticles.length > 0) {
+          const header = language === 'de' 
+            ? `📰 **Gefundene Artikel zum Thema "${searchTopic}":**\n\n`
+            : `📰 **Found Articles about "${searchTopic}":**\n\n`;
+          
+          const articleList = matchingArticles.map(article => {
+            const title = language === 'de' ? article.title : (article.titleEn || article.title);
+            const excerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
+            const category = language === 'de' ? article.category : (article.categoryEn || article.category);
+            
+            return `**[${title}](/article/${article.id})**\n📂 ${category} | ✍️ ${article.author} | 👁️ ${article.views.toLocaleString()}\n${excerpt.substring(0, 120)}...\n`;
+          }).join('\n');
+          
+          const footer = language === 'de'
+            ? `\n🔍 **${matchingArticles.length} Artikel gefunden** - Klicken Sie auf einen Titel, um den vollständigen Artikel zu lesen!\n\n💡 **Tipp:** Sie können auch nach anderen Themen suchen mit "Finde Artikel über [Thema]"`
+            : `\n🔍 **${matchingArticles.length} articles found** - Click on a title to read the full article!\n\n💡 **Tip:** You can also search for other topics with "Find articles about [topic]"`;
+          
+          return { text: header + articleList + footer, endConversationAvailable: true };
+        } else {
+          const noResultsText = language === 'de'
+            ? `📰 Leider keine Artikel zum Thema "${searchTopic}" gefunden.\n\n💡 **Verfügbare Kategorien:** Wissenschaft, Technology, Humor, Gesellschaft, Politik\n\n🔍 **Tipp:** Versuchen Sie es mit anderen Suchbegriffen oder [zeigen Sie alle Artikel](/) an.`
+            : `📰 Unfortunately, no articles found about "${searchTopic}".\n\n💡 **Available categories:** Science, Technology, Humor, Society, Politics\n\n🔍 **Tip:** Try different search terms or [view all articles](/).`;
+          
+          return { text: noResultsText, endConversationAvailable: true };
+        }
+      }
+    }
+    
     // Check for summary command
     if (checkForSummaryCommand(userInput)) {
       await summarizeSelectedMessages();
