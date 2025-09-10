@@ -2182,25 +2182,18 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             const excerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
             const category = language === 'de' ? article.category : (article.categoryEn || article.category);
             
-            return `<div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 12px 0; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); backdrop-filter: blur(10px); cursor: pointer;" onclick="window.location.href='/article/${article.id}'">
-              <div style="display: flex; gap: 16px; align-items: flex-start;">
-                <img src="${article.imageUrl}" alt="${title}" style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;" />
-                <div style="flex: 1;">
-                  <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: var(--foreground); line-height: 1.3;">${title}</h3>
-                  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; font-size: 12px; color: var(--muted-foreground);">
-                    <span>📂 ${category}</span>
-                    <span>✍️ ${article.author}</span>
-                    <span>👁️ ${article.views.toLocaleString()}</span>
-                  </div>
-                  <p style="margin: 0; font-size: 14px; color: var(--muted-foreground); line-height: 1.4;">${excerpt.substring(0, 150)}...</p>
-                </div>
+            return `<div style="display: inline-block; margin: 8px; width: 280px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s;" onclick="window.location.href='/article/${article.id}'" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+              <img src="${article.imageUrl}" alt="${title}" style="width: 100%; height: 160px; object-fit: cover;" />
+              <div style="padding: 12px; background: var(--card);">
+                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--foreground); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${title}</h4>
+                <p style="margin: 0; font-size: 12px; color: var(--muted-foreground); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${excerpt.substring(0, 100)}...</p>
               </div>
             </div>`;
           }).join('');
           
           const footer = language === 'de'
-            ? `\n\n🔍 **${matchingArticles.length} Artikel gefunden** - Klicken Sie auf eine Karte, um den Artikel zu lesen!\n\n💡 **Tipp:** Sie können auch nach anderen Themen suchen mit "Finde Artikel über [Thema]"`
-            : `\n\n🔍 **${matchingArticles.length} articles found** - Click on a card to read the article!\n\n💡 **Tip:** You can also search for other topics with "Find articles about [topic]"`;
+            ? `\n\n🔍 **${matchingArticles.length} Artikel gefunden** - Klicken Sie auf ein Bild, um den Artikel zu lesen!`
+            : `\n\n🔍 **${matchingArticles.length} articles found** - Click on an image to read the article!`;
           
           return { text: header + articleCards + footer, endConversationAvailable: true };
         } else {
