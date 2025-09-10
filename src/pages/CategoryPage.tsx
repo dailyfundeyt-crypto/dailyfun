@@ -16,6 +16,7 @@ import {
 } from '../components/ui/pagination';
 import { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import OptimizedImage from '../components/OptimizedImage';
 
 const CategoryPage = () => {
   const { category } = useParams();
@@ -106,10 +107,13 @@ const CategoryPage = () => {
                   {/* Article Image - Left side */}
                   <div className="order-2 lg:order-1">
                     <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
-                      <img
-                        src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=800&q=80`}
+                      <OptimizedImage
+                        src={article.imageUrl}
                         alt={language === 'de' ? article.title : (article.titleEn || article.title)}
                         className="w-full h-full object-cover"
+                        width={560}
+                        height={315}
+                        sizes="(max-width: 1024px) 100vw, 50vw"
                       />
                     </div>
                   </div>

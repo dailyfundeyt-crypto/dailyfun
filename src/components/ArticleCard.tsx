@@ -5,6 +5,7 @@ import { incrementViews } from '../utils/viewTracker';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 import { getEmployeeByAuthor } from '../data/employees';
+import OptimizedImage from './OptimizedImage';
 
 interface Article {
   id: string;
@@ -59,15 +60,16 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
       <article className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md hover:border-red-accent transition-all duration-300 cursor-pointer ${featured ? 'md:flex' : ''}`}>
         <div className={`relative ${featured ? 'md:w-1/2' : ''}`}>
           <div className="aspect-video bg-gray-100 overflow-hidden">
-            <img
-              src={optimizedImageUrl}
+            <OptimizedImage
+              src={article.imageUrl}
               alt={translatedTitle}
               className={`w-full h-full object-cover transform hover:scale-105 transition-transform duration-500 ${
                 imageLoaded ? 'opacity-100' : 'opacity-0'
               }`}
               onLoad={() => setImageLoaded(true)}
-              loading="lazy"
-              decoding="async"
+              width={560}
+              height={315}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
             {!imageLoaded && (
               <div className="absolute inset-0 bg-gray-200 animate-pulse" />

@@ -3651,7 +3651,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
 
 
       {/* Floating bottom container with action cards, mode switcher and input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50 pb-20 md:pb-0">
         <div className="max-w-4xl mx-auto p-4 space-y-4">
           
 
