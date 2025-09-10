@@ -2177,19 +2177,32 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             ? `📰 **Gefundene Artikel zum Thema "${searchTopic}":**\n\n`
             : `📰 **Found Articles about "${searchTopic}":**\n\n`;
           
-          const articleList = matchingArticles.map(article => {
+          const articleCards = matchingArticles.map(article => {
             const title = language === 'de' ? article.title : (article.titleEn || article.title);
             const excerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
             const category = language === 'de' ? article.category : (article.categoryEn || article.category);
             
-            return `**[${title}](/article/${article.id})**\n📂 ${category} | ✍️ ${article.author} | 👁️ ${article.views.toLocaleString()}\n${excerpt.substring(0, 120)}...\n`;
-          }).join('\n');
+            return `<div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 12px 0; background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); backdrop-filter: blur(10px); cursor: pointer;" onclick="window.location.href='/article/${article.id}'">
+              <div style="display: flex; gap: 16px; align-items: flex-start;">
+                <img src="${article.imageUrl}" alt="${title}" style="width: 120px; height: 80px; object-fit: cover; border-radius: 8px; flex-shrink: 0;" />
+                <div style="flex: 1;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: var(--foreground); line-height: 1.3;">${title}</h3>
+                  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px; font-size: 12px; color: var(--muted-foreground);">
+                    <span>📂 ${category}</span>
+                    <span>✍️ ${article.author}</span>
+                    <span>👁️ ${article.views.toLocaleString()}</span>
+                  </div>
+                  <p style="margin: 0; font-size: 14px; color: var(--muted-foreground); line-height: 1.4;">${excerpt.substring(0, 150)}...</p>
+                </div>
+              </div>
+            </div>`;
+          }).join('');
           
           const footer = language === 'de'
-            ? `\n🔍 **${matchingArticles.length} Artikel gefunden** - Klicken Sie auf einen Titel, um den vollständigen Artikel zu lesen!\n\n💡 **Tipp:** Sie können auch nach anderen Themen suchen mit "Finde Artikel über [Thema]"`
-            : `\n🔍 **${matchingArticles.length} articles found** - Click on a title to read the full article!\n\n💡 **Tip:** You can also search for other topics with "Find articles about [topic]"`;
+            ? `\n\n🔍 **${matchingArticles.length} Artikel gefunden** - Klicken Sie auf eine Karte, um den Artikel zu lesen!\n\n💡 **Tipp:** Sie können auch nach anderen Themen suchen mit "Finde Artikel über [Thema]"`
+            : `\n\n🔍 **${matchingArticles.length} articles found** - Click on a card to read the article!\n\n💡 **Tip:** You can also search for other topics with "Find articles about [topic]"`;
           
-          return { text: header + articleList + footer, endConversationAvailable: true };
+          return { text: header + articleCards + footer, endConversationAvailable: true };
         } else {
           const noResultsText = language === 'de'
             ? `📰 Leider keine Artikel zum Thema "${searchTopic}" gefunden.\n\n💡 **Verfügbare Kategorien:** Wissenschaft, Technology, Humor, Gesellschaft, Politik\n\n🔍 **Tipp:** Versuchen Sie es mit anderen Suchbegriffen oder [zeigen Sie alle Artikel](/) an.`
