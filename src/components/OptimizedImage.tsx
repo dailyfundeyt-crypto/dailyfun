@@ -40,51 +40,42 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     onError?.();
   }, [fallbackSrc, onError]);
 
-  // Generate WebP source set for lovable-uploads images
-  const generateSrcSet = (baseSrc: string) => {
-    if (!baseSrc.startsWith('/lovable-uploads/')) {
-      return baseSrc.startsWith('/') 
-        ? baseSrc 
-        : `https://images.unsplash.com/${baseSrc}?auto=format&fit=crop&w=800&q=80`;
+  // Process image source for different types
+  const getOptimizedSrc = (baseSrc: string) => {
+    // If it's a relative path starting with /, use as is
+    if (baseSrc.startsWith('/')) {
+      return baseSrc;
     }
     
-    // For lovable-uploads, create multiple sizes
-    const baseUrl = baseSrc.replace('.png', '').replace('.jpg', '').replace('.jpeg', '');
-    return `${baseUrl}.webp 800w, ${baseUrl}.png 800w`;
+    // If it's an external URL, use as is
+    if (baseSrc.startsWith('http')) {
+      return baseSrc;
+    }
+    
+    // If it looks like an Unsplash ID, construct the URL
+    return `https://images.unsplash.com/${baseSrc}?auto=format&fit=crop&w=800&q=80`;
   };
 
-  const finalSrc = generateSrcSet(src);
-  const webpSrc = src.startsWith('/lovable-uploads/') 
-    ? src.replace(/\.(png|jpg|jpeg)$/, '.webp')
-    : null;
+  const optimizedSrc = getOptimizedSrc(src);
 
   return (
     <div className={`relative ${className}`}>
       {isLoading && (
         <div className="absolute inset-0 bg-muted animate-pulse rounded" />
       )}
-      <picture>
-        {webpSrc && (
-          <source 
-            srcSet={webpSrc} 
-            type="image/webp"
-            sizes={sizes}
-          />
-        )}
-        <img
-          src={hasError ? imageSrc : (src.startsWith('/lovable-uploads/') ? src : finalSrc)}
-          alt={alt}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
-            isLoading ? 'opacity-0' : 'opacity-100'
-          }`}
-          onLoad={handleLoad}
-          onError={handleError}
-          loading="lazy"
-          sizes={sizes}
-          width={width}
-          height={height}
-        />
-      </picture>
+      <img
+        src={hasError ? fallbackSrc : optimizedSrc}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+        onLoad={handleLoad}
+        onError={handleError}
+        loading="lazy"
+        sizes={sizes}
+        width={width}
+        height={height}
+      />
     </div>
   );
 };
