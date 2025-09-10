@@ -2177,19 +2177,19 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             ? `📰 **Gefundene Artikel zum Thema "${searchTopic}":**\n\n`
             : `📰 **Found Articles about "${searchTopic}":**\n\n`;
           
-          const articleCards = matchingArticles.map(article => {
+          const articleCards = matchingArticles.map((article, index) => {
             const title = language === 'de' ? article.title : (article.titleEn || article.title);
             const excerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
             const category = language === 'de' ? article.category : (article.categoryEn || article.category);
             
-            return `<div style="display: inline-block; margin: 8px; width: 280px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s;" onclick="window.location.href='/article/${article.id}'" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-              <img src="${article.imageUrl}" alt="${title}" style="width: 100%; height: 160px; object-fit: cover;" />
-              <div style="padding: 12px; background: var(--card);">
-                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: var(--foreground); line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${title}</h4>
-                <p style="margin: 0; font-size: 12px; color: var(--muted-foreground); line-height: 1.4; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${excerpt.substring(0, 100)}...</p>
-              </div>
-            </div>`;
-          }).join('');
+            return `![${title}](${article.imageUrl})
+
+**[${title}](/article/${article.id})**
+
+${excerpt.substring(0, 100)}...
+
+📂 ${category} | ✍️ ${article.author}`;
+          }).join('\n\n---\n\n');
           
           const footer = language === 'de'
             ? `\n\n🔍 **${matchingArticles.length} Artikel gefunden** - Klicken Sie auf ein Bild, um den Artikel zu lesen!`
