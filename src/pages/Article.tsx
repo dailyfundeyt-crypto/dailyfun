@@ -194,6 +194,23 @@ const Article = () => {
                     return paragraphs.map((paragraph, index) => {
                       // Check if paragraph contains HTML img tag
                       if (paragraph.includes('<img')) {
+                        // Extract image src and alt from HTML
+                        const imgMatch = paragraph.match(/<img[^>]+src="([^"]*)"[^>]*alt="([^"]*)"[^>]*\/?>/);
+                        if (imgMatch) {
+                          const [, src, alt] = imgMatch;
+                          return (
+                            <div key={index} className="mb-6">
+                              <OptimizedImage
+                                src={src}
+                                alt={alt}
+                                className="w-full max-w-md mx-auto rounded-lg"
+                                width={300}
+                                height={200}
+                              />
+                            </div>
+                          );
+                        }
+                        // Fallback to dangerouslySetInnerHTML if parsing fails
                         return (
                           <div 
                             key={index} 
