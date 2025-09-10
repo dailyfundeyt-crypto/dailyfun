@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/articles';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
 import ReactMarkdown from 'react-markdown';
 import jsPDF from 'jspdf';
@@ -180,6 +180,7 @@ const QUIZ_SUGGESTIONS = {
 const AI = () => {
   const { language, t } = useLanguage();
   const location = useLocation();
+  const navigate = useNavigate();
   const articleDatabase = createArticleDatabase();
   const companyDatabase = createCompanyDatabase();
   const { toast } = useToast();
@@ -2110,6 +2111,21 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
   const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string; quizData?: any; endConversationAvailable?: boolean }> => {
     const input = userInput.toLowerCase();
     const detectedLanguage = detectLanguage(userInput);
+    
+    // Check for "show me all articles" in local mode
+    if (searchMode === 'local' && (
+      input.includes('zeig mir alle artikel') || 
+      input.includes('show me all articles') ||
+      input.includes('alle artikel zeigen') ||
+      input.includes('show all articles')
+    )) {
+      // Navigate to homepage (which shows all articles)
+      navigate('/');
+      const responseText = language === 'de' 
+        ? '📰 Perfekt! Ich bringe Sie zur Startseite mit allen Artikeln. Dort können Sie alle verfügbaren Artikel durchstöbern.'
+        : '📰 Perfect! I\'ll take you to the homepage with all articles. There you can browse through all available articles.';
+      return { text: responseText };
+    }
     
     // Check for summary command
     if (checkForSummaryCommand(userInput)) {
