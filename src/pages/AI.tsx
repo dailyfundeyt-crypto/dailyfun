@@ -2127,8 +2127,102 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
       return { text: responseText };
     }
     
-    // Check for article search in local mode
+    // Check for category search in local mode
     if (searchMode === 'local') {
+      const categorySearchPatterns = [
+        /(?:search|find|show)\s+articles?\s+by\s+category\s+(.+)/i,
+        /(?:suche|finde|zeige?)\s+artikel\s+(?:der|in|nach)\s+kategorie\s+(.+)/i,
+        /(?:find|show)\s+pages?\s+about\s+(.+)/i,
+        /(?:finde|zeige?)\s+seiten?\s+(?:über|zu|zum\s+thema)\s+(.+)/i
+      ];
+      
+      let searchCategory = null;
+      for (const pattern of categorySearchPatterns) {
+        const match = userInput.match(pattern);
+        if (match && match[1]) {
+          searchCategory = match[1].trim().toLowerCase();
+          break;
+        }
+      }
+      
+      if (searchCategory) {
+        console.log('Searching by category:', searchCategory);
+        
+        // Import employees data
+        const { employees } = await import('@/data/employees');
+        
+        // Find matching authors by category
+        const matchingAuthors = employees.filter(employee => {
+          const categories = language === 'de' ? employee.categories : employee.categoriesEn;
+          return categories.some(cat => cat.toLowerCase().includes(searchCategory));
+        });
+        
+        // Also search articles by category
+        const matchingArticles = articles.filter(article => {
+          const categoryDe = article.category?.toLowerCase() || '';
+          const categoryEn = article.categoryEn?.toLowerCase() || '';
+          return categoryDe.includes(searchCategory) || categoryEn.includes(searchCategory);
+        });
+        
+        if (matchingAuthors.length > 0 || matchingArticles.length > 0) {
+          let result = language === 'de' 
+            ? `🎯 **Kategoriesuche: "${searchCategory}"**\n\n`
+            : `🎯 **Category Search: "${searchCategory}"**\n\n`;
+          
+          // Show matching authors/experts
+          if (matchingAuthors.length > 0) {
+            const authorsHeader = language === 'de' ? '👥 **Experten in dieser Kategorie:**\n\n' : '👥 **Experts in this Category:**\n\n';
+            result += authorsHeader;
+            
+            matchingAuthors.forEach(author => {
+              const description = language === 'de' ? author.descriptionDe : author.descriptionEn;
+              const categories = language === 'de' ? author.categories : author.categoriesEn;
+              
+              result += `![${author.name}](${author.image})\n\n`;
+              result += `**${author.name}**\n`;
+              result += `${description}\n\n`;
+              result += `🏷️ **Kategorien:** ${categories.join(' • ')}\n\n`;
+              result += `---\n\n`;
+            });
+          }
+          
+          // Show matching articles if any
+          if (matchingArticles.length > 0) {
+            const articlesHeader = language === 'de' ? `📰 **Artikel in der Kategorie "${searchCategory}":**\n\n` : `📰 **Articles in Category "${searchCategory}":**\n\n`;
+            result += articlesHeader;
+            
+            const articleCards = matchingArticles.slice(0, 6).map((article) => {
+              const title = language === 'de' ? article.title : (article.titleEn || article.title);
+              const excerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
+              const category = language === 'de' ? article.category : (article.categoryEn || article.category);
+              
+              return `![${title}](${article.imageUrl})
+
+**[${title}](/article/${article.id})**
+
+${excerpt.substring(0, 100)}...
+
+📂 ${category} | ✍️ ${article.author}`;
+            }).join('\n\n---\n\n');
+            
+            result += articleCards;
+          }
+          
+          const footer = language === 'de'
+            ? `\n\n🔍 **${matchingAuthors.length} Experten** und **${matchingArticles.length} Artikel** gefunden`
+            : `\n\n🔍 **${matchingAuthors.length} experts** and **${matchingArticles.length} articles** found`;
+          
+          result += footer;
+          return { text: result, endConversationAvailable: true };
+        } else {
+          const noResultsText = language === 'de'
+            ? `🔍 Keine Experten oder Artikel für Kategorie "${searchCategory}" gefunden.\n\n💡 **Verfügbare Kategorien:** Technology, Wissenschaft, Humor, Gesellschaft, Politik, Innovation, Gaming`
+            : `🔍 No experts or articles found for category "${searchCategory}".\n\n💡 **Available categories:** Technology, Science, Humor, Society, Politics, Innovation, Gaming`;
+          
+          return { text: noResultsText, endConversationAvailable: true };
+        }
+      }
+      
       const articleSearchPatterns = [
         /(?:finde|suche|zeige?)\s+artikel\s+(?:über|zu|von|mit|zum\s+thema)\s+(.+)/i,
         /(?:find|search|show)\s+articles?\s+(?:about|on|with|for|regarding)\s+(.+)/i,
