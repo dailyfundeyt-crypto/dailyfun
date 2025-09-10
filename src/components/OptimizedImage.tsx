@@ -59,7 +59,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const webpSrcSet = null;
   
   const fallbackSrcSet = generateSrcSet(src, false);
-  
+
   // Calculate optimal dimensions based on common display sizes
   const getOptimalDimensions = (originalSrc: string) => {
     // Use provided dimensions or defaults
@@ -79,7 +79,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       )}
       <picture>
         <img
-          src={hasError ? imageSrc : fallbackSrcSet}
+          src={hasError ? imageSrc : src}
           alt={alt}
           className={`w-full h-full object-cover transition-opacity duration-300 ${
             isLoading ? 'opacity-0' : 'opacity-100'

@@ -128,7 +128,7 @@ const CategoryPage = () => {
                     <p className="text-lg mb-6 opacity-90 line-clamp-3">
                       {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
                     </p>
-                    <div className={`text-sm ${index % 2 === 0 ? 'opacity-75' : 'text-purple-bg-accessible'}`}>
+                    <div className="text-sm opacity-75">
                       {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {language === 'de' ? article.category : (article.categoryEn || article.category)}
                     </div>
                   </div>
