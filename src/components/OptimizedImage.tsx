@@ -42,58 +42,26 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     onError?.();
   }, [fallbackSrc, onError]);
 
-  // Generate optimized source sets for better performance
-  const generateSrcSet = (baseSrc: string, isWebP = false) => {
-    if (!baseSrc.startsWith('/lovable-uploads/')) {
-      return baseSrc.startsWith('/') 
-        ? baseSrc 
-        : `https://images.unsplash.com/${baseSrc}?auto=format&fit=crop&w=800&q=75`;
-    }
-    
-    // For lovable-uploads, return the original image
-    // WebP conversion would need server-side support
-    return baseSrc;
-  };
-
-  // Don't use WebP for lovable-uploads since we can't guarantee they exist
-  const webpSrcSet = null;
-  
-  const fallbackSrcSet = generateSrcSet(src, false);
-  
-  // Calculate optimal dimensions based on common display sizes
-  const getOptimalDimensions = (originalSrc: string) => {
-    // Use provided dimensions or defaults
-    return {
-      width: width,
-      height: height,
-      sizes: sizes
-    };
-  };
-
-  const optimalDims = getOptimalDimensions(src);
-
   return (
     <div className={`relative ${className}`}>
       {isLoading && (
         <div className="absolute inset-0 bg-muted animate-pulse rounded" />
       )}
-      <picture>
-        <img
-          src={hasError ? imageSrc : fallbackSrcSet}
-          alt={alt}
-          className={`w-full h-full object-cover transition-opacity duration-300 ${
-            isLoading ? 'opacity-0' : 'opacity-100'
-          }`}
-          onLoad={handleLoad}
-          onError={handleError}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : "auto"}
-          sizes={optimalDims.sizes || sizes}
-          width={optimalDims.width || width}
-          height={optimalDims.height || height}
-          decoding="async"
-        />
-      </picture>
+      <img
+        src={imageSrc}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+        onLoad={handleLoad}
+        onError={handleError}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : "auto"}
+        sizes={sizes}
+        width={width}
+        height={height}
+        decoding="async"
+      />
     </div>
   );
 };
