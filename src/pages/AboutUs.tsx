@@ -162,6 +162,94 @@ const AboutUs = () => {
           </div>
         </section>
 
+        {/* Shop Section */}
+        <section className="mb-16">
+          <div className="bg-gradient-to-br from-red-accent/10 via-purple-500/10 to-blue-accent/10 rounded-xl shadow-lg border border-gray-200 p-8 overflow-hidden relative">
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-red-accent/20 to-blue-accent/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-br from-blue-accent/20 to-red-accent/20 rounded-full blur-2xl"></div>
+            
+            <div className="relative z-10">
+              <div className="text-center mb-8">
+                <h2 className="text-4xl font-bold text-black font-serif mb-4 flex items-center justify-center gap-3">
+                  <span className="text-3xl">🛍️</span>
+                  Daily Fun Shop
+                </h2>
+                <div className="w-32 h-1 bg-gradient-to-r from-red-accent via-purple-500 to-blue-accent mx-auto mb-6"></div>
+                <p className="text-xl text-gray-600 font-serif italic max-w-2xl mx-auto leading-relaxed">
+                  Entdecken Sie unsere exklusive Kollektion - Humor zum Anfassen!
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <div className="space-y-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-accent to-red-accent/80 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                      ✨
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-black mb-2">
+                        Exklusive Artikel
+                      </h3>
+                      <p className="text-gray-600">
+                        Einzigartige Produkte, die Sie nur bei uns finden - mit dem unverwechselbaren Daily Fun Humor.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-accent to-blue-accent/80 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                      🎁
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-black mb-2">
+                        Perfekte Geschenke
+                      </h3>
+                      <p className="text-gray-600">
+                        Überraschen Sie Ihre Liebsten mit originellen Geschenken, die garantiert für Lächeln sorgen.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-500/80 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                      💝
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-black mb-2">
+                        Hochwertige Qualität
+                      </h3>
+                      <p className="text-gray-600">
+                        Alle unsere Produkte werden mit Liebe zum Detail und höchsten Qualitätsstandards hergestellt.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <div className="bg-white rounded-xl p-8 shadow-xl border-2 border-gradient-to-r from-red-accent/20 to-blue-accent/20">
+                    <div className="text-6xl mb-4">🛒</div>
+                    <h3 className="text-2xl font-bold text-black mb-4 font-serif">
+                      Jetzt entdecken!
+                    </h3>
+                    <p className="text-gray-600 mb-6 leading-relaxed">
+                      Tauchen Sie ein in unsere Welt voller humorvoller Überraschungen und finden Sie das perfekte Stück für sich oder Ihre Liebsten.
+                    </p>
+                    <Link 
+                      to="/products"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-red-accent via-purple-500 to-blue-accent hover:from-red-accent/90 hover:via-purple-500/90 hover:to-blue-accent/90 text-white px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                    >
+                      <span>🛍️</span>
+                      Zum Shop
+                      <span className="ml-2">→</span>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Outlook / Call to Action Section */}
         <section className="mb-12">
           <div className="text-center">
