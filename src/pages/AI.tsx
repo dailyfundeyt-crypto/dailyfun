@@ -200,7 +200,17 @@ const AI = () => {
     const timeframes: ('today' | 'week' | 'month')[] = ['today', 'week', 'month'];
     const currentIndex = timeframes.indexOf(newsTimeframe);
     const nextIndex = (currentIndex + 1) % timeframes.length;
-    setNewsTimeframe(timeframes[nextIndex]);
+    const newTimeframe = timeframes[nextIndex];
+    setNewsTimeframe(newTimeframe);
+    
+    // Set predefined input text based on timeframe
+    const predefinedTexts = {
+      today: language === 'de' ? 'Was ist heute passiert?' : 'What happened today?',
+      week: language === 'de' ? 'Was ist diese Woche passiert?' : 'What happened this week?',
+      month: language === 'de' ? 'Was ist diesen Monat passiert?' : 'What happened this month?'
+    };
+    
+    setInputValue(predefinedTexts[newTimeframe]);
   };
 
   const getTimeframeLabel = () => {
@@ -3499,6 +3509,27 @@ ${additionalInfo}
       return;
     }
 
+    // Check if this is a predefined news intelligence question
+    const newsQuestions = {
+      de: [
+        'Was ist heute passiert?',
+        'Was ist diese Woche passiert?', 
+        'Was ist diesen Monat passiert?'
+      ],
+      en: [
+        'What happened today?',
+        'What happened this week?',
+        'What happened this month?'
+      ]
+    };
+    
+    const allNewsQuestions = [...newsQuestions.de, ...newsQuestions.en];
+    if (allNewsQuestions.includes(currentInput) && searchMode === 'internet') {
+      // This is a predefined news intelligence question, trigger the news aggregation
+      await handleNewsIntelligence();
+      return;
+    }
+
     setIsTyping(true);
 
     try {
@@ -4189,26 +4220,16 @@ ${additionalInfo}
                    <span className="sm:hidden">{quizInfoMode ? 'Exit' : 'Quiz'}</span>
                  </Button>
 
-                 {/* News Intelligence Button */}
-                 <Button
-                   variant="outline"
-                   onClick={handleNewsIntelligence}
-                   disabled={isTyping}
-                   className="flex items-center gap-1 md:gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
-                 >
-                   {React.createElement(getTimeframeIcon(), { className: "w-3 h-3 md:w-4 md:h-4" })}
-                   <span className="hidden sm:inline">{getTimeframeLabel()}</span>
-                   <span className="sm:hidden">{newsTimeframe === 'today' ? 'H' : newsTimeframe === 'week' ? 'W' : 'M'}</span>
-                 </Button>
-
-                 {/* Timeframe Cycle Button */}
-                 <Button
-                   variant="outline"
-                   onClick={cycleTimeframe}
-                   className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-2 py-1 md:py-2 h-8 md:h-10 min-w-0"
-                 >
-                   <Calendar className="w-3 h-3 md:w-4 md:h-4" />
-                 </Button>
+                  {/* Single News Intelligence Button */}
+                  <Button
+                    variant="outline"
+                    onClick={cycleTimeframe}
+                    className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                  >
+                    <Newspaper className="w-3 h-3 md:w-4 md:h-4" />
+                    <span className="hidden sm:inline">{getTimeframeLabel()}</span>
+                    <span className="sm:hidden">{newsTimeframe === 'today' ? 'H' : newsTimeframe === 'week' ? 'W' : 'M'}</span>
+                  </Button>
               </>
             ) : (
               <>
