@@ -139,7 +139,7 @@ const SUGGESTIONS = {
   de: [
     'Zeig mir alle Artikel',
     'Finde Artikel über Humor',
-    'Suche Artikel nach Kategorie Technik',
+    'Find Pages about Technologie',
     'Wer ist Stefan Kunc?',
     'Wie kann ich euch kontaktieren?',
     'Was ist die Mission von Daily Fun?',
@@ -147,7 +147,7 @@ const SUGGESTIONS = {
   en: [
     'Show me all articles',
     'Find articles about humor',
-    'Search articles by category technology',
+    'Find Pages about Technology',
     'Who is Stefan Kunc?',
     'How can I contact you?',
     "What is Daily Fun's mission?",
