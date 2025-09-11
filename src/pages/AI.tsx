@@ -2157,60 +2157,29 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           return categories.some(cat => cat.toLowerCase().includes(searchCategory));
         });
         
-        // Also search articles by category
-        const matchingArticles = articles.filter(article => {
-          const categoryDe = article.category?.toLowerCase() || '';
-          const categoryEn = article.categoryEn?.toLowerCase() || '';
-          return categoryDe.includes(searchCategory) || categoryEn.includes(searchCategory);
-        });
-        
-        if (matchingAuthors.length > 0 || matchingArticles.length > 0) {
+        if (matchingAuthors.length > 0) {
           let result = language === 'de' 
             ? `🎯 **Kategoriesuche: "${searchCategory}"**\n\n`
             : `🎯 **Category Search: "${searchCategory}"**\n\n`;
           
           // Show matching authors/experts
-          if (matchingAuthors.length > 0) {
-            const authorsHeader = language === 'de' ? '👥 **Experten in dieser Kategorie:**\n\n' : '👥 **Experts in this Category:**\n\n';
-            result += authorsHeader;
-            
-            matchingAuthors.forEach(author => {
-              const description = language === 'de' ? author.descriptionDe : author.descriptionEn;
-              const categories = language === 'de' ? author.categories : author.categoriesEn;
-              
-              result += `![${author.name}](${author.image})\n\n`;
-              result += `**${author.name}**\n`;
-              result += `${description}\n\n`;
-              result += `🏷️ **Kategorien:** ${categories.join(' • ')}\n\n`;
-              result += `---\n\n`;
-            });
-          }
+          const authorsHeader = language === 'de' ? '👥 **Experten in dieser Kategorie:**\n\n' : '👥 **Experts in this Category:**\n\n';
+          result += authorsHeader;
           
-          // Show matching articles if any
-          if (matchingArticles.length > 0) {
-            const articlesHeader = language === 'de' ? `📰 **Artikel in der Kategorie "${searchCategory}":**\n\n` : `📰 **Articles in Category "${searchCategory}":**\n\n`;
-            result += articlesHeader;
+          matchingAuthors.forEach(author => {
+            const description = language === 'de' ? author.descriptionDe : author.descriptionEn;
+            const categories = language === 'de' ? author.categories : author.categoriesEn;
             
-            const articleCards = matchingArticles.slice(0, 6).map((article) => {
-              const title = language === 'de' ? article.title : (article.titleEn || article.title);
-              const excerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
-              const category = language === 'de' ? article.category : (article.categoryEn || article.category);
-              
-              return `![${title}](${article.imageUrl})
-
-**[${title}](/article/${article.id})**
-
-${excerpt.substring(0, 100)}...
-
-📂 ${category} | ✍️ ${article.author}`;
-            }).join('\n\n---\n\n');
-            
-            result += articleCards;
-          }
+            result += `[![${author.name}](${author.image})](/search?author=${author.id})\n\n`;
+            result += `**[${author.name}](/search?author=${author.id})**\n`;
+            result += `${description}\n\n`;
+            result += `🏷️ **Kategorien:** ${categories.join(' • ')}\n\n`;
+            result += `---\n\n`;
+          });
           
           const footer = language === 'de'
-            ? `\n\n🔍 **${matchingAuthors.length} Experten** und **${matchingArticles.length} Artikel** gefunden`
-            : `\n\n🔍 **${matchingAuthors.length} experts** and **${matchingArticles.length} articles** found`;
+            ? `\n\n🔍 **${matchingAuthors.length} Experten** gefunden - Klicken Sie auf ein Bild oder Namen, um das Profil zu öffnen!`
+            : `\n\n🔍 **${matchingAuthors.length} experts** found - Click on an image or name to open the profile!`;
           
           result += footer;
           return { text: result, endConversationAvailable: true };
