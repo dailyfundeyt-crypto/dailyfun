@@ -3600,7 +3600,14 @@ ${excerpt.substring(0, 100)}...
                                em: ({ children }) => <em className="italic">{children}</em>,
                                blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic">{children}</blockquote>,
                                code: ({ children }) => <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">{children}</code>,
-                               a: ({ children, href }) => <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>
+                                a: ({ children, href }) => {
+                                  // Handle internal profile links
+                                  if (href?.startsWith('/search?author=')) {
+                                    return <a href={href} className="text-blue-600 hover:underline">{children}</a>;
+                                  }
+                                  // External links open in new tab
+                                  return <a href={href} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>;
+                                }
                              }}
                            >
                              {message.text}
