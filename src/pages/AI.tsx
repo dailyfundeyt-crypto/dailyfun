@@ -2132,14 +2132,16 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
     if (searchMode === 'local') {
       const userSearchPatterns = [
         /how\s+is\s+(.+)/i,
-        /wie\s+ist\s+(.+)/i
+        /who\s+is\s+(.+)/i,
+        /wie\s+ist\s+(.+)/i,
+        /wer\s+ist\s+(.+)/i
       ];
       
       let searchUser = null;
       for (const pattern of userSearchPatterns) {
         const match = userInput.match(pattern);
         if (match && match[1]) {
-          searchUser = match[1].trim();
+          searchUser = match[1].trim().replace(/[?.!]+$/, '');
           break;
         }
       }
@@ -4102,36 +4104,46 @@ ${excerpt.substring(0, 100)}...
                   setShowSuggestions(searchMode !== 'internet');
                   
                   // Handle user search suggestions
-                  if (searchMode === 'local' && (e.target.value.toLowerCase().startsWith('how is ') || e.target.value.toLowerCase().startsWith('wie ist '))) {
-                    const searchQuery = e.target.value.toLowerCase().startsWith('how is ') 
-                      ? e.target.value.substring(7).trim()
-                      : e.target.value.substring(8).trim();
+                  if (searchMode === 'local') {
+                    const value = e.target.value;
+                    const lower = value.toLowerCase();
+                    const labelMap: Record<string, string> = {
+                      'how is ': 'How is',
+                      'who is ': 'Who is',
+                      'wie ist ': 'Wie ist',
+                      'wer ist ': 'Wer ist'
+                    };
+                    const prefixes = Object.keys(labelMap);
+                    const matchedPrefix = prefixes.find(p => lower.startsWith(p));
                     
-                    if (searchQuery.length > 0) {
-                      // Generate user suggestions based on current input
-                      import('@/data/employees').then(({ employees }) => {
-                        const suggestions = employees
-                          .filter(employee => {
-                            const nameLower = employee.name.toLowerCase();
-                            const searchLower = searchQuery.toLowerCase();
-                            return nameLower.includes(searchLower) || searchLower === '' || 
-                                   nameLower.split(' ').some(part => part.startsWith(searchLower));
-                          })
-                          .map(employee => `${e.target.value.toLowerCase().startsWith('how is ') ? 'How is' : 'Wie ist'} ${employee.name}`)
-                          .slice(0, 5);
-                        setUserSuggestions(suggestions);
-                      });
+                    if (matchedPrefix) {
+                      const searchQuery = value.substring(matchedPrefix.length).trim();
+                      const prefixLabel = labelMap[matchedPrefix];
+                      
+                      if (searchQuery.length > 0) {
+                        import('@/data/employees').then(({ employees }) => {
+                          const suggestions = employees
+                            .filter(employee => {
+                              const nameLower = employee.name.toLowerCase();
+                              const searchLower = searchQuery.toLowerCase();
+                              return nameLower.includes(searchLower) || 
+                                     nameLower.split(' ').some(part => part.startsWith(searchLower));
+                            })
+                            .map(employee => `${prefixLabel} ${employee.name}`)
+                            .slice(0, 5);
+                          setUserSuggestions(suggestions);
+                        });
+                      } else {
+                        import('@/data/employees').then(({ employees }) => {
+                          const suggestions = employees
+                            .map(employee => `${prefixLabel} ${employee.name}`)
+                            .slice(0, 5);
+                          setUserSuggestions(suggestions);
+                        });
+                      }
                     } else {
-                      // Show all users when just "How is " is typed
-                      import('@/data/employees').then(({ employees }) => {
-                        const suggestions = employees
-                          .map(employee => `${e.target.value.toLowerCase().startsWith('how is ') ? 'How is' : 'Wie ist'} ${employee.name}`)
-                          .slice(0, 5);
-                        setUserSuggestions(suggestions);
-                      });
+                      setUserSuggestions([]);
                     }
-                  } else {
-                    setUserSuggestions([]);
                   }
                 }}
                 onFocus={() => setShowSuggestions(searchMode !== 'internet')}
