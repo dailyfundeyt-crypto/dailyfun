@@ -2173,6 +2173,24 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           const description = language === 'de' ? matchingUser.descriptionDe : matchingUser.descriptionEn;
           const categories = language === 'de' ? matchingUser.categories : matchingUser.categoriesEn;
           
+          // Get additional profile information from company database
+          let additionalInfo = '';
+          if (matchingUser.name === 'Stefan Kunc') {
+            additionalInfo = `\n💬 **${language === 'de' ? 'Vision' : 'Vision'}:**\n"${companyDatabase.founder.vision}"\n\n`;
+          } else {
+            // Find team member info
+            const teamMember = companyDatabase.team.find(member => 
+              member.name === matchingUser.name || 
+              member.name === `Mr. ${matchingUser.name}` ||
+              member.name === `Dr. ${matchingUser.name}` ||
+              matchingUser.name.includes(member.name.replace('Mr. ', '').replace('Dr. ', ''))
+            );
+            
+            if (teamMember) {
+              additionalInfo = `\n💬 **${language === 'de' ? 'Persönliche Beschreibung' : 'Personal Description'}:**\n"${teamMember.description}"\n\n`;
+            }
+          }
+          
           let result = language === 'de' 
             ? `👤 **Profil: ${matchingUser.name}**\n\n`
             : `👤 **Profile: ${matchingUser.name}**\n\n`;
@@ -2180,6 +2198,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           result += `[![${matchingUser.name}](${matchingUser.image})](/search?author=${matchingUser.id})\n\n`;
           result += `${description}\n\n`;
           result += `🏷️ **${language === 'de' ? 'Kategorien' : 'Categories'}:** ${categories.join(' • ')}\n\n`;
+          result += additionalInfo;
           
           const footer = language === 'de'
             ? `💡 Klicken Sie auf das Bild, um das vollständige Profil zu öffnen!`
