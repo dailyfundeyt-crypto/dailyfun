@@ -325,6 +325,7 @@ const AI = () => {
   const [selectedMessages, setSelectedMessages] = useState<string[]>([]);
   const [quizInfoMode, setQuizInfoMode] = useState(false);
   const [isArticleMode, setIsArticleMode] = useState(false);
+  const [userSuggestions, setUserSuggestions] = useState<string[]>([]);
 
   const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
     setMessages(prev => prev.map(msg => {
@@ -2127,6 +2128,74 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
       return { text: responseText };
     }
     
+    // Check for user search in local mode
+    if (searchMode === 'local') {
+      const userSearchPatterns = [
+        /how\s+is\s+(.+)/i,
+        /wie\s+ist\s+(.+)/i
+      ];
+      
+      let searchUser = null;
+      for (const pattern of userSearchPatterns) {
+        const match = userInput.match(pattern);
+        if (match && match[1]) {
+          searchUser = match[1].trim();
+          break;
+        }
+      }
+      
+      if (searchUser) {
+        console.log('Searching for user:', searchUser);
+        
+        // Import employees data
+        const { employees } = await import('@/data/employees');
+        
+        // Find matching user by name
+        const matchingUser = employees.find(employee => {
+          const nameParts = employee.name.toLowerCase().split(' ');
+          const searchParts = searchUser.toLowerCase().split(' ');
+          
+          // Remove titles for comparison
+          const cleanNameParts = nameParts.filter(part => !['herr', 'dr.', 'dr'].includes(part));
+          const cleanSearchParts = searchParts.filter(part => !['herr', 'dr.', 'dr'].includes(part));
+          
+          // Check if search matches any part of the name
+          return cleanSearchParts.some(searchPart => 
+            cleanNameParts.some(namePart => 
+              namePart.includes(searchPart) || searchPart.includes(namePart)
+            )
+          );
+        });
+        
+        if (matchingUser) {
+          const description = language === 'de' ? matchingUser.descriptionDe : matchingUser.descriptionEn;
+          const categories = language === 'de' ? matchingUser.categories : matchingUser.categoriesEn;
+          
+          let result = language === 'de' 
+            ? `👤 **Profil: ${matchingUser.name}**\n\n`
+            : `👤 **Profile: ${matchingUser.name}**\n\n`;
+          
+          result += `[![${matchingUser.name}](${matchingUser.image})](/search?author=${matchingUser.id})\n\n`;
+          result += `${description}\n\n`;
+          result += `🏷️ **${language === 'de' ? 'Kategorien' : 'Categories'}:** ${categories.join(' • ')}\n\n`;
+          
+          const footer = language === 'de'
+            ? `💡 Klicken Sie auf das Bild, um das vollständige Profil zu öffnen!`
+            : `💡 Click on the image to open the full profile!`;
+          
+          result += footer;
+          return { text: result, endConversationAvailable: true };
+        } else {
+          const availableUsers = employees.map(emp => emp.name).join(', ');
+          const noResultsText = language === 'de'
+            ? `🔍 Keine Person namens "${searchUser}" gefunden.\n\n👥 **Verfügbare Personen:** ${availableUsers}\n\n💡 **Tipp:** Versuchen Sie es mit "How is Stefan" oder "How is Elke"`
+            : `🔍 No person named "${searchUser}" found.\n\n👥 **Available people:** ${availableUsers}\n\n💡 **Tip:** Try "How is Stefan" or "How is Elke"`;
+          
+          return { text: noResultsText, endConversationAvailable: true };
+        }
+      }
+    }
+    
     // Check for category search in local mode
     if (searchMode === 'local') {
       const categorySearchPatterns = [
@@ -3198,6 +3267,9 @@ ${excerpt.substring(0, 100)}...
   const sendPrompt = async (text: string) => {
     if (!text.trim() || isTyping) return;
 
+    // Clear suggestions when sending
+    setUserSuggestions([]);
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text,
@@ -3977,24 +4049,44 @@ ${excerpt.substring(0, 100)}...
           </div>
 
           {/* Suggestions (like examples) */}
-          {showSuggestions && filteredSuggestions.length > 0 && searchMode !== 'internet' && (
+          {showSuggestions && (filteredSuggestions.length > 0 || userSuggestions.length > 0) && searchMode !== 'internet' && (
             <div className="flex justify-center">
               <div className="w-full md:w-[80%] bg-white/90 border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                {filteredSuggestions.map((s, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      sendPrompt(s);
-                      setShowSuggestions(false);
-                    }}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
-                  >
-                    <Search className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm">{s}</span>
-                  </button>
-                ))}
+                {/* User suggestions have priority */}
+                {userSuggestions.length > 0 ? (
+                  userSuggestions.map((s, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        sendPrompt(s);
+                        setShowSuggestions(false);
+                        setUserSuggestions([]);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
+                    >
+                      <Search className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm">{s}</span>
+                    </button>
+                  ))
+                ) : (
+                  filteredSuggestions.map((s, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        sendPrompt(s);
+                        setShowSuggestions(false);
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-left"
+                    >
+                      <Search className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm">{s}</span>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -4008,9 +4100,45 @@ ${excerpt.substring(0, 100)}...
                 onChange={(e) => {
                   setInputValue(e.target.value);
                   setShowSuggestions(searchMode !== 'internet');
+                  
+                  // Handle user search suggestions
+                  if (searchMode === 'local' && (e.target.value.toLowerCase().startsWith('how is ') || e.target.value.toLowerCase().startsWith('wie ist '))) {
+                    const searchQuery = e.target.value.toLowerCase().startsWith('how is ') 
+                      ? e.target.value.substring(7).trim()
+                      : e.target.value.substring(8).trim();
+                    
+                    if (searchQuery.length > 0) {
+                      // Generate user suggestions based on current input
+                      import('@/data/employees').then(({ employees }) => {
+                        const suggestions = employees
+                          .filter(employee => {
+                            const nameLower = employee.name.toLowerCase();
+                            const searchLower = searchQuery.toLowerCase();
+                            return nameLower.includes(searchLower) || searchLower === '' || 
+                                   nameLower.split(' ').some(part => part.startsWith(searchLower));
+                          })
+                          .map(employee => `${e.target.value.toLowerCase().startsWith('how is ') ? 'How is' : 'Wie ist'} ${employee.name}`)
+                          .slice(0, 5);
+                        setUserSuggestions(suggestions);
+                      });
+                    } else {
+                      // Show all users when just "How is " is typed
+                      import('@/data/employees').then(({ employees }) => {
+                        const suggestions = employees
+                          .map(employee => `${e.target.value.toLowerCase().startsWith('how is ') ? 'How is' : 'Wie ist'} ${employee.name}`)
+                          .slice(0, 5);
+                        setUserSuggestions(suggestions);
+                      });
+                    }
+                  } else {
+                    setUserSuggestions([]);
+                  }
                 }}
                 onFocus={() => setShowSuggestions(searchMode !== 'internet')}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+                onBlur={() => setTimeout(() => {
+                  setShowSuggestions(false);
+                  setUserSuggestions([]);
+                }, 120)}
                 placeholder={language === 'de' ? 'Nachricht...' : 'Message...'}
                 className="w-full bg-transparent border-none outline-none text-sm px-2 py-1"
                 disabled={isTyping}
