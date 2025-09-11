@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown, Brain, Mic, Image as ImageIcon, Newspaper } from 'lucide-react';
+import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, Download, ChevronDown, Brain, Mic, Image as ImageIcon, Newspaper, Calendar, Clock, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -189,6 +189,129 @@ const AI = () => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [searchMode, setSearchMode] = useState<'local' | 'internet'>('internet');
+  
+  // News Intelligence States
+  const [newsTimeframe, setNewsTimeframe] = useState<'today' | 'week' | 'month'>('today');
+  const [currentArticleContent, setCurrentArticleContent] = useState<string>('');
+  const [isInDetailMode, setIsInDetailMode] = useState(false);
+  
+  // News Intelligence Functions
+  const cycleTimeframe = () => {
+    const timeframes: ('today' | 'week' | 'month')[] = ['today', 'week', 'month'];
+    const currentIndex = timeframes.indexOf(newsTimeframe);
+    const nextIndex = (currentIndex + 1) % timeframes.length;
+    setNewsTimeframe(timeframes[nextIndex]);
+  };
+
+  const getTimeframeLabel = () => {
+    switch (newsTimeframe) {
+      case 'today': return language === 'de' ? 'Heute' : 'Today';
+      case 'week': return language === 'de' ? 'Woche' : 'Week';
+      case 'month': return language === 'de' ? 'Monat' : 'Month';
+    }
+  };
+
+  const getTimeframeIcon = () => {
+    switch (newsTimeframe) {
+      case 'today': return Clock;
+      case 'week': return Calendar;
+      case 'month': return CalendarDays;
+    }
+  };
+
+  const handleNewsIntelligence = async () => {
+    setIsTyping(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('news-intelligence', {
+        body: { 
+          action: 'aggregate_news', 
+          timeframe: newsTimeframe 
+        }
+      });
+
+      if (error) throw error;
+
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        text: `**📰 News Intelligence - ${getTimeframeLabel()}**\n\n${data.summary}\n\n*${data.articlesFound} Artikel analysiert*\n\n> **Stellen Sie weitere Fragen zu den Themen für detailliertere Informationen!**`,
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+      setIsInDetailMode(true);
+    } catch (error) {
+      console.error('News Intelligence error:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: `Fehler beim Laden der News: ${error.message}`,
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  const handleDetailedQuestion = async (question: string) => {
+    setIsTyping(true);
+    try {
+      // First convert question to search terms
+      const { data: searchData, error: searchError } = await supabase.functions.invoke('news-intelligence', {
+        body: { 
+          action: 'query_to_search', 
+          query: question 
+        }
+      });
+
+      if (searchError) throw searchError;
+
+      // Then get detailed article
+      const { data: articleData, error: articleError } = await supabase.functions.invoke('news-intelligence', {
+        body: { 
+          action: 'detailed_search', 
+          query: searchData.searchTerms 
+        }
+      });
+
+      if (articleError) throw articleError;
+
+      setCurrentArticleContent(articleData.articleContent);
+
+      // Answer the question based on the article
+      const { data: answerData, error: answerError } = await supabase.functions.invoke('news-intelligence', {
+        body: { 
+          action: 'answer_question', 
+          query: question,
+          articleContent: articleData.articleContent
+        }
+      });
+
+      if (answerError) throw answerError;
+
+      const responseMessage: Message = {
+        id: Date.now().toString(),
+        text: `**📖 Detaillierte Antwort**\n\n${answerData.answer}\n\n*Quelle: [${articleData.articleTitle}](${articleData.articleUrl})*\n\n> **Stellen Sie weitere Fragen zu diesem Artikel!**`,
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      setMessages(prev => [...prev, responseMessage]);
+    } catch (error) {
+      console.error('Detailed question error:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: `Fehler bei der detaillierten Suche: ${error.message}`,
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+  
   
   // PDF download function
   const downloadSummaryAsPDF = (messageText: string) => {
@@ -3367,11 +3490,19 @@ ${additionalInfo}
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
     setInputValue('');
+
+    // Check if user is asking a detailed question while in detail mode
+    if (isInDetailMode && currentArticleContent) {
+      await handleDetailedQuestion(currentInput);
+      return;
+    }
+
     setIsTyping(true);
 
     try {
-      const response = await processAIResponse(inputValue);
+      const response = await processAIResponse(currentInput);
       setLastAIResponse(response.text);
 
       // Only add AI message if there's actual text content
@@ -4028,35 +4159,56 @@ ${additionalInfo}
                   <span className="sm:hidden">{summaryMode ? 'Exit' : 'Sum'}</span>
                 </Button>
 
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (quizInfoMode) {
-                      setQuizInfoMode(false);
-                      setSelectedMessages([]);
-                      setSummaryMode(false); // Ensure summary mode is also disabled
-                      const msg = language === 'de' 
-                        ? '❌ Quiz-Modus deaktiviert.'
-                        : '❌ Quiz mode disabled.';
-                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
-                    } else {
-                      setQuizInfoMode(true);
-                      setSummaryMode(false); // Disable summary mode when enabling quiz
-                      setSelectedMessages([]);
-                      const msg = language === 'de' 
-                        ? '🧠 **Quiz-Modus aktiviert**\n\nSo funktioniert es:\n1. Klicken Sie auf die Nachrichten, die Sie für das Quiz verwenden möchten\n2. Ausgewählte Nachrichten werden mit einem Rahmen markiert\n3. Klicken Sie auf den "Quiz erstellen" Button in einer AI-Nachricht\n4. Oder schreiben Sie "erstelle informations quiz"\n\nWählen Sie jetzt die Nachrichten aus, die für das Quiz verwendet werden sollen.'
-                        : '🧠 **Quiz Mode Activated**\n\nHow it works:\n1. Click on the messages you want to use for the quiz\n2. Selected messages will be highlighted with a border\n3. Click the "Create Quiz" button in an AI message\n4. Or type "create information quiz"\n\nNow select the messages you want to use for the quiz.';
-                      setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date(), showQuizButton: true }]);
-                    }
-                  }}
-                  className={`flex items-center gap-1 md:gap-2 shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 ${
-                    quizInfoMode ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white'
-                  }`}
-                >
-                  <Brain className="w-3 h-3 md:w-4 md:h-4" />
-                  <span className="hidden sm:inline">{language === 'de' ? (quizInfoMode ? 'Modus beenden' : 'Informations-Quiz') : (quizInfoMode ? 'Exit mode' : 'Information Quiz')}</span>
-                  <span className="sm:hidden">{quizInfoMode ? 'Exit' : 'Quiz'}</span>
-                </Button>
+                 <Button
+                   variant="outline"
+                   onClick={() => {
+                     if (quizInfoMode) {
+                       setQuizInfoMode(false);
+                       setSelectedMessages([]);
+                       setSummaryMode(false); // Ensure summary mode is also disabled
+                       const msg = language === 'de' 
+                         ? '❌ Quiz-Modus deaktiviert.'
+                         : '❌ Quiz mode disabled.';
+                       setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date() }]);
+                     } else {
+                       setQuizInfoMode(true);
+                       setSummaryMode(false); // Disable summary mode when enabling quiz
+                       setSelectedMessages([]);
+                       const msg = language === 'de' 
+                         ? '🧠 **Quiz-Modus aktiviert**\n\nSo funktioniert es:\n1. Klicken Sie auf die Nachrichten, die Sie für das Quiz verwenden möchten\n2. Ausgewählte Nachrichten werden mit einem Rahmen markiert\n3. Klicken Sie auf den "Quiz erstellen" Button in einer AI-Nachricht\n4. Oder schreiben Sie "erstelle informations quiz"\n\nWählen Sie jetzt die Nachrichten aus, die für das Quiz verwendet werden sollen.'
+                         : '🧠 **Quiz Mode Activated**\n\nHow it works:\n1. Click on the messages you want to use for the quiz\n2. Selected messages will be highlighted with a border\n3. Click the "Create Quiz" button in an AI message\n4. Or type "create information quiz"\n\nNow select the messages you want to use for the quiz.';
+                       setMessages(prev => [...prev, { id: Date.now().toString(), text: msg, isUser: false, timestamp: new Date(), showQuizButton: true }]);
+                     }
+                   }}
+                   className={`flex items-center gap-1 md:gap-2 shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 ${
+                     quizInfoMode ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white'
+                   }`}
+                 >
+                   <Brain className="w-3 h-3 md:w-4 md:h-4" />
+                   <span className="hidden sm:inline">{language === 'de' ? (quizInfoMode ? 'Modus beenden' : 'Informations-Quiz') : (quizInfoMode ? 'Exit mode' : 'Information Quiz')}</span>
+                   <span className="sm:hidden">{quizInfoMode ? 'Exit' : 'Quiz'}</span>
+                 </Button>
+
+                 {/* News Intelligence Button */}
+                 <Button
+                   variant="outline"
+                   onClick={handleNewsIntelligence}
+                   disabled={isTyping}
+                   className="flex items-center gap-1 md:gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                 >
+                   {React.createElement(getTimeframeIcon(), { className: "w-3 h-3 md:w-4 md:h-4" })}
+                   <span className="hidden sm:inline">{getTimeframeLabel()}</span>
+                   <span className="sm:hidden">{newsTimeframe === 'today' ? 'H' : newsTimeframe === 'week' ? 'W' : 'M'}</span>
+                 </Button>
+
+                 {/* Timeframe Cycle Button */}
+                 <Button
+                   variant="outline"
+                   onClick={cycleTimeframe}
+                   className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-2 py-1 md:py-2 h-8 md:h-10 min-w-0"
+                 >
+                   <Calendar className="w-3 h-3 md:w-4 md:h-4" />
+                 </Button>
               </>
             ) : (
               <>
