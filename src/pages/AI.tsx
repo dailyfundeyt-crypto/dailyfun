@@ -2176,7 +2176,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           // Get additional profile information from company database
           let additionalInfo = '';
           if (matchingUser.name === 'Stefan Kunc') {
-            additionalInfo = `\n💬 **${language === 'de' ? 'Vision' : 'Vision'}:**\n"${companyDatabase.founder.vision}"\n\n`;
+            additionalInfo = `\n> *"${companyDatabase.founder.vision}"*\n\n`;
           } else {
             // Find team member info
             const teamMember = companyDatabase.team.find(member => 
@@ -2187,24 +2187,64 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             );
             
             if (teamMember) {
-              additionalInfo = `\n💬 **${language === 'de' ? 'Persönliche Beschreibung' : 'Personal Description'}:**\n"${teamMember.description}"\n\n`;
+              additionalInfo = `\n> *"${teamMember.description}"*\n\n`;
             }
           }
           
-          let result = language === 'de' 
-            ? `👤 **Profil: ${matchingUser.name}**\n\n`
-            : `👤 **Profile: ${matchingUser.name}**\n\n`;
+          let result = `
+<div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+  
+  <div style="text-align: center; margin-bottom: 20px;">
+    <h2 style="margin: 0; color: #1e293b; font-size: 24px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+      👤 ${language === 'de' ? 'Profil' : 'Profile'}: ${matchingUser.name}
+    </h2>
+  </div>
+  
+  <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 20px;">
+    <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1); margin-bottom: 16px; cursor: pointer;" onclick="window.location.href='/search?author=${matchingUser.id}'">
+      <img src="${matchingUser.image}" alt="${matchingUser.name}" style="width: 120px; height: 120px; object-fit: cover;" />
+    </div>
+  </div>
+  
+  <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; border-left: 4px solid #3b82f6;">
+    <h3 style="margin: 0 0 12px 0; color: #1e293b; font-size: 16px; font-weight: 600;">
+      💼 ${language === 'de' ? 'Berufliche Rolle' : 'Professional Role'}
+    </h3>
+    <p style="margin: 0; color: #64748b; line-height: 1.6;">${description}</p>
+  </div>`;
+
+          if (additionalInfo.trim()) {
+            result += `
+  <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 16px; border-left: 4px solid #10b981;">
+    <h3 style="margin: 0 0 12px 0; color: #1e293b; font-size: 16px; font-weight: 600;">
+      💬 ${language === 'de' ? 'Persönliche Vision' : 'Personal Vision'}
+    </h3>
+    <div style="background: #f8fafc; border-radius: 8px; padding: 16px; font-style: italic; color: #475569; line-height: 1.6;">
+      ${additionalInfo.replace(/\n> \*"|"\*\n/g, '').replace(/"/g, '')}
+    </div>
+  </div>`;
+          }
+
+          result += `
+  <div style="background: white; border-radius: 12px; padding: 20px; border-left: 4px solid #f59e0b;">
+    <h3 style="margin: 0 0 12px 0; color: #1e293b; font-size: 16px; font-weight: 600;">
+      🏷️ ${language === 'de' ? 'Fachbereiche' : 'Expertise Areas'}
+    </h3>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      ${categories.map(category => 
+        `<span style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;">${category}</span>`
+      ).join('')}
+    </div>
+  </div>
+  
+  <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+    <a href="/search?author=${matchingUser.id}" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 500; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+      🔍 ${language === 'de' ? 'Vollständiges Profil anzeigen' : 'View Full Profile'}
+    </a>
+  </div>
+  
+</div>`;
           
-          result += `[![${matchingUser.name}](${matchingUser.image})](/search?author=${matchingUser.id})\n\n`;
-          result += `${description}\n\n`;
-          result += `🏷️ **${language === 'de' ? 'Kategorien' : 'Categories'}:** ${categories.join(' • ')}\n\n`;
-          result += additionalInfo;
-          
-          const footer = language === 'de'
-            ? `💡 Klicken Sie auf das Bild, um das vollständige Profil zu öffnen!`
-            : `💡 Click on the image to open the full profile!`;
-          
-          result += footer;
           return { text: result, endConversationAvailable: true };
         } else {
           const availableUsers = employees.map(emp => emp.name).join(', ');
@@ -2248,30 +2288,68 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
         });
         
         if (matchingAuthors.length > 0) {
-          let result = language === 'de' 
-            ? `🎯 **Kategoriesuche: "${searchCategory}"**\n\n`
-            : `🎯 **Category Search: "${searchCategory}"**\n\n`;
+          let result = `
+<div style="max-width: 800px; margin: 0 auto; background: linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%); border-radius: 16px; padding: 24px; border: 1px solid #e4e4e7; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+  
+  <div style="text-align: center; margin-bottom: 24px;">
+    <h2 style="margin: 0; color: #18181b; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px;">
+      🎯 ${language === 'de' ? 'Kategorie-Experten' : 'Category Experts'}: "${searchCategory}"
+    </h2>
+    <p style="margin: 8px 0 0 0; color: #71717a; font-size: 16px;">${language === 'de' ? 'Unsere Fachexperten in diesem Bereich' : 'Our subject matter experts in this field'}</p>
+  </div>
+  
+  <div style="display: grid; gap: 20px;">`;
           
-          // Show matching authors/experts
-          const authorsHeader = language === 'de' ? '👥 **Experten in dieser Kategorie:**\n\n' : '👥 **Experts in this Category:**\n\n';
-          result += authorsHeader;
-          
-          matchingAuthors.forEach(author => {
+          matchingAuthors.forEach((author, index) => {
             const description = language === 'de' ? author.descriptionDe : author.descriptionEn;
             const categories = language === 'de' ? author.categories : author.categoriesEn;
             
-            result += `[![${author.name}](${author.image})](/search?author=${author.id})\n\n`;
-            result += `**[${author.name}](/search?author=${author.id})**\n`;
-            result += `${description}\n\n`;
-            result += `🏷️ **Kategorien:** ${categories.join(' • ')}\n\n`;
-            result += `---\n\n`;
+            result += `
+    <div style="background: white; border-radius: 12px; padding: 20px; border: 1px solid #e4e4e7; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" onclick="window.location.href='/search?author=${author.id}'" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 25px rgba(0, 0, 0, 0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)'">
+      
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+        <div style="border-radius: 50%; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);">
+          <img src="${author.image}" alt="${author.name}" style="width: 80px; height: 80px; object-fit: cover;" />
+        </div>
+        
+        <div style="flex: 1;">
+          <h3 style="margin: 0 0 8px 0; color: #18181b; font-size: 20px; font-weight: 600;">
+            ${author.name}
+          </h3>
+          <p style="margin: 0; color: #71717a; line-height: 1.5; font-size: 14px;">
+            ${description}
+          </p>
+        </div>
+      </div>
+      
+      <div style="border-top: 1px solid #f4f4f5; padding-top: 16px;">
+        <h4 style="margin: 0 0 8px 0; color: #18181b; font-size: 14px; font-weight: 600;">
+          🏷️ ${language === 'de' ? 'Fachbereiche' : 'Expertise Areas'}:
+        </h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          ${categories.map(category => 
+            `<span style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 500;">${category}</span>`
+          ).join('')}
+        </div>
+      </div>
+      
+    </div>`;
           });
           
-          const footer = language === 'de'
-            ? `\n\n🔍 **${matchingAuthors.length} Experten** gefunden - Klicken Sie auf ein Bild oder Namen, um das Profil zu öffnen!`
-            : `\n\n🔍 **${matchingAuthors.length} experts** found - Click on an image or name to open the profile!`;
+          result += `
+  </div>
+  
+  <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 2px solid #e4e4e7;">
+    <div style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 12px 24px; border-radius: 8px; font-weight: 600; display: inline-block;">
+      🔍 ${matchingAuthors.length} ${language === 'de' ? 'Experten gefunden' : 'Experts Found'}
+    </div>
+    <p style="margin: 12px 0 0 0; color: #71717a; font-size: 14px;">
+      ${language === 'de' ? 'Klicken Sie auf eine Karte, um das vollständige Profil zu öffnen!' : 'Click on a card to open the full profile!'}
+    </p>
+  </div>
+  
+</div>`;
           
-          result += footer;
           return { text: result, endConversationAvailable: true };
         } else {
           const noResultsText = language === 'de'
@@ -2326,29 +2404,70 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
         });
         
         if (matchingArticles.length > 0) {
-          const header = language === 'de' 
-            ? `📰 **Gefundene Artikel zum Thema "${searchTopic}":**\n\n`
-            : `📰 **Found Articles about "${searchTopic}":**\n\n`;
+          let result = `
+<div style="max-width: 900px; margin: 0 auto; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 16px; padding: 24px; border: 1px solid #0ea5e9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+  
+  <div style="text-align: center; margin-bottom: 24px;">
+    <h2 style="margin: 0; color: #0c4a6e; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px;">
+      📰 ${language === 'de' ? 'Artikel-Sammlung' : 'Article Collection'}: "${searchTopic}"
+    </h2>
+    <p style="margin: 8px 0 0 0; color: #0369a1; font-size: 16px;">${language === 'de' ? 'Passende Artikel aus unserer Redaktion' : 'Matching articles from our editorial team'}</p>
+  </div>
+  
+  <div style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">`;
           
-          const articleCards = matchingArticles.map((article, index) => {
+          matchingArticles.forEach((article, index) => {
             const title = language === 'de' ? article.title : (article.titleEn || article.title);
             const excerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
             const category = language === 'de' ? article.category : (article.categoryEn || article.category);
             
-            return `[![${title}](${article.imageUrl})](/article/${article.id})
-
-**[${title}](/article/${article.id})**
-
-${excerpt.substring(0, 100)}...
-
-📂 ${category} | ✍️ ${article.author}`;
-          }).join('\n\n---\n\n');
+            result += `
+    <div style="background: white; border-radius: 12px; overflow: hidden; border: 1px solid #e0f2fe; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" onclick="window.location.href='/article/${article.id}'" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 25px rgba(0, 0, 0, 0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0, 0, 0, 0.1)'">
+      
+      <div style="height: 180px; overflow: hidden; position: relative;">
+        <img src="${article.imageUrl}" alt="${title}" style="width: 100%; height: 100%; object-fit: cover;" />
+        <div style="position: absolute; top: 8px; left: 8px; background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+          📂 ${category}
+        </div>
+      </div>
+      
+      <div style="padding: 16px;">
+        <h3 style="margin: 0 0 8px 0; color: #0c4a6e; font-size: 16px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+          ${title}
+        </h3>
+        
+        <p style="margin: 0 0 12px 0; color: #64748b; font-size: 14px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+          ${excerpt.substring(0, 120)}${excerpt.length > 120 ? '...' : ''}
+        </p>
+        
+        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; color: #94a3b8;">
+          <span style="display: flex; align-items: center; gap: 4px;">
+            ✍️ ${article.author}
+          </span>
+          <span style="background: #f1f5f9; padding: 2px 8px; border-radius: 8px; color: #475569;">
+            👁️ ${article.views.toLocaleString()}
+          </span>
+        </div>
+      </div>
+      
+    </div>`;
+          });
           
-          const footer = language === 'de'
-            ? `\n\n🔍 **${matchingArticles.length} Artikel gefunden** - Klicken Sie auf ein Bild, um den Artikel zu lesen!`
-            : `\n\n🔍 **${matchingArticles.length} articles found** - Click on an image to read the article!`;
+          result += `
+  </div>
+  
+  <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 2px solid #0ea5e9;">
+    <div style="background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; padding: 12px 24px; border-radius: 8px; font-weight: 600; display: inline-block; margin-bottom: 12px;">
+      🔍 ${matchingArticles.length} ${language === 'de' ? 'Artikel gefunden' : 'Articles Found'}
+    </div>
+    <p style="margin: 0; color: #0369a1; font-size: 14px;">
+      ${language === 'de' ? 'Klicken Sie auf eine Karte, um den vollständigen Artikel zu lesen!' : 'Click on a card to read the full article!'}
+    </p>
+  </div>
+  
+</div>`;
           
-          return { text: header + articleCards + footer, endConversationAvailable: true };
+          return { text: result, endConversationAvailable: true };
         } else {
           const noResultsText = language === 'de'
             ? `📰 Leider keine Artikel zum Thema "${searchTopic}" gefunden.\n\n💡 **Verfügbare Kategorien:** Wissenschaft, Technology, Humor, Gesellschaft, Politik\n\n🔍 **Tipp:** Versuchen Sie es mit anderen Suchbegriffen oder [zeigen Sie alle Artikel](/) an.`
@@ -3193,10 +3312,47 @@ ${excerpt.substring(0, 100)}...
     
     // Check for contact information requests
     if (input.includes('contact') || input.includes('email') || input.includes('kontakt') || input.includes('mail')) {
-      const contactText = language === 'de'
-        ? `Hier sind unsere Kontaktinformationen:\n\n📧 Für deutsche Anfragen: ${companyDatabase.contact.german}\n📧 Für englische Anfragen: ${companyDatabase.contact.english}\n\nWir freuen uns auf Ihre Nachricht!`
-        : `Here is our contact information:\n\n📧 For German inquiries: ${companyDatabase.contact.german}\n📧 For English inquiries: ${companyDatabase.contact.english}\n\nWe look forward to hearing from you!`;
-      return { text: contactText };
+      let result = `
+<div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 16px; padding: 24px; border: 1px solid #22c55e; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+  
+  <div style="text-align: center; margin-bottom: 24px;">
+    <h2 style="margin: 0; color: #15803d; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px;">
+      📞 ${language === 'de' ? 'Kontakt-Information' : 'Contact Information'}
+    </h2>
+    <p style="margin: 8px 0 0 0; color: #16a34a; font-size: 16px;">${language === 'de' ? 'Wir sind für Sie da!' : 'We are here for you!'}</p>
+  </div>
+  
+  <div style="display: grid; gap: 16px;">
+    
+    <div style="background: white; border-radius: 12px; padding: 20px; border-left: 4px solid #22c55e; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <h3 style="margin: 0 0 8px 0; color: #15803d; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        🇩🇪 ${language === 'de' ? 'Deutsche Anfragen' : 'German Inquiries'}
+      </h3>
+      <div style="background: #f0fdf4; padding: 12px; border-radius: 8px; border: 1px solid #bbf7d0;">
+        <a href="mailto:${companyDatabase.contact.german}" style="color: #15803d; font-weight: 500; text-decoration: none; font-family: monospace;">${companyDatabase.contact.german}</a>
+      </div>
+    </div>
+    
+    <div style="background: white; border-radius: 12px; padding: 20px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+      <h3 style="margin: 0 0 8px 0; color: #1d4ed8; font-size: 16px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        🇬🇧 ${language === 'de' ? 'Englische Anfragen' : 'English Inquiries'}
+      </h3>
+      <div style="background: #eff6ff; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
+        <a href="mailto:${companyDatabase.contact.english}" style="color: #1d4ed8; font-weight: 500; text-decoration: none; font-family: monospace;">${companyDatabase.contact.english}</a>
+      </div>
+    </div>
+    
+  </div>
+  
+  <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 2px solid #22c55e;">
+    <p style="margin: 0; color: #16a34a; font-size: 14px; font-weight: 500;">
+      ${language === 'de' ? '💌 Wir freuen uns auf Ihre Nachricht!' : '💌 We look forward to hearing from you!'}
+    </p>
+  </div>
+  
+</div>`;
+      
+      return { text: result, endConversationAvailable: true };
     }
     
     // Check for team information requests
@@ -3222,11 +3378,58 @@ ${excerpt.substring(0, 100)}...
     
     // Check for company information requests
     if (input.includes('about') || input.includes('company') || input.includes('mission') || input.includes('über') || input.includes('firma') || input.includes('unternehmen')) {
-      const aboutText = language === 'de'
-        ? `Über Daily Fun:\n\n${companyDatabase.company.mission}\n\nDaily Fun Mission: ${companyDatabase.company.vision}\n\nUnsere Werte: ${companyDatabase.company.values.join(', ')}`
-        : `About Daily Fun:\n\n${companyDatabase.company.mission}\n\nDaily Fun Mission: ${companyDatabase.company.vision}\n\nOur Values: ${companyDatabase.company.values.join(', ')}`;
+      let result = `
+<div style="max-width: 700px; margin: 0 auto; background: linear-gradient(135deg, #fdf4ff 0%, #f3e8ff 100%); border-radius: 16px; padding: 24px; border: 1px solid #a855f7; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+  
+  <div style="text-align: center; margin-bottom: 24px;">
+    <h2 style="margin: 0; color: #7c3aed; font-size: 32px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 12px;">
+      🚀 Daily Fun
+    </h2>
+    <p style="margin: 8px 0 0 0; color: #8b5cf6; font-size: 18px; font-weight: 500;">${language === 'de' ? 'Unsere Mission & Vision' : 'Our Mission & Vision'}</p>
+  </div>
+  
+  <div style="display: grid; gap: 20px;">
+    
+    <div style="background: white; border-radius: 12px; padding: 24px; border-left: 4px solid #a855f7; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+      <h3 style="margin: 0 0 12px 0; color: #7c3aed; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        🎯 ${language === 'de' ? 'Unsere Mission' : 'Our Mission'}
+      </h3>
+      <p style="margin: 0; color: #64748b; line-height: 1.6; font-size: 16px;">
+        ${companyDatabase.company.mission}
+      </p>
+    </div>
+    
+    <div style="background: white; border-radius: 12px; padding: 24px; border-left: 4px solid #06b6d4; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+      <h3 style="margin: 0 0 12px 0; color: #0891b2; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        🔮 ${language === 'de' ? 'Unsere Vision' : 'Our Vision'}
+      </h3>
+      <p style="margin: 0; color: #64748b; line-height: 1.6; font-size: 16px;">
+        ${companyDatabase.company.vision}
+      </p>
+    </div>
+    
+    <div style="background: white; border-radius: 12px; padding: 24px; border-left: 4px solid #f59e0b; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+      <h3 style="margin: 0 0 12px 0; color: #d97706; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        ⭐ ${language === 'de' ? 'Unsere Werte' : 'Our Values'}
+      </h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px;">
+        ${companyDatabase.company.values.map(value => 
+          `<span style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 500; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);">${value}</span>`
+        ).join('')}
+      </div>
+    </div>
+    
+  </div>
+  
+  <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 2px solid #a855f7;">
+    <div style="background: linear-gradient(135deg, #a855f7, #7c3aed); color: white; padding: 12px 24px; border-radius: 8px; font-weight: 600; display: inline-block;">
+      ✨ ${language === 'de' ? 'Willkommen bei Daily Fun!' : 'Welcome to Daily Fun!'}
+    </div>
+  </div>
+  
+</div>`;
       
-      return { text: aboutText };
+      return { text: result, endConversationAvailable: true };
     }
     
     // Default response for unmatched queries
