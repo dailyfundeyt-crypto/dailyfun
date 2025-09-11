@@ -2245,7 +2245,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
             const excerpt = language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt);
             const category = language === 'de' ? article.category : (article.categoryEn || article.category);
             
-            return `![${title}](${article.imageUrl})
+            return `[![${title}](${article.imageUrl})](/article/${article.id})
 
 **[${title}](/article/${article.id})**
 
@@ -3601,8 +3601,8 @@ ${excerpt.substring(0, 100)}...
                                blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 pl-4 italic">{children}</blockquote>,
                                code: ({ children }) => <code className="bg-gray-100 px-1 py-0.5 rounded text-sm">{children}</code>,
                                 a: ({ children, href }) => {
-                                  // Handle internal profile links
-                                  if (href?.startsWith('/search?author=')) {
+                                  // Handle internal links (profile and article links)
+                                  if (href?.startsWith('/search?author=') || href?.startsWith('/article/')) {
                                     return <a href={href} className="text-blue-600 hover:underline">{children}</a>;
                                   }
                                   // External links open in new tab
