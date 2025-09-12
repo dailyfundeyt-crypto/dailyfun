@@ -200,4 +200,14 @@
     backface-visibility: hidden;
     perspective: 1000px;
   }
+
+  /* Hide scrollbar for horizontal scroll */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
 }
