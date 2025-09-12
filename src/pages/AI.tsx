@@ -244,7 +244,9 @@ const AI = () => {
 
       const newMessage: Message = {
         id: Date.now().toString(),
-        text: `**📰 News Intelligence - ${getTimeframeLabel()}**\n\n${data.summary}\n\n*${data.articlesFound} Artikel analysiert*\n\n> **Stellen Sie weitere Fragen zu den Themen für detailliertere Informationen!**`,
+        text: language === 'de'
+          ? `**📰 News Intelligence - ${getTimeframeLabel()}**\n\n${data.summary}\n\n*${data.articlesFound} Artikel analysiert*\n\n> **Stellen Sie weitere Fragen zu den Themen für detailliertere Informationen!**`
+          : `**📰 News Intelligence - ${getTimeframeLabel()}**\n\n${data.summary}\n\n*Analyzed ${data.articlesFound} articles*\n\n> **Ask follow-up questions for more details!**`,
         isUser: false,
         timestamp: new Date(),
       };
@@ -255,7 +257,9 @@ const AI = () => {
       console.error('News Intelligence error:', error);
       const errorMessage: Message = {
         id: Date.now().toString(),
-        text: `Fehler beim Laden der News: ${error.message}`,
+        text: language === 'de' 
+          ? `Fehler beim Laden der News: ${(error as any)?.message || 'Unbekannter Fehler'}`
+          : `Error loading news: ${(error as any)?.message || 'Unknown error'}`,
         isUser: false,
         timestamp: new Date(),
       };

@@ -7,7 +7,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, timeframe = 'today', query, articleContent } = await req.json()
+    const { action, timeframe = 'today', query, articleContent, language = 'en' } = await req.json()
 
     const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY')
     const guardianApiKey = Deno.env.get('GUARDIAN_API_KEY')
@@ -19,7 +19,7 @@ serve(async (req) => {
 
     // Action 1: Aggregate news and summarize
     if (action === 'aggregate_news') {
-      console.log(`🔍 Aggregating news for timeframe: ${timeframe}`)
+      console.log(`🔍 Aggregating news for timeframe: ${timeframe}, language: ${language}`)
       
       const allArticles: any[] = []
 
@@ -65,7 +65,9 @@ serve(async (req) => {
       // Try GNews API
       if (gnewsApiKey) {
         try {
-          const gnewsUrl = `https://gnews.io/api/v4/top-headlines?token=${gnewsApiKey}&lang=de&country=de&max=10`
+          const gnewsLang = language === 'de' ? 'de' : 'en';
+          const gnewsCountry = gnewsLang === 'de' ? 'de' : 'us';
+          const gnewsUrl = `https://gnews.io/api/v4/top-headlines?token=${gnewsApiKey}&lang=${gnewsLang}&country=${gnewsCountry}&max=10`;
           
           const gnewsResponse = await fetch(gnewsUrl)
           if (gnewsResponse.ok) {
@@ -86,21 +88,23 @@ serve(async (req) => {
       }
 
       if (allArticles.length === 0) {
-        throw new Error('Keine aktuellen Artikel gefunden')
+        const noArticlesMessage = language === 'de' ? 'Keine aktuellen Artikel gefunden' : 'No recent articles found'
+        throw new Error(noArticlesMessage)
       }
 
       // Prepare headlines for OpenRouter
       const headlines = allArticles.map(article => `${article.title} (${article.source})`).join('\n')
       
-      const prompt = `Fasse die wichtigsten Informationen aus diesen aktuellen Schlagzeilen zusammen und gebe nur die wichtigsten Themen des Tages/der Woche/des Monats aus. Gib nur Überschriften und kurze Zusammenfassungen aus:
-
-${headlines}
-
-Antworte im Format:
-**Heute ist das passiert:**
-- [Hauptthema 1]: [Kurze Zusammenfassung]
-- [Hauptthema 2]: [Kurze Zusammenfassung]
-- [Hauptthema 3]: [Kurze Zusammenfassung]`
+      const timeframeLabel = language === 'de'
+        ? (timeframe === 'today' ? 'Heute' : timeframe === 'week' ? 'Diese Woche' : 'Diesen Monat')
+        : (timeframe === 'today' ? 'Today' : timeframe === 'week' ? 'This week' : 'This month')
+      const dateStr = now.toISOString().split('T')[0]
+      const prompt = language === 'de'
+        ? `Datum: ${dateStr}\n\nNutze ausschließlich die folgenden Schlagzeilen (und ggf. Kurztexte). Fasse die wichtigsten Informationen zusammen und gib nur die wichtigsten Themen aus. Nur Überschriften mit sehr kurzen Zusammenfassungen, keine zusätzliche Erzählung.\n\n${headlines}\n\nAntworte im Format:\n**${timeframeLabel}:**\n- [Hauptthema 1]: [kurz]\n- [Hauptthema 2]: [kurz]\n- [Hauptthema 3]: [kurz]`
+        : `Date: ${dateStr}\n\nUse only the headlines below (and any provided short descriptions). Summarize the key developments and output only the most important topics. Headlines with very short summaries only; no extra commentary.\n\n${headlines}\n\nAnswer in the format:\n**${timeframeLabel}:**\n- [Key topic 1]: [short]\n- [Key topic 2]: [short]\n- [Key topic 3]: [short]`
+      const systemMessage = language === 'de'
+        ? 'Du bist ein Nachrichten-Analyst. Antworte ausschließlich auf Deutsch. Nutze nur die gegebenen Schlagzeilen und erfinde keine Informationen.'
+        : 'You are a news analyst. Answer strictly in English. Use only the provided headlines and do not fabricate information.'
 
       const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -111,7 +115,7 @@ Antworte im Format:
         body: JSON.stringify({
           model: 'meta-llama/llama-3.1-405b-instruct',
           messages: [
-            { role: 'system', content: 'Du bist ein Nachrichten-Analyst. Fasse nur die wichtigsten Informationen zusammen.' },
+            { role: 'system', content: systemMessage },
             { role: 'user', content: prompt }
           ],
           max_tokens: 1000
@@ -119,13 +123,14 @@ Antworte im Format:
       })
 
       const openrouterData = await openrouterResponse.json()
-      const summary = openrouterData.choices?.[0]?.message?.content || 'Fehler bei der Zusammenfassung'
+      const summary = openrouterData.choices?.[0]?.message?.content || (language === 'de' ? 'Fehler bei der Zusammenfassung' : 'Failed to generate summary')
 
       return new Response(
         JSON.stringify({ 
           summary,
           timeframe,
-          articlesFound: allArticles.length
+          articlesFound: allArticles.length,
+          language
         }),
         {
           headers: {
@@ -138,11 +143,13 @@ Antworte im Format:
 
     // Action 2: Convert user query to search term
     if (action === 'query_to_search') {
-      const prompt = `Wandle diese Nutzerfrage in eine präzise Suchbegriffe für eine News-API um. Gib nur die Suchbegriffe aus, ohne zusätzlichen Text:
+      const prompt = language === 'de'
+        ? `Wandle diese Nutzerfrage in prägnante Suchbegriffe für eine News-API um. Gib nur die Suchbegriffe aus, ohne zusätzlichen Text.\n\nNutzerfrage: "${query}"\n\nAntworte nur mit den Suchbegriffen, z. B.: "Trump Putin Treffen", "Klimawandel Deutschland".`
+        : `Convert this user question into concise search terms for a news API. Output only the search terms, with no extra text.\n\nUser question: "${query}"\n\nReturn only the search terms, e.g.: "Trump Putin meeting", "climate change Germany".`
 
-Nutzerfrage: "${query}"
-
-Antworte nur mit den Suchbegriffen, zum Beispiel: "Trump Putin Treffen" oder "Klimawandel Deutschland"`
+      const systemMessage = language === 'de'
+        ? 'Du wandelst Fragen in Suchbegriffe um. Antworte ausschließlich mit den Suchbegriffen.'
+        : 'You convert questions into search terms. Respond only with the search terms.'
 
       const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -153,7 +160,7 @@ Antworte nur mit den Suchbegriffen, zum Beispiel: "Trump Putin Treffen" oder "Kl
         body: JSON.stringify({
           model: 'meta-llama/llama-3.1-405b-instruct',
           messages: [
-            { role: 'system', content: 'Du wandelst Fragen in Suchbegriffe um. Antworte nur mit den Suchbegriffen.' },
+            { role: 'system', content: systemMessage },
             { role: 'user', content: prompt }
           ],
           max_tokens: 50
@@ -180,14 +187,14 @@ Antworte nur mit den Suchbegriffen, zum Beispiel: "Trump Putin Treffen" oder "Kl
       
       // Search Guardian for specific topic
       if (!guardianApiKey) {
-        throw new Error('Guardian API Key nicht verfügbar')
+        throw new Error(language === 'de' ? 'Guardian API Key nicht verfügbar' : 'Guardian API key not available')
       }
 
       const guardianUrl = `https://content.guardianapis.com/search?q=${encodeURIComponent(query)}&api-key=${guardianApiKey}&show-fields=body,trailText&page-size=1&order-by=relevance`
       
       const guardianResponse = await fetch(guardianUrl)
       if (!guardianResponse.ok) {
-        throw new Error('Artikel nicht gefunden')
+        throw new Error(language === 'de' ? 'Artikel nicht gefunden' : 'Article not found')
       }
 
       const guardianData = await guardianResponse.json()
@@ -221,13 +228,9 @@ Antworte nur mit den Suchbegriffen, zum Beispiel: "Trump Putin Treffen" oder "Kl
         throw new Error('Artikel-Inhalt und Frage erforderlich')
       }
 
-      const prompt = `Basierend auf diesem Artikel, beantworte die folgende Frage:
-
-Artikel: ${articleContent.substring(0, 3000)}
-
-Frage: ${query}
-
-Antworte präzise und beziehe dich nur auf die Informationen aus dem Artikel.`
+      const prompt = language === 'de'
+        ? `Basierend auf diesem Artikel beantworte die folgende Frage auf Deutsch. Beziehe dich nur auf den Artikel und erfinde nichts.\n\nArtikel (gekürzt): ${articleContent.substring(0, 3000)}\n\nFrage: ${query}\n\nAntworte präzise, ohne unnötige Einleitung.`
+        : `Based on this article, answer the following question in English. Use only the article content and do not invent facts.\n\nArticle (truncated): ${articleContent.substring(0, 3000)}\n\nQuestion: ${query}\n\nAnswer concisely with no unnecessary preamble.`
 
       const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -238,7 +241,10 @@ Antworte präzise und beziehe dich nur auf die Informationen aus dem Artikel.`
         body: JSON.stringify({
           model: 'meta-llama/llama-3.1-405b-instruct',
           messages: [
-            { role: 'system', content: 'Du beantwortest Fragen basierend auf gegebenen Artikelinhalten. Sei präzise und beziehe dich nur auf die verfügbaren Informationen.' },
+            { role: 'system', content: (language === 'de'
+              ? 'Du beantwortest Fragen basierend auf gegebenen Artikelinhalten. Antworte ausschließlich auf Deutsch und beziehe dich nur auf die verfügbaren Informationen.'
+              : 'You answer questions based on provided article content. Answer strictly in English and only use the available information.'
+            ) },
             { role: 'user', content: prompt }
           ],
           max_tokens: 1000
@@ -259,13 +265,13 @@ Antworte präzise und beziehe dich nur auf die Informationen aus dem Artikel.`
       )
     }
 
-    throw new Error('Ungültige Aktion')
+    throw new Error(language === 'de' ? 'Ungültige Aktion' : 'Invalid action')
 
   } catch (error) {
-    console.error('Error in news-intelligence function:', error)
+    console.error('Error in news-intelligence function:', error, { action, timeframe, language })
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Unbekannter Fehler'
+        error: (error as Error).message || (language === 'de' ? 'Unbekannter Fehler' : 'Unknown error')
       }),
       { 
         status: 500, 
