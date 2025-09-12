@@ -4546,12 +4546,12 @@ ${additionalInfo}
                          : getTimeframeLabel()
                        }
                      </span>
-                     <span className="sm:hidden">
-                       {isInDetailMode 
-                         ? 'Exit' 
-                         : (newsTimeframe === 'today' ? 'H' : newsTimeframe === 'week' ? 'W' : 'M')
-                       }
-                     </span>
+                      <span className="sm:hidden">
+                        {isInDetailMode 
+                          ? 'Exit' 
+                          : getTimeframeLabel()
+                        }
+                      </span>
                    </Button>
               </>
             ) : (
