@@ -617,6 +617,11 @@ ${currentArticleSource ? `\nSource: ${currentArticleSource}` : ''}
   const [isArticleMode, setIsArticleMode] = useState(false);
   const [userSuggestions, setUserSuggestions] = useState<string[]>([]);
 
+  // Persistent Information-Quiz seed (keeps the first context for all subsequent quizzes)
+  const [infoQuizSeedContent, setInfoQuizSeedContent] = useState<string>('');
+  const [infoQuizSeedSource, setInfoQuizSeedSource] = useState<string>('');
+  const [infoQuizActive, setInfoQuizActive] = useState<boolean>(false);
+
   const handleQuizAnswer = (messageId: string, selectedAnswer: string) => {
     setMessages(prev => prev.map(msg => {
       if (msg.id === messageId && msg.quizData) {
@@ -2216,6 +2221,13 @@ The text to be summarized is:
       .filter(msg => selectedMessages.includes(msg.id))
       .map(msg => `${msg.isUser ? (language === 'de' ? 'Benutzer' : 'User') : 'AI'}: ${msg.text}`)
       .join('\n\n');
+
+    // Persist the first Information-Quiz context (only once)
+    if (!infoQuizSeedContent) {
+      setInfoQuizSeedContent(messagesToQuiz);
+      setInfoQuizSeedSource(language === 'de' ? 'Ausgewählte Nachrichten' : 'Selected messages');
+      setInfoQuizActive(true);
+    }
     
     try {
       setIsTyping(true);
@@ -2359,6 +2371,97 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
     }];
   };
 
+  // Generate a strict Information-Quiz from the persisted seed context
+  const generateStrictInfoQuizFromSeed = async () => {
+    if (!infoQuizSeedContent) {
+      console.warn('No infoQuizSeedContent set. Falling back.');
+      return;
+    }
+    setIsTyping(true);
+    try {
+      // Gather all previous quiz questions (avoid repeats)
+      const previousQuizQuestions = messages
+        .filter(m => !m.isUser && typeof m.text === 'string' && m.text.startsWith('SEMICOLON_QUIZ:'))
+        .map(m => {
+          const content = m.text.replace('SEMICOLON_QUIZ:', '').trim();
+          const line = content.split('\n').find(l => l.includes(';') && l.split(';').length === 6) || content;
+          return line.split(';')[0].trim();
+        });
+
+      const promptDe = `Du bist eine strenge Quiz-Erstellungs-Engine. Erstelle GENAU EIN Quiz NUR aus dem folgenden Kontext.
+
+Format: Frage;Antwort1;Antwort2;Antwort3;Antwort4;Richtige_Antwort
+- Verwende ausschließlich Fakten (Zahlen, Namen, Orte, Daten) aus dem Kontext
+- Keine Erfindungen, keine externen Kenntnisse
+- Die richtige Antwort MUSS eine der vier Optionen sein
+- Wenn der Kontext nicht ausreicht, antworte exakt: NO_QUIZ_POSSIBLE
+${previousQuizQuestions.length ? `\nBereits behandelte Quizzes (verwende ANDERE Fragen): ${previousQuizQuestions.map((q, i) => `${i + 1}. ${q}`).join(' ')}` : ''}
+${infoQuizSeedSource ? `\nQuelle: ${infoQuizSeedSource}` : ''}
+\nKontext:\n"""\n${infoQuizSeedContent}\n"""`;
+
+      const promptEn = `You are a strict quiz-generation engine. Create EXACTLY ONE quiz ONLY from the context below.
+
+Format: Question;Option1;Option2;Option3;Option4;Correct_Answer
+- Use only facts (numbers, names, places, dates) from the context
+- No inventions, no outside knowledge
+- The correct answer MUST be one of the four options
+- If the context is insufficient, reply exactly: NO_QUIZ_POSSIBLE
+${previousQuizQuestions.length ? `\nPrevious quizzes covered (use DIFFERENT questions): ${previousQuizQuestions.map((q, i) => `${i + 1}. ${q}`).join(' ')}` : ''}
+${infoQuizSeedSource ? `\nSource: ${infoQuizSeedSource}` : ''}
+\nContext:\n"""\n${infoQuizSeedContent}\n"""`;
+
+      const prompt = language === 'de' ? promptDe : promptEn;
+
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer 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',
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://dailyfun.app',
+          'X-Title': 'Daily Fun - Info Quiz (Seed Context)'
+        },
+        body: JSON.stringify({
+          model: 'meta-llama/llama-3.1-405b-instruct:free',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.2,
+          max_tokens: 400
+        })
+      });
+
+      if (!response.ok) throw new Error(`OpenRouter API error: ${response.status}`);
+      const data = await response.json();
+      const raw = (data.choices?.[0]?.message?.content || '').trim();
+      if (/^NO_QUIZ_POSSIBLE$/i.test(raw)) {
+        throw new Error(language === 'de' ? 'Nicht genug Informationen im Kontext für ein weiteres Quiz.' : 'Not enough information in the context for another quiz.');
+      }
+
+      const lines = raw.split('\n').map(l => l.trim());
+      const quizLine = lines.find(l => l.includes(';') && l.split(';').length === 6) || '';
+      if (!quizLine) throw new Error('Invalid quiz response');
+
+      const quizMessage: Message = {
+        id: Date.now().toString(),
+        text: `SEMICOLON_QUIZ:${quizLine}`,
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, quizMessage]);
+    } catch (error) {
+      console.error('generateStrictInfoQuizFromSeed failed:', error);
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        text: language === 'de'
+          ? '❌ Quiz konnte nicht aus dem ersten Kontext erstellt werden. '
+          + (infoQuizSeedSource ? `Quelle: ${infoQuizSeedSource}` : '')
+          : '❌ Failed to create quiz from the initial context.',
+        isUser: false,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
   const parseInteractiveQuiz = (text: string) => {
     if (!text.startsWith('INTERACTIVE_INFO_QUIZ:')) return null;
     
@@ -2369,7 +2472,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
     if (quizStart === -1 || quizEnd === -1) return null;
     
     const quizData = quizContent.substring(quizStart + 10, quizEnd);
-    const questions = [];
+    const questions: any[] = [];
     
     for (let i = 1; i <= 3; i++) {
       const questionMatch = quizData.match(new RegExp(`QUESTION_${i}: (.+?)(?=A\\))`));
@@ -2659,13 +2762,22 @@ ${additionalInfo}
     
     // Check for quiz command - but handle "next quiz" scenario differently
     if (checkForQuizCommand(userInput)) {
-      // Check if this is a "next quiz" request in internet search or article mode
-      const isNextQuizRequest = userInput.includes('weiteres') && userInput.includes('Quiz') && 
+      // Check if this is a "next quiz" request in internet search or article mode (case-insensitive)
+      const isNextQuizRequest = input.includes('weiteres') && input.includes('quiz') && 
                                (searchMode === 'internet' || isArticleMode);
       
       if (isNextQuizRequest) {
-        // For next quiz in internet/article mode, continue with normal flow to generate new quiz
-        // Don't return early, let it be processed by the internet search logic below
+        // If we have a persisted seed, always use it for follow-up quizzes
+        if (infoQuizSeedContent) {
+          await generateStrictInfoQuizFromSeed();
+          return { text: '' };
+        }
+        // Else if we're in detail mode with a stored article, use the detailed handler
+        if (isInDetailMode && currentArticleContent) {
+          await handleDetailedQuestion(userInput);
+          return { text: '' };
+        }
+        // Otherwise continue with normal flow below
       } else {
         // Regular quiz generation from selected messages
         await generateInformationQuiz();
