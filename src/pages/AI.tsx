@@ -4001,30 +4001,18 @@ ${additionalInfo}
                                 <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                   <div className="flex gap-2">
                                     <Button
-                                      onClick={() => {
-                                        // Progressive quiz numbering functionality for multi-question quizzes
-                                        let nextQuizPrompt;
-                                        
-                                         if (searchMode === 'internet' && !isArticleMode) {
-                                           // Internet Search mode: use stored context and trigger detailed question handler
-                                           const currentQuizCount = (message.quizCount || 0) + 1;
-                                           nextQuizPrompt = `Erstelle ein weiteres Informations-Quiz - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
-                                         } else if (isArticleMode && articleContext) {
-                                           // Article mode: use current article context with progressive numbering
-                                           const currentQuizCount = (message.quizCount || 0) + 1;
-                                           nextQuizPrompt = `Erstelle ein weiteres Informations-Quiz basierend auf dem Artikel "${articleContext}" - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
-                                         } else {
-                                           nextQuizPrompt = 'Erstelle ein weiteres Informations-Quiz.';
-                                         }
-                                         
-                                         // If we're in detail mode with article context, trigger detailed question handler
+                                       onClick={() => {
+                                         // Always use the same original request that created the first quiz
                                          if (isInDetailMode && currentArticleContent) {
-                                           handleDetailedQuestion(nextQuizPrompt);
+                                           // Just trigger detailed question handler with any quiz-related prompt
+                                           // The handler will use the stored currentArticleContent automatically
+                                           handleDetailedQuestion('Erstelle ein Quiz basierend auf dem Artikel.');
                                            return;
                                          }
-                                        
-                                        sendPrompt(nextQuizPrompt);
-                                      }}
+                                         
+                                         // Fallback for other modes
+                                         sendPrompt('Erstelle ein weiteres Quiz.');
+                                       }}
                                       size="sm"
                                       variant="default"
                                       className="w-full"
