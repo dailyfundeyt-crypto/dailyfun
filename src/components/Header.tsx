@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useMemo } from 'react';
-import { Search, Menu, X, Home, Info, ShoppingCart, Globe, Bot, Zap } from 'lucide-react';
+import { Search, Menu, X, Home, Info, Globe, Bot, Zap } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -11,11 +11,10 @@ const Header = () => {
 
   const navigation = useMemo(() => [
     { icon: Home, href: '/search', label: 'Home' },
-    { icon: Info, href: '/about', label: 'About' },
-    { icon: ShoppingCart, href: '/products', label: 'Products' },
-    { icon: Zap, href: '/weird', label: 'Strange News' },
-    { icon: Globe, href: '#', label: 'Language', action: 'language' },
     { icon: Bot, href: '/ai', label: 'AI Chat' },
+    { icon: Zap, href: '/weird', label: 'Strange News' },
+    { icon: Info, href: '/about', label: 'About' },
+    { icon: Globe, href: '#', label: 'Language', action: 'language' },
   ], []);
 
   const handleNavigation = useCallback((item: typeof navigation[0]) => {
