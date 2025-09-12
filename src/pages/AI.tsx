@@ -272,7 +272,8 @@ const AI = () => {
       const { data: searchData, error: searchError } = await supabase.functions.invoke('news-intelligence', {
         body: { 
           action: 'query_to_search', 
-          query: question 
+          query: question,
+          language: language
         }
       });
 
@@ -282,7 +283,8 @@ const AI = () => {
       const { data: articleData, error: articleError } = await supabase.functions.invoke('news-intelligence', {
         body: { 
           action: 'detailed_search', 
-          query: searchData.searchTerms 
+          query: searchData.searchTerms,
+          language: language
         }
       });
 
@@ -295,7 +297,8 @@ const AI = () => {
         body: { 
           action: 'answer_question', 
           query: question,
-          articleContent: articleData.articleContent
+          articleContent: articleData.articleContent,
+          language: language
         }
       });
 
