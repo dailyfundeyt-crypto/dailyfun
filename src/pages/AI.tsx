@@ -397,6 +397,13 @@ ${currentArticleSource ? `\nSource: ${currentArticleSource}` : ''}
             timestamp: new Date()
           };
           setMessages(prev => [...prev, quizMessage]);
+
+          // Persist seed for follow-up quizzes (article-based)
+          if (!infoQuizSeedContent) {
+            setInfoQuizSeedContent(currentArticleContent);
+            setInfoQuizSeedSource(currentArticleSource || (language === 'de' ? 'Artikel' : 'Article'));
+            setInfoQuizActive(true);
+          }
           console.log('✅ Successfully created strict article-based quiz');
         } catch (error) {
           console.error('Article quiz generation failed:', error);
@@ -2505,6 +2512,24 @@ ${infoQuizSeedSource ? `\nSource: ${infoQuizSeedSource}` : ''}
   const processAIResponse = async (userInput: string): Promise<{ text: string; qrCode?: string; quizData?: any; endConversationAvailable?: boolean }> => {
     const input = userInput.toLowerCase();
     const detectedLanguage = detectLanguage(userInput);
+
+    // Explicit "Next Quiz" typed by user (DE/EN)
+    const typedNextQuiz = (
+      input.includes('nächstes quiz') ||
+      input.includes('weiteres quiz') ||
+      input.includes('next quiz')
+    );
+    if (typedNextQuiz && (searchMode === 'internet' || isArticleMode || isInDetailMode)) {
+      if (infoQuizSeedContent) {
+        await generateStrictInfoQuizFromSeed();
+        return { text: '' };
+      }
+      if (isInDetailMode && currentArticleContent) {
+        await handleDetailedQuestion(userInput);
+        return { text: '' };
+      }
+      // Fallback to normal flow if no seed/context
+    }
     
     // Check for "show me all articles" in local mode
     if (searchMode === 'local' && (
@@ -2789,6 +2814,12 @@ ${additionalInfo}
     if (quizMode || input.includes('quiz') || 
         (language === 'de' && (input.includes('erstell') || input.includes('frag'))) ||
         (language === 'en' && (input.includes('create') || input.includes('generat')))) {
+      // Prefer strict information-quiz from the persisted seed when available
+      if (infoQuizSeedContent && (searchMode === 'internet' || isArticleMode || isInDetailMode)) {
+        await generateStrictInfoQuizFromSeed();
+        setQuizMode(false);
+        return { text: '' };
+      }
       setQuizMode(false);
       return await generateQuiz(userInput);
     }
@@ -4001,18 +4032,20 @@ ${additionalInfo}
                                 <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                   <div className="flex gap-2">
                                     <Button
-                                       onClick={() => {
-                                         // Always use the same original request that created the first quiz
-                                         if (isInDetailMode && currentArticleContent) {
-                                           // Just trigger detailed question handler with any quiz-related prompt
-                                           // The handler will use the stored currentArticleContent automatically
-                                           handleDetailedQuestion('Erstelle ein Quiz basierend auf dem Artikel.');
-                                           return;
-                                         }
-                                         
-                                         // Fallback for other modes
-                                         sendPrompt('Erstelle ein weiteres Quiz.');
-                                       }}
+                                    onClick={() => {
+                                      // Always reuse the initial Information-Quiz context if available
+                                      if (infoQuizSeedContent) {
+                                        generateStrictInfoQuizFromSeed();
+                                        return;
+                                      }
+                                      if (isInDetailMode && currentArticleContent) {
+                                        // Use stored article content in detail mode
+                                        handleDetailedQuestion('Erstelle ein Quiz basierend auf dem Artikel.');
+                                        return;
+                                      }
+                                      // Fallback for other modes
+                                      sendPrompt('Erstelle ein weiteres Informations-Quiz.');
+                                    }}
                                       size="sm"
                                       variant="default"
                                       className="w-full"
@@ -4089,29 +4122,22 @@ ${additionalInfo}
                                   <div className="flex gap-2">
                                     <Button
                                       onClick={() => {
-                                        // Progressive quiz numbering functionality
-                                        let nextQuizPrompt;
-                                        
-                                        if (searchMode === 'local') {
-                                          // Local mode: use topic
-                                          const currentTopic = message.quizData.topic;
-                                          nextQuizPrompt = `${currentTopic} Quiz`;
-                                        } else if (searchMode === 'internet' && !isArticleMode) {
-                                          // Internet Search mode: use original source with progressive numbering
-                                          const originalSource = message.quizData.originalSource || message.quizData.topic;
-                                          const currentQuizCount = (message.quizData.quizCount || 0) + 1;
-                                          nextQuizPrompt = `Erstelle ein weiteres Quiz basierend auf "${originalSource}" - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
-                                        } else if (isArticleMode && articleContext) {
-                                          // Article mode: use current article context with progressive numbering
-                                          const currentQuizCount = (message.quizData.quizCount || 0) + 1;
-                                          nextQuizPrompt = `Erstelle ein weiteres Quiz basierend auf dem Artikel "${articleContext}" - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
-                                        } else {
-                                          // Fallback
-                                          const currentTopic = message.quizData.topic;
-                                          nextQuizPrompt = `${currentTopic} Quiz`;
+                                        // Prefer the persisted Information-Quiz seed for consistency
+                                        if (infoQuizSeedContent) {
+                                          generateStrictInfoQuizFromSeed();
+                                          return;
                                         }
-                                        
-                                        sendPrompt(nextQuizPrompt);
+                                        if (isInDetailMode && currentArticleContent) {
+                                          handleDetailedQuestion('Erstelle ein Quiz basierend auf dem Artikel.');
+                                          return;
+                                        }
+                                        // Fallbacks
+                                        if (searchMode === 'local') {
+                                          const currentTopic = message.quizData.topic;
+                                          sendPrompt(`${currentTopic} Quiz`);
+                                        } else {
+                                          sendPrompt('Erstelle ein weiteres Informations-Quiz.');
+                                        }
                                       }}
                                       size="sm"
                                       variant="default"
