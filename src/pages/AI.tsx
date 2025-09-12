@@ -193,6 +193,7 @@ const AI = () => {
   // News Intelligence States
   const [newsTimeframe, setNewsTimeframe] = useState<'today' | 'week' | 'month'>('today');
   const [currentArticleContent, setCurrentArticleContent] = useState<string>('');
+  const [currentArticleSource, setCurrentArticleSource] = useState<string>('');
   const [isInDetailMode, setIsInDetailMode] = useState(false);
   
   // News Intelligence Functions
@@ -284,10 +285,9 @@ const AI = () => {
       
       if (isQuizRequest && currentArticleContent) {
         // Generate quiz strictly based on current article content
-        // Collect previous quiz questions to avoid repetition
+        // Collect previous quiz questions to avoid repetition - get ALL previous quiz questions from this session
         const previousQuizQuestions = messages
           .filter(m => !m.isUser && typeof m.text === 'string' && m.text.startsWith('SEMICOLON_QUIZ:'))
-          .slice(-5)
           .map(m => {
             const content = m.text.replace('SEMICOLON_QUIZ:', '').trim();
             const line = content.split('\n').find(l => l.includes(';') && l.split(';').length === 6) || content;
@@ -322,7 +322,8 @@ Format: Frage;Antwort1;Antwort2;Antwort3;Antwort4;Richtige_Antwort
 - Keine Erfindungen, keine externen Kenntnisse
 - Die richtige Antwort MUSS eine der vier Optionen sein
 - Wenn der Kontext nicht ausreicht, antworte exakt: NO_QUIZ_POSSIBLE
-${previousQuizQuestions.length ? `\nFragen, die du NICHT wiederholen darfst: ${previousQuizQuestions.map(q => `"${q}"`).join(', ')}` : ''}
+${previousQuizQuestions.length ? `\nBereits behandelte Quizzes (verwende ANDERE Fragen): ${previousQuizQuestions.map((q, i) => `${i + 1}. ${q}`).join(' ')}` : ''}
+${currentArticleSource ? `\nQuelle: ${currentArticleSource}` : ''}
 \nArtikel-Kontext:\n"""\n${currentArticleContent}\n"""`;
 
         const basePromptEn = `You are a strict quiz-generation engine. Create EXACTLY ONE quiz ONLY from the article context below.
@@ -332,7 +333,8 @@ Format: Question;Option1;Option2;Option3;Option4;Correct_Answer
 - No inventions, no outside knowledge
 - The correct answer MUST be one of the four options
 - If the context is insufficient, reply exactly: NO_QUIZ_POSSIBLE
-${previousQuizQuestions.length ? `\nQuestions you MUST NOT repeat: ${previousQuizQuestions.map(q => `"${q}"`).join(', ')}` : ''}
+${previousQuizQuestions.length ? `\nPrevious quizzes covered (use DIFFERENT questions): ${previousQuizQuestions.map((q, i) => `${i + 1}. ${q}`).join(' ')}` : ''}
+${currentArticleSource ? `\nSource: ${currentArticleSource}` : ''}
 \nArticle context:\n"""\n${currentArticleContent}\n"""`;
 
         const prompt = language === 'de' ? basePromptDe : basePromptEn;
@@ -437,6 +439,7 @@ ${previousQuizQuestions.length ? `\nQuestions you MUST NOT repeat: ${previousQui
       if (articleError) throw articleError;
 
       setCurrentArticleContent(articleData.articleContent);
+      setCurrentArticleSource(articleData.articleTitle || 'Unbekannte Quelle');
 
       // Answer the question based on the article
       const { data: answerData, error: answerError } = await supabase.functions.invoke('news-intelligence', {
@@ -3745,6 +3748,7 @@ ${additionalInfo}
   const endNewsDetailMode = () => {
     setIsInDetailMode(false);
     setCurrentArticleContent('');
+    setCurrentArticleSource('');
     setMessages(prev => [...prev, {
       id: Date.now().toString(),
       text: language === 'de' 
@@ -3889,17 +3893,23 @@ ${additionalInfo}
                                         // Progressive quiz numbering functionality for multi-question quizzes
                                         let nextQuizPrompt;
                                         
-                                        if (searchMode === 'internet' && !isArticleMode) {
-                                          // Internet Search mode: increment quiz count
-                                          const currentQuizCount = (message.quizCount || 0) + 1;
-                                          nextQuizPrompt = `Erstelle ein weiteres Informations-Quiz - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
-                                        } else if (isArticleMode && articleContext) {
-                                          // Article mode: use current article context with progressive numbering
-                                          const currentQuizCount = (message.quizCount || 0) + 1;
-                                          nextQuizPrompt = `Erstelle ein weiteres Informations-Quiz basierend auf dem Artikel "${articleContext}" - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
-                                        } else {
-                                          nextQuizPrompt = 'Erstelle ein weiteres Informations-Quiz.';
-                                        }
+                                         if (searchMode === 'internet' && !isArticleMode) {
+                                           // Internet Search mode: use stored context and trigger detailed question handler
+                                           const currentQuizCount = (message.quizCount || 0) + 1;
+                                           nextQuizPrompt = `Erstelle ein weiteres Informations-Quiz - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
+                                         } else if (isArticleMode && articleContext) {
+                                           // Article mode: use current article context with progressive numbering
+                                           const currentQuizCount = (message.quizCount || 0) + 1;
+                                           nextQuizPrompt = `Erstelle ein weiteres Informations-Quiz basierend auf dem Artikel "${articleContext}" - Quiz ${currentQuizCount + 1}. Verwende andere Fragen als in den vorherigen Quizzen.`;
+                                         } else {
+                                           nextQuizPrompt = 'Erstelle ein weiteres Informations-Quiz.';
+                                         }
+                                         
+                                         // If we're in detail mode with article context, trigger detailed question handler
+                                         if (isInDetailMode && currentArticleContent) {
+                                           handleDetailedQuestion(nextQuizPrompt);
+                                           return;
+                                         }
                                         
                                         sendPrompt(nextQuizPrompt);
                                       }}
