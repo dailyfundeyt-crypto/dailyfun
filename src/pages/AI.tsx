@@ -2497,14 +2497,14 @@ ${additionalInfo}
 
 **[🔍 ${language === 'de' ? 'Vollständiges Profil anzeigen' : 'View Full Profile'}](/search?author=${matchingUser.id})**`;
           
-          return { text: result, endConversationAvailable: true };
+          return { text: result, endConversationAvailable: false };
         } else {
           const availableUsers = employees.map(emp => emp.name).join(', ');
           const noResultsText = language === 'de'
             ? `🔍 Keine Person namens "${searchUser}" gefunden.\n\n👥 **Verfügbare Personen:** ${availableUsers}\n\n💡 **Tipp:** Versuchen Sie es mit "How is Stefan" oder "How is Elke"`
             : `🔍 No person named "${searchUser}" found.\n\n👥 **Available people:** ${availableUsers}\n\n💡 **Tip:** Try "How is Stefan" or "How is Elke"`;
           
-          return { text: noResultsText, endConversationAvailable: true };
+          return { text: noResultsText, endConversationAvailable: false };
         }
       }
     }
@@ -2561,13 +2561,13 @@ ${additionalInfo}
           result += `\n\n> **🔍 ${matchingAuthors.length} ${language === 'de' ? 'Experten gefunden' : 'Experts Found'}**\n\n`;
           result += `*${language === 'de' ? 'Klicken Sie auf einen Namen oder ein Bild, um das vollständige Profil zu öffnen!' : 'Click on a name or image to open the full profile!'}*`;
           
-          return { text: result, endConversationAvailable: true };
+          return { text: result, endConversationAvailable: false };
         } else {
           const noResultsText = language === 'de'
             ? `🔍 Keine Experten oder Artikel für Kategorie "${searchCategory}" gefunden.\n\n💡 **Verfügbare Kategorien:** Technology, Wissenschaft, Humor, Gesellschaft, Politik, Innovation, Gaming`
             : `🔍 No experts or articles found for category "${searchCategory}".\n\n💡 **Available categories:** Technology, Science, Humor, Society, Politics, Innovation, Gaming`;
           
-          return { text: noResultsText, endConversationAvailable: true };
+          return { text: noResultsText, endConversationAvailable: false };
         }
       }
       
@@ -2637,13 +2637,13 @@ ${additionalInfo}
           result += `\n\n> **🔍 ${matchingArticles.length} ${language === 'de' ? 'Artikel gefunden' : 'Articles Found'}**\n\n`;
           result += `*${language === 'de' ? 'Klicken Sie auf einen Titel oder ein Bild, um den vollständigen Artikel zu lesen!' : 'Click on a title or image to read the full article!'}*`;
           
-          return { text: result, endConversationAvailable: true };
+          return { text: result, endConversationAvailable: false };
         } else {
           const noResultsText = language === 'de'
             ? `📰 Leider keine Artikel zum Thema "${searchTopic}" gefunden.\n\n💡 **Verfügbare Kategorien:** Wissenschaft, Technology, Humor, Gesellschaft, Politik\n\n🔍 **Tipp:** Versuchen Sie es mit anderen Suchbegriffen oder [zeigen Sie alle Artikel](/) an.`
             : `📰 Unfortunately, no articles found about "${searchTopic}".\n\n💡 **Available categories:** Science, Technology, Humor, Society, Politics\n\n🔍 **Tip:** Try different search terms or [view all articles](/).`;
           
-          return { text: noResultsText, endConversationAvailable: true };
+          return { text: noResultsText, endConversationAvailable: false };
         }
       }
     }
@@ -2670,8 +2670,10 @@ ${additionalInfo}
       }
     }
     
-    // Quiz generation
-    if (quizMode || input.includes('quiz')) {
+    // Quiz generation - auto-detect quiz requests
+    if (quizMode || input.includes('quiz') || 
+        (language === 'de' && (input.includes('erstell') || input.includes('frag'))) ||
+        (language === 'en' && (input.includes('create') || input.includes('generat')))) {
       setQuizMode(false);
       return await generateQuiz(userInput);
     }
@@ -2761,7 +2763,7 @@ ${additionalInfo}
         
         if (aiResponse && aiResponse.trim().length > 10) {
           const responseHeader = language === 'de' ? '🤖 **AI-Antwort basierend auf dem Artikel:**' : '🤖 **AI Answer based on the article:**';
-          return { text: `${responseHeader}\n\n${aiResponse.trim()}`, endConversationAvailable: true };
+          return { text: `${responseHeader}\n\n${aiResponse.trim()}`, endConversationAvailable: false };
         } else {
           throw new Error('Invalid response from OpenRouter API');
         }
@@ -3495,7 +3497,7 @@ ${additionalInfo}
       result += `---\n\n`;
       result += `💌 *${language === 'de' ? 'Wir freuen uns auf Ihre Nachricht!' : 'We look forward to hearing from you!'}*`;
       
-      return { text: result, endConversationAvailable: true };
+      return { text: result, endConversationAvailable: false };
     }
     
     // Check for team information requests
@@ -3537,7 +3539,7 @@ ${additionalInfo}
       result += `---\n\n`;
       result += `✨ **${language === 'de' ? 'Willkommen bei Daily Fun!' : 'Welcome to Daily Fun!'}**`;
       
-      return { text: result, endConversationAvailable: true };
+      return { text: result, endConversationAvailable: false };
     }
     
     // Default response for unmatched queries
@@ -3626,7 +3628,7 @@ ${additionalInfo}
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: response.endConversationAvailable || (searchMode === 'internet' && !isArticleMode),
+          endConversationAvailable: false,
           showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
@@ -3699,7 +3701,7 @@ ${additionalInfo}
           timestamp: new Date(),
           qrCode: response.qrCode,
           quizData: response.quizData,
-          endConversationAvailable: response.endConversationAvailable || (searchMode === 'internet' && !isArticleMode),
+          endConversationAvailable: false,
           showSummaryButton: !response.text.includes('📝 **') // Don't show summary button on summary messages
         };
 
