@@ -283,82 +283,126 @@ const AI = () => {
       const isQuizRequest = patterns.some(pattern => lowerQuestion.includes(pattern));
       
       if (isQuizRequest && currentArticleContent) {
-        // Generate quiz based on current article content
-        const prompt = language === 'de' 
-          ? `Du bist eine Quiz-Erstellungs-Engine. Erstelle aus dem gegebenen Artikel-Kontext ein Quiz im folgenden Format:
-Frage;Antwort1;Antwort2;Antwort3;Antwort4;Richtige_Antwort
+        // Generate quiz strictly based on current article content
+        // Collect previous quiz questions to avoid repetition
+        const previousQuizQuestions = messages
+          .filter(m => !m.isUser && typeof m.text === 'string' && m.text.startsWith('SEMICOLON_QUIZ:'))
+          .slice(-5)
+          .map(m => {
+            const content = m.text.replace('SEMICOLON_QUIZ:', '').trim();
+            const line = content.split('\n').find(l => l.includes(';') && l.split(';').length === 6) || content;
+            return line.split(';')[0].trim();
+          });
 
-Beispiel:
-Was ist die Hauptstadt von Deutschland?;München;Hamburg;Berlin;Köln;Berlin
+        // Simple keyword extraction from article content
+        const deStop = ['der','die','das','ein','eine','und','oder','für','von','mit','zu','auf','in','an','bei','nach','über','unter','vor','zwischen','durch','gegen','ohne','um','während','wegen','trotz','statt','außerhalb','innerhalb','oberhalb','unterhalb','ist','sind','war','waren'];
+        const enStop = ['the','and','or','for','of','with','to','on','in','at','by','from','about','into','through','during','before','after','above','below','between','among','against','without','within','is','are','was','were'];
+        const stop = language === 'de' ? deStop : enStop;
+        const extractKeywords = (text: string) => Array.from(new Set(
+          text
+            .toLowerCase()
+            .replace(/[^a-zA-ZÄÖÜäöüß0-9\s-]/g, ' ')
+            .split(/\s+/)
+            .filter(w => w.length > 5 && !stop.includes(w))
+        )).slice(0, 50);
+        const contextKeywords = extractKeywords(currentArticleContent);
+        const contextNumbers = Array.from(currentArticleContent.match(/\d[\d.,]*/g) || []);
 
-**Artikel-Kontext für das zu erstellende Quiz:**
-"${currentArticleContent}"
+        const validateQuestion = (q: string) => {
+          const qLower = q.toLowerCase();
+          const hasKeyword = contextKeywords.some(kw => qLower.includes(kw));
+          const hasNumber = contextNumbers.some(n => qLower.includes(n.replace(/[.,]/g, '')) || qLower.includes(n));
+          return hasKeyword || hasNumber;
+        };
 
-Wichtig: Erstelle GENAU ein Quiz basierend auf dem bereitgestellten Artikel-Kontext. Gib NUR das Quiz im exakten Format "Frage;Option1;Option2;Option3;Option4;Richtige_Antwort" aus, ohne zusätzlichen Text, Erklärungen oder Kommentare. Die richtige Antwort muss eine der vier Optionen sein.`
-          : `You are a quiz creation engine. Create a quiz from the given article context in the following format:
-Question;Option1;Option2;Option3;Option4;Correct_Answer
+        const basePromptDe = `Du bist eine strenge Quiz-Erstellungs-Engine. Erstelle GENAU EIN Quiz NUR aus dem folgenden Artikel-Kontext.
 
-Example:
-What is the capital of Germany?;Munich;Hamburg;Berlin;Cologne;Berlin
+Format: Frage;Antwort1;Antwort2;Antwort3;Antwort4;Richtige_Antwort
+- Verwende ausschließlich Fakten (Zahlen, Namen, Orte, Daten), die im Kontext stehen
+- Keine Erfindungen, keine externen Kenntnisse
+- Die richtige Antwort MUSS eine der vier Optionen sein
+- Wenn der Kontext nicht ausreicht, antworte exakt: NO_QUIZ_POSSIBLE
+${previousQuizQuestions.length ? `\nFragen, die du NICHT wiederholen darfst: ${previousQuizQuestions.map(q => `"${q}"`).join(', ')}` : ''}
+\nArtikel-Kontext:\n"""\n${currentArticleContent}\n"""`;
 
-**Article context for the quiz to be created:**
-"${currentArticleContent}"
+        const basePromptEn = `You are a strict quiz-generation engine. Create EXACTLY ONE quiz ONLY from the article context below.
 
-Important: Create EXACTLY one quiz based on the provided article context. Output ONLY the quiz in the exact format "Question;Option1;Option2;Option3;Option4;Correct_Answer", without additional text, explanations, or comments. The correct answer must be one of the four options.`;
+Format: Question;Option1;Option2;Option3;Option4;Correct_Answer
+- Use only facts (numbers, names, places, dates) present in the context
+- No inventions, no outside knowledge
+- The correct answer MUST be one of the four options
+- If the context is insufficient, reply exactly: NO_QUIZ_POSSIBLE
+${previousQuizQuestions.length ? `\nQuestions you MUST NOT repeat: ${previousQuizQuestions.map(q => `"${q}"`).join(', ')}` : ''}
+\nArticle context:\n"""\n${currentArticleContent}\n"""`;
 
-        try {
-          console.log('🤖 Creating article-based information quiz');
-          
+        const prompt = language === 'de' ? basePromptDe : basePromptEn;
+
+        const callOpenRouter = async (p: string, temp = 0.2) => {
           const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Authorization': 'Bearer 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',
               'Content-Type': 'application/json',
               'HTTP-Referer': 'https://dailyfun.app',
-              'X-Title': 'Daily Fun - Article Quiz Generation'
+              'X-Title': 'Daily Fun - Article Quiz Generation (Strict)'
             },
             body: JSON.stringify({
               model: 'meta-llama/llama-3.1-405b-instruct:free',
-              messages: [
-                {
-                  role: 'user',
-                  content: prompt
-                }
-              ],
-              temperature: 0.7,
-              max_tokens: 500
+              messages: [{ role: 'user', content: p }],
+              temperature: temp,
+              max_tokens: 400
             })
           });
-
-          if (!response.ok) {
-            throw new Error(`OpenRouter API error: ${response.status}`);
-          }
-
+          if (!response.ok) throw new Error(`OpenRouter API error: ${response.status}`);
           const data = await response.json();
-          const quizText = data.choices?.[0]?.message?.content?.trim() || '';
-          
-          if (quizText && quizText.length > 10) {
-            // Parse the semicolon-separated format
-            const quizMessage: Message = {
-              id: Date.now().toString(),
-              text: `SEMICOLON_QUIZ:${quizText}`,
-              isUser: false,
-              timestamp: new Date()
-            };
-            
-            setMessages(prev => [...prev, quizMessage]);
-            console.log('✅ Successfully created article-based quiz');
-          } else {
-            throw new Error('Invalid quiz response');
+          return (data.choices?.[0]?.message?.content || '').trim();
+        };
+
+        try {
+          let quizText = await callOpenRouter(prompt, 0.2);
+
+          // Early stop if model refused
+          if (/^NO_QUIZ_POSSIBLE$/i.test(quizText)) {
+            throw new Error(language === 'de' ? 'Nicht genug Informationen im Artikel für ein weiteres Quiz.' : 'Not enough information in the article for another quiz.');
           }
-          
+
+          // Ensure we pick the valid semicolon line
+          const lines = quizText.split('\n').map(l => l.trim());
+          let quizLine = lines.find(l => l.includes(';') && l.split(';').length === 6) || '';
+
+          // Retry once with stricter instruction if validation fails
+          const needsRetry = !quizLine || !validateQuestion(quizLine.split(';')[0] || '');
+          if (needsRetry) {
+            const stricter = prompt + (language === 'de'
+              ? `\n\nSTRIKT: Die Frage MUSS mindestens eine Zahl, ein Datum, einen Namen oder Ort aus dem Artikel enthalten.`
+              : `\n\nSTRICT: The question MUST include at least one number, date, name, or place from the article.`);
+            quizText = await callOpenRouter(stricter, 0.1);
+            if (/^NO_QUIZ_POSSIBLE$/i.test(quizText)) {
+              throw new Error(language === 'de' ? 'Nicht genug Informationen im Artikel für ein weiteres Quiz.' : 'Not enough information in the article for another quiz.');
+            }
+            const lines2 = quizText.split('\n').map(l => l.trim());
+            quizLine = lines2.find(l => l.includes(';') && l.split(';').length === 6) || '';
+          }
+
+          if (!quizLine) throw new Error('Invalid quiz response');
+          const qPart = quizLine.split(';')[0];
+          if (!validateQuestion(qPart)) throw new Error('Quiz passt nicht zum Artikelkontext');
+
+          const quizMessage: Message = {
+            id: Date.now().toString(),
+            text: `SEMICOLON_QUIZ:${quizLine}`,
+            isUser: false,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, quizMessage]);
+          console.log('✅ Successfully created strict article-based quiz');
         } catch (error) {
           console.error('Article quiz generation failed:', error);
           const errorMessage: Message = {
             id: Date.now().toString(),
-            text: language === 'de' 
-              ? '❌ Fehler beim Erstellen des Quiz aus dem Artikel. Versuchen Sie es später erneut.'
-              : '❌ Error creating quiz from article. Try again later.',
+            text: language === 'de'
+              ? '❌ Quiz konnte nicht kontexttreu erstellt werden. Stellen Sie eine inhaltliche Frage zum Artikel oder wählen Sie ein anderes Thema.'
+              : '❌ Could not create a context-faithful quiz. Ask a content question about the article or choose another topic.',
             isUser: false,
             timestamp: new Date()
           };
