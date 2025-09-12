@@ -310,7 +310,9 @@ const AI = () => {
 
       const responseMessage: Message = {
         id: Date.now().toString(),
-        text: `**📖 Detaillierte Antwort**\n\n${answerData.answer}\n\n*Quelle: [${articleData.articleTitle}](${articleData.articleUrl})*\n\n> **Stellen Sie weitere Fragen zu diesem Artikel!**`,
+        text: language === 'de'
+          ? `**📖 Detaillierte Antwort**\n\n${answerData.answer}\n\n*Quelle: [${articleData.articleTitle}](${articleData.articleUrl})*\n\n> **Stellen Sie weitere Fragen zu diesem Artikel!**`
+          : `**📖 Detailed answer**\n\n${answerData.answer}\n\n*Source: [${articleData.articleTitle}](${articleData.articleUrl})*\n\n> **Ask more questions about this article!**`,
         isUser: false,
         timestamp: new Date(),
       };
@@ -320,7 +322,9 @@ const AI = () => {
       console.error('Detailed question error:', error);
       const errorMessage: Message = {
         id: Date.now().toString(),
-        text: `Fehler bei der detaillierten Suche: ${error.message}`,
+        text: language === 'de'
+          ? `Fehler bei der detaillierten Suche: ${(error as any)?.message || 'Unbekannter Fehler'}`
+          : `Error during detailed search: ${(error as any)?.message || 'Unknown error'}`,
         isUser: false,
         timestamp: new Date(),
       };
@@ -3512,7 +3516,7 @@ ${additionalInfo}
     setInputValue('');
 
     // Check if user is asking a detailed question while in detail mode
-    if (isInDetailMode && currentArticleContent) {
+    if (isInDetailMode) {
       await handleDetailedQuestion(currentInput);
       return;
     }
