@@ -3594,6 +3594,19 @@ ${additionalInfo}
     }]);
   };
 
+  const endNewsDetailMode = () => {
+    setIsInDetailMode(false);
+    setCurrentArticleContent('');
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      text: language === 'de' 
+        ? '🛑 News Intelligence Modus beendet. Sie sind zurück im normalen Daily Fun (Internet Search) Modus.'
+        : '🛑 News Intelligence mode ended. You are back in normal Daily Fun (Internet Search) mode.',
+      isUser: false,
+      timestamp: new Date()
+    }]);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">      
       {/* Small Daily Fun AI title in upper corner */}
@@ -4228,16 +4241,34 @@ ${additionalInfo}
                    <span className="sm:hidden">{quizInfoMode ? 'Exit' : 'Quiz'}</span>
                  </Button>
 
-                  {/* Single News Intelligence Button */}
-                  <Button
-                    variant="outline"
-                    onClick={cycleTimeframe}
-                    className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
-                  >
-                    <Newspaper className="w-3 h-3 md:w-4 md:h-4" />
-                    <span className="hidden sm:inline">{getTimeframeLabel()}</span>
-                    <span className="sm:hidden">{newsTimeframe === 'today' ? 'H' : newsTimeframe === 'week' ? 'W' : 'M'}</span>
-                  </Button>
+                   {/* Single News Intelligence Button */}
+                   <Button
+                     variant="outline"
+                     onClick={() => {
+                       if (isInDetailMode) {
+                         endNewsDetailMode();
+                       } else {
+                         cycleTimeframe();
+                       }
+                     }}
+                     className={`flex items-center gap-1 md:gap-2 shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10 ${
+                       isInDetailMode ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white'
+                     }`}
+                   >
+                     <Newspaper className="w-3 h-3 md:w-4 md:h-4" />
+                     <span className="hidden sm:inline">
+                       {isInDetailMode 
+                         ? (language === 'de' ? 'Modus beenden' : 'Exit mode')
+                         : getTimeframeLabel()
+                       }
+                     </span>
+                     <span className="sm:hidden">
+                       {isInDetailMode 
+                         ? 'Exit' 
+                         : (newsTimeframe === 'today' ? 'H' : newsTimeframe === 'week' ? 'W' : 'M')
+                       }
+                     </span>
+                   </Button>
               </>
             ) : (
               <>
