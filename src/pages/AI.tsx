@@ -272,6 +272,104 @@ const AI = () => {
   const handleDetailedQuestion = async (question: string) => {
     setIsTyping(true);
     try {
+      // Check if user is requesting a quiz based on the current article
+      const quizRequestPatterns = {
+        de: ['erstelle', 'informations', 'quiz', 'weiteres', 'quiz'],
+        en: ['create', 'information', 'quiz', 'another', 'quiz']
+      };
+      
+      const lowerQuestion = question.toLowerCase();
+      const patterns = language === 'de' ? quizRequestPatterns.de : quizRequestPatterns.en;
+      const isQuizRequest = patterns.some(pattern => lowerQuestion.includes(pattern));
+      
+      if (isQuizRequest && currentArticleContent) {
+        // Generate quiz based on current article content
+        const prompt = language === 'de' 
+          ? `Du bist eine Quiz-Erstellungs-Engine. Erstelle aus dem gegebenen Artikel-Kontext ein Quiz im folgenden Format:
+Frage;Antwort1;Antwort2;Antwort3;Antwort4;Richtige_Antwort
+
+Beispiel:
+Was ist die Hauptstadt von Deutschland?;München;Hamburg;Berlin;Köln;Berlin
+
+**Artikel-Kontext für das zu erstellende Quiz:**
+"${currentArticleContent}"
+
+Wichtig: Erstelle GENAU ein Quiz basierend auf dem bereitgestellten Artikel-Kontext. Gib NUR das Quiz im exakten Format "Frage;Option1;Option2;Option3;Option4;Richtige_Antwort" aus, ohne zusätzlichen Text, Erklärungen oder Kommentare. Die richtige Antwort muss eine der vier Optionen sein.`
+          : `You are a quiz creation engine. Create a quiz from the given article context in the following format:
+Question;Option1;Option2;Option3;Option4;Correct_Answer
+
+Example:
+What is the capital of Germany?;Munich;Hamburg;Berlin;Cologne;Berlin
+
+**Article context for the quiz to be created:**
+"${currentArticleContent}"
+
+Important: Create EXACTLY one quiz based on the provided article context. Output ONLY the quiz in the exact format "Question;Option1;Option2;Option3;Option4;Correct_Answer", without additional text, explanations, or comments. The correct answer must be one of the four options.`;
+
+        try {
+          console.log('🤖 Creating article-based information quiz');
+          
+          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Bearer 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',
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://dailyfun.app',
+              'X-Title': 'Daily Fun - Article Quiz Generation'
+            },
+            body: JSON.stringify({
+              model: 'meta-llama/llama-3.1-405b-instruct:free',
+              messages: [
+                {
+                  role: 'user',
+                  content: prompt
+                }
+              ],
+              temperature: 0.7,
+              max_tokens: 500
+            })
+          });
+
+          if (!response.ok) {
+            throw new Error(`OpenRouter API error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          const quizText = data.choices?.[0]?.message?.content?.trim() || '';
+          
+          if (quizText && quizText.length > 10) {
+            // Parse the semicolon-separated format
+            const quizMessage: Message = {
+              id: Date.now().toString(),
+              text: `SEMICOLON_QUIZ:${quizText}`,
+              isUser: false,
+              timestamp: new Date()
+            };
+            
+            setMessages(prev => [...prev, quizMessage]);
+            console.log('✅ Successfully created article-based quiz');
+          } else {
+            throw new Error('Invalid quiz response');
+          }
+          
+        } catch (error) {
+          console.error('Article quiz generation failed:', error);
+          const errorMessage: Message = {
+            id: Date.now().toString(),
+            text: language === 'de' 
+              ? '❌ Fehler beim Erstellen des Quiz aus dem Artikel. Versuchen Sie es später erneut.'
+              : '❌ Error creating quiz from article. Try again later.',
+            isUser: false,
+            timestamp: new Date()
+          };
+          setMessages(prev => [...prev, errorMessage]);
+        }
+        
+        setIsTyping(false);
+        return;
+      }
+
+      // Normal detailed question handling for non-quiz requests
       // First convert question to search terms
       const { data: searchData, error: searchError } = await supabase.functions.invoke('news-intelligence', {
         body: { 
