@@ -235,7 +235,8 @@ const AI = () => {
       const { data, error } = await supabase.functions.invoke('news-intelligence', {
         body: { 
           action: 'aggregate_news', 
-          timeframe: newsTimeframe 
+          timeframe: newsTimeframe,
+          language: language
         }
       });
 
