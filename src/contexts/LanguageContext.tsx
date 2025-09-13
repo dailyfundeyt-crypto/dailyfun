@@ -141,7 +141,7 @@ const translations = {
     'footer.categories': 'Fun Categories',
     
     // Common
-    'common.back': 'Back to Home',
+    'common.back': 'Back',
     'common.contact': 'Contact',
     'common.privacy': 'Privacy Policy',
     'common.terms': 'Terms of Service',
@@ -300,7 +300,7 @@ const translations = {
     'footer.categories': 'Spaß Kategorien',
     
     // Common
-    'common.back': 'Zurück zur Startseite',
+    'common.back': 'Zurück',
     'common.contact': 'Kontakt',
     'common.privacy': 'Datenschutzrichtlinie',
     'common.terms': 'Nutzungsbedingungen',
