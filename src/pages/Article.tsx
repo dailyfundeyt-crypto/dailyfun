@@ -109,12 +109,22 @@ const Article = () => {
   const handleBack = () => {
     const idx = (window.history.state && (window.history.state as any).idx) ?? 0;
     const canGoBack = idx > 0 || window.history.length > 1;
+    const before = window.location.pathname + window.location.search;
     if (canGoBack) {
       navigate(-1);
+      // Fallback if history back doesn't trigger (mobile edge cases)
+      setTimeout(() => {
+        const after = window.location.pathname + window.location.search;
+        if (after === before) {
+          const from = (location.state as any)?.from as string | undefined;
+          if (from) navigate(from, { state: { restoreScroll: true } });
+          else navigate('/search', { state: { restoreScroll: true } });
+        }
+      }, 300);
     } else {
       const from = (location.state as any)?.from as string | undefined;
-      if (from) navigate(from);
-      else navigate('/search');
+      if (from) navigate(from, { state: { restoreScroll: true } });
+      else navigate('/search', { state: { restoreScroll: true } });
     }
   };
 

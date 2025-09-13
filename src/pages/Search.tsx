@@ -1,6 +1,6 @@
 
 import { useState, useMemo, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
 import ProfileShareMenu from '../components/ProfileShareMenu';
@@ -14,6 +14,8 @@ const Search = () => {
   const [sortMode, setSortMode] = useState<'latest' | 'random'>('latest');
   const { t, language } = useLanguage();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Handle URL parameters for author filtering
   useEffect(() => {
@@ -25,6 +27,18 @@ const Search = () => {
     // Scroll to top when page loads or author parameter changes
     window.scrollTo(0, 0);
   }, [searchParams]);
+
+  // Restore scroll position when returning with restore flag
+  useEffect(() => {
+    const shouldRestore = (location.state as any)?.restoreScroll;
+    if (shouldRestore) {
+      const key = `scroll:${location.pathname}${location.search}`;
+      const y = Number(sessionStorage.getItem(key) || '0');
+      requestAnimationFrame(() => window.scrollTo(0, y));
+      // Clear the state flag
+      navigate('.', { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // Generate random seed to keep random order stable during re-renders
   const [randomSeed, setRandomSeed] = useState(() => Math.random());
@@ -268,6 +282,10 @@ const Search = () => {
             <Link
               key={article.id}
               to={`/article/${article.id}`}
+              state={{ from: `${location.pathname}${location.search}` }}
+              onClick={() => {
+                sessionStorage.setItem(`scroll:${location.pathname}${location.search}`, String(window.scrollY));
+              }}
               className={`block w-full py-16 transition-all duration-300 hover:scale-[1.02] ${
                 index % 2 === 0 ? 'bg-white' : 'bg-[#5E40E3]'
               }`}

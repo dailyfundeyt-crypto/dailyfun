@@ -1,6 +1,6 @@
 
-import { useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useMemo, useEffect } from 'react';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
@@ -23,6 +23,8 @@ const CategoryPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 6;
   const { t, language } = useLanguage();
+  const location = useLocation();
+  const navigate = useNavigate();
   
   // For the /weird route, we want to show "Weird News" category
   // Map URL paths to actual category names
@@ -55,6 +57,16 @@ const CategoryPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Restore scroll when returning from article via fallback navigation
+  useEffect(() => {
+    const shouldRestore = (location.state as any)?.restoreScroll;
+    if (shouldRestore) {
+      const key = `scroll:${location.pathname}${location.search}`;
+      const y = Number(sessionStorage.getItem(key) || '0');
+      requestAnimationFrame(() => window.scrollTo(0, y));
+      navigate('.', { replace: true, state: {} });
+    }
+  }, [location, navigate]);
   if (!categoryName) {
     return (
       <div className="min-h-screen bg-[#FFFFFF] text-[#1A1A1A]">
@@ -98,6 +110,10 @@ const CategoryPage = () => {
             <Link
               key={article.id}
               to={`/article/${article.id}`}
+              state={{ from: `${location.pathname}${location.search}` }}
+              onClick={() => {
+                sessionStorage.setItem(`scroll:${location.pathname}${location.search}`, String(window.scrollY));
+              }}
               className={`block w-full py-16 transition-all duration-300 hover:scale-[1.02] ${
                 index % 2 === 0 ? 'bg-[#FFFFFF]' : 'bg-[#5E40E3]'
               }`}

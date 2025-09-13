@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import OptimizedImage from './OptimizedImage';
 import type { Article } from '../data/articles';
 
@@ -13,10 +13,15 @@ const ArticleSection: React.FC<ArticleSectionProps> = memo(({ article, index, la
   const isEven = index % 2 === 0;
   const bgColor = isEven ? 'bg-white' : 'bg-[#5E40E3]';
   const textColor = isEven ? 'text-[#1A1A1A]' : 'text-[#FFFFFF]';
+  const location = useLocation();
 
   return (
     <Link
       to={`/article/${article.id}`}
+      state={{ from: `${location.pathname}${location.search}` }}
+      onClick={() => {
+        sessionStorage.setItem(`scroll:${location.pathname}${location.search}`, String(window.scrollY));
+      }}
       className={`block w-full py-16 transition-all duration-300 hover:scale-[1.02] ${bgColor}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -24,14 +24,15 @@ const queryClient = new QueryClient();
 
 // Component to handle scroll restoration
 const ScrollToTop = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
   const navigationType = useNavigationType();
   
   useEffect(() => {
-    if (navigationType === 'PUSH') {
+    const shouldRestore = (location.state as any)?.restoreScroll;
+    if (navigationType === 'PUSH' && !shouldRestore) {
       window.scrollTo(0, 0);
     }
-  }, [pathname, navigationType]);
+  }, [location, navigationType]);
   
   return null;
 };

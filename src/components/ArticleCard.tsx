@@ -1,6 +1,6 @@
 
 import { useState, memo, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { incrementViews } from '../utils/viewTracker';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
@@ -30,6 +30,7 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleClick = useCallback(() => {
     incrementViews(article.id);
@@ -56,7 +57,14 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
     : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=600&q=75`;
 
   return (
-    <Link to={`/article/${article.id}`} onClick={handleClick}>
+    <Link 
+      to={`/article/${article.id}`}
+      state={{ from: `${location.pathname}${location.search}` }}
+      onClick={() => {
+        handleClick();
+        sessionStorage.setItem(`scroll:${location.pathname}${location.search}`, String(window.scrollY));
+      }}
+    >
       <article className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md hover:border-red-accent transition-all duration-300 cursor-pointer ${featured ? 'md:flex' : ''}`}>
         <div className={`relative ${featured ? 'md:w-1/2' : ''}`}>
           <div className="aspect-video bg-gray-100 overflow-hidden">
