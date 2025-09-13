@@ -134,7 +134,7 @@ const Article = () => {
           </div>
         </div>
 
-        <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden apple-popup-animation">
           <div className="relative">
             <div className="aspect-video bg-gray-100 overflow-hidden">
               <OptimizedImage
@@ -180,9 +180,12 @@ const Article = () => {
             </div>
 
             <div className="prose prose-lg max-w-none">
-              <p className="text-xl text-[#1A1A1A] mb-8 sans-serif italic leading-relaxed glow-text">
-                {translatedExcerpt}
-              </p>
+              <div className="particle-container">
+                <p className="text-xl text-[#1A1A1A] mb-8 sans-serif italic leading-relaxed glow-text">
+                  {translatedExcerpt}
+                </p>
+                <div className="particles"></div>
+              </div>
               
               <div className="text-[#1A1A1A] space-y-6 sans-serif leading-relaxed">
                 {article.content ? (
@@ -214,18 +217,20 @@ const Article = () => {
                         return (
                           <div 
                             key={index} 
-                            className="mb-6 text-lg leading-relaxed glow-text"
-                            dangerouslySetInnerHTML={{ __html: paragraph }}
-                          />
+                            className="mb-6 text-lg leading-relaxed particle-container"
+                          >
+                            <div dangerouslySetInnerHTML={{ __html: paragraph }} className="glow-text" />
+                            <div className="particles"></div>
+                          </div>
                         );
                       } else {
                         return (
-                          <p 
-                            key={index} 
-                            className="mb-6 text-lg leading-relaxed glow-text"
-                          >
-                            {paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}
-                          </p>
+                          <div key={index} className="mb-6 text-lg leading-relaxed particle-container">
+                            <p className="glow-text">
+                              {paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}
+                            </p>
+                            <div className="particles"></div>
+                          </div>
                         );
                       }
                     });
@@ -233,21 +238,33 @@ const Article = () => {
                 ) : (
                   // Fallback to generic content without animation
                   <>
-                    <p className="mb-6 text-lg leading-relaxed glow-text">
-                      {t('article.content.paragraph1')}
-                    </p>
+                    <div className="particle-container">
+                      <p className="mb-6 text-lg leading-relaxed glow-text">
+                        {t('article.content.paragraph1')}
+                      </p>
+                      <div className="particles"></div>
+                    </div>
                     
-                    <p className="mb-6 text-lg leading-relaxed glow-text">
-                      {t('article.content.paragraph2')}
-                    </p>
+                    <div className="particle-container">
+                      <p className="mb-6 text-lg leading-relaxed glow-text">
+                        {t('article.content.paragraph2')}
+                      </p>
+                      <div className="particles"></div>
+                    </div>
                     
-                    <p className="mb-6 text-lg leading-relaxed glow-text">
-                      {t('article.content.paragraph3')}
-                    </p>
+                    <div className="particle-container">
+                      <p className="mb-6 text-lg leading-relaxed glow-text">
+                        {t('article.content.paragraph3')}
+                      </p>
+                      <div className="particles"></div>
+                    </div>
                     
-                    <p className="mb-6 text-lg leading-relaxed glow-text">
-                      {t('article.content.paragraph4')}
-                    </p>
+                    <div className="particle-container">
+                      <p className="mb-6 text-lg leading-relaxed glow-text">
+                        {t('article.content.paragraph4')}
+                      </p>
+                      <div className="particles"></div>
+                    </div>
                   </>
                 )}
               </div>
