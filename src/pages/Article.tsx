@@ -113,13 +113,13 @@ const Article = () => {
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
-          <Link
-            to="/"
-            className="inline-flex items-center text-red-accent hover:text-blue-accent transition-colors"
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center text-red-accent hover:text-blue-accent transition-colors bg-transparent border-none cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t('common.back')}
-          </Link>
+          </button>
           
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <button
