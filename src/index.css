@@ -200,4 +200,9 @@
     backface-visibility: hidden;
     perspective: 1000px;
   }
+
+  /* Glow text effect for articles */
+  .glow-text {
+    text-shadow: 0 0 5px rgba(26, 26, 26, 0.3), 0 0 10px rgba(26, 26, 26, 0.2);
+  }
 }

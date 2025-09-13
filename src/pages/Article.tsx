@@ -180,9 +180,9 @@ const Article = () => {
             </div>
 
             <div className="prose prose-lg max-w-none">
-              <AnimatedParagraph className="text-xl text-[#1A1A1A] mb-8 sans-serif italic leading-relaxed">
+              <p className="text-xl text-[#1A1A1A] mb-8 sans-serif italic leading-relaxed glow-text">
                 {translatedExcerpt}
-              </AnimatedParagraph>
+              </p>
               
               <div className="text-[#1A1A1A] space-y-6 sans-serif leading-relaxed">
                 {article.content ? (
@@ -214,41 +214,40 @@ const Article = () => {
                         return (
                           <div 
                             key={index} 
-                            className="mb-6 text-lg leading-relaxed"
+                            className="mb-6 text-lg leading-relaxed glow-text"
                             dangerouslySetInnerHTML={{ __html: paragraph }}
                           />
                         );
                       } else {
                         return (
-                          <AnimatedParagraph 
+                          <p 
                             key={index} 
-                            className="mb-6 text-lg leading-relaxed"
-                            delay={index * 100}
+                            className="mb-6 text-lg leading-relaxed glow-text"
                           >
                             {paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}
-                          </AnimatedParagraph>
+                          </p>
                         );
                       }
                     });
                   })()
                 ) : (
-                  // Fallback to generic content with animation
+                  // Fallback to generic content without animation
                   <>
-                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={0}>
+                    <p className="mb-6 text-lg leading-relaxed glow-text">
                       {t('article.content.paragraph1')}
-                    </AnimatedParagraph>
+                    </p>
                     
-                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={100}>
+                    <p className="mb-6 text-lg leading-relaxed glow-text">
                       {t('article.content.paragraph2')}
-                    </AnimatedParagraph>
+                    </p>
                     
-                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={200}>
+                    <p className="mb-6 text-lg leading-relaxed glow-text">
                       {t('article.content.paragraph3')}
-                    </AnimatedParagraph>
+                    </p>
                     
-                    <AnimatedParagraph className="mb-6 text-lg leading-relaxed" delay={300}>
+                    <p className="mb-6 text-lg leading-relaxed glow-text">
                       {t('article.content.paragraph4')}
-                    </AnimatedParagraph>
+                    </p>
                   </>
                 )}
               </div>
