@@ -4462,8 +4462,8 @@ ${additionalInfo}
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Action buttons */}
-            {searchMode === 'internet' ? (
+            {/* Action buttons - Only show on AI page when in internet mode */}
+            {searchMode === 'internet' && location.pathname === '/ai' ? (
               <>
                 <Button
                   variant="outline"
