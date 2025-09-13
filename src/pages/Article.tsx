@@ -29,6 +29,7 @@ const Article = () => {
   const article = articles.find(a => a.id === id);
   const { t, language } = useLanguage();
   const navigate = useNavigate();
+  const location = useLocation();
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
@@ -105,6 +106,17 @@ const Article = () => {
     navigate('/ai');
   };
 
+  const handleBack = () => {
+    const idx = (window.history.state && (window.history.state as any).idx) ?? 0;
+    const canGoBack = idx > 0 || window.history.length > 1;
+    if (canGoBack) {
+      navigate(-1);
+    } else {
+      const from = (location.state as any)?.from as string | undefined;
+      if (from) navigate(from);
+      else navigate('/search');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white text-black relative">
@@ -112,9 +124,9 @@ const Article = () => {
       
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 relative z-10">
           <button
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="inline-flex items-center text-red-accent hover:text-blue-accent transition-colors bg-transparent border-none cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
