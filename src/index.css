@@ -201,9 +201,12 @@
     perspective: 1000px;
   }
 
-  /* Glow text effect for articles */
+  /* Subtle text effect for articles - Apple style readability */
   .glow-text {
-    text-shadow: 0 0 5px rgba(26, 26, 26, 0.3), 0 0 10px rgba(26, 26, 26, 0.2);
+    text-shadow: 0 0 2px rgba(26, 26, 26, 0.1);
+    font-weight: 400;
+    line-height: 1.6;
+    color: rgba(26, 26, 26, 0.95);
   }
 
   /* Apple-style popup animation */
@@ -228,7 +231,7 @@
     overflow: visible;
   }
 
-  /* Particles animation */
+  /* Enhanced particles animation - more particles */
   .particles {
     position: absolute;
     top: 0;
@@ -243,55 +246,103 @@
   .particles::after {
     content: '';
     position: absolute;
-    width: 2px;
-    height: 2px;
+    width: 1.5px;
+    height: 1.5px;
     background: linear-gradient(45deg, #007BFF, #E4002B);
     border-radius: 50%;
     animation: floatParticle 8s ease-in-out infinite;
-    opacity: 0.4;
+    opacity: 0.3;
+    box-shadow: 0 0 4px rgba(0, 123, 255, 0.4);
   }
 
   .particles::before {
-    top: 20%;
-    left: 10%;
+    top: 15%;
+    left: 8%;
     animation-delay: 0s;
-    animation-duration: 6s;
+    animation-duration: 7s;
   }
 
   .particles::after {
-    top: 60%;
-    right: 15%;
+    top: 70%;
+    right: 12%;
     animation-delay: 2s;
+    animation-duration: 9s;
+  }
+
+  /* Add more particles with pseudo-elements */
+  .particle-container::before,
+  .particle-container::after {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    background: linear-gradient(135deg, #00D4AA, #007BFF);
+    border-radius: 50%;
+    animation: floatParticle 10s ease-in-out infinite;
+    opacity: 0.25;
+    box-shadow: 0 0 3px rgba(228, 0, 43, 0.3);
+    pointer-events: none;
+  }
+
+  .particle-container::before {
+    top: 40%;
+    left: 85%;
+    animation-delay: 1.5s;
     animation-duration: 8s;
+  }
+
+  .particle-container::after {
+    top: 80%;
+    left: 20%;
+    animation-delay: 4s;
+    animation-duration: 6s;
   }
 
   @keyframes floatParticle {
     0%, 100% {
       transform: translateY(0px) translateX(0px) scale(1);
-      opacity: 0.2;
+      opacity: 0.15;
     }
     25% {
-      transform: translateY(-10px) translateX(5px) scale(1.2);
-      opacity: 0.6;
-    }
-    50% {
-      transform: translateY(-5px) translateX(-5px) scale(0.8);
+      transform: translateY(-8px) translateX(4px) scale(1.1);
       opacity: 0.4;
     }
+    50% {
+      transform: translateY(-4px) translateX(-4px) scale(0.9);
+      opacity: 0.3;
+    }
     75% {
-      transform: translateY(-15px) translateX(8px) scale(1.1);
-      opacity: 0.7;
+      transform: translateY(-12px) translateX(6px) scale(1.05);
+      opacity: 0.5;
     }
   }
 
-  /* Additional particle effect for more Apple Intelligence feel */
+  /* Additional particle variations for Apple Intelligence feel */
   .particle-container:nth-child(odd) .particles::before {
     background: linear-gradient(135deg, #007BFF, #00D4AA);
-    animation-delay: 1s;
+    animation-delay: 0.8s;
+    width: 2px;
+    height: 2px;
   }
 
   .particle-container:nth-child(even) .particles::after {
     background: linear-gradient(135deg, #E4002B, #FF6B6B);
-    animation-delay: 3s;
+    animation-delay: 2.5s;
+    width: 1.8px;
+    height: 1.8px;
+  }
+
+  .particle-container:nth-child(3n) .particles::before {
+    background: linear-gradient(90deg, #00D4AA, #007BFF);
+    top: 25%;
+    left: 60%;
+    animation-delay: 1.2s;
+  }
+
+  .particle-container:nth-child(4n) .particles::after {
+    background: linear-gradient(180deg, #E4002B, #007BFF);
+    top: 50%;
+    right: 25%;
+    animation-delay: 3.5s;
   }
 }
