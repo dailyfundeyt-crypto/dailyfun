@@ -231,6 +231,18 @@ const Article = () => {
                 >
                   <source src="/doner-paradox-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === 'no-legs-no-excuses' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/no-legs-no-excuses-video.mp4" type="video/mp4" />
+                </video>
               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
