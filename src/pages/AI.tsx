@@ -3691,24 +3691,29 @@ ${additionalInfo}
   const handleActionCardClick = (card: ActionCard) => {
     if (card.id === 'summarize-info') {
       setSummaryMode(true);
-      setQuizInfoMode(false); // Ensure quiz mode is disabled
+      setQuizInfoMode(false);
       setSelectedMessages([]);
-      const prompt = language === 'de' ? card.promptDe : card.promptEn;
+      const msg = language === 'de' 
+        ? '📝 **Zusammenfassungs-Modus aktiviert**\n\nSo funktioniert es:\n1. Klicken Sie auf die Nachrichten, die Sie zusammenfassen möchten\n2. Ausgewählte Nachrichten werden mit einem Rahmen markiert\n3. Klicken Sie auf den "Zusammenfassen" Button in einer AI-Nachricht\n4. Oder schreiben Sie "fasse die Informationen zusammen"\n\nWählen Sie jetzt die Nachrichten aus, die zusammengefasst werden sollen.'
+        : '📝 **Summary Mode Activated**\n\nHow it works:\n1. Click on the messages you want to summarize\n2. Selected messages will be highlighted with a border\n3. Click the "Summarize" button in an AI message\n4. Or type "summarize the information"\n\nNow select the messages you want to summarize.';
       const newMessage: Message = {
         id: Date.now().toString(),
-        text: prompt,
+        text: msg,
         isUser: false,
-        timestamp: new Date()
+        timestamp: new Date(),
+        showSummaryButton: true
       };
       setMessages(prev => [...prev, newMessage]);
     } else if (card.id === 'information-quiz') {
       setQuizInfoMode(true);
-      setSummaryMode(false); // Disable summary mode when enabling quiz
+      setSummaryMode(false);
       setSelectedMessages([]);
-      const prompt = language === 'de' ? card.promptDe : card.promptEn;
+      const msg = language === 'de' 
+        ? '🧠 **Quiz-Modus aktiviert**\n\nSo funktioniert es:\n1. Klicken Sie auf die Nachrichten, die Sie für das Quiz verwenden möchten\n2. Ausgewählte Nachrichten werden mit einem Rahmen markiert\n3. Klicken Sie auf den "Quiz erstellen" Button in einer AI-Nachricht\n4. Oder schreiben Sie "erstelle informations quiz"\n\nWählen Sie jetzt die Nachrichten aus, die für das Quiz verwendet werden sollen.'
+        : '🧠 **Quiz Mode Activated**\n\nHow it works:\n1. Click on the messages you want to use for the quiz\n2. Selected messages will be highlighted with a border\n3. Click the "Create Quiz" button in an AI message\n4. Or type "create information quiz"\n\nNow select the messages you want to use for the quiz.';
       const newMessage: Message = {
         id: Date.now().toString(),
-        text: prompt,
+        text: msg,
         isUser: false,
         timestamp: new Date(),
         showQuizButton: true
