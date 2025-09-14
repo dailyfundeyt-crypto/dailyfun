@@ -159,14 +159,28 @@ const Article = () => {
         <article className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden apple-popup-animation">
           <div className="relative">
             <div className="aspect-video bg-gray-100 overflow-hidden">
-              <OptimizedImage
-                src={getProfessionalImage(article.id)}
-                alt={translatedTitle}
-                className="w-full h-full object-cover"
-                width={800}
-                height={450}
-                sizes="(max-width: 768px) 100vw, 800px"
-              />
+              {article.id === '10' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/samsung-note7-video.mp4" type="video/mp4" />
+                </video>
+              ) : (
+                <OptimizedImage
+                  src={getProfessionalImage(article.id)}
+                  alt={translatedTitle}
+                  className="w-full h-full object-cover"
+                  width={800}
+                  height={450}
+                  sizes="(max-width: 768px) 100vw, 800px"
+                />
+              )}
             </div>
             <div className="absolute top-4 left-4">
               <span className="bg-red-accent text-white px-3 py-1 rounded text-sm font-bold">
