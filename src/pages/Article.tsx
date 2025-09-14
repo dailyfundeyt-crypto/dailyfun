@@ -195,6 +195,18 @@ const Article = () => {
                 >
                   <source src="/emoji-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === 'hunger-games-schweinehund' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/hunger-games-video.mp4" type="video/mp4" />
+                </video>
               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
