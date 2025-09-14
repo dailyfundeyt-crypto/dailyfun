@@ -183,6 +183,18 @@ const Article = () => {
                 >
                   <source src="/missing-person-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === 'google-vs-apple-poop-emoji' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/emoji-video.mp4" type="video/mp4" />
+                </video>
               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
