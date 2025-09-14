@@ -209,6 +209,52 @@
     color: rgba(26, 26, 26, 0.95);
   }
 
+  /* Apple-style animations and interactions */
+  .apple-button {
+    @apply transition-all duration-200 ease-apple;
+    @apply active:scale-95 active:transition-all active:duration-75;
+    @apply hover:shadow-lg hover:shadow-primary/20;
+    @apply focus:ring-2 focus:ring-primary/30 focus:ring-offset-2;
+    transform-origin: center;
+  }
+  
+  .apple-button:active {
+    transform: scale(0.95) translateY(1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: all 75ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  .apple-toggle {
+    @apply transition-all duration-300 ease-apple-spring;
+    @apply hover:scale-105 hover:shadow-md;
+    @apply active:scale-95 active:transition-all active:duration-100;
+    transform-origin: center;
+  }
+  
+  .apple-nav-item {
+    @apply transition-all duration-300 ease-apple;
+    @apply hover:scale-110 hover:bg-muted/20;
+    @apply active:scale-95 active:transition-all active:duration-100;
+    @apply focus:ring-2 focus:ring-primary/30 focus:ring-offset-2;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+  }
+  
+  .apple-nav-item.active {
+    @apply bg-primary/10 shadow-lg;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Apple-style language switcher */
+  .apple-language-badge {
+    @apply transition-all duration-300 ease-apple-spring;
+    @apply hover:scale-110 hover:shadow-md hover:bg-primary/10;
+    @apply active:scale-95 active:transition-all active:duration-100;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
   /* Apple-style popup animation */
   .apple-popup-animation {
     animation: applePopup 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);

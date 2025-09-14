@@ -40,10 +40,10 @@ const MobileBottomNav = () => {
               <button
                 key={item.label}
                 onClick={toggleLanguage}
-                className={`flex items-center justify-center min-w-[48px] h-12 mx-1 rounded-2xl transition-all duration-300 ease-out ${
+                className={`apple-toggle flex items-center justify-center min-w-[48px] h-12 mx-1 rounded-2xl backdrop-blur-sm transition-all duration-300 ease-apple-spring ${
                   active
-                    ? 'text-[hsl(var(--icon-hover))] bg-muted/50 scale-110 shadow-lg'
-                    : 'text-muted-foreground hover:text-[hsl(var(--icon-hover))] hover:bg-muted/30 hover:scale-105'
+                    ? 'text-primary bg-primary/10 scale-110 shadow-lg shadow-primary/20'
+                    : 'text-muted-foreground hover:text-primary hover:bg-primary/5 hover:shadow-md'
                 }`}
               >
                 <span className="text-xs font-bold tracking-wider px-1">
@@ -58,10 +58,10 @@ const MobileBottomNav = () => {
               key={item.href}
               to={item.href}
               onClick={item.href === '/search' ? handleHomeClick : undefined}
-              className={`flex items-center justify-center w-12 h-12 mx-1 rounded-2xl transition-all duration-300 ease-out ${
+              className={`apple-nav-item flex items-center justify-center w-12 h-12 mx-1 rounded-2xl backdrop-blur-sm transition-all duration-300 ease-apple-spring ${
                 active
-                  ? 'text-[hsl(var(--icon-hover))] bg-muted/50 scale-110 shadow-lg'
-                  : 'text-muted-foreground hover:text-[hsl(var(--icon-hover))] hover:bg-muted/30 hover:scale-105'
+                  ? 'active text-primary bg-primary/10 scale-110 shadow-lg shadow-primary/20'
+                  : 'text-muted-foreground hover:text-primary hover:bg-primary/5 hover:shadow-md'
               }`}
             >
               <Icon className="h-5 w-5" />

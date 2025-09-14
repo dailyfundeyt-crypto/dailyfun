@@ -53,14 +53,14 @@ const Header = () => {
                   <button
                     key={item.label}
                     onClick={() => handleNavigation(item)}
-                    className={`p-2 rounded-md transition-colors ${
+                    className={`apple-language-badge px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 ease-apple-spring ${
                       isActive
-                        ? 'text-[hsl(var(--icon-hover))]'
-                        : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
+                        ? 'text-primary bg-primary/10 shadow-md'
+                        : 'text-muted-foreground hover:text-primary hover:bg-primary/5'
                     }`}
                     title={`${item.label} (${language === 'en' ? 'EN' : 'DE'})`}
                   >
-                    <span className="text-sm font-medium">{language === 'en' ? 'EN' : 'DE'}</span>
+                    {language === 'en' ? 'EN' : 'DE'}
                   </button>
                 );
               }
@@ -69,10 +69,10 @@ const Header = () => {
                 <Link
                   key={item.label}
                   to={item.href}
-                  className={`p-2 rounded-md transition-colors ${
+                  className={`apple-nav-item p-2.5 transition-all duration-300 ease-apple ${
                     isActive
-                      ? 'text-[hsl(var(--icon-hover))]'
-                      : 'text-[hsl(var(--icon-default))] hover:text-[hsl(var(--icon-hover))]'
+                      ? 'active text-primary shadow-lg'
+                      : 'text-muted-foreground hover:text-primary'
                   }`}
                   title={item.label}
                 >

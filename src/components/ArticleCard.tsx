@@ -65,13 +65,13 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
         sessionStorage.setItem(`scroll:${location.pathname}${location.search}`, String(window.scrollY));
       }}
     >
-      <article className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md hover:border-red-accent transition-all duration-300 cursor-pointer ${featured ? 'md:flex' : ''}`}>
-        <div className={`relative ${featured ? 'md:w-1/2' : ''}`}>
+      <article className={`apple-popup-animation bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/50 overflow-hidden transition-all duration-300 ease-apple cursor-pointer hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] active:scale-[0.98] ${featured ? 'md:flex' : ''}`}>
+        <div className={`relative overflow-hidden rounded-t-2xl ${featured ? 'md:w-1/2 md:rounded-l-2xl md:rounded-tr-none' : ''}`}>
           <div className="aspect-video bg-gray-100 overflow-hidden">
             <OptimizedImage
               src={article.imageUrl}
               alt={translatedTitle}
-              className={`w-full h-full object-cover transform hover:scale-105 transition-transform duration-500 ${
+              className={`w-full h-full object-cover transform hover:scale-110 transition-all duration-700 ease-apple ${
                 imageLoaded ? 'opacity-100' : 'opacity-0'
               }`}
               onLoad={() => setImageLoaded(true)}
@@ -83,35 +83,35 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
               <div className="absolute inset-0 bg-gray-200 animate-pulse" />
             )}
           </div>
-          <div className="absolute top-3 left-3">
-            <span className="bg-red-accent text-white px-2 py-1 rounded text-xs font-bold">
+          <div className="absolute top-4 left-4">
+            <span className="bg-primary text-primary-foreground px-3 py-1.5 rounded-full text-xs font-semibold tracking-wide shadow-lg backdrop-blur-sm">
               {language === 'de' ? article.category : (article.categoryEn || article.category)}
             </span>
           </div>
         </div>
         
         <div className={`p-6 ${featured ? 'md:w-1/2 flex flex-col justify-center' : ''}`}>
-          <h3 className={`font-bold text-black mb-3 hover:text-red-accent transition-colors font-serif ${
+          <h3 className={`font-bold text-foreground mb-3 hover:text-primary transition-all duration-300 ease-apple font-serif ${
             featured ? 'text-xl md:text-2xl' : 'text-lg'
           }`}>
             {translatedTitle}
           </h3>
           
-          <p className="text-gray-700 mb-4 line-clamp-3 font-serif">
+          <p className="text-muted-foreground mb-4 line-clamp-3 font-serif leading-relaxed">
             {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
           </p>
           
-          <div className="flex items-center text-sm text-gray-600">
+          <div className="flex items-center text-sm text-muted-foreground">
             <div className="flex items-center">
               {employee && (
-                <Avatar className="h-6 w-6 mr-2">
+                <Avatar className="h-6 w-6 mr-2 ring-2 ring-primary/20 transition-all duration-300 ease-apple hover:ring-primary/40">
                   <AvatarImage src={employee.image} alt={employee.name} />
                   <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
                 </Avatar>
               )}
               <button 
                 onClick={handleAuthorClick}
-                className="font-medium text-gray-800 hover:text-red-accent transition-colors cursor-pointer"
+                className="font-medium text-foreground hover:text-primary transition-all duration-300 ease-apple cursor-pointer"
               >
                 {article.author}
               </button>
