@@ -41,7 +41,7 @@ interface Message {
 }
 
 interface ActionCard {
-  id: 'article-search' | 'qr-generator' | 'quiz';
+  id: 'summarize-info' | 'information-quiz';
   titleDe: string;
   titleEn: string;
   icon: React.ComponentType<any>;
@@ -51,28 +51,20 @@ interface ActionCard {
 
 const actionCards: ActionCard[] = [
   {
-    id: 'article-search',
-    titleDe: 'Artikel Suchen',
-    titleEn: 'Article Search',
-    icon: Search,
-    promptDe: 'Ich kann Ihnen dabei helfen, Artikel aus unserer umfangreichen Sammlung zu finden. Beschreiben Sie einfach, wonach Sie suchen, und ich zeige Ihnen die passenden Artikel mit allen Details!',
-    promptEn: 'I can help you find articles from our extensive collection. Simply describe what you\'re looking for, and I\'ll show you matching articles with all the details!'
+    id: 'summarize-info',
+    titleDe: 'Informationen zusammenfassen',
+    titleEn: 'Summarize information',
+    icon: MessageCircle,
+    promptDe: 'Ich kann Ihnen dabei helfen, Informationen aus unserem Gespräch zusammenzufassen. Wählen Sie die Nachrichten aus, die Sie zusammenfassen möchten, und ich erstelle eine übersichtliche Zusammenfassung für Sie.',
+    promptEn: 'I can help you summarize information from our conversation. Select the messages you want to summarize, and I\'ll create a clear summary for you.'
   },
   {
-    id: 'qr-generator',
-    titleDe: 'QR Code generieren',
-    titleEn: 'Generate QR Code',
-    icon: QrCode,
-    promptDe: 'Senden Sie mir einfach einen Link und ich erstelle sofort einen QR Code dafür! Perfekt zum Teilen von Webseiten, Artikeln oder beliebigen URLs.',
-    promptEn: 'Just send me a link and I\'ll instantly create a QR code for it! Perfect for sharing websites, articles, or any URLs.'
-  },
-  {
-    id: 'quiz',
-    titleDe: 'Quiz',
-    titleEn: 'Quiz',
+    id: 'information-quiz',
+    titleDe: 'Informations-Quiz',
+    titleEn: 'Information Quiz',
     icon: Brain,
-    promptDe: 'Ich kann für Sie interessante Quizzes erstellen! Wählen Sie ein Thema oder probieren Sie eines unserer beliebten Quizzes aus.',
-    promptEn: 'I can create interesting quizzes for you! Choose a topic or try one of our popular quizzes.'
+    promptDe: 'Ich kann ein Quiz basierend auf den Informationen aus unserem Gespräch erstellen. Wählen Sie die Nachrichten aus, die Sie für das Quiz verwenden möchten, und ich erstelle interessante Fragen dazu.',
+    promptEn: 'I can create a quiz based on information from our conversation. Select the messages you want to use for the quiz, and I\'ll create interesting questions about them.'
   }
 ];
 
@@ -3697,8 +3689,10 @@ ${additionalInfo}
   };
 
   const handleActionCardClick = (card: ActionCard) => {
-    if (card.id === 'qr-generator') {
-      setQrMode(true);
+    if (card.id === 'summarize-info') {
+      setSummaryMode(true);
+      setQuizInfoMode(false); // Ensure quiz mode is disabled
+      setSelectedMessages([]);
       const prompt = language === 'de' ? card.promptDe : card.promptEn;
       const newMessage: Message = {
         id: Date.now().toString(),
@@ -3707,24 +3701,17 @@ ${additionalInfo}
         timestamp: new Date()
       };
       setMessages(prev => [...prev, newMessage]);
-    } else if (card.id === 'article-search') {
+    } else if (card.id === 'information-quiz') {
+      setQuizInfoMode(true);
+      setSummaryMode(false); // Disable summary mode when enabling quiz
+      setSelectedMessages([]);
       const prompt = language === 'de' ? card.promptDe : card.promptEn;
       const newMessage: Message = {
         id: Date.now().toString(),
         text: prompt,
         isUser: false,
         timestamp: new Date(),
-        articleSearch: true
-      };
-      setMessages(prev => [...prev, newMessage]);
-    } else if (card.id === 'quiz') {
-      setQuizMode(true);
-      const prompt = language === 'de' ? card.promptDe : card.promptEn;
-      const newMessage: Message = {
-        id: Date.now().toString(),
-        text: prompt,
-        isUser: false,
-        timestamp: new Date()
+        showQuizButton: true
       };
       setMessages(prev => [...prev, newMessage]);
     }
