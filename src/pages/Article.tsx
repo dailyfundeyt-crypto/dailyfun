@@ -207,6 +207,18 @@ const Article = () => {
                 >
                   <source src="/hunger-games-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === 'gta-vs-driving-license' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/gta-video.mp4" type="video/mp4" />
+                </video>
               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
