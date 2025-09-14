@@ -219,6 +219,18 @@ const Article = () => {
                 >
                   <source src="/gta-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === 'doner-paradox' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/doner-paradox-video.mp4" type="video/mp4" />
+                </video>
               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
