@@ -171,6 +171,18 @@ const Article = () => {
                 >
                   <source src="/samsung-note7-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === '16' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/missing-person-video.mp4" type="video/mp4" />
+                </video>
               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
