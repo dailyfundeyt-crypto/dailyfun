@@ -239,7 +239,7 @@ Psychologists are already talking about the "Ketchup Effect": the realization th
     publishedAt: '2024-06-14T08:30:00Z',
     category: 'Food & Recipes',
     categoryEn: 'Food & Recipes',
-    imageUrl: 'photo-1551218808-94e220e084d2',
+    imageUrl: '/lovable-uploads/ketchup-recipe-article.png',
     views: 18890
   },
   {
