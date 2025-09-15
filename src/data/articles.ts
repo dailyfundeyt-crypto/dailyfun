@@ -262,7 +262,7 @@ From a scientific standpoint, this case is groundbreaking. It proves that our bu
     publishedAt: '2024-06-13T20:15:00Z',
     category: 'Wissenschaft',
     categoryEn: 'Science',
-    imageUrl: 'photo-1544551763-46a013bb70d5',
+    imageUrl: '/lovable-uploads/narnia-phenomenon-article.png',
     views: 16876
   },
   {
