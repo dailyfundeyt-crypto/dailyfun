@@ -8,6 +8,7 @@ export interface Article {
   content?: string;
   contentEn?: string;
   imageUrl: string;
+  videoUrl?: string;
   category: string;
   categoryEn?: string;
   author: string;
@@ -240,6 +241,7 @@ Psychologists are already talking about the "Ketchup Effect": the realization th
     category: 'Food & Recipes',
     categoryEn: 'Food & Recipes',
     imageUrl: '/lovable-uploads/ketchup-recipe-article.png',
+    videoUrl: '/ketchup-recipe-video.mp4',
     views: 18890
   },
   {

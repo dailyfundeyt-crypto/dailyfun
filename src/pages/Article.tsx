@@ -279,6 +279,18 @@ const Article = () => {
                 >
                   <source src="/shutdown-test-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === '2' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/ketchup-recipe-video.mp4" type="video/mp4" />
+                </video>
               ) : article.id === '7' ? (
                 <video 
                   className="w-full h-full object-cover"
