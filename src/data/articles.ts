@@ -246,11 +246,22 @@ Psychologists are already talking about the "Ketchup Effect": the realization th
   },
   {
     id: '3',
-    title: 'Tourist Gets Lost in Own Hotel, Discovers Secret Indoor Waterpark',
-    excerpt: 'What started as a simple search for the ice machine turned into the adventure of a lifetime. The lost tourist stumbled upon a hidden tropical paradise complete with slides, palm trees, and confused hotel staff.',
+    title: 'Das Narnia-Phänomen: Eine wissenschaftliche Analyse, warum Sie Ihren Badezimmerspiegel überprüfen sollten',
+    titleEn: 'The Narnia Phenomenon: A Scientific Analysis of Why You Should Check Your Bathroom Mirror',
+    excerpt: 'In der urbanen Wohnpsychologie gibt es ein bekanntes Phänomen: die unerklärliche Zugluft. Ein Mysterium, das wir meist mit schlecht isolierten Fenstern oder einer paranoiden Einbildung abtun.',
+    excerptEn: 'In the field of urban residential psychology, there is a well-known phenomenon: the inexplicable draft. A mystery we usually dismiss as poorly insulated windows or a paranoid delusion.',
+    content: `In der urbanen Wohnpsychologie gibt es ein bekanntes Phänomen: die unerklärliche Zugluft. Ein Mysterium, das wir meist mit schlecht isolierten Fenstern oder einer paranoiden Einbildung abtun. Der Fall der New Yorkerin Samantha Hart beweist jedoch eine kühne These: Ihre Zugluft war kein thermisches Problem, sondern ein geografisches. Ihr Badezimmer grenzte an ein anderes Universum – oder zumindest an eine andere Wohnung.
+Die Ausgangslage: Eine persistente Kaltluftströmung im Bad. Die Probandin, Samantha, lokalisierte die Quelle nicht am Fenster, sondern hinter dem Badezimmerspiegel. Eine logische Anomalie. Anstatt jedoch einen Handwerker zu rufen, tat sie das wissenschaftlich einzig Richtige: Sie führte eine empirische Untersuchung durch. Sie demontierte den Spiegel und entdeckte kein Mauerwerk, sondern ein dunkles, rechteckiges Loch. Ein Portal.
+Was folgt, ist ein Musterbeispiel für zivilen Forscherdrang. Ausgerüstet mit einer Taschenlampe und einem Hammer als "multifunktionalem Analysewerkzeug", durchquerte sie die Öffnung und fand sich in einer kompletten, unfertigen und gespenstisch verlassenen Zwei-Zimmer-Wohnung wieder. Offene Müllsäcke und eine einzelne, leere Wasserflasche deuteten auf eine kurzzeitige, gescheiterte Besiedlung hin. Es war kein Durchgang nach Narnia, sondern in die Bauruine von nebenan.
+Aus wissenschaftlicher Sicht ist dieser Fall bahnbrechend. Er belegt, dass unsere gebaute Umwelt möglicherweise mehr Dimensionen besitzt, als es die Grundrisse vermuten lassen. Es handelt sich hierbei um das "Spiegel-Portal-Syndrom": die latente Möglichkeit, dass Alltagsgegenstände als getarnte Übergänge zu ungenutztem Raum fungieren. Meine Empfehlung lautet daher: Ignorieren Sie keine unerklärliche Zugluft. Klopfen Sie Ihre Wände ab. Und vor allem: Werfen Sie ab und zu einen kritischen Blick hinter Ihren Spiegel. Vielleicht wartet dort nicht nur Ihr Spiegelbild, sondern ein ganzes Abenteuer auf Sie.`,
+    contentEn: `In the field of urban residential psychology, there is a well-known phenomenon: the inexplicable draft. A mystery we usually dismiss as poorly insulated windows or a paranoid delusion. However, the case of New Yorker Samantha Hart proves a bolder thesis: her draft wasn't a thermal problem, but a geographical one. Her bathroom bordered another universe—or at least, another apartment.
+The initial situation: a persistent stream of cold air in the bathroom. The subject, Samantha, located the source not at the window, but behind the bathroom mirror. A logical anomaly. Instead of calling a handyman, she did the only scientifically appropriate thing: she conducted an empirical investigation. She removed the mirror and discovered not brickwork, but a dark, rectangular hole. A portal.
+What follows is a prime example of civilian curiosity. Armed with a flashlight and a hammer as a "multifunctional analysis tool," she crossed the threshold and found herself in a complete, unfinished, and eerily abandoned two-bedroom apartment. Open trash bags and a single, empty water bottle suggested a brief, failed settlement. It was not a passage to Narnia, but to the neighboring construction shell.
+From a scientific standpoint, this case is groundbreaking. It proves that our built environment may possess more dimensions than floor plans suggest. We are dealing with the "Mirror-Portal-Syndrome": the latent possibility that everyday objects function as camouflaged gateways to unused space. My recommendation is therefore: do not ignore any inexplicable draft. Tap on your walls. And above all, take a critical look behind your mirror from time to time. You might find not just your reflection, but a whole real adventure waiting for you.`,
     author: 'Stefan Kunc',
     publishedAt: '2024-06-13T20:15:00Z',
-    category: 'Travel Adventures',
+    category: 'Wissenschaft',
+    categoryEn: 'Science',
     imageUrl: 'photo-1544551763-46a013bb70d5',
     views: 16876
   },
