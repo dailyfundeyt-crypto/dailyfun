@@ -279,6 +279,18 @@ const Article = () => {
                 >
                   <source src="/shutdown-test-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === '7' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/childhood-2-0-video.mp4" type="video/mp4" />
+                </video>
               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
