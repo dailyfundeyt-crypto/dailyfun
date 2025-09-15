@@ -26,14 +26,26 @@ const ArticleSection: React.FC<ArticleSectionProps> = memo(({ article, index, la
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Article Image - Left side */}
+          {/* Article Image/Video - Left side */}
           <div className="order-2 lg:order-1">
             <div className="aspect-video rounded-lg overflow-hidden shadow-lg">
-              <OptimizedImage
-                src={article.imageUrl}
-                alt={article.title}
-                className="w-full h-full"
-              />
+              {article.imageUrl.endsWith('.mp4') ? (
+                <video
+                  src={article.imageUrl}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover pointer-events-none"
+                  style={{ pointerEvents: 'none' }}
+                />
+              ) : (
+                <OptimizedImage
+                  src={article.imageUrl}
+                  alt={article.title}
+                  className="w-full h-full"
+                />
+              )}
             </div>
           </div>
           
