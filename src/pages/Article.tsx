@@ -243,6 +243,18 @@ const Article = () => {
                 >
                   <source src="/no-legs-no-excuses-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === '1' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/whiskers-mayor-video.mp4" type="video/mp4" />
+                </video>
               ) : article.id === '8' ? (
                 <video 
                   className="w-full h-full object-cover"
