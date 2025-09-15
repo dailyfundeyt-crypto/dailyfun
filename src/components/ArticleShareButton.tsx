@@ -41,17 +41,17 @@ const ArticleShareButton: React.FC<ArticleShareButtonProps> = ({ articleId, titl
   return (
     <button
       onClick={handleShare}
-      className="inline-flex items-center px-4 py-2 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 rounded-lg font-medium text-sm"
+      className="apple-toggle inline-flex items-center justify-center px-3 py-2.5 min-w-[100px] sm:min-w-[120px] bg-background/80 backdrop-blur-md border-2 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-xl hover:shadow-primary/25 hover:scale-105 active:scale-95 transition-all duration-300 ease-apple-spring rounded-xl font-medium text-sm whitespace-nowrap"
     >
       {copied ? (
         <>
-          <Check className="h-4 w-4 mr-2" />
-          {language === 'de' ? 'Kopiert!' : 'Copied!'}
+          <Check className="h-4 w-4 mr-2 animate-scale-in" />
+          <span className="animate-fade-in">{language === 'de' ? 'Kopiert!' : 'Copied!'}</span>
         </>
       ) : (
         <>
           <Share2 className="h-4 w-4 mr-2" />
-          {language === 'de' ? 'Teilen' : 'Share'}
+          <span>{language === 'de' ? 'Teilen' : 'Share'}</span>
         </>
       )}
     </button>

@@ -146,10 +146,10 @@ const Article = () => {
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <button
               onClick={handleAIClick}
-              className="inline-flex items-center px-2.5 py-1.5 md:px-4 md:py-2 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-300 rounded-lg font-medium text-xs md:text-sm"
+              className="apple-toggle inline-flex items-center justify-center px-3 py-2.5 min-w-[100px] sm:min-w-[120px] bg-background/80 backdrop-blur-md border-2 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-xl hover:shadow-primary/25 hover:scale-105 active:scale-95 transition-all duration-300 ease-apple-spring rounded-xl font-medium text-sm whitespace-nowrap"
             >
               <Bot className="h-4 w-4 mr-2" />
-              {language === 'de' ? 'Mit AI sprechen' : 'Ask AI'}
+              <span>{language === 'de' ? 'Mit AI sprechen' : 'Ask AI'}</span>
             </button>
             <ArticleShareButton articleId={article.id} title={translatedTitle} />
             <LanguageSwitcher />

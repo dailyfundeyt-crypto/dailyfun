@@ -107,6 +107,88 @@
     font-display: swap;
   }
 
+  /* Apple-style button animations and effects */
+  .apple-toggle {
+    position: relative;
+    overflow: hidden;
+    transform-origin: center;
+  }
+
+  .apple-toggle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease-out;
+  }
+
+  .apple-toggle:hover::before {
+    left: 100%;
+  }
+
+  .apple-toggle:active {
+    transform: scale(0.96) translateY(1px);
+    transition: all 75ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  /* Enhanced fade and scale animations */
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-in {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Enhanced pulse animation for globe icon */
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 0.8;
+    }
+  }
+
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Mobile-specific enhancements */
+  @media (max-width: 640px) {
+    .apple-toggle {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+  }
+
   /* Subtle organic background lines */
   body::before {
     content: '';
