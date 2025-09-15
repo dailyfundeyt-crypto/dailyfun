@@ -217,11 +217,28 @@ So yes, Klaus. Your legs hurt. Mine too. And that's a valid excuse. At least for
   },
   {
     id: '2',
-    title: 'Man Discovers His Grandmother\'s Secret Recipe Was Just Ketchup and Love',
-    excerpt: 'After 30 years of trying to recreate his beloved grandmother\'s "world-famous" pasta sauce, local resident discovers the ingredients were simpler than expected. "The love part was definitely the secret ingredient," he tearfully admitted.',
+    title: 'Die unglaubliche Wahrheit über Omas Geheimrezept: Ketchup war die wahre Magie',
+    titleEn: 'The Unbelievable Truth About Grandma\'s Secret Recipe: Ketchup Was the Real Magic',
+    excerpt: 'Jeder kennt sie, die mystischen Familienrezepte, die über Generationen weitergegeben werden. Für Stefan Kunc aus Kleindorf war Omas weltberühmte Pasta-Soße genau so ein Mythos. 30 Jahre lang versuchte er, das unvergleichliche Aroma nachzubilden.',
+    excerptEn: 'Everyone knows them, those mystical family recipes passed down through generations. For Stefan Kunc from Kleindorf, his grandmother\'s world-famous pasta sauce was just such a myth. For 30 years, he tried to recreate its unparalleled aroma.',
+    content: `Jeder kennt sie, die mystischen Familienrezepte, die über Generationen weitergegeben werden. Handgeschriebene Notizen in vergilbten Kochbüchern, gefüllt mit kryptischen Anweisungen wie "eine Prise Liebe" oder "nach Gefühl würzen". Für Stefan Kunc aus Kleindorf war Omas weltberühmte Pasta-Soße genau so ein Mythos. 30 Jahre lang, sage und schreibe 30 Jahre, versuchte er, das unvergleichliche Aroma nachzubilden. Er reiste durch Italien, testete die teuersten Tomaten und experimentierte mit Gewürzen, von denen er nicht einmal wusste, wie man sie ausspricht.
+
+Doch all seine Mühen waren umsonst. Die Soße aus seiner Küche schmeckte immer "ganz okay", aber nie wie das Original. Bis vor Kurzem. Bei der Haushaltsauflösung seiner Großmutter fand er in einer alten Kiste ein verstaubtes Notizbuch. Und darin, auf einer lose liegenden Karte, stand es schwarz auf weiß: "Tomatensoße à la Nonna. 1 Flasche Ketchup, eine halbe Zwiebel, ein Schuss Wasser. Mit Liebe aufkochen."
+
+Stefan, der jetzt weltweit unter "The Ketchup Man" bekannt ist, brach in Tränen aus. "Ich dachte, es wären getrocknete Kräuter aus den Bergen der Toskana oder eine geheime Reduktion von Rotwein, der 15 Jahre lang in Holzfässern reifte", schniefte er in einem exklusiven Interview. "Es war einfach Ketchup. Heinz Ketchup. Und ja, der 'Liebe'-Teil war definitiv die wichtigere Zutat."
+
+Psychologen sprechen bereits vom "Ketchup-Effekt": der Erkenntnis, dass die Einfachheit des Lebens oft in den Dingen liegt, die wir am meisten verkomplizieren. Und Stefan? Der genießt seine Nudeln jetzt wieder wie früher: schnell, lecker und mit dem beruhigenden Wissen, dass das Geheimnis seiner Kindheit nicht in einem Sternerestaurant, sondern in der hintersten Ecke des Supermarktes lag.`,
+    contentEn: `Everyone knows them, those mystical family recipes passed down through generations. Handwritten notes in yellowed cookbooks, filled with cryptic instructions like "a pinch of love" or "season to taste." For Stefan Kunc from Kleindorf, his grandmother's world-famous pasta sauce was just such a myth. For an incredible 30 years, he tried to recreate its unparalleled aroma. He traveled through Italy, tested the most expensive tomatoes, and experimented with spices he didn't even know how to pronounce.
+
+Yet all his efforts were in vain. The sauce from his kitchen always tasted "just okay," but never like the original. Until recently. While clearing out his grandmother's house, he found a dusty notebook in an old box. And there, on a loose card, it was written in black and white: "Tomato Sauce à la Nonna. 1 bottle of ketchup, half an onion, a splash of water. Simmer with love."
+
+Stefan, now known worldwide as "The Ketchup Man," burst into tears. "I thought it was dried herbs from the mountains of Tuscany or a secret reduction of red wine aged for 15 years in oak barrels," he sobbed in an exclusive interview. "It was just ketchup. Heinz Ketchup. And yes, the 'love' part was definitely the more important ingredient."
+
+Psychologists are already talking about the "Ketchup Effect": the realization that the simplicity of life often lies in the things we most overcomplicate. And Stefan? He now enjoys his pasta like he used to: quick, delicious, and with the comforting knowledge that the secret of his childhood wasn't in a Michelin-star restaurant, but in the back corner of the supermarket.`,
     author: 'Stefan Kunc',
     publishedAt: '2024-06-14T08:30:00Z',
     category: 'Food & Recipes',
+    categoryEn: 'Food & Recipes',
     imageUrl: 'photo-1551218808-94e220e084d2',
     views: 18890
   },
