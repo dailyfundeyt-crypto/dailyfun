@@ -134,16 +134,16 @@ const Article = () => {
       
       
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-6 relative z-10">
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-6 relative z-10">
           <button
             onClick={handleBack}
-            className="inline-flex items-center text-red-accent hover:text-blue-accent transition-colors bg-transparent border-none cursor-pointer"
+            className="inline-flex items-center text-red-accent hover:text-blue-accent transition-colors bg-transparent border-none cursor-pointer self-start"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             {t('common.back')}
           </button>
           
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-start sm:justify-end">
             <button
               onClick={handleAIClick}
               className="apple-toggle inline-flex items-center justify-center px-3 py-2.5 min-w-[100px] sm:min-w-[120px] bg-background/80 backdrop-blur-md border-2 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground hover:border-primary hover:shadow-xl hover:shadow-primary/25 hover:scale-105 active:scale-95 transition-all duration-300 ease-apple-spring rounded-xl font-medium text-sm whitespace-nowrap"
