@@ -21,7 +21,7 @@ import article4Professional from '../assets/article-4-professional.jpg';
 import article5Professional from '../assets/article-5-professional.jpg';
 import article6Professional from '../assets/article-6-professional.jpg';
 import article7Professional from '../assets/article-7-professional.jpg';
-import article8Professional from '../assets/article-8-professional.jpg';
+import article8Professional from '../assets/article-8-dream.jpg';
 import article9Professional from '../assets/article-9-professional.jpg';
 
 const Article = () => {
