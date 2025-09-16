@@ -268,11 +268,36 @@ From a scientific standpoint, this case is groundbreaking. It proves that our bu
   },
   {
     id: '4',
-    title: 'Local Comedy Club Bans Dad Jokes After Audience Groans Become Too Loud',
-    excerpt: 'The Laugh Track Comedy Club has implemented a strict "no puns, no dad jokes" policy after sound levels exceeded safety regulations. "We had to protect our patrons\' eardrums," said club owner. Emergency eye-roll stations have been installed.',
+    title: 'Wollte nur den Keller aufräumen – fand antike Metropole',
+    titleEn: 'Just Wanted to Tidy Up the Basement – Found an Ancient Metropolis',
+    excerpt: 'Okay, Leute, Hand aufs Herz: Wer von euch hat nicht schon mal ein kleines Heimwerker-Projekt gestartet, das... sagen wir mal... etwas größere Dimensionen angenommen hat? Ein Mann in der Türkei wollte nur eine Wand einreißen und entdeckte dabei die antike Stadt Derinkuyu.',
+    excerptEn: 'Okay, folks, hand on heart: who among you hasn\'t started a small home improvement project that took on slightly larger dimensions? A man in Turkey just wanted to knock down a wall and discovered the ancient city of Derinkuyu in the process.',
+    content: `Okay, Leute, Hand aufs Herz: Wer von euch hat nicht schon mal ein kleines Heimwerker-Projekt gestartet, das... sagen wir mal... etwas größere Dimensionen angenommen hat? Man will nur schnell ein Bild aufhängen und am Ende hat man die halbe Wand neu verputzt. Kennen wir alle, oder? Aber was einem Mann in der Türkei passiert ist, stellt mein "Ups, ich hab die Hauptwasserleitung angebohrt" in den Schatten. Und zwar meilenweit.
+
+Stellt euch vor: Ihr steht in eurem Keller. Es riecht ein bisschen modrig, die Feuchtigkeit kriecht die Wände hoch. Euer Plan für den Samstag: Vorschlaghammer schwingen, eine unnötige Wand einreißen, mehr Platz für alte Kartons und das Einmachglas-Imperium der Oma schaffen. Simpel. Effektiv. 
+
+Unser Held des Tages dachte sich das auch. Er holt also aus, der Hammer trifft auf Stein, es staubt, es bröckelt und – krach – die Wand ist durch. Aber dahinter ist nicht etwa das Fundament des Nachbarhauses. Nein. Dahinter ist ein pechschwarzer Tunnel. Ein Tunnel, der nicht nach "Abwasserrohr" aussieht, sondern nach "Indiana Jones hat hier sein WG-Zimmer".
+
+An diesem Punkt hätten die meisten von uns wahrscheinlich die Polizei, einen Priester oder die Ghostbusters gerufen. Nicht so unser türkischer Super-Heimwerker! Neugierig wie er war, schnappte er sich eine Taschenlampe und stieg hinein. Und der Tunnel führte weiter. Und weiter. Er fand nicht nur einen kleinen Geheimgang, sondern ein ganzes Labyrinth. Es öffneten sich Räume, Hallen, ja, ganze Straßenzüge!
+
+Kurz gesagt: Der Mann wollte eine Wand einreißen und hat dabei die uralte, riesige unterirdische Stadt Derinkuyu wiederentdeckt. Eine Metropole, die einst 20.000 Menschen beherbergte. Zwanzig. Tausend. Leute. Ich bekomme schon die Krise, wenn unangemeldet drei Freunde vor der Tür stehen!
+
+Das ultimative DIY-Projekt ist also nicht, ein Hochbett zu bauen. Es ist, versehentlich eine antike Zivilisation im eigenen Keller freizulegen. Sein "Keller aufräumen"-Projekt endete damit, dass Archäologen und Historiker seine neuen Mitbewohner wurden. Mal ehrlich, wie will man das seiner Versicherung erklären? "Ja, hallo, mein Haus hat jetzt achttausend zusätzliche Zimmer und einen leichten, historischen Zugwind."`,
+    contentEn: `Okay, folks, hand on heart: who among you hasn't started a small home improvement project that... let's just say... took on slightly larger dimensions? You just want to quickly hang a picture, and by the end, you've replastered half the wall. We've all been there, right? But what happened to a man in Turkey puts my "Oops, I've hit the main water line" story to shame. By a long shot.
+
+Picture this: You're standing in your basement. It smells a bit musty, the damp is creeping up the walls. Your plan for Saturday: swing a sledgehammer, knock down an unnecessary wall, create more space for old boxes and grandma's canning empire. Simple. Effective.
+
+Our hero of the day thought so too. So, he takes a swing, the hammer hits the stone, it's dusty, it crumbles, and—crash—the wall is down. But behind it isn't the foundation of the neighbor's house. No. Behind it is a pitch-black tunnel. A tunnel that doesn't look like a "sewer pipe" but more like "Indiana Jones had his shared flat here."
+
+At this point, most of us would have probably called the police, a priest, or the Ghostbusters. Not our Turkish super-DIYer! Curious as he was, he grabbed a flashlight and climbed in. And the tunnel went on. And on. He didn't just find a small secret passage, but an entire labyrinth. Rooms opened up, halls, even entire streets!
+
+Long story short: The man wanted to knock down a wall and in the process rediscovered the ancient, massive underground city of Derinkuyu. A metropolis that once housed 20,000 people. Twenty. Thousand. People. I already start to panic when three friends show up unannounced!
+
+So, the ultimate DIY project isn't building a loft bed. It's accidentally uncovering an ancient civilization in your own basement. His "tidy up the basement" project ended with archaeologists and historians becoming his new roommates. I mean, seriously, how do you explain that to your insurance company? "Yeah, hi, my house now has eight thousand extra rooms and a slight, historical draft."`,
     author: 'Stefan Kunc',
     publishedAt: '2024-06-13T14:20:00Z',
-    category: 'Comedy',
+    category: 'Heimwerken',
+    categoryEn: 'DIY',
     imageUrl: 'photo-1527224857830-43a7acc85260',
     views: 14654
   },
