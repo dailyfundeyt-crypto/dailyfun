@@ -315,6 +315,18 @@ const Article = () => {
                 >
                   <source src="/narnia-phenomenon-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === '4' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/basement-metropolis-video.mp4" type="video/mp4" />
+                </video>
               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
