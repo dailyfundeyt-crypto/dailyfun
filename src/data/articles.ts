@@ -318,11 +318,50 @@ So, the ultimate DIY project isn't building a loft bed. It's accidentally uncove
   },
   {
     id: '6',
-    title: 'Breaking: Dog Finally Catches Own Tail, Has No Idea What to Do Next',
-    excerpt: 'After three years of dedicated pursuit, Golden Retriever "Buddy" has achieved his life\'s ambition. Witnesses report the dog stood motionless for several minutes, apparently contemplating his next life goal. Squirrel-chasing is rumored to be next.',
-    author: 'Stefan Kunc',
+    title: 'Genial Faul: Die 5 unschlagbaren Life-Hacks für maximale Entspannung',
+    titleEn: 'Brilliantly Lazy: The 5 Unbeatable Life Hacks for Maximum Relaxation',
+    excerpt: 'Seien wir ehrlich: Ehrgeiz ist toll, Produktivität ist bewundernswert, aber manchmal ist die Kunst des gepflegten Nichtstuns die wahre Meisterschaft. Für alle, die ihre Energie lieber für wirklich wichtige Dinge aufsparen – wie die Entscheidung, welche Serie als Nächstes geschaut wird.',
+    excerptEn: 'Let\'s be honest: ambition is great, and productivity is admirable, but sometimes, the art of doing absolutely nothing is the true mark of mastery. For all those who prefer to save their energy for the things that truly matter—like deciding which series to binge-watch next.',
+    content: `Seien wir ehrlich: Ehrgeiz ist toll, Produktivität ist bewundernswert, aber manchmal ist die Kunst des gepflegten Nichtstuns die wahre Meisterschaft. Für alle, die ihre Energie lieber für wirklich wichtige Dinge aufsparen – wie die Entscheidung, welche Serie als Nächstes geschaut wird –, habe ich Karl Bergmann, die ultimative Liste der Life-Hacks für Fortgeschrittene im Faulenzen zusammenstellen lassen. Effizienz ist, wenn man die Dinge richtig macht. Faulheit ist, wenn man die Dinge gar nicht erst macht – oder eben smarter.
+
+1. Der strategische „Kleiderstuhl" 
+Warum sollte man Kleidung, die noch nicht schmutzig, aber auch nicht mehr frisch genug für den Schrank ist, mühsam zusammenlegen? Die Lösung ist der „Kleiderstuhl" – ein dediziertes Möbelstück, das als Zwischenlager dient. Er verhindert Chaos auf dem Boden und erspart das ständige Ein- und Ausräumen. Ein Hoch auf organisierte Unordnung!
+
+2. Der ferngesteuerte Snack-Greifarm 
+Der Film ist spannend, die Decke ist warm, aber die Chipstüte steht unerreichbar auf dem Tisch. Ein Albtraum! Abhilfe schafft ein einfacher Greifarm, wie man ihn aus Spielzeugläden kennt. Ohne sich auch nur aufzusetzen, können Snacks, Fernbedienung und Getränke elegant zum Sofa befördert werden. Das ist nicht faul, das ist futuristisch!
+
+3. Das Trockenshampoo-Imperium 
+Haare waschen, föhnen, stylen – ein Prozess, der wertvolle Liegezeit kostet. Die Lösung heißt Trockenshampoo. Mit ein paar Sprühstößen sieht die Frisur wieder frisch aus und man hat mindestens 30 Minuten mehr Zeit für die wichtigen Dinge des Lebens. Betrachten Sie es als eine Zeitmaschine in der Sprühdose.
+
+4. Die Mikrowellen-Gourmetküche 
+Wer braucht schon Töpfe und Pfannen? Ein wahrer Meister der Faulheit kann fast jedes Gericht in der Mikrowelle zubereiten. Tassenkuchen, Rührei in der Tasse oder sogar Nudeln (ja, das geht!). Weniger Abwasch, weniger Aufwand, mehr Genuss. Das ist keine einfache Mahlzeit, das ist eine Effizienz-Offenbarung.
+
+5. Die „Alles-in-Reichweite"-Basisstation 
+Bevor man sich zur Entspannung niederlässt, gilt es, die Basisstation zu errichten. Das bedeutet: Alle potenziell benötigten Gegenstände (Ladegerät, Getränke, Snacks, Buch (wiso Buch), Fernbedienung) werden um den auserwählten Liegeplatz herum drapiert. So minimiert man die Notwendigkeit, in den nächsten Stunden wieder aufzustehen. Das ist kein Chaos, das ist strategische Logistik.
+
+Also, lehnen Sie sich zurück und feiern Sie Ihre geniale Faulheit. Sie sparen nicht nur Energie, Sie optimieren Ihr Leben!`,
+    contentEn: `Let's be honest: ambition is great, and productivity is admirable, but sometimes, the art of doing absolutely nothing is the true mark of mastery. For all those who prefer to save their energy for the things that truly matter—like deciding which series to binge-watch next—I had Karl Bergmann compile the ultimate list of life hacks for the advanced connoisseur of laziness. Efficiency is doing things right. Laziness is not doing them at all—or simply doing them smarter.
+
+1. The Strategic "Chair-drobe" 
+Why bother folding clothes that aren't dirty, yet no longer fresh enough for the closet? The solution is the "chair-drobe"—a dedicated piece of furniture that serves as a temporary storage unit. It prevents chaos on the floor and saves you the constant effort of putting things away and taking them out again. Here's to organized disarray!
+
+2. The Remote-Controlled Snack Gripper 
+The movie is gripping, the blanket is warm, but the bag of chips is just out of reach on the table. A true nightmare! The remedy is a simple grabber arm, the kind you find in toy stores. Without so much as sitting up, you can elegantly transport snacks, the remote control, and drinks to your sofa. That isn't lazy; it's futuristic!
+
+3. The Dry Shampoo Empire 
+Washing, drying, styling your hair—a process that costs you precious lounging time. The answer is dry shampoo. With just a few sprays, your hair looks fresh again, and you've gained at least 30 more minutes for the important things in life. Think of it as a time machine in a can.
+
+4. The Microwave Gourmet Kitchen 
+Who needs pots and pans? A true master of laziness can prepare almost any dish in the microwave. Mug cakes, scrambled eggs in a cup, or even pasta (yes, it's possible!). Less washing up, less effort, more enjoyment. This isn't just a meal; it's an efficiency revelation.
+
+5. The "Everything-in-Reach" Base Station 
+Before settling down to relax, the first order of business is to establish your base station. This means arranging all potentially needed items (charger, drinks, snacks, book (why a book?), remote control) around your chosen lounging spot. This minimizes the need to get up again for the next several hours. This isn't chaos; it's strategic logistics.
+
+So, lean back and celebrate your brilliant laziness. You're not just saving energy; you're optimizing your life!`,
+    author: 'Karl Bergmann',
     publishedAt: '2024-06-12T16:30:00Z',
-    category: 'Pets & Animals',
+    category: 'Lifestyle',
+    categoryEn: 'Lifestyle',
     imageUrl: 'photo-1552053831-71594a27632d',
     views: 11543
   },
