@@ -327,7 +327,7 @@ const Article = () => {
                 >
                   <source src="/basement-metropolis-video.mp4" type="video/mp4" />
                 </video>
-              ) : article.id === '5' ? (
+                ) : article.id === '5' ? (
                 <video 
                   className="w-full h-full object-cover"
                   autoPlay
@@ -338,6 +338,18 @@ const Article = () => {
                   style={{ pointerEvents: 'none' }}
                 >
                   <source src="/basement-goldmine-video.mp4" type="video/mp4" />
+                </video>
+              ) : article.id === '6' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/lazy-life-hacks-video.mp4" type="video/mp4" />
                 </video>
               ) : (
                 <OptimizedImage
