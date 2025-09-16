@@ -362,7 +362,7 @@ So, lean back and celebrate your brilliant laziness. You're not just saving ener
     publishedAt: '2024-06-12T16:30:00Z',
     category: 'Lifestyle',
     categoryEn: 'Lifestyle',
-    imageUrl: 'photo-1552053831-71594a27632d',
+    imageUrl: '/lazy-life-hacks.png',
     views: 11543
   },
   {
