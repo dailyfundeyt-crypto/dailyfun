@@ -298,7 +298,7 @@ So, the ultimate DIY project isn't building a loft bed. It's accidentally uncove
     publishedAt: '2024-06-13T14:20:00Z',
     category: 'Heimwerken',
     categoryEn: 'DIY',
-    imageUrl: 'photo-1527224857830-43a7acc85260',
+    imageUrl: '/basement-metropolis.png',
     views: 14654
   },
   {
