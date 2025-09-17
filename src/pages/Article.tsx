@@ -351,6 +351,18 @@ const Article = () => {
                 >
                   <source src="/lazy-life-hacks-video.mp4" type="video/mp4" />
                 </video>
+              ) : article.id === '11' ? (
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  disablePictureInPicture
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <source src="/cat-matrix-video.mp4" type="video/mp4" />
+                </video>
               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
