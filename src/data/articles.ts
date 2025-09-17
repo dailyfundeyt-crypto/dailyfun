@@ -598,7 +598,7 @@ The perfect cat does not exist as a finished product. It is the result of a deep
     imageUrl: '/cat-matrix-homepage.jpg',
     category: 'Pets',
     categoryEn: 'Pets',
-    author: 'Dr. Sarah Mitchell',
+    author: 'Dr. Elke Schneider',
     publishedAt: '2024-03-15',
     tags: ['Pets', 'Science', 'Cats', 'Behavior'],
     views: 0
