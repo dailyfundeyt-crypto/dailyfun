@@ -452,62 +452,10 @@ const Article = () => {
                           </div>
                         );
                       } else {
-                        // Process hashtags and bold text
-                        const processText = (text: string) => {
-                          const parts = [];
-                          const regex = /(#\w+)|(\*\*(.*?)\*\*)/g;
-                          let lastIndex = 0;
-                          let match;
-
-                          while ((match = regex.exec(text)) !== null) {
-                            // Add text before the match
-                            if (match.index > lastIndex) {
-                              parts.push(text.slice(lastIndex, match.index));
-                            }
-
-                            if (match[1]) {
-                              // It's a hashtag
-                              const hashtag = match[1];
-                              parts.push(
-                                <span
-                                  key={match.index}
-                                  className="hashtag inline-block px-2 py-1 mx-1 text-sm bg-primary/10 text-primary rounded-md cursor-pointer hover:bg-primary/20 transition-colors font-medium"
-                                  onClick={() => {
-                                    // Implement hashtag functionality (could filter articles, navigate, etc.)
-                                    console.log('Clicked hashtag:', hashtag);
-                                    // For now, just copy to clipboard as in Obsidian
-                                    navigator.clipboard.writeText(hashtag);
-                                    // Could also navigate to a search page: navigate(`/search?tag=${hashtag.slice(1)}`);
-                                  }}
-                                  title={`Click to copy ${hashtag}`}
-                                >
-                                  {hashtag}
-                                </span>
-                              );
-                            } else if (match[2]) {
-                              // It's bold text
-                              parts.push(
-                                <strong key={match.index} className="font-semibold">
-                                  {match[3]}
-                                </strong>
-                              );
-                            }
-
-                            lastIndex = regex.lastIndex;
-                          }
-
-                          // Add remaining text
-                          if (lastIndex < text.length) {
-                            parts.push(text.slice(lastIndex));
-                          }
-
-                          return parts;
-                        };
-
                         return (
                           <div key={index} className="mb-6 text-lg leading-relaxed particle-container">
                             <p className="glow-text">
-                              {processText(paragraph)}
+                              {paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}
                             </p>
                             <div className="particles"></div>
                           </div>
