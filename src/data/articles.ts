@@ -549,50 +549,50 @@ The police, visibly amused but also glad that everything had worked out, took hi
 
 Vergessen Sie alles, was Sie über „süße Kätzchen" zu wissen glaubten. Wir betreten die Katzen-Matrix, ein multidimensionales Konstrukt aus Schnurr-Frequenzen, Nickerchen-Zyklen und gezielter Ignoranz.
 
-## Forschungsfeld 1: Der Schnurrfaktor
+Forschungsfeld 1: Der Schnurrfaktor
 
 Das Schnurren einer Katze ist kein simples Zeichen von Wohlbefinden. Es ist ein hoch entwickeltes, bio-akustisches Manipulationsinstrument. Unsere Studien zeigen, dass die Frequenz von 25 bis 150 Hertz nicht nur heilungsfördernd ist, sondern auch exakt im Bereich liegt, der das menschliche Gehirn zur Ausschüttung von „Ja, natürlich bekommst du noch ein Leckerli"-Hormonen anregt.
 
 **Praktischer Tipp:** Investieren Sie in Ohrenschützer oder akzeptieren Sie Ihre neue Rolle als Dosenöffner auf Abruf. Widerstand ist zwecklos.
 
-## Forschungsfeld 2: Das Nickerchen-Paradoxon
+Forschungsfeld 2: Das Nickerchen-Paradoxon
 
 Eine Katze schläft durchschnittlich 15 Stunden am Tag. Faulheit? Keineswegs! Dies ist eine strategische Energie-Konservierungsmaßnahme für den nächtlichen „kinetischen Entladungszyklus", auch bekannt als „3-Uhr-morgens-durch-die-Wohnung-jagen". Das Ziel? Die Überprüfung der menschlichen Reaktionsfähigkeit im Schlaf.
 
 **Praktischer Tipp:** Platzieren Sie nachts keine Gläser an den Tischkanten. Betrachten Sie es als nächtliches Geschicklichkeitstraining – für Sie, nicht für die Katze.
 
-## Forschungsfeld 3: Die Geschenke-Hypothese
+Forschungsfeld 3: Die Geschenke-Hypothese
 
 Wenn Ihre Katze Ihnen eine halb lebendige Maus präsentiert, ist das kein Akt der Grausamkeit. Es ist eine sozio-ökonomische Geste. In der Katzen-Matrix bedeutet dies: „Ich, die überlegene Jägerin, erkenne deine Unfähigkeit, dich selbst zu versorgen. Hier, übe damit." Sie testet Ihre Überlebensfähigkeit.
 
 **Praktischer Tipp:** Bedanken Sie sich höflich und entsorgen Sie das „Lehrmaterial" diskret. Ein Lob für den Jagderfolg stärkt die bilateralen Beziehungen.
 
-## Fazit
+Fazit
 
 Die perfekte Katze existiert nicht als fertiges Produkt. Sie ist das Ergebnis eines tiefen Verständnisses ihres komplexen, wissenschaftlich fundierten Verhaltens. Die perfekte Katze ist die, deren Algorithmen Sie entschlüsselt haben. Oder besser gesagt: die, die Sie perfekt trainiert hat.`,
     contentEn: `As a scientist, I have dedicated my life to analyzing complex systems. Yet, none has driven me to the brink of despair quite like the years-long search for the formula of the "perfect cat." Is it a myth, a legend told by cat owners at the end of a scratch-marked day? I say: No! It is a matter of proper data analysis.
 
 Forget everything you thought you knew about "cute kittens." We are entering the Cat Matrix, a multidimensional construct of purr frequencies, nap cycles, and targeted ignorance.
 
-## Research Field 1: The Purr Factor
+Research Field 1: The Purr Factor
 
 A cat's purr is not a simple sign of contentment. It is a highly sophisticated, bio-acoustic manipulation tool. Our studies show that its frequency, ranging from 25 to 150 Hertz, is not only conducive to healing but also falls precisely within the range that stimulates the human brain to release "Yes, of course, you can have another treat" hormones.
 
 **Practical Tip:** Invest in earplugs or accept your new role as an on-call can opener. Resistance is futile.
 
-## Research Field 2: The Nap Paradox
+Research Field 2: The Nap Paradox
 
 A cat sleeps an average of 15 hours a day. Laziness? Not at all! This is a strategic energy conservation measure for the nocturnal "kinetic discharge cycle," also known as the "3 a.m. tear through the apartment." The objective? To test human responsiveness during sleep.
 
 **Practical Tip:** Do not place glasses on the edges of tables at night. Consider it nocturnal agility training—for you, not for the cat.
 
-## Research Field 3: The Gifting Hypothesis
+Research Field 3: The Gifting Hypothesis
 
 When your cat presents you with a half-alive mouse, it is not an act of cruelty. It is a socio-economic gesture. Within the Cat Matrix, this translates to: "I, the superior hunter, recognize your inability to provide for yourself. Here, practice with this." It is testing your survival skills.
 
 **Practical Tip:** Thank it politely and dispose of the "teaching material" discreetly. Praising the hunting success strengthens bilateral relations.
 
-## Conclusion
+Conclusion
 
 The perfect cat does not exist as a finished product. It is the result of a deep understanding of its complex, scientifically-backed behavior. The perfect cat is the one whose algorithms you have decoded. Or rather: the one that has perfectly trained you.`,
     imageUrl: '/cat-matrix-homepage.jpg',
