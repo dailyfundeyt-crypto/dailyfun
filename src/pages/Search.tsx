@@ -6,13 +6,18 @@ import InstallSidebar from '../components/InstallSidebar';
 import ProfileShareMenu from '../components/ProfileShareMenu';
 import { articles } from '../data/articles';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useFollows } from '../hooks/useFollows';
 import { employees } from '../data/employees';
 
 const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
   const [sortMode, setSortMode] = useState<'latest' | 'random'>('latest');
+  const [viewMode, setViewMode] = useState<'following' | 'all'>('following'); // New state for view mode
   const { t, language } = useLanguage();
+  const { user } = useAuth();
+  const { followedAuthors, loading: followsLoading } = useFollows();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -46,6 +51,13 @@ const Search = () => {
   const filteredArticles = useMemo(() => {
     let filtered = articles;
 
+    // If user is logged in and in "following" mode, filter by followed authors
+    if (user && viewMode === 'following' && followedAuthors.length > 0) {
+      filtered = filtered.filter(article => 
+        followedAuthors.includes(article.author)
+      );
+    }
+
     if (selectedAuthor !== 'all') {
       // Map selected author to article authors
       const authorMapping = {
@@ -76,7 +88,7 @@ const Search = () => {
       // Sort by publication date (newest first)
       return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     }
-  }, [selectedAuthor, sortMode, randomSeed]);
+  }, [selectedAuthor, sortMode, randomSeed, user, viewMode, followedAuthors]);
 
   // Update random seed when switching to random mode
   const handleSortModeChange = (mode: 'latest' | 'random') => {
@@ -235,6 +247,39 @@ const Search = () => {
             <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
               {currentEmployeeInfo.description}
             </p>
+          </div>
+        )}
+
+        {/* View Mode Toggle (only show if user is logged in) */}
+        {user && (
+          <div className="mb-6 lg:mb-8 flex justify-center">
+            <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('following')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'following'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-600 hover:text-black'
+                }`}
+              >
+                Gefolgte Autoren
+                {followedAuthors.length > 0 && (
+                  <span className="ml-2 bg-red-accent text-white text-xs px-2 py-0.5 rounded-full">
+                    {followedAuthors.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setViewMode('all')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'all'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-600 hover:text-black'
+                }`}
+              >
+                Alle Kategorien
+              </button>
+            </div>
           </div>
         )}
 

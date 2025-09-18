@@ -1,13 +1,16 @@
 
 import { useState, useCallback, useMemo } from 'react';
-import { Search, Menu, X, Home, Info, Globe, Bot, Zap } from 'lucide-react';
+import { Search, Menu, X, Home, Info, Globe, Bot, Zap, LogIn, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from './ui/button';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
+  const { user, signOut } = useAuth();
 
   const navigation = useMemo(() => [
     { icon: Home, href: '/search', label: 'Home' },
@@ -81,6 +84,32 @@ const Header = () => {
               );
             })}
           </nav>
+
+          {/* Auth Button */}
+          <div className="hidden md:flex items-center ml-4">
+            {user ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={signOut}
+                className="text-muted-foreground hover:text-primary"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Abmelden
+              </Button>
+            ) : (
+              <Link to="/auth">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Anmelden
+                </Button>
+              </Link>
+            )}
+          </div>
 
           {/* No mobile menu needed - using bottom nav */}
           <div className="md:hidden">

@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import InstallSidebar from '../components/InstallSidebar';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import ArticleShareButton from '../components/ArticleShareButton';
+import AuthorFollowButton from '../components/AuthorFollowButton';
 import AnimatedParagraph from '../components/AnimatedParagraph';
 import { useLanguage } from '../contexts/LanguageContext';
 import { articles } from '../data/articles';
@@ -398,7 +399,7 @@ const Article = () => {
               {translatedTitle}
             </h1>
 
-            <div className="flex items-center text-sm text-gray-600 mb-8 pb-6 border-b border-gray-200">
+            <div className="flex items-center justify-between text-sm text-gray-600 mb-8 pb-6 border-b border-gray-200">
               <div className="flex items-center">
                 {employee && (
                   <Avatar className="h-6 w-6 mr-2">
@@ -412,8 +413,9 @@ const Article = () => {
                 >
                   {article.author}
                 </button>
+                <AuthorFollowButton authorName={article.author} />
               </div>
-              <div className="flex items-center ml-6">
+              <div className="flex items-center">
                 <Calendar className="h-4 w-4 mr-2" />
                 <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
               </div>
