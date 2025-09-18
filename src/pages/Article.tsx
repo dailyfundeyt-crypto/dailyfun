@@ -360,10 +360,22 @@ const Article = () => {
                   playsInline
                   disablePictureInPicture
                   style={{ pointerEvents: 'none' }}
-                >
-                  <source src="/cat-matrix-video.mp4" type="video/mp4" />
-                </video>
-              ) : (
+                 >
+                   <source src="/cat-matrix-video.mp4" type="video/mp4" />
+                 </video>
+               ) : article.id === 'coffee-superhero' ? (
+                 <video 
+                   className="w-full h-full object-cover"
+                   autoPlay
+                   loop
+                   muted
+                   playsInline
+                   disablePictureInPicture
+                   style={{ pointerEvents: 'none' }}
+                 >
+                   <source src="/coffee-superhero-video.mp4" type="video/mp4" />
+                 </video>
+               ) : (
                 <OptimizedImage
                   src={getProfessionalImage(article.id)}
                   alt={translatedTitle}
