@@ -1,4 +1,4 @@
-import { Home, Bot, Zap, Info, Globe } from 'lucide-react';
+import { Home, Bot, User, Info, Globe } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -9,7 +9,7 @@ const MobileBottomNav = () => {
   const navigation = [
     { icon: Home, href: '/search', label: 'Home' },
     { icon: Bot, href: '/ai', label: 'AI Chat' },
-    { icon: Zap, href: '/weird', label: 'Strange News' },
+    { icon: User, href: '/weird', label: 'My Page' },
     { icon: Info, href: '/about', label: 'About' },
     { icon: Globe, href: '#', label: language === 'en' ? 'EN' : 'DE', action: 'language' },
   ];

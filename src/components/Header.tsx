@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useMemo } from 'react';
-import { Search, Menu, X, Home, Info, Globe, Bot, Zap, LogIn, LogOut } from 'lucide-react';
+import { Search, Menu, X, Home, Info, Globe, Bot, User, LogIn, LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,7 +15,7 @@ const Header = () => {
   const navigation = useMemo(() => [
     { icon: Home, href: '/search', label: 'Home' },
     { icon: Bot, href: '/ai', label: 'AI Chat' },
-    { icon: Zap, href: '/weird', label: 'Strange News' },
+    { icon: User, href: '/weird', label: 'My Page' },
     { icon: Info, href: '/about', label: 'About' },
     { icon: Globe, href: '#', label: 'Language', action: 'language' },
   ], []);
@@ -45,8 +45,9 @@ const Header = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation - Icons only */}
-          <nav className="hidden md:flex items-center space-x-6">
+          {/* Desktop Navigation - Right side */}
+          <div className="hidden md:flex items-center space-x-6 ml-auto">
+            <nav className="flex items-center space-x-6">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = (item.href === '/search' && (location.pathname === '/' || location.pathname === '/search')) || (item.href !== '/search' && location.pathname === item.href);
@@ -83,16 +84,15 @@ const Header = () => {
                 </Link>
               );
             })}
-          </nav>
+            </nav>
 
-          {/* Auth Button */}
-          <div className="hidden md:flex items-center ml-4">
+            {/* Auth Button */}
             {user && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={signOut}
-                className="text-muted-foreground hover:text-primary"
+                className="text-muted-foreground hover:text-primary ml-4"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Abmelden
