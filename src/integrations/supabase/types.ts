@@ -55,28 +55,55 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          description: string | null
           display_name: string | null
+          followers_count: number | null
+          following_count: number | null
           id: string
+          is_public: boolean | null
+          location: string | null
+          profession: string | null
+          profile_image_url: string | null
+          social_links: Json | null
           updated_at: string
           user_id: string
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          description?: string | null
           display_name?: string | null
+          followers_count?: number | null
+          following_count?: number | null
           id?: string
+          is_public?: boolean | null
+          location?: string | null
+          profession?: string | null
+          profile_image_url?: string | null
+          social_links?: Json | null
           updated_at?: string
           user_id: string
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          description?: string | null
           display_name?: string | null
+          followers_count?: number | null
+          following_count?: number | null
           id?: string
+          is_public?: boolean | null
+          location?: string | null
+          profession?: string | null
+          profile_image_url?: string | null
+          social_links?: Json | null
           updated_at?: string
           user_id?: string
+          website?: string | null
         }
         Relationships: []
       }

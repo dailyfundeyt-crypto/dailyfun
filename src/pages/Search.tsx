@@ -9,12 +9,25 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useFollows } from '../hooks/useFollows';
 import { employees } from '../data/employees';
+import { supabase } from '../integrations/supabase/client';
+
+interface UserProfile {
+  id: string;
+  user_id: string;
+  display_name: string | null;
+  bio: string | null;
+  profession: string | null;
+  location: string | null;
+  description: string | null;
+  is_public: boolean;
+}
 
 const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
   const [sortMode, setSortMode] = useState<'latest' | 'random'>('latest');
   const [viewMode, setViewMode] = useState<'following' | 'all'>('following'); // New state for view mode
+  const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const { followedAuthors, loading: followsLoading } = useFollows();
@@ -47,6 +60,26 @@ const Search = () => {
 
   // Generate random seed to keep random order stable during re-renders
   const [randomSeed, setRandomSeed] = useState(() => Math.random());
+
+  // Fetch user profiles
+  useEffect(() => {
+    const fetchUserProfiles = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, user_id, display_name, bio, profession, location, description, is_public')
+          .eq('is_public', true)
+          .not('display_name', 'is', null);
+
+        if (error) throw error;
+        setUserProfiles(data || []);
+      } catch (error) {
+        console.error('Error fetching user profiles:', error);
+      }
+    };
+
+    fetchUserProfiles();
+  }, []);
 
   const filteredArticles = useMemo(() => {
     let filtered = articles;
@@ -108,10 +141,11 @@ const Search = () => {
     setShowProfileInfo(false);
   };
 
-  // Get employee info for profile display
+  // Get employee or user info for profile display
   const getEmployeeInfo = (employeeId: string) => {
+    // Check if it's an employee first
     const employee = employees.find(emp => emp.id === employeeId);
-    if (!employee) return null;
+    if (employee) {
 
     const getDescription = (id: string) => {
       switch (id) {
@@ -143,11 +177,26 @@ const Search = () => {
       }
     };
 
-    return {
-      ...employee,
-      description: getDescription(employeeId),
-      role: getRole(employeeId)
-    };
+      return {
+        ...employee,
+        description: getDescription(employeeId),
+        role: getRole(employeeId)
+      };
+    }
+
+    // Check if it's a user profile
+    const userProfile = userProfiles.find(profile => profile.user_id === employeeId);
+    if (userProfile) {
+      return {
+        id: userProfile.user_id,
+        name: userProfile.display_name || 'User',
+        image: '', // User profiles don't have images yet
+        description: userProfile.description || userProfile.bio || '',
+        role: userProfile.profession || 'Community Member'
+      };
+    }
+
+    return null;
   };
 
   const currentEmployeeInfo = selectedAuthor !== 'all' ? getEmployeeInfo(selectedAuthor) : null;
@@ -195,6 +244,28 @@ const Search = () => {
                 </div>
                 <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight">
                   {employee.name}
+                </span>
+              </div>
+            ))}
+
+            {/* User Profiles */}
+            {userProfiles.map((profile) => (
+              <div 
+                key={profile.user_id}
+                className="flex flex-col items-center cursor-pointer group flex-shrink-0"
+                onClick={() => handleEmployeeClick(profile.user_id)}
+              >
+                <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center bg-gray-100 transition-all ${
+                  selectedAuthor === profile.user_id 
+                    ? 'border-red-accent' 
+                    : 'border-gray-300 group-hover:border-red-accent/50'
+                }`}>
+                  <span className="text-lg font-bold text-gray-600">
+                    {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                </div>
+                <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight">
+                  {profile.display_name}
                 </span>
               </div>
             ))}

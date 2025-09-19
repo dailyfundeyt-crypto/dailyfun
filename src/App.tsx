@@ -14,6 +14,7 @@ import Article from "./pages/Article";
 import AboutUs from "./pages/AboutUs";
 import Products from "./pages/Products";
 import CategoryPage from "./pages/CategoryPage";
+import ProfileManagement from "./pages/ProfileManagement";
 import Contact from "./pages/Contact";
 import SocialMedia from "./pages/SocialMedia";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -63,7 +64,7 @@ const App = () => (
                 <Route path="/ai" element={<AI />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/article/:id" element={<Article />} />
-                <Route path="/weird" element={<CategoryPage />} />
+                <Route path="/weird" element={<ProfileManagement />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

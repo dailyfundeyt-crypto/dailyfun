@@ -87,7 +87,7 @@ const Header = () => {
 
           {/* Auth Button */}
           <div className="hidden md:flex items-center ml-4">
-            {user ? (
+            {user && (
               <Button
                 variant="outline"
                 size="sm"
@@ -97,17 +97,6 @@ const Header = () => {
                 <LogOut className="h-4 w-4 mr-2" />
                 Abmelden
               </Button>
-            ) : (
-              <Link to="/auth">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-muted-foreground hover:text-primary"
-                >
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Anmelden
-                </Button>
-              </Link>
             )}
           </div>
 
