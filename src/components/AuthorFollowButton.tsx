@@ -5,14 +5,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+const DEFAULT_AUTHORS = [
+  'Stefan Kunc',
+  'Dr. Elke Schneider',
+  'Karl Bergmann', 
+  'Jonas Richter'
+];
+
 interface AuthorFollowButtonProps {
   authorName: string;
   className?: string;
+  onFollowChange?: () => void;
 }
 
 const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({ 
   authorName, 
-  className = '' 
+  className = '',
+  onFollowChange
 }) => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -57,6 +66,16 @@ const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({
       return;
     }
 
+    // Prevent unfollowing default authors
+    if (isFollowing && DEFAULT_AUTHORS.includes(authorName)) {
+      toast({
+        title: 'Nicht möglich',
+        description: 'Standard-Autoren können nicht entfolgt werden.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -92,6 +111,9 @@ const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({
           description: `Sie folgen jetzt ${authorName}.`,
         });
       }
+      
+      // Trigger callback to refresh follows
+      onFollowChange?.();
     } catch (error) {
       console.error('Error toggling follow:', error);
       toast({

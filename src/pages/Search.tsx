@@ -8,8 +8,10 @@ import { articles } from '../data/articles';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useFollows } from '../hooks/useFollows';
+import { useAutoFollow } from '../hooks/useAutoFollow';
 import { employees } from '../data/employees';
 import { supabase } from '../integrations/supabase/client';
+import AuthorFollowButton from '../components/AuthorFollowButton';
 
 interface UserProfile {
   id: string;
@@ -26,11 +28,11 @@ const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
   const [sortMode, setSortMode] = useState<'latest' | 'random'>('latest');
-  const [viewMode, setViewMode] = useState<'following' | 'all'>('following'); // New state for view mode
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const { followedAuthors, loading: followsLoading } = useFollows();
+  const { followedAuthors, loading: followsLoading, refetchFollows } = useFollows();
+  const { DEFAULT_AUTHORS } = useAutoFollow();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -84,11 +86,14 @@ const Search = () => {
   const filteredArticles = useMemo(() => {
     let filtered = articles;
 
-    // If user is logged in and in "following" mode, filter by followed authors
-    if (user && viewMode === 'following' && followedAuthors.length > 0) {
+    // Always filter by followed authors if user is logged in and has followed authors
+    if (user && followedAuthors.length > 0) {
       filtered = filtered.filter(article => 
         followedAuthors.includes(article.author)
       );
+    } else if (user && followedAuthors.length === 0) {
+      // If user has no followed authors yet, show nothing until auto-follow completes
+      filtered = [];
     }
 
     if (selectedAuthor !== 'all') {
@@ -121,7 +126,7 @@ const Search = () => {
       // Sort by publication date (newest first)
       return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     }
-  }, [selectedAuthor, sortMode, randomSeed, user, viewMode, followedAuthors]);
+  }, [selectedAuthor, sortMode, randomSeed, user, followedAuthors]);
 
   // Update random seed when switching to random mode
   const handleSortModeChange = (mode: 'latest' | 'random') => {
@@ -224,51 +229,95 @@ const Search = () => {
               <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-16 sm:max-w-20">{t('search.all')}</span>
             </div>
 
-            {/* Employee Profiles */}
-            {employees.map((employee) => (
-              <div 
-                key={employee.id}
-                className="flex flex-col items-center cursor-pointer group flex-shrink-0"
-                onClick={() => handleEmployeeClick(employee.id)}
-              >
-                <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 overflow-hidden transition-all ${
-                  selectedAuthor === employee.id 
-                    ? 'border-red-accent' 
-                    : 'border-gray-300 group-hover:border-red-accent/50'
-                }`}>
-                  <img 
-                    src={employee.image} 
-                    alt={employee.name}
-                    className="w-full h-full object-cover"
-                  />
+            {/* Employee Profiles - Only show followed authors if user is logged in */}
+            {employees.map((employee) => {
+              // Map employee names to match follow system
+              const authorMapping = {
+                'stefan': 'Stefan Kunc',
+                'elke': 'Dr. Elke Schneider',
+                'karl': 'Karl Bergmann',
+                'jonas': 'Jonas Richter'
+              };
+              const authorName = authorMapping[employee.id];
+              const isFollowed = followedAuthors.includes(authorName);
+              
+              // If user is logged in, only show followed authors
+              if (user && !isFollowed) return null;
+              
+              return (
+                <div key={employee.id} className="flex flex-col items-center group flex-shrink-0 relative">
+                  <div 
+                    className="cursor-pointer"
+                    onClick={() => handleEmployeeClick(employee.id)}
+                  >
+                    <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 overflow-hidden transition-all ${
+                      selectedAuthor === employee.id 
+                        ? 'border-red-accent' 
+                        : 'border-gray-300 group-hover:border-red-accent/50'
+                    }`}>
+                      <img 
+                        src={employee.image} 
+                        alt={employee.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight block">
+                      {employee.name}
+                    </span>
+                  </div>
+                  
+                  {/* Follow button - only show if not a default author */}
+                  {user && !DEFAULT_AUTHORS.includes(authorName) && (
+                    <div className="mt-1">
+                      <AuthorFollowButton 
+                        authorName={authorName}
+                        className="text-xs px-2 py-1"
+                      />
+                    </div>
+                  )}
                 </div>
-                <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight">
-                  {employee.name}
-                </span>
-              </div>
-            ))}
+              );
+            })}
 
-            {/* User Profiles */}
-            {userProfiles.map((profile) => (
-              <div 
-                key={profile.user_id}
-                className="flex flex-col items-center cursor-pointer group flex-shrink-0"
-                onClick={() => handleEmployeeClick(profile.user_id)}
-              >
-                <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center bg-gray-100 transition-all ${
-                  selectedAuthor === profile.user_id 
-                    ? 'border-red-accent' 
-                    : 'border-gray-300 group-hover:border-red-accent/50'
-                }`}>
-                  <span className="text-lg font-bold text-gray-600">
-                    {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                  </span>
+            {/* User Profiles - Only show if followed */}
+            {userProfiles.map((profile) => {
+              const isFollowed = followedAuthors.includes(profile.display_name || '');
+              
+              // If user is logged in, only show followed profiles
+              if (user && !isFollowed) return null;
+              
+              return (
+                <div key={profile.user_id} className="flex flex-col items-center group flex-shrink-0 relative">
+                  <div 
+                    className="cursor-pointer"
+                    onClick={() => handleEmployeeClick(profile.user_id)}
+                  >
+                    <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center bg-gray-100 transition-all ${
+                      selectedAuthor === profile.user_id 
+                        ? 'border-red-accent' 
+                        : 'border-gray-300 group-hover:border-red-accent/50'
+                    }`}>
+                      <span className="text-lg font-bold text-gray-600">
+                        {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                    <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight block">
+                      {profile.display_name}
+                    </span>
+                  </div>
+                  
+                  {/* Follow button for user profiles */}
+                  {user && profile.display_name && (
+                    <div className="mt-1">
+                      <AuthorFollowButton 
+                        authorName={profile.display_name}
+                        className="text-xs px-2 py-1"
+                      />
+                    </div>
+                  )}
                 </div>
-                <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight">
-                  {profile.display_name}
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -321,38 +370,6 @@ const Search = () => {
           </div>
         )}
 
-        {/* View Mode Toggle (only show if user is logged in) */}
-        {user && (
-          <div className="mb-6 lg:mb-8 flex justify-center">
-            <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('following')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'following'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-600 hover:text-black'
-                }`}
-              >
-                Gefolgte Autoren
-                {followedAuthors.length > 0 && (
-                  <span className="ml-2 bg-red-accent text-white text-xs px-2 py-0.5 rounded-full">
-                    {followedAuthors.length}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={() => setViewMode('all')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  viewMode === 'all'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-600 hover:text-black'
-                }`}
-              >
-                Alle Kategorien
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Articles Section with Sort Toggle */}
         <div className="mb-8">
