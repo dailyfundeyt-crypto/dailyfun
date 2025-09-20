@@ -191,6 +191,7 @@ const Search = () => {
 
     // Check if it's a user profile
     const userProfile = userProfiles.find(profile => profile.user_id === employeeId);
+    
     if (userProfile) {
       return {
         id: userProfile.user_id,
@@ -272,6 +273,9 @@ const Search = () => {
                       <AuthorFollowButton 
                         authorName={authorName}
                         className="text-xs px-2 py-1"
+                        onFollowChange={() => {
+                          refetchFollows();
+                        }}
                       />
                     </div>
                   )}
@@ -312,6 +316,9 @@ const Search = () => {
                       <AuthorFollowButton 
                         authorName={profile.display_name}
                         className="text-xs px-2 py-1"
+                        onFollowChange={() => {
+                          refetchFollows();
+                        }}
                       />
                     </div>
                   )}
@@ -327,12 +334,18 @@ const Search = () => {
             {/* Profile Header with Stats */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3 sm:space-x-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0">
-                  <img 
-                    src={currentEmployeeInfo.image} 
-                    alt={currentEmployeeInfo.name}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0 flex items-center justify-center bg-gray-100">
+                  {currentEmployeeInfo.image ? (
+                    <img 
+                      src={currentEmployeeInfo.image} 
+                      alt={currentEmployeeInfo.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl font-bold text-gray-600">
+                      {currentEmployeeInfo.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                  )}
                 </div>
                 <div className="text-center">
                   <div className="font-bold text-base sm:text-lg text-black">
