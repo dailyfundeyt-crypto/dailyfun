@@ -70,11 +70,15 @@ const Search = () => {
         const { data, error } = await supabase
           .from('profiles')
           .select('id, user_id, display_name, bio, profession, location, description, is_public')
-          .eq('is_public', true)
-          .not('display_name', 'is', null);
+          .eq('is_public', true);
 
         if (error) throw error;
-        setUserProfiles(data || []);
+        
+        // Filter out profiles without a display name on the client side
+        const validProfiles = (data || []).filter(profile => 
+          profile.display_name && profile.display_name.trim() !== ''
+        );
+        setUserProfiles(validProfiles);
       } catch (error) {
         console.error('Error fetching user profiles:', error);
       }
