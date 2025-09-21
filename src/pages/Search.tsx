@@ -12,6 +12,8 @@ import { useAutoFollow } from '../hooks/useAutoFollow';
 import { employees } from '../data/employees';
 import { supabase } from '../integrations/supabase/client';
 import AuthorFollowButton from '../components/AuthorFollowButton';
+import { Input } from '../components/ui/input';
+import { Search as SearchIcon, User } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -22,6 +24,12 @@ interface UserProfile {
   location: string | null;
   description: string | null;
   is_public: boolean;
+  aiGenerated?: {
+    description: string;
+    interests: string[];
+    funFacts: string[];
+    achievements: string[];
+  };
 }
 
 const Search = () => {
@@ -29,6 +37,9 @@ const Search = () => {
   const [showProfileInfo, setShowProfileInfo] = useState(false);
   const [sortMode, setSortMode] = useState<'latest' | 'random'>('latest');
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<{articles: any[], profiles: UserProfile[]}>({articles: [], profiles: []});
+  const [isSearching, setIsSearching] = useState(false);
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const { followedAuthors, loading: followsLoading, refetchFollows } = useFollows();
@@ -63,7 +74,97 @@ const Search = () => {
   // Generate random seed to keep random order stable during re-renders
   const [randomSeed, setRandomSeed] = useState(() => Math.random());
 
-  // Fetch user profiles
+  // Search functionality
+  const performSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults({articles: [], profiles: []});
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    
+    try {
+      // Search articles
+      const searchTerms = query.toLowerCase().split(' ');
+      const matchingArticles = articles.filter(article => {
+        const title = (language === 'de' ? article.title : (article.titleEn || article.title)).toLowerCase();
+        const content = (language === 'de' ? article.content : (article.contentEn || article.content)).toLowerCase();
+        const author = article.author.toLowerCase();
+        const category = (language === 'de' ? article.category : (article.categoryEn || article.category)).toLowerCase();
+        
+        return searchTerms.some(term => 
+          title.includes(term) || 
+          content.includes(term) || 
+          author.includes(term) ||
+          category.includes(term)
+        );
+      });
+
+      // Search user profiles
+      const matchingProfiles = userProfiles.filter(profile => {
+        const displayName = (profile.display_name || '').toLowerCase();
+        const bio = (profile.bio || '').toLowerCase();
+        const profession = (profile.profession || '').toLowerCase();
+        const location = (profile.location || '').toLowerCase();
+        const description = (profile.description || '').toLowerCase();
+        
+        return searchTerms.some(term => 
+          displayName.includes(term) || 
+          bio.includes(term) || 
+          profession.includes(term) ||
+          location.includes(term) ||
+          description.includes(term)
+        );
+      });
+
+      // Generate AI info for profiles if they don't have much info
+      const profilesWithAI = await Promise.all(
+        matchingProfiles.map(async (profile) => {
+          if (!profile.description || profile.description.length < 50) {
+            try {
+              const response = await supabase.functions.invoke('generate-user-info', {
+                body: {
+                  userName: profile.display_name,
+                  userBio: profile.bio,
+                  userProfession: profile.profession,
+                  userLocation: profile.location
+                }
+              });
+
+              if (response.data?.success && response.data?.data) {
+                return {
+                  ...profile,
+                  aiGenerated: response.data.data
+                };
+              }
+            } catch (error) {
+              console.error('Error generating AI info for profile:', error);
+            }
+          }
+          return profile;
+        })
+      );
+
+      setSearchResults({
+        articles: matchingArticles,
+        profiles: profilesWithAI
+      });
+    } catch (error) {
+      console.error('Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle search input changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, userProfiles, language]);
   useEffect(() => {
     const fetchUserProfiles = async () => {
       try {
@@ -226,6 +327,145 @@ const Search = () => {
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search Input */}
+        <div className="mb-8">
+          <div className="relative max-w-md mx-auto">
+            <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder={t('search.placeholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-accent focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        {/* Search Results */}
+        {searchQuery.trim() && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-black mb-6">
+              Suchergebnisse für "{searchQuery}"
+            </h2>
+            
+            {isSearching ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-accent mx-auto"></div>
+                <p className="text-gray-600 mt-2">Suche läuft...</p>
+              </div>
+            ) : (
+              <>
+                {/* User Profile Results */}
+                {searchResults.profiles.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
+                      <User className="h-5 w-5 mr-2" />
+                      Benutzerprofile ({searchResults.profiles.length})
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {searchResults.profiles.map((profile) => (
+                        <div key={profile.user_id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                          <div className="flex items-start space-x-3">
+                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                              <span className="text-lg font-bold text-gray-600">
+                                {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-black">{profile.display_name}</h4>
+                              {profile.profession && (
+                                <p className="text-sm text-red-accent">{profile.profession}</p>
+                              )}
+                              {profile.location && (
+                                <p className="text-xs text-gray-500">{profile.location}</p>
+                              )}
+                              {profile.aiGenerated ? (
+                                <div className="mt-2">
+                                  <p className="text-sm text-gray-700">{profile.aiGenerated.description}</p>
+                                  {profile.aiGenerated.interests && (
+                                    <div className="mt-2">
+                                      <p className="text-xs font-medium text-gray-600">Interessen:</p>
+                                      <p className="text-xs text-gray-600">{profile.aiGenerated.interests.join(', ')}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <>
+                                  {profile.bio && <p className="text-sm text-gray-700 mt-1">{profile.bio}</p>}
+                                  {profile.description && <p className="text-sm text-gray-700 mt-1">{profile.description}</p>}
+                                </>
+                              )}
+                            </div>
+                            <div>
+                              <AuthorFollowButton 
+                                authorName={profile.display_name || ''}
+                                className="text-xs px-2 py-1"
+                                onFollowChange={() => {
+                                  refetchFollows();
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Article Results */}
+                {searchResults.articles.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-black mb-4">
+                      Artikel ({searchResults.articles.length})
+                    </h3>
+                    <div className="space-y-4">
+                      {searchResults.articles.map((article) => (
+                        <Link
+                          key={article.id}
+                          to={`/article/${article.id}`}
+                          className="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex space-x-4">
+                            <img
+                              src={article.imageUrl.startsWith('/') ? article.imageUrl : `https://images.unsplash.com/${article.imageUrl}?auto=format&fit=crop&w=200&q=75`}
+                              alt={language === 'de' ? article.title : (article.titleEn || article.title)}
+                              className="w-20 h-20 object-cover rounded"
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-black mb-1">
+                                {language === 'de' ? article.title : (article.titleEn || article.title)}
+                              </h4>
+                              <p className="text-sm text-gray-600 mb-2">
+                                {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
+                              </p>
+                              <div className="text-xs text-gray-500">
+                                {article.author} • {new Date(article.publishedAt).toLocaleDateString('de-DE')}
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No Results */}
+                {searchResults.profiles.length === 0 && searchResults.articles.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">Keine Ergebnisse für "{searchQuery}" gefunden.</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Versuchen Sie andere Suchbegriffe oder schauen Sie sich die verfügbaren Profile an.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Only show profile section when not searching */}
+        {!searchQuery.trim() && (
+          <>
         {/* Employee Profiles Section */}
         <div className="mb-8 lg:mb-12">
           <div className="flex items-start space-x-4 sm:space-x-6 lg:space-x-8 mb-6 lg:mb-8 overflow-x-auto pb-2 px-4 sm:px-6 lg:justify-center" style={{scrollSnapType: 'x mandatory'}}>
@@ -498,6 +738,8 @@ const Search = () => {
               }
             </p>
           </div>
+        )}
+          </>
         )}
       </main>
     </div>
