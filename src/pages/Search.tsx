@@ -101,20 +101,30 @@ const Search = () => {
     }
 
     if (selectedAuthor !== 'all') {
-      // Map selected author to article authors
       const authorMapping = {
-        'stefan': 'Stefan Kunc',
-        'elke': 'Dr. Elke Schneider',
-        'karl': 'Karl Bergmann',
-        'jonas': 'Jonas Richter'
-      };
-      
-      const authorName = authorMapping[selectedAuthor];
-      filtered = filtered.filter(article => 
-        article.author === authorName || 
-        article.author.includes(authorName.split(' ')[0]) ||
-        article.author.includes(authorName.split(' ').pop())
-      );
+        stefan: 'Stefan Kunc',
+        elke: 'Dr. Elke Schneider',
+        karl: 'Karl Bergmann',
+        jonas: 'Jonas Richter',
+      } as const;
+
+      let authorName: string | undefined;
+
+      if (authorMapping[selectedAuthor as keyof typeof authorMapping]) {
+        authorName = authorMapping[selectedAuthor as keyof typeof authorMapping];
+      } else {
+        const prof = userProfiles.find(p => p.user_id === selectedAuthor);
+        authorName = prof?.display_name || undefined;
+      }
+
+      if (authorName) {
+        const [first, last] = authorName.split(' ');
+        filtered = filtered.filter(article => 
+          article.author === authorName || 
+          (first ? article.author.includes(first) : false) ||
+          (last ? article.author.includes(last) : false)
+        );
+      }
     }
 
     // Sort articles based on selected mode
@@ -130,7 +140,7 @@ const Search = () => {
       // Sort by publication date (newest first)
       return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     }
-  }, [selectedAuthor, sortMode, randomSeed, user, followedAuthors]);
+  }, [selectedAuthor, sortMode, randomSeed, user, followedAuthors, userProfiles]);
 
   // Update random seed when switching to random mode
   const handleSortModeChange = (mode: 'latest' | 'random') => {
