@@ -64,9 +64,10 @@ export type Database = {
           location: string | null
           profession: string | null
           profile_image_url: string | null
+          profile_type: string | null
           social_links: Json | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           website: string | null
         }
         Insert: {
@@ -82,9 +83,10 @@ export type Database = {
           location?: string | null
           profession?: string | null
           profile_image_url?: string | null
+          profile_type?: string | null
           social_links?: Json | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           website?: string | null
         }
         Update: {
@@ -100,9 +102,10 @@ export type Database = {
           location?: string | null
           profession?: string | null
           profile_image_url?: string | null
+          profile_type?: string | null
           social_links?: Json | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           website?: string | null
         }
         Relationships: []
