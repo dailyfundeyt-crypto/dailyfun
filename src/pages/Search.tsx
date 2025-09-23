@@ -17,13 +17,15 @@ import { Search as SearchIcon, User } from 'lucide-react';
 
 interface UserProfile {
   id: string;
-  user_id: string;
+  user_id: string | null;
   display_name: string | null;
   bio: string | null;
   profession: string | null;
   location: string | null;
   description: string | null;
   is_public: boolean;
+  profile_type?: string;
+  avatar_url?: string | null;
   aiGenerated?: {
     description: string;
     interests: string[];
@@ -170,7 +172,7 @@ const Search = () => {
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, user_id, display_name, bio, profession, location, description, is_public')
+          .select('id, user_id, display_name, bio, profession, location, description, is_public, profile_type, avatar_url')
           .eq('is_public', true);
 
         if (error) throw error;
@@ -214,7 +216,7 @@ const Search = () => {
       if (authorMapping[selectedAuthor as keyof typeof authorMapping]) {
         authorName = authorMapping[selectedAuthor as keyof typeof authorMapping];
       } else {
-        const prof = userProfiles.find(p => p.user_id === selectedAuthor);
+        const prof = userProfiles.find(p => p.id === selectedAuthor);
         authorName = prof?.display_name || undefined;
       }
 
@@ -305,13 +307,13 @@ const Search = () => {
     }
 
     // Check if it's a user profile
-    const userProfile = userProfiles.find(profile => profile.user_id === employeeId);
+    const userProfile = userProfiles.find(profile => profile.id === employeeId);
     
     if (userProfile) {
       return {
-        id: userProfile.user_id,
+        id: userProfile.id,
         name: userProfile.display_name || 'User',
-        image: '', // User profiles don't have images yet
+        image: userProfile.avatar_url || '', // Now includes avatar_url from database
         description: userProfile.description || userProfile.bio || '',
         role: userProfile.profession || 'Community Member'
       };
@@ -362,15 +364,23 @@ const Search = () => {
                       <User className="h-5 w-5 mr-2" />
                       Benutzerprofile ({searchResults.profiles.length})
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {searchResults.profiles.map((profile) => (
-                        <div key={profile.user_id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex items-start space-x-3">
-                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                              <span className="text-lg font-bold text-gray-600">
-                                {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                              </span>
-                            </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {searchResults.profiles.map((profile) => (
+                         <div key={profile.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                           <div className="flex items-start space-x-3">
+                             <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                               {profile.avatar_url ? (
+                                 <img 
+                                   src={profile.avatar_url} 
+                                   alt={profile.display_name || 'User'} 
+                                   className="w-full h-full object-cover"
+                                 />
+                               ) : (
+                                 <span className="text-lg font-bold text-gray-600">
+                                   {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                                 </span>
+                               )}
+                             </div>
                             <div className="flex-1">
                               <h4 className="font-semibold text-black">{profile.display_name}</h4>
                               {profile.profession && (
@@ -537,27 +547,51 @@ const Search = () => {
               );
             })}
 
-            {/* User Profiles - Only show if followed */}
-            {userProfiles.map((profile) => {
+            {/* User Profiles - Only show if followed and not already covered by employees */}
+            {userProfiles
+              .filter(profile => {
+                // Filter out profiles that duplicate employee names
+                const employeeNames = employees.map(emp => emp.name.toLowerCase());
+                const profileName = (profile.display_name || '').toLowerCase();
+                
+                // Don't show if this profile name matches an employee
+                return !employeeNames.some(empName => {
+                  // Check for exact match or partial match (e.g., "Karl Bergmann" vs "Herr Karl Bergmann")
+                  return empName === profileName || 
+                         empName.includes(profileName.replace(/^(dr\.|herr)\s+/i, '')) ||
+                         profileName.includes(empName.replace(/^(dr\.|herr)\s+/i, ''));
+                });
+              })
+              .map((profile) => {
               const isFollowed = followedAuthors.includes(profile.display_name || '');
               
               // If user is logged in, only show followed profiles
               if (user && !isFollowed) return null;
               
               return (
-                <div key={profile.user_id} className="flex flex-col items-center group flex-shrink-0 relative">
+                <div key={profile.id} className="flex flex-col items-center group flex-shrink-0 relative">
                   <div 
                     className="cursor-pointer"
-                    onClick={() => handleEmployeeClick(profile.user_id)}
+                    onClick={() => handleEmployeeClick(profile.id)}
                   >
-                    <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center bg-gray-100 transition-all ${
-                      selectedAuthor === profile.user_id 
+                    <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 overflow-hidden transition-all ${
+                      selectedAuthor === profile.id 
                         ? 'border-red-accent' 
                         : 'border-gray-300 group-hover:border-red-accent/50'
                     }`}>
-                      <span className="text-lg font-bold text-gray-600">
-                        {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                      </span>
+                      {profile.avatar_url ? (
+                        <img 
+                          src={profile.avatar_url} 
+                          alt={profile.display_name || 'User'} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <span className="text-lg font-bold text-gray-600">
+                            {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight block">
                       {profile.display_name}
