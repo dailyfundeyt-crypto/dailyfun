@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Label } from '../components/ui/label';
 import { Alert, AlertDescription } from '../components/ui/alert';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { Loader2, Edit, User, Mail, MapPin, Briefcase, Globe, Save, Eye, Calendar, Heart } from 'lucide-react';
+import { Loader2, Edit, User, Mail, MapPin, Briefcase, Globe, Save, Eye, Calendar, Heart, Camera, Upload, AtSign } from 'lucide-react';
 import { toast } from 'sonner';
 import InstallSidebar from '../components/InstallSidebar';
 import Auth from './Auth';
@@ -23,6 +23,8 @@ interface UserProfile {
   profession: string | null;
   description: string | null;
   website: string | null;
+  email: string | null;
+  alias: string | null;
   is_public: boolean;
   created_at: string;
   updated_at: string;
@@ -41,8 +43,12 @@ const ProfileManagement = () => {
     profession: '',
     description: '',
     website: '',
+    email: '',
+    alias: '',
     is_public: true
   });
+  const [uploading, setUploading] = useState(false);
+  const [aliasError, setAliasError] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -74,6 +80,8 @@ const ProfileManagement = () => {
           profession: data.profession || '',
           description: data.description || '',
           website: data.website || '',
+          email: data.email || '',
+          alias: data.alias || '',
           is_public: data.is_public
         });
       }
@@ -92,8 +100,76 @@ const ProfileManagement = () => {
     }));
   };
 
+  const checkAliasAvailability = async (alias: string) => {
+    if (!alias) return true;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('alias')
+      .eq('alias', alias)
+      .neq('user_id', user?.id)
+      .single();
+
+    return error?.code === 'PGRST116'; // No data found means alias is available
+  };
+
+  const handleAliasChange = async (alias: string) => {
+    setAliasError('');
+    if (alias && alias.length > 0) {
+      const isAvailable = await checkAliasAvailability(alias);
+      if (!isAvailable) {
+        setAliasError('Dieser Alias ist bereits vergeben');
+      }
+    }
+    handleInputChange('alias', alias);
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      setUploading(true);
+      
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(fileName);
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      setProfile(prev => prev ? { ...prev, avatar_url: publicUrl } : null);
+      toast.success('Profilbild erfolgreich hochgeladen!');
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Fehler beim Hochladen des Bildes');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
+
+    // Check alias availability before saving
+    if (formData.alias && !(await checkAliasAvailability(formData.alias))) {
+      setAliasError('Dieser Alias ist bereits vergeben');
+      return;
+    }
 
     try {
       setSaving(true);
@@ -106,6 +182,8 @@ const ProfileManagement = () => {
         profession: formData.profession,
         description: formData.description,
         website: formData.website,
+        email: formData.email,
+        alias: formData.alias,
         is_public: formData.is_public,
         updated_at: new Date().toISOString()
       };
@@ -143,6 +221,8 @@ const ProfileManagement = () => {
         profession: profile.profession || '',
         description: profile.description || '',
         website: profile.website || '',
+        email: profile.email || '',
+        alias: profile.alias || '',
         is_public: profile.is_public
       });
     }
@@ -184,12 +264,14 @@ const ProfileManagement = () => {
           {/* Profile Card */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
             <div className="bg-gradient-to-r from-red-50 to-orange-50 p-8 text-center">
-              <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-white shadow-lg">
-                <AvatarImage src={profile?.avatar_url || ''} />
-                <AvatarFallback className="bg-gradient-to-br from-red-400 to-orange-400 text-white text-2xl font-bold">
-                  {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative inline-block">
+                <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-white shadow-lg">
+                  <AvatarImage src={profile?.avatar_url || ''} />
+                  <AvatarFallback className="bg-gradient-to-br from-red-400 to-orange-400 text-white text-2xl font-bold">
+                    {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
               
               <h2 className="text-2xl font-bold text-black mb-2">
                 {formData.display_name || user?.email || 'Dein Name'}
@@ -199,6 +281,13 @@ const ProfileManagement = () => {
                 <p className="text-red-500 font-medium text-lg mb-3">
                   {formData.profession}
                 </p>
+              )}
+              
+              {formData.alias && (
+                <div className="flex items-center justify-center gap-2 text-gray-600 mb-2">
+                  <AtSign className="h-4 w-4" />
+                  <span className="font-medium">@{formData.alias}</span>
+                </div>
               )}
               
               {formData.location && (
@@ -253,10 +342,12 @@ const ProfileManagement = () => {
                   </span>
                 </div>
                 
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <span>{user?.email}</span>
-                </div>
+                {formData.email && (
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Mail className="h-4 w-4 text-blue-500" />
+                    <span>{formData.email}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -319,6 +410,66 @@ const ProfileManagement = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
+                {/* Profile Image Upload */}
+                <div className="space-y-4">
+                  <Label className="text-black font-medium">Profilbild</Label>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="w-16 h-16 ring-2 ring-gray-200">
+                      <AvatarImage src={profile?.avatar_url || ''} />
+                      <AvatarFallback className="bg-gradient-to-br from-red-400 to-orange-400 text-white font-bold">
+                        {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <input
+                        type="file"
+                        id="avatar-upload"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('avatar-upload')?.click()}
+                        disabled={uploading}
+                        className="w-full"
+                      >
+                        {uploading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Hochladen...
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="h-4 w-4 mr-2" />
+                            Bild hochladen
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Alias */}
+                <div className="space-y-2">
+                  <Label htmlFor="alias" className="text-black font-medium">Benutzername/Alias</Label>
+                  <div className="relative">
+                    <AtSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="alias"
+                      value={formData.alias}
+                      onChange={(e) => handleAliasChange(e.target.value)}
+                      placeholder="deinusername"
+                      className={`pl-10 border-gray-200 focus:border-red-300 focus:ring-red-100 ${aliasError ? 'border-red-300' : ''}`}
+                    />
+                  </div>
+                  {aliasError && (
+                    <p className="text-sm text-red-600">{aliasError}</p>
+                  )}
+                  <p className="text-sm text-gray-500">Eindeutiger Benutzername, den nur du verwenden kannst</p>
+                </div>
+
                 {/* Display Name */}
                 <div className="space-y-2">
                   <Label htmlFor="display_name" className="text-black font-medium">Anzeigename</Label>
@@ -329,6 +480,20 @@ const ProfileManagement = () => {
                     placeholder="Dein vollständiger Name"
                     className="border-gray-200 focus:border-red-300 focus:ring-red-100"
                   />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-black font-medium">E-Mail (öffentlich)</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="deine@email.de"
+                    className="border-gray-200 focus:border-red-300 focus:ring-red-100"
+                  />
+                  <p className="text-sm text-gray-500">Diese E-Mail wird in deinem Profil angezeigt (optional)</p>
                 </div>
 
                 {/* Bio */}
@@ -431,6 +596,11 @@ const ProfileManagement = () => {
                     <h3 className="font-bold text-lg text-black">
                       {formData.display_name || 'Dein Name'}
                     </h3>
+                    {formData.alias && (
+                      <p className="text-gray-600 text-sm">
+                        @{formData.alias}
+                      </p>
+                    )}
                     {formData.profession && (
                       <p className="text-red-500 text-sm font-medium">
                         {formData.profession}
@@ -451,6 +621,14 @@ const ProfileManagement = () => {
                     <p className="text-sm text-gray-700 text-left">
                       {formData.bio}
                     </p>
+                  )}
+
+                  {/* Email */}
+                  {formData.email && (
+                    <div className="flex items-center justify-center gap-1 text-sm">
+                      <Mail className="h-4 w-4 text-blue-500" />
+                      <span className="text-blue-500 font-medium">{formData.email}</span>
+                    </div>
                   )}
 
                   {/* Website */}

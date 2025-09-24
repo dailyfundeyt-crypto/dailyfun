@@ -52,11 +52,13 @@ export type Database = {
       }
       profiles: {
         Row: {
+          alias: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
           description: string | null
           display_name: string | null
+          email: string | null
           followers_count: number | null
           following_count: number | null
           id: string
@@ -64,17 +66,20 @@ export type Database = {
           location: string | null
           profession: string | null
           profile_image_url: string | null
+          profile_type: string | null
           social_links: Json | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           website: string | null
         }
         Insert: {
+          alias?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           description?: string | null
           display_name?: string | null
+          email?: string | null
           followers_count?: number | null
           following_count?: number | null
           id?: string
@@ -82,17 +87,20 @@ export type Database = {
           location?: string | null
           profession?: string | null
           profile_image_url?: string | null
+          profile_type?: string | null
           social_links?: Json | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           website?: string | null
         }
         Update: {
+          alias?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
           description?: string | null
           display_name?: string | null
+          email?: string | null
           followers_count?: number | null
           following_count?: number | null
           id?: string
@@ -100,9 +108,10 @@ export type Database = {
           location?: string | null
           profession?: string | null
           profile_image_url?: string | null
+          profile_type?: string | null
           social_links?: Json | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           website?: string | null
         }
         Relationships: []
