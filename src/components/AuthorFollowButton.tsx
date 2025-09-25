@@ -66,16 +66,6 @@ const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({
       return;
     }
 
-    // Prevent unfollowing default authors
-    if (isFollowing && DEFAULT_AUTHORS.includes(authorName)) {
-      toast({
-        title: 'Nicht möglich',
-        description: 'Standard-Autoren können nicht entfolgt werden.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setLoading(true);
 
     try {

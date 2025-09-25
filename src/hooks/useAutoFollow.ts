@@ -17,6 +17,18 @@ export const useAutoFollow = () => {
 
     const autoFollowDefaultAuthors = async () => {
       try {
+        // Check if user has auto-followed flag in their profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError || !profile) {
+          console.error('Error fetching user profile:', profileError);
+          return;
+        }
+
         // Check which default authors are not being followed yet
         const { data: existingFollows, error: fetchError } = await supabase
           .from('follows')
@@ -34,8 +46,8 @@ export const useAutoFollow = () => {
           !followedAuthors.includes(author)
         );
 
-        // Auto-follow authors that aren't being followed yet
-        if (authorsToFollow.length > 0) {
+        // Auto-follow authors that aren't being followed yet (only on first signup)
+        if (authorsToFollow.length === DEFAULT_AUTHORS.length) {
           const followData = authorsToFollow.map(author => ({
             follower_id: user.id,
             following_author: author

@@ -11,7 +11,6 @@ import { useFollows } from '../hooks/useFollows';
 import { useAutoFollow } from '../hooks/useAutoFollow';
 import { employees } from '../data/employees';
 import { supabase } from '../integrations/supabase/client';
-import AuthorFollowButton from '../components/AuthorFollowButton';
 import { Input } from '../components/ui/input';
 import { Search as SearchIcon, User } from 'lucide-react';
 
@@ -396,15 +395,6 @@ const Search = () => {
                                 </>
                               )}
                             </div>
-                            <div>
-                              <AuthorFollowButton 
-                                authorName={profile.display_name || ''}
-                                className="text-xs px-2 py-1"
-                                onFollowChange={() => {
-                                  refetchFollows();
-                                }}
-                              />
-                            </div>
                           </div>
                         </div>
                       ))}
@@ -520,19 +510,6 @@ const Search = () => {
                       {employee.name}
                     </span>
                   </div>
-                  
-                  {/* Follow button - only show if not a default author */}
-                  {user && !DEFAULT_AUTHORS.includes(authorName) && (
-                    <div className="mt-1">
-                      <AuthorFollowButton 
-                        authorName={authorName}
-                        className="text-xs px-2 py-1"
-                        onFollowChange={() => {
-                          refetchFollows();
-                        }}
-                      />
-                    </div>
-                  )}
                 </div>
               );
             })}
@@ -563,19 +540,6 @@ const Search = () => {
                       {profile.display_name}
                     </span>
                   </div>
-                  
-                  {/* Follow button for user profiles */}
-                  {user && profile.display_name && (
-                    <div className="mt-1">
-                      <AuthorFollowButton 
-                        authorName={profile.display_name}
-                        className="text-xs px-2 py-1"
-                        onFollowChange={() => {
-                          refetchFollows();
-                        }}
-                      />
-                    </div>
-                  )}
                 </div>
               );
             })}
