@@ -118,10 +118,74 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          alias: string | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          id: string | null
+          is_public: boolean | null
+          location: string | null
+          profession: string | null
+          updated_at: string | null
+          user_id: string | null
+          website: string | null
+        }
+        Insert: {
+          alias?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          location?: string | null
+          profession?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          alias?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          location?: string | null
+          profession?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      get_public_profile: {
+        Args: { profile_user_id: string }
+        Returns: {
+          alias: string
+          avatar_url: string
+          bio: string
+          created_at: string
+          description: string
+          display_name: string
+          id: string
+          is_public: boolean
+          location: string
+          profession: string
+          updated_at: string
+          user_id: string
+          website: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
