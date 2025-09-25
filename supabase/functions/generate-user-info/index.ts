@@ -90,7 +90,7 @@ Format the response as JSON with keys: description, interests, funFacts, achieve
     console.error('Error generating user info:', error)
     return new Response(JSON.stringify({ 
       success: false, 
-      error: error.message,
+      error: (error as Error).message,
       // Fallback data
       data: {
         description: 'Ein interessantes Mitglied unserer Community mit einzigartigen Erfahrungen und Perspektiven.',

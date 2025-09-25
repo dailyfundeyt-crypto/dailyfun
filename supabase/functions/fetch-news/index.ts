@@ -113,7 +113,7 @@ serve(async (req) => {
     console.error('Error fetching news:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Failed to fetch news',
+        error: (error as Error).message || 'Failed to fetch news',
         articles: []
       }),
       { 

@@ -268,10 +268,10 @@ serve(async (req) => {
     throw new Error(language === 'de' ? 'Ungültige Aktion' : 'Invalid action')
 
   } catch (error) {
-    console.error('Error in news-intelligence function:', error, { action, timeframe, language })
+    console.error('Error in news-intelligence function:', error)
     return new Response(
       JSON.stringify({ 
-        error: (error as Error).message || (language === 'de' ? 'Unbekannter Fehler' : 'Unknown error')
+        error: (error as Error).message || 'Unknown error'
       }),
       { 
         status: 500, 

@@ -106,7 +106,7 @@ FORMAT (verwende genau dieses JSON-Format):
           console.error(`JSON parsing failed for ${aiModel.name}:`, parseError);
           
           // Fallback: try to parse line by line
-          const lines = quizContent.split('\n').map(line => line.trim()).filter(Boolean);
+          const lines = quizContent.split('\n').map((line: string) => line.trim()).filter(Boolean);
           
           let question = '';
           let answers = [];
@@ -149,7 +149,7 @@ FORMAT (verwende genau dieses JSON-Format):
 
         // Ensure all fields are strings and clean
         parsedQuiz.question = String(parsedQuiz.question).trim();
-        parsedQuiz.answers = parsedQuiz.answers.map(answer => String(answer).trim());
+        parsedQuiz.answers = parsedQuiz.answers.map((answer: any) => String(answer).trim());
         parsedQuiz.correctAnswer = String(parsedQuiz.correctAnswer).trim();
         parsedQuiz.explanation = String(parsedQuiz.explanation || `Die richtige Antwort ist "${parsedQuiz.correctAnswer}".`).trim();
 
@@ -205,7 +205,7 @@ FORMAT (verwende genau dieses JSON-Format):
       
       for (const topicKey of Object.keys(fallbackQuizzes)) {
         if (normalizedTopic.includes(topicKey.toLowerCase())) {
-          selectedQuiz = fallbackQuizzes[topicKey];
+          selectedQuiz = fallbackQuizzes[topicKey as keyof typeof fallbackQuizzes];
           break;
         }
       }
@@ -232,7 +232,7 @@ FORMAT (verwende genau dieses JSON-Format):
     console.error('Error generating German quiz:', error)
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Failed to generate quiz' 
+        error: (error as Error).message || 'Failed to generate quiz' 
       }),
       { 
         status: 500, 
