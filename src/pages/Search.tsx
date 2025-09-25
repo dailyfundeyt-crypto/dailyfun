@@ -22,7 +22,12 @@ interface UserProfile {
   profession: string | null;
   location: string | null;
   description: string | null;
+  avatar_url: string | null;
+  alias: string | null;
   is_public: boolean;
+  created_at: string;
+  updated_at: string;
+  // Note: email is NOT included in public profiles for security reasons
   aiGenerated?: {
     description: string;
     interests: string[];
@@ -167,9 +172,10 @@ const Search = () => {
   useEffect(() => {
     const fetchUserProfiles = async () => {
       try {
+        // Use direct query with specific field selection (excluding sensitive fields like email)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, user_id, display_name, bio, profession, location, description, is_public')
+          .select('id, user_id, display_name, bio, profession, location, description, avatar_url, alias, is_public, created_at, updated_at')
           .eq('is_public', true);
 
         if (error) throw error;

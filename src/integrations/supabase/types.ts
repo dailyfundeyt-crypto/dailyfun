@@ -121,6 +121,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_profile: {
+        Args: { profile_user_id: string }
+        Returns: {
+          alias: string
+          avatar_url: string
+          bio: string
+          created_at: string
+          description: string
+          display_name: string
+          id: string
+          is_public: boolean
+          location: string
+          profession: string
+          updated_at: string
+          user_id: string
+          website: string
+        }[]
+      }
       get_safe_public_profile: {
         Args: { profile_user_id: string }
         Returns: {

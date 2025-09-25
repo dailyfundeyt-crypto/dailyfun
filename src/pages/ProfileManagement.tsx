@@ -484,7 +484,12 @@ const ProfileManagement = () => {
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-black font-medium">E-Mail (öffentlich)</Label>
+                  <Label htmlFor="email" className="text-black font-medium">
+                    E-Mail (privat sichtbar)
+                    <span className="text-xs text-gray-500 block font-normal">
+                      Wird nur dir angezeigt, nicht öffentlich sichtbar
+                    </span>
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -623,11 +628,12 @@ const ProfileManagement = () => {
                     </p>
                   )}
 
-                  {/* Email */}
-                  {formData.email && (
+                  {/* Email - Only show in own profile, not in public preview */}
+                  {user && formData.email && (
                     <div className="flex items-center justify-center gap-1 text-sm">
                       <Mail className="h-4 w-4 text-blue-500" />
                       <span className="text-blue-500 font-medium">{formData.email}</span>
+                      <span className="text-xs text-gray-400 ml-1">(privat)</span>
                     </div>
                   )}
 
