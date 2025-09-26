@@ -6,7 +6,7 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { Loader2, Edit, MapPin, Calendar, Heart, Upload, AtSign, Save } from 'lucide-react';
+import { Loader2, Edit, MapPin, Calendar, Heart, Upload, AtSign, Save, LogOut, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import InstallSidebar from '../components/InstallSidebar';
 import Auth from './Auth';
@@ -29,7 +29,7 @@ interface UserProfile {
 }
 
 const ProfileManagement = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -47,6 +47,7 @@ const ProfileManagement = () => {
   });
   const [uploading, setUploading] = useState(false);
   const [aliasError, setAliasError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -225,6 +226,34 @@ const ProfileManagement = () => {
       });
     }
     setIsEditing(false);
+  };
+
+  const handleDeleteProfile = async () => {
+    if (!user) return;
+
+    try {
+      // Delete profile from database
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Delete user account
+      const { error: authError } = await supabase.auth.admin.deleteUser(user.id);
+
+      if (authError) {
+        // If we can't delete the auth user, just sign out
+        await signOut();
+        toast.success('Profil gelöscht!');
+      } else {
+        toast.success('Profil und Account vollständig gelöscht!');
+      }
+    } catch (error) {
+      console.error('Error deleting profile:', error);
+      toast.error('Fehler beim Löschen des Profils');
+    }
   };
 
   // Show auth page if user is not logged in
@@ -570,6 +599,56 @@ const ProfileManagement = () => {
             </p>
           </div>
         )}
+
+        {/* Account Actions */}
+        <div className="mt-12 pt-8 border-t border-gray-200 space-y-4">
+          <h3 className="text-lg font-semibold text-black mb-6">Account-Einstellungen</h3>
+          
+          <div className="flex flex-col gap-4">
+            <Button
+              onClick={signOut}
+              variant="outline"
+              className="w-full justify-center gap-2 text-gray-700 border-gray-300 hover:bg-gray-50"
+            >
+              <LogOut className="h-4 w-4" />
+              Abmelden
+            </Button>
+            
+            {showDeleteConfirm ? (
+              <div className="space-y-3">
+                <p className="text-sm text-red-600 text-center">
+                  Sind Sie sicher? Diese Aktion kann nicht rückgängig gemacht werden.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Abbrechen
+                  </Button>
+                  <Button
+                    onClick={handleDeleteProfile}
+                    variant="destructive"
+                    className="flex-1 gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Endgültig löschen
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                onClick={() => setShowDeleteConfirm(true)}
+                variant="outline"
+                className="w-full justify-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                Profil löschen
+              </Button>
+            )}
+          </div>
+        </div>
       </main>
     </div>
   );

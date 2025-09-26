@@ -86,18 +86,7 @@ const Header = () => {
             })}
             </nav>
 
-            {/* Auth Button */}
-            {user && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={signOut}
-                className="text-muted-foreground hover:text-primary ml-4"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Abmelden
-              </Button>
-            )}
+            {/* Auth section removed - moved to My Page */}
           </div>
 
           {/* No mobile menu needed - using bottom nav */}
