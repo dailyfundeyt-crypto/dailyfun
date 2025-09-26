@@ -4,11 +4,9 @@ import { supabase } from '../integrations/supabase/client';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
-import { Alert, AlertDescription } from '../components/ui/alert';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { Loader2, Edit, User, Mail, MapPin, Briefcase, Globe, Save, Eye, Calendar, Heart, Camera, Upload, AtSign } from 'lucide-react';
+import { Loader2, Edit, MapPin, Calendar, Heart, Upload, AtSign, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import InstallSidebar from '../components/InstallSidebar';
 import Auth from './Auth';
@@ -245,119 +243,135 @@ const ProfileManagement = () => {
   if (!isEditing) {
     // Profile View Mode
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white text-black">
+      <div className="min-h-screen bg-white">
         <InstallSidebar />
         
-        <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-black mb-2 font-serif">Mein Profil</h1>
-              <p className="text-gray-600">Dein öffentliches Profil</p>
-            </div>
-            <Button onClick={handleEdit} className="flex items-center gap-2">
-              <Edit className="h-4 w-4" />
+            <h1 className="text-lg text-gray-600">Live Vorschau</h1>
+            <Button 
+              onClick={handleEdit} 
+              className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2"
+            >
+              <Edit className="h-4 w-4 mr-2" />
               Profil bearbeiten
             </Button>
           </div>
 
-          {/* Profile Card */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 p-8 text-center">
-              <div className="relative inline-block">
-                <Avatar className="w-24 h-24 mx-auto mb-4 ring-4 ring-white shadow-lg">
-                  <AvatarImage src={profile?.avatar_url || ''} />
-                  <AvatarFallback className="bg-gradient-to-br from-red-400 to-orange-400 text-white text-2xl font-bold">
-                    {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+          {/* Profile Section */}
+          <div className="text-center mb-8">
+            {/* Avatar and Posts Counter */}
+            <div className="flex items-center justify-center gap-8 mb-6">
+              <Avatar className="w-20 h-20">
+                <AvatarImage src={profile?.avatar_url || ''} />
+                <AvatarFallback className="bg-gray-300 text-gray-600 text-2xl font-bold">
+                  {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              <div className="text-center">
+                <div className="text-2xl font-bold text-black">0</div>
+                <div className="text-sm text-gray-600">Posts</div>
               </div>
               
-              <h2 className="text-2xl font-bold text-black mb-2">
-                {formData.display_name || user?.email || 'Dein Name'}
-              </h2>
-              
-              {formData.profession && (
-                <p className="text-red-500 font-medium text-lg mb-3">
-                  {formData.profession}
-                </p>
-              )}
-              
-              {formData.alias && (
-                <div className="flex items-center justify-center gap-2 text-gray-600 mb-2">
-                  <AtSign className="h-4 w-4" />
-                  <span className="font-medium">@{formData.alias}</span>
-                </div>
-              )}
-              
               {formData.location && (
-                <div className="flex items-center justify-center gap-2 text-gray-600 mb-4">
+                <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
                   <MapPin className="h-4 w-4" />
-                  <span>{formData.location}</span>
+                  <span className="text-sm">{formData.location}</span>
                 </div>
               )}
             </div>
             
-            <div className="p-8">
-              {formData.bio && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-black mb-2">Bio</h3>
-                  <p className="text-gray-700 leading-relaxed">{formData.bio}</p>
-                </div>
-              )}
-              
-              {formData.description && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-black mb-2">Über mich</h3>
-                  <p className="text-gray-700 leading-relaxed">{formData.description}</p>
-                </div>
-              )}
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                {formData.website && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Globe className="h-4 w-4 text-red-500" />
-                    <a 
-                      href={formData.website} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-red-500 hover:underline font-medium"
-                    >
-                      Website besuchen
-                    </a>
-                  </div>
-                )}
-                
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Eye className="h-4 w-4 text-green-500" />
-                  <span>
-                    {formData.is_public ? 'Öffentlich sichtbar' : 'Privat'}
-                  </span>
-                </div>
-                
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Calendar className="h-4 w-4 text-blue-500" />
-                  <span>
-                    Mitglied seit {new Date(user?.created_at || '').toLocaleDateString('de-DE')}
-                  </span>
-                </div>
-                
-                {formData.email && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Mail className="h-4 w-4 text-blue-500" />
-                    <span>{formData.email}</span>
-                  </div>
-                )}
+            {/* Name */}
+            <h2 className="text-xl font-bold text-black mb-2">
+              {formData.display_name || user?.email || 'Dein Name'}
+            </h2>
+            
+            {/* Profession as Link */}
+            {formData.profession && (
+              <div className="mb-3">
+                <a 
+                  href={formData.website || '#'} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-red-500 hover:underline font-medium"
+                >
+                  {formData.profession}
+                </a>
               </div>
+            )}
+            
+            {/* Bio */}
+            {formData.bio && (
+              <p className="text-gray-700 mb-4 max-w-md mx-auto">
+                {formData.bio}
+              </p>
+            )}
+            
+            {/* Website Link */}
+            {formData.website && (
+              <div className="mb-4">
+                <a 
+                  href={formData.website} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-blue-500 hover:underline text-sm"
+                >
+                  Website besuchen
+                </a>
+              </div>
+            )}
+            
+            {/* Join Date */}
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-6">
+              <Calendar className="h-4 w-4" />
+              <span>
+                Mitglied seit {new Date(user?.created_at || '').toLocaleDateString('de-DE', { 
+                  day: 'numeric', 
+                  month: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </span>
+            </div>
+            
+            {/* Follow Button (placeholder) */}
+            <Button className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2 mb-8">
+              <Heart className="h-4 w-4 mr-2 fill-current" />
+              Gefolgt
+            </Button>
+          </div>
+
+          {/* Latest Articles Section */}
+          <div className="text-center">
+            <h3 className="text-xl font-bold text-black mb-2">Latest Articles</h3>
+            <p className="text-gray-600 text-sm mb-6">by</p>
+            
+            {/* Tabs */}
+            <div className="flex justify-center mb-8">
+              <div className="bg-gray-100 rounded-full p-1 flex">
+                <button className="px-4 py-2 text-sm font-medium bg-white rounded-full shadow-sm text-black">
+                  Latest Articles
+                </button>
+                <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-black">
+                  Random Articles
+                </button>
+              </div>
+            </div>
+            
+            {/* No Articles Message */}
+            <div className="py-16">
+              <h4 className="text-lg font-semibold text-black mb-2">No articles found</h4>
+              <p className="text-gray-500 text-sm">No articles by undefined.</p>
             </div>
           </div>
 
           {!formData.is_public && (
-            <Alert className="border-orange-200 bg-orange-50">
-              <AlertDescription className="text-orange-800">
+            <div className="mt-8 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="text-orange-800 text-sm">
                 💡 Dein Profil ist derzeit privat. Andere Nutzer können es nicht finden oder sehen.
-              </AlertDescription>
-            </Alert>
+              </p>
+            </div>
           )}
         </main>
       </div>
@@ -366,302 +380,195 @@ const ProfileManagement = () => {
 
   // Edit Mode
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white text-black">
+    <div className="min-h-screen bg-white">
       <InstallSidebar />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-black mb-2 font-serif">Profil bearbeiten</h1>
-            <p className="text-gray-600">Bearbeite dein öffentliches Profil</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancel}>
-              Abbrechen
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={saving}
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Speichern...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Speichern
-                </>
-              )}
-            </Button>
-          </div>
+          <h1 className="text-lg text-gray-600">Profil bearbeiten</h1>
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Speichern...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Speichern
+              </>
+            )}
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Form */}
-          <div className="lg:col-span-2">
-            <Card className="shadow-lg border-gray-100">
-              <CardHeader className="bg-gradient-to-r from-red-50 to-orange-50">
-                <CardTitle className="flex items-center gap-2 text-black">
-                  <User className="h-5 w-5 text-red-500" />
-                  Profil Informationen
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-6">
-                {/* Profile Image Upload */}
-                <div className="space-y-4">
-                  <Label className="text-black font-medium">Profilbild</Label>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-16 h-16 ring-2 ring-gray-200">
-                      <AvatarImage src={profile?.avatar_url || ''} />
-                      <AvatarFallback className="bg-gradient-to-br from-red-400 to-orange-400 text-white font-bold">
-                        {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <input
-                        type="file"
-                        id="avatar-upload"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => document.getElementById('avatar-upload')?.click()}
-                        disabled={uploading}
-                        className="w-full"
-                      >
-                        {uploading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Hochladen...
-                          </>
-                        ) : (
-                          <>
-                            <Camera className="h-4 w-4 mr-2" />
-                            Bild hochladen
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+        {/* Public Profile Checkbox */}
+        <div className="flex items-center gap-2 mb-8 p-4 bg-purple-50 rounded-lg">
+          <input
+            type="checkbox"
+            id="public-profile"
+            checked={formData.is_public}
+            onChange={(e) => handleInputChange('is_public', e.target.checked)}
+            className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+          />
+          <label htmlFor="public-profile" className="text-sm font-medium text-purple-700">
+            Profil öffentlich sichtbar machen
+          </label>
+        </div>
 
-                {/* Alias */}
-                <div className="space-y-2">
-                  <Label htmlFor="alias" className="text-black font-medium">Benutzername/Alias</Label>
-                  <div className="relative">
-                    <AtSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="alias"
-                      value={formData.alias}
-                      onChange={(e) => handleAliasChange(e.target.value)}
-                      placeholder="deinusername"
-                      className={`pl-10 border-gray-200 focus:border-red-300 focus:ring-red-100 ${aliasError ? 'border-red-300' : ''}`}
-                    />
-                  </div>
-                  {aliasError && (
-                    <p className="text-sm text-red-600">{aliasError}</p>
+        <div className="space-y-6">
+          {/* Profile Image Upload */}
+          <div className="space-y-4">
+            <Label className="text-black font-medium">Profilbild</Label>
+            <div className="flex items-center gap-4">
+              <Avatar className="w-16 h-16 bg-orange-400">
+                <AvatarImage src={profile?.avatar_url || ''} />
+                <AvatarFallback className="bg-orange-400 text-white font-bold text-xl">
+                  {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <input
+                  type="file"
+                  id="avatar-upload"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => document.getElementById('avatar-upload')?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-2"
+                >
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Hochladen...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-4 w-4" />
+                      Bild hochladen
+                    </>
                   )}
-                  <p className="text-sm text-gray-500">Eindeutiger Benutzername, den nur du verwenden kannst</p>
-                </div>
-
-                {/* Display Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="display_name" className="text-black font-medium">Anzeigename</Label>
-                  <Input
-                    id="display_name"
-                    value={formData.display_name}
-                    onChange={(e) => handleInputChange('display_name', e.target.value)}
-                    placeholder="Dein vollständiger Name"
-                    className="border-gray-200 focus:border-red-300 focus:ring-red-100"
-                  />
-                </div>
-
-                {/* Email */}
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-black font-medium">
-                    E-Mail (privat sichtbar)
-                    <span className="text-xs text-gray-500 block font-normal">
-                      Wird nur dir angezeigt, nicht öffentlich sichtbar
-                    </span>
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="deine@email.de"
-                    className="border-gray-200 focus:border-red-300 focus:ring-red-100"
-                  />
-                  <p className="text-sm text-gray-500">Diese E-Mail wird in deinem Profil angezeigt (optional)</p>
-                </div>
-
-                {/* Bio */}
-                <div className="space-y-2">
-                  <Label htmlFor="bio" className="text-black font-medium">Kurze Bio</Label>
-                  <Textarea
-                    id="bio"
-                    value={formData.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    placeholder="Erzähle in ein paar Worten über dich..."
-                    rows={3}
-                    className="border-gray-200 focus:border-red-300 focus:ring-red-100"
-                  />
-                </div>
-
-                {/* Profession */}
-                <div className="space-y-2">
-                  <Label htmlFor="profession" className="text-black font-medium">Beruf</Label>
-                  <Input
-                    id="profession"
-                    value={formData.profession}
-                    onChange={(e) => handleInputChange('profession', e.target.value)}
-                    placeholder="z.B. Software Engineer, Designer, Student..."
-                    className="border-gray-200 focus:border-red-300 focus:ring-red-100"
-                  />
-                </div>
-
-                {/* Location */}
-                <div className="space-y-2">
-                  <Label htmlFor="location" className="text-black font-medium">Standort</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    placeholder="z.B. Berlin, Deutschland"
-                    className="border-gray-200 focus:border-red-300 focus:ring-red-100"
-                  />
-                </div>
-
-                {/* Description */}
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-black font-medium">Detaillierte Beschreibung</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Beschreibe deine Interessen, Erfahrungen und Expertise..."
-                    rows={4}
-                    className="border-gray-200 focus:border-red-300 focus:ring-red-100"
-                  />
-                </div>
-
-                {/* Website */}
-                <div className="space-y-2">
-                  <Label htmlFor="website" className="text-black font-medium">Website</Label>
-                  <Input
-                    id="website"
-                    value={formData.website}
-                    onChange={(e) => handleInputChange('website', e.target.value)}
-                    placeholder="https://deine-website.de"
-                    className="border-gray-200 focus:border-red-300 focus:ring-red-100"
-                  />
-                </div>
-
-                {/* Public Profile Toggle */}
-                <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                  <input
-                    type="checkbox"
-                    id="is_public"
-                    checked={formData.is_public}
-                    onChange={(e) => handleInputChange('is_public', e.target.checked)}
-                    className="h-4 w-4 text-red-500 rounded border-gray-300 focus:ring-red-500"
-                  />
-                  <Label htmlFor="is_public" className="text-black font-medium">
-                    Profil öffentlich sichtbar machen
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
+                </Button>
+              </div>
+            </div>
           </div>
 
-          {/* Live Preview */}
-          <div className="lg:col-span-1">
-            <Card className="shadow-lg border-gray-100 sticky top-4">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
-                <CardTitle className="text-black">Live Vorschau</CardTitle>
-              </CardHeader>
-              <CardContent className="p-4">
-                <div className="text-center space-y-4">
-                  {/* Profile Avatar */}
-                  <Avatar className="w-16 h-16 mx-auto ring-2 ring-gray-200">
-                    <AvatarImage src={profile?.avatar_url || ''} />
-                    <AvatarFallback className="bg-gradient-to-br from-red-400 to-orange-400 text-white font-bold">
-                      {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+          {/* Alias */}
+          <div className="space-y-2">
+            <Label htmlFor="alias" className="text-black font-medium">Benutzername/Alias</Label>
+            <div className="relative">
+              <AtSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                id="alias"
+                value={formData.alias}
+                onChange={(e) => handleAliasChange(e.target.value)}
+                placeholder="deinusername"
+                className={`pl-10 ${aliasError ? 'border-red-300' : ''}`}
+              />
+            </div>
+            {aliasError && (
+              <p className="text-sm text-red-600">{aliasError}</p>
+            )}
+            <p className="text-sm text-gray-500">Eindeutiger Benutzername, den nur du verwenden kannst</p>
+          </div>
 
-                  {/* Name */}
-                  <div>
-                    <h3 className="font-bold text-lg text-black">
-                      {formData.display_name || 'Dein Name'}
-                    </h3>
-                    {formData.alias && (
-                      <p className="text-gray-600 text-sm">
-                        @{formData.alias}
-                      </p>
-                    )}
-                    {formData.profession && (
-                      <p className="text-red-500 text-sm font-medium">
-                        {formData.profession}
-                      </p>
-                    )}
-                  </div>
+          {/* Display Name */}
+          <div className="space-y-2">
+            <Label htmlFor="display_name" className="text-black font-medium">Anzeigename</Label>
+            <Input
+              id="display_name"
+              value={formData.display_name}
+              onChange={(e) => handleInputChange('display_name', e.target.value)}
+              placeholder="Marshall Rise"
+            />
+          </div>
 
-                  {/* Location */}
-                  {formData.location && (
-                    <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
-                      <MapPin className="h-4 w-4" />
-                      {formData.location}
-                    </div>
-                  )}
+          {/* Email */}
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-black font-medium">E-Mail</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              placeholder="deine@email.de"
+            />
+            <p className="text-sm text-gray-500">Diese E-Mail wird in deinem Profil angezeigt (optional)</p>
+          </div>
 
-                  {/* Bio */}
-                  {formData.bio && (
-                    <p className="text-sm text-gray-700 text-left">
-                      {formData.bio}
-                    </p>
-                  )}
+          {/* Bio */}
+          <div className="space-y-2">
+            <Label htmlFor="bio" className="text-black font-medium">Kurz Bio</Label>
+            <Textarea
+              id="bio"
+              value={formData.bio}
+              onChange={(e) => handleInputChange('bio', e.target.value)}
+              placeholder="Hallo Ich bin Marshall Rise"
+              rows={3}
+            />
+          </div>
 
-                  {/* Email - Only show in own profile, not in public preview */}
-                  {user && formData.email && (
-                    <div className="flex items-center justify-center gap-1 text-sm">
-                      <Mail className="h-4 w-4 text-blue-500" />
-                      <span className="text-blue-500 font-medium">{formData.email}</span>
-                      <span className="text-xs text-gray-400 ml-1">(privat)</span>
-                    </div>
-                  )}
+          {/* Profession */}
+          <div className="space-y-2">
+            <Label htmlFor="profession" className="text-black font-medium">Beruf</Label>
+            <Input
+              id="profession"
+              value={formData.profession}
+              onChange={(e) => handleInputChange('profession', e.target.value)}
+              placeholder="YouTube"
+            />
+          </div>
 
-                  {/* Website */}
-                  {formData.website && (
-                    <div className="flex items-center justify-center gap-1 text-sm">
-                      <Globe className="h-4 w-4 text-red-500" />
-                      <span className="text-red-500 font-medium">Website</span>
-                    </div>
-                  )}
+          {/* Location */}
+          <div className="space-y-2">
+            <Label htmlFor="location" className="text-black font-medium">Standort</Label>
+            <Input
+              id="location"
+              value={formData.location}
+              onChange={(e) => handleInputChange('location', e.target.value)}
+              placeholder="Berlin"
+            />
+          </div>
 
-                  {/* Public Status */}
-                  <div className={`text-xs px-2 py-1 rounded-full ${formData.is_public ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                    {formData.is_public ? '✓ Öffentlich' : '🔒 Privat'}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Website */}
+          <div className="space-y-2">
+            <Label htmlFor="website" className="text-black font-medium">Website</Label>
+            <Input
+              id="website"
+              value={formData.website}
+              onChange={(e) => handleInputChange('website', e.target.value)}
+              placeholder="https://deine-website.de"
+            />
+          </div>
+
+          {/* Description */}
+          <div className="space-y-2">
+            <Label htmlFor="description" className="text-black font-medium">Persönliche Beschreibung</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Hallo ich bin Marshall Rise"
+              rows={4}
+            />
           </div>
         </div>
 
         {!formData.is_public && (
-          <Alert className="mt-6 border-orange-200 bg-orange-50">
-            <Heart className="h-4 w-4 text-orange-600" />
-            <AlertDescription className="text-orange-800">
+          <div className="mt-8 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <p className="text-orange-800 text-sm">
               💡 Tipp: Aktiviere die öffentliche Sichtbarkeit, damit andere Nutzer dein Profil entdecken können!
-            </AlertDescription>
-          </Alert>
+            </p>
+          </div>
         )}
       </main>
     </div>
