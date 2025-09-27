@@ -369,7 +369,11 @@ const Search = () => {
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {searchResults.profiles.map((profile) => (
-                        <div key={profile.user_id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <Link
+                          key={profile.user_id} 
+                          to={`/profile/${profile.user_id}`}
+                          className="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                        >
                           <div className="flex items-start space-x-3">
                             <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
                               <span className="text-lg font-bold text-gray-600">
@@ -402,7 +406,7 @@ const Search = () => {
                               )}
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
