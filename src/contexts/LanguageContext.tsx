@@ -168,6 +168,28 @@ const translations = {
     'article.6.excerpt': 'After three years of dedicated pursuit, Golden Retriever "Buddy" has achieved his life\'s ambition. Witnesses report the dog stood motionless for several minutes, apparently contemplating his next life goal. Squirrel-chasing is rumored to be next.',
     'article.7.title': 'Childhood 2.0: Where Cardboard Tubes Become Telescopes and Beds Become Trampolines',
     'article.7.excerpt': 'Ah, childhood! A time when reality was merely a suggestion and imagination was the only valid blueprint. Do you remember the other reality? The one our parents saw?',
+    
+    // Auth Page
+    'auth.welcome': 'Welcome',
+    'auth.subtitle': 'Sign in or create an account',
+    'auth.login': 'Login',
+    'auth.signup': 'Sign Up',
+    'auth.email': 'Email',
+    'auth.email.placeholder': 'your@email.com',
+    'auth.password': 'Password',
+    'auth.password.placeholder': '••••••••',
+    'auth.login.button': 'Sign In',
+    'auth.signup.button': 'Sign Up',
+    'auth.or': 'Or continue with',
+    'auth.google': 'Continue with Google',
+    'auth.login.failed': 'Login failed',
+    'auth.login.success': 'Successfully logged in',
+    'auth.login.welcome': 'Welcome back!',
+    'auth.signup.failed': 'Registration failed',
+    'auth.signup.success': 'Registration successful',
+    'auth.signup.email.verify': 'Please check your email for confirmation.',
+    'auth.error': 'Error',
+    'auth.error.unexpected': 'An unexpected error occurred.',
   },
   de: {
     // Header
@@ -327,6 +349,28 @@ const translations = {
     'article.6.excerpt': 'Nach drei Jahren hingebungsvoller Verfolgung hat Golden Retriever "Buddy" sein Lebensziel erreicht. Zeugen berichten, dass der Hund mehrere Minuten regungslos dastand und offenbar über sein nächstes Lebensziel nachdachte. Eichhörnchen-Jagen soll als nächstes kommen.',
     'article.7.title': 'Kindheit 2.0: Wo Papprollen zu Fernrohren werden und Betten zu Trampolinen',
     'article.7.excerpt': 'Ah, die Kindheit! Eine Zeit, in der die Realität eine reine Empfehlung war und die Fantasie der einzige gültige Bauplan. Erinnern Sie sich noch an die andere Realität? Die, die unsere Eltern sahen?',
+    
+    // Auth Page
+    'auth.welcome': 'Willkommen',
+    'auth.subtitle': 'Melden Sie sich an oder erstellen Sie ein Konto',
+    'auth.login': 'Anmelden',
+    'auth.signup': 'Registrieren',
+    'auth.email': 'E-Mail',
+    'auth.email.placeholder': 'ihre@email.de',
+    'auth.password': 'Passwort',
+    'auth.password.placeholder': '••••••••',
+    'auth.login.button': 'Anmelden',
+    'auth.signup.button': 'Registrieren',
+    'auth.or': 'Oder weiter mit',
+    'auth.google': 'Mit Google fortfahren',
+    'auth.login.failed': 'Anmeldung fehlgeschlagen',
+    'auth.login.success': 'Erfolgreich angemeldet',
+    'auth.login.welcome': 'Willkommen zurück!',
+    'auth.signup.failed': 'Registrierung fehlgeschlagen',
+    'auth.signup.success': 'Registrierung erfolgreich',
+    'auth.signup.email.verify': 'Bitte überprüfen Sie Ihre E-Mail für die Bestätigung.',
+    'auth.error': 'Fehler',
+    'auth.error.unexpected': 'Ein unerwarteter Fehler ist aufgetreten.',
   }
 };
 
