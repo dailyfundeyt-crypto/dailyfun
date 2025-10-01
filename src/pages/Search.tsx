@@ -516,7 +516,7 @@ const Search = () => {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight block">
+                    <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight block break-words line-clamp-2">
                       {employee.name}
                     </span>
                   </div>
@@ -546,7 +546,7 @@ const Search = () => {
                         {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
                       </span>
                     </div>
-                    <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight block">
+                    <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight block break-words line-clamp-2">
                       {profile.display_name}
                     </span>
                   </div>
