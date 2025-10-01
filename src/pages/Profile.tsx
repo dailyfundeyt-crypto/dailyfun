@@ -50,23 +50,26 @@ const Profile = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', id)
-        .eq('is_public', true)
-        .single();
+        .rpc('get_safe_profile_view', { profile_user_id: id });
 
       if (error) {
         console.error('Error fetching profile:', error);
-        if (error.code === 'PGRST116') {
-          toast.error('Profil nicht gefunden oder nicht öffentlich');
-        } else {
-          toast.error('Fehler beim Laden des Profils');
-        }
+        toast.error('Fehler beim Laden des Profils');
         return;
       }
 
-      setProfile(data);
+      if (!data || data.length === 0) {
+        toast.error('Profil nicht gefunden oder nicht öffentlich');
+        return;
+      }
+
+      // Convert the RPC result to match our interface
+      const profileData = data[0];
+      setProfile({
+        ...profileData,
+        user_id: id,
+        updated_at: new Date().toISOString()
+      } as UserProfile);
     } catch (error) {
       console.error('Error:', error);
       toast.error('Fehler beim Laden des Profils');
