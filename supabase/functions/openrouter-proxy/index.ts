@@ -7,7 +7,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, systemPrompt, temperature = 0.2, model = 'meta-llama/llama-3.1-405b-instruct:free', max_tokens = 400 } = await req.json();
+    const { prompt, systemPrompt, temperature = 0.2, model = 'google/gemini-2.0-flash-exp:free', max_tokens = 400 } = await req.json();
     
     const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
     if (!OPENROUTER_API_KEY) {

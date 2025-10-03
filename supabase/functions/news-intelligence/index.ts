@@ -113,7 +113,7 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-405b-instruct',
+          model: 'google/gemini-2.0-flash-exp:free',
           messages: [
             { role: 'system', content: systemMessage },
             { role: 'user', content: prompt }
@@ -158,7 +158,7 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-405b-instruct',
+          model: 'google/gemini-2.0-flash-exp:free',
           messages: [
             { role: 'system', content: systemMessage },
             { role: 'user', content: prompt }
@@ -239,7 +239,7 @@ serve(async (req) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-405b-instruct',
+          model: 'google/gemini-2.0-flash-exp:free',
           messages: [
             { role: 'system', content: (language === 'de'
               ? 'Du beantwortest Fragen basierend auf gegebenen Artikelinhalten. Antworte ausschließlich auf Deutsch und beziehe dich nur auf die verfügbaren Informationen.'
