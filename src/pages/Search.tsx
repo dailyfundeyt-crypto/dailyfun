@@ -316,7 +316,7 @@ const Search = () => {
       return {
         id: userProfile.user_id,
         name: userProfile.display_name || 'User',
-        image: '', // User profiles don't have images yet
+        image: userProfile.avatar_url || '',
         description: userProfile.description || userProfile.bio || '',
         role: userProfile.profession || 'Community Member'
       };
@@ -375,10 +375,18 @@ const Search = () => {
                           className="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                         >
                           <div className="flex items-start space-x-3">
-                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                              <span className="text-lg font-bold text-gray-600">
-                                {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                              </span>
+                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+                              {profile.avatar_url ? (
+                                <img 
+                                  src={profile.avatar_url} 
+                                  alt={profile.display_name || 'User'} 
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-lg font-bold text-gray-600">
+                                  {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                                </span>
+                              )}
                             </div>
                             <div className="flex-1">
                               <h4 className="font-semibold text-black">{profile.display_name}</h4>
@@ -536,14 +544,22 @@ const Search = () => {
                     className="cursor-pointer"
                     onClick={() => handleEmployeeClick(profile.user_id)}
                   >
-                    <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center bg-gray-100 transition-all ${
+                    <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center bg-gray-100 overflow-hidden transition-all ${
                       selectedAuthor === profile.user_id 
                         ? 'border-red-accent' 
                         : 'border-gray-300 group-hover:border-red-accent/50'
                     }`}>
-                      <span className="text-lg font-bold text-gray-600">
-                        {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                      </span>
+                      {profile.avatar_url ? (
+                        <img 
+                          src={profile.avatar_url} 
+                          alt={profile.display_name || 'User'} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-lg font-bold text-gray-600">
+                          {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
+                        </span>
+                      )}
                     </div>
                     <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-20 sm:max-w-24 leading-tight block break-words line-clamp-2">
                       {profile.display_name}
