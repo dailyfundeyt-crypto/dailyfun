@@ -16,7 +16,6 @@ import { Search as SearchIcon, User } from 'lucide-react';
 
 interface UserProfile {
   id: string;
-  user_id: string;
   display_name: string | null;
   bio: string | null;
   profession: string | null;
@@ -27,7 +26,7 @@ interface UserProfile {
   is_public: boolean;
   created_at: string;
   updated_at: string;
-  // Note: email is NOT included in public profiles for security reasons
+  // Note: user_id and email are NOT included in public profiles for security reasons
   aiGenerated?: {
     description: string;
     interests: string[];
@@ -172,10 +171,10 @@ const Search = () => {
   useEffect(() => {
     const fetchUserProfiles = async () => {
       try {
-        // Use direct query with specific field selection (excluding sensitive fields like email)
+        // Use direct query with specific field selection (excluding sensitive fields like user_id and email)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, user_id, display_name, bio, profession, location, description, avatar_url, alias, is_public, created_at, updated_at')
+          .select('id, display_name, bio, profession, location, description, avatar_url, alias, is_public, created_at, updated_at')
           .eq('is_public', true);
 
         if (error) throw error;
@@ -219,7 +218,7 @@ const Search = () => {
       if (authorMapping[selectedAuthor as keyof typeof authorMapping]) {
         authorName = authorMapping[selectedAuthor as keyof typeof authorMapping];
       } else {
-        const prof = userProfiles.find(p => p.user_id === selectedAuthor);
+        const prof = userProfiles.find(p => p.id === selectedAuthor);
         authorName = prof?.display_name || undefined;
       }
 
@@ -310,11 +309,11 @@ const Search = () => {
     }
 
     // Check if it's a user profile
-    const userProfile = userProfiles.find(profile => profile.user_id === employeeId);
+    const userProfile = userProfiles.find(profile => profile.id === employeeId);
     
     if (userProfile) {
       return {
-        id: userProfile.user_id,
+        id: userProfile.id,
         name: userProfile.display_name || 'User',
         image: '', // User profiles don't have images yet
         description: userProfile.description || userProfile.bio || '',
@@ -370,8 +369,8 @@ const Search = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {searchResults.profiles.map((profile) => (
                         <Link
-                          key={profile.user_id} 
-                          to={`/profile/${profile.user_id}`}
+                          key={profile.id} 
+                          to={`/profile/${profile.id}`}
                           className="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                         >
                           <div className="flex items-start space-x-3">
@@ -531,13 +530,13 @@ const Search = () => {
               if (!isFollowed) return null;
               
               return (
-                <div key={profile.user_id} className="flex flex-col items-center group flex-shrink-0 relative">
+                <div key={profile.id} className="flex flex-col items-center group flex-shrink-0 relative">
                   <div 
                     className="cursor-pointer"
-                    onClick={() => handleEmployeeClick(profile.user_id)}
+                    onClick={() => handleEmployeeClick(profile.id)}
                   >
                     <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center bg-gray-100 transition-all ${
-                      selectedAuthor === profile.user_id 
+                      selectedAuthor === profile.id 
                         ? 'border-red-accent' 
                         : 'border-gray-300 group-hover:border-red-accent/50'
                     }`}>
