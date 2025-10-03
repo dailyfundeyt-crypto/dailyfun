@@ -966,9 +966,8 @@ FORMAT (verwende genau dieses JSON-Format):
 
       // Try multiple AI models for better reliability
       const aiModels = [
-        { name: 'Grok Beta', model: 'x-ai/grok-beta' },
-        { name: 'Grok 2', model: 'x-ai/grok-2-1212' },
-        { name: 'Grok 2 Vision', model: 'x-ai/grok-2-vision-1212' }
+        { name: 'Grok 4 Fast', model: 'x-ai/grok-4-fast:free' },
+        { name: 'Grok 4', model: 'x-ai/grok-4' }
       ];
 
       let quiz = null;
@@ -2043,7 +2042,7 @@ The text to be summarized is:
             body: { 
               prompt: fullPrompt,
               temperature: 0.7,
-              model: 'x-ai/grok-beta',
+              model: 'x-ai/grok-4-fast:free',
               max_tokens: 400
             }
           });
@@ -2230,7 +2229,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           body: { 
             prompt: prompt,
             temperature: 0.7,
-            model: 'x-ai/grok-beta',
+            model: 'x-ai/grok-4-fast:free',
             max_tokens: 500
           }
         });
@@ -2376,7 +2375,7 @@ ${infoQuizSeedSource ? `\nSource: ${infoQuizSeedSource}` : ''}
         body: { 
           prompt: prompt,
           temperature: 0.2,
-          model: 'x-ai/grok-beta',
+          model: 'x-ai/grok-4-fast:free',
           max_tokens: 400
         }
       });
@@ -2828,7 +2827,7 @@ ${additionalInfo}
             prompt: combinedPrompt,
             systemPrompt: systemPrompt,
             temperature: 0.7,
-            model: 'x-ai/grok-beta',
+            model: 'x-ai/grok-4-fast:free',
             max_tokens: 500
           }
         });
@@ -3107,8 +3106,8 @@ ${additionalInfo}
           
           // Enhanced AI models array with multiple fallbacks
           const aiModels = [
-            { name: 'Grok Beta', type: 'openrouter', model: 'x-ai/grok-beta' },
-            { name: 'Grok 2', type: 'openrouter', model: 'x-ai/grok-2-1212' },
+            { name: 'Grok 4 Fast', type: 'openrouter', model: 'x-ai/grok-4-fast:free' },
+            { name: 'Grok 4', type: 'openrouter', model: 'x-ai/grok-4' },
             { name: 'GPT-5', type: 'puter', model: 'gpt-5' },
             { name: 'Claude Sonnet 4', type: 'puter', model: 'claude-sonnet-4' },
             { name: 'GPT-4.1', type: 'puter', model: 'gpt-4.1' },
@@ -3379,8 +3378,8 @@ ${additionalInfo}
           
           // Enhanced AI models array with multiple fallbacks
           const aiModels = [
-            { name: 'Grok Beta', type: 'openrouter', model: 'x-ai/grok-beta' },
-            { name: 'Grok 2', type: 'openrouter', model: 'x-ai/grok-2-1212' },
+            { name: 'Grok 4 Fast', type: 'openrouter', model: 'x-ai/grok-4-fast:free' },
+            { name: 'Grok 4', type: 'openrouter', model: 'x-ai/grok-4' },
             { name: 'GPT-5', type: 'puter', model: 'gpt-5' },
             { name: 'Claude Sonnet 4', type: 'puter', model: 'claude-sonnet-4' },
             { name: 'GPT-4.1', type: 'puter', model: 'gpt-4.1' },

@@ -7,7 +7,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, systemPrompt, temperature = 0.2, model = 'x-ai/grok-beta', max_tokens = 400 } = await req.json();
+    const { prompt, systemPrompt, temperature = 0.2, model = 'x-ai/grok-4-fast:free', max_tokens = 400 } = await req.json();
     
     const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
     if (!OPENROUTER_API_KEY) {
