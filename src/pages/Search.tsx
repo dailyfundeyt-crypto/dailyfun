@@ -171,11 +171,11 @@ const Search = () => {
   useEffect(() => {
     const fetchUserProfiles = async () => {
       try {
-        // Use direct query with specific field selection (excluding sensitive fields like user_id and email)
+        // Use public_profiles view which excludes user_id for security
+        // This view respects privacy settings and only shows fields users have made public
         const { data, error } = await supabase
-          .from('profiles')
-          .select('id, display_name, bio, profession, location, description, avatar_url, alias, is_public, created_at, updated_at')
-          .eq('is_public', true);
+          .from('public_profiles')
+          .select('id, display_name, bio, profession, location, description, avatar_url, alias, is_public, created_at');
 
         if (error) throw error;
         
@@ -183,7 +183,14 @@ const Search = () => {
         const validProfiles = (data || []).filter(profile => 
           profile.display_name && profile.display_name.trim() !== ''
         );
-        setUserProfiles(validProfiles);
+        
+        // Add empty updated_at for compatibility with UserProfile interface
+        const profilesWithUpdatedAt = validProfiles.map(p => ({
+          ...p,
+          updated_at: p.created_at // Use created_at as fallback
+        }));
+        
+        setUserProfiles(profilesWithUpdatedAt);
       } catch (error) {
         console.error('Error fetching user profiles:', error);
       }

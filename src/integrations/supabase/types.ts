@@ -118,7 +118,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          alias: string | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          followers_count: number | null
+          following_count: number | null
+          id: string | null
+          is_public: boolean | null
+          location: string | null
+          profession: string | null
+          website: string | null
+        }
+        Insert: {
+          alias?: string | null
+          avatar_url?: string | null
+          bio?: never
+          created_at?: string | null
+          description?: never
+          display_name?: string | null
+          followers_count?: number | null
+          following_count?: number | null
+          id?: string | null
+          is_public?: boolean | null
+          location?: never
+          profession?: never
+          website?: never
+        }
+        Update: {
+          alias?: string | null
+          avatar_url?: string | null
+          bio?: never
+          created_at?: string | null
+          description?: never
+          display_name?: string | null
+          followers_count?: number | null
+          following_count?: number | null
+          id?: string | null
+          is_public?: boolean | null
+          location?: never
+          profession?: never
+          website?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_public_profile: {
