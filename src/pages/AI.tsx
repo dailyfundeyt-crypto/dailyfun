@@ -966,9 +966,9 @@ FORMAT (verwende genau dieses JSON-Format):
 
       // Try multiple AI models for better reliability
       const aiModels = [
-        { name: 'Llama 3.1 405B', model: 'meta-llama/llama-3.1-405b-instruct:free' },
-        { name: 'Llama 3.1 70B', model: 'meta-llama/llama-3.1-70b-instruct:free' },
-        { name: 'Llama 3.2 11B', model: 'meta-llama/llama-3.2-11b-instruct:free' }
+        { name: 'Grok Beta', model: 'x-ai/grok-beta' },
+        { name: 'Grok 2', model: 'x-ai/grok-2-1212' },
+        { name: 'Grok 2 Vision', model: 'x-ai/grok-2-vision-1212' }
       ];
 
       let quiz = null;
@@ -2043,7 +2043,7 @@ The text to be summarized is:
             body: { 
               prompt: fullPrompt,
               temperature: 0.7,
-              model: 'meta-llama/llama-3.1-405b-instruct:free',
+              model: 'x-ai/grok-beta',
               max_tokens: 400
             }
           });
@@ -2230,7 +2230,7 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
           body: { 
             prompt: prompt,
             temperature: 0.7,
-            model: 'meta-llama/llama-3.1-405b-instruct:free',
+            model: 'x-ai/grok-beta',
             max_tokens: 500
           }
         });
@@ -2376,7 +2376,7 @@ ${infoQuizSeedSource ? `\nSource: ${infoQuizSeedSource}` : ''}
         body: { 
           prompt: prompt,
           temperature: 0.2,
-          model: 'meta-llama/llama-3.1-405b-instruct:free',
+          model: 'x-ai/grok-beta',
           max_tokens: 400
         }
       });
@@ -2828,7 +2828,7 @@ ${additionalInfo}
             prompt: combinedPrompt,
             systemPrompt: systemPrompt,
             temperature: 0.7,
-            model: 'meta-llama/llama-3.1-405b-instruct:free',
+            model: 'x-ai/grok-beta',
             max_tokens: 500
           }
         });
@@ -3107,8 +3107,8 @@ ${additionalInfo}
           
           // Enhanced AI models array with multiple fallbacks
           const aiModels = [
-            { name: 'OpenRouter Llama 3.1 405B', type: 'openrouter', model: 'meta-llama/llama-3.1-405b-instruct:free' },
-            { name: 'OpenRouter Llama 3.1 70B', type: 'openrouter', model: 'meta-llama/llama-3.1-70b-instruct:free' },
+            { name: 'Grok Beta', type: 'openrouter', model: 'x-ai/grok-beta' },
+            { name: 'Grok 2', type: 'openrouter', model: 'x-ai/grok-2-1212' },
             { name: 'GPT-5', type: 'puter', model: 'gpt-5' },
             { name: 'Claude Sonnet 4', type: 'puter', model: 'claude-sonnet-4' },
             { name: 'GPT-4.1', type: 'puter', model: 'gpt-4.1' },
@@ -3379,8 +3379,8 @@ ${additionalInfo}
           
           // Enhanced AI models array with multiple fallbacks
           const aiModels = [
-            { name: 'OpenRouter Llama 3.1 405B', type: 'openrouter', model: 'meta-llama/llama-3.1-405b-instruct:free' },
-            { name: 'OpenRouter Llama 3.1 70B', type: 'openrouter', model: 'meta-llama/llama-3.1-70b-instruct:free' },
+            { name: 'Grok Beta', type: 'openrouter', model: 'x-ai/grok-beta' },
+            { name: 'Grok 2', type: 'openrouter', model: 'x-ai/grok-2-1212' },
             { name: 'GPT-5', type: 'puter', model: 'gpt-5' },
             { name: 'Claude Sonnet 4', type: 'puter', model: 'claude-sonnet-4' },
             { name: 'GPT-4.1', type: 'puter', model: 'gpt-4.1' },
