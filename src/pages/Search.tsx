@@ -484,7 +484,7 @@ const Search = () => {
               <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-16 sm:max-w-20">{t('search.all')}</span>
             </div>
 
-            {/* Employee Profiles - Only show followed authors if user is logged in */}
+            {/* Employee Profiles - Always show default authors */}
             {employees.map((employee) => {
               // Map employee names to match follow system
               const authorMapping = {
@@ -496,8 +496,7 @@ const Search = () => {
               const authorName = authorMapping[employee.id];
               const isFollowed = followedAuthors.includes(authorName);
               
-              // If user is logged in, only show followed authors
-              if (user && !isFollowed) return null;
+              // Always show these default authors
               
               return (
                 <div key={employee.id} className="flex flex-col items-center group flex-shrink-0 relative">
@@ -524,12 +523,12 @@ const Search = () => {
               );
             })}
 
-            {/* User Profiles - Only show if followed */}
-            {userProfiles.map((profile) => {
+            {/* User Profiles - Only show if user is logged in and followed */}
+            {user && userProfiles.map((profile) => {
               const isFollowed = followedAuthors.includes(profile.display_name || '');
               
-              // If user is logged in, only show followed profiles
-              if (user && !isFollowed) return null;
+              // Only show followed profiles for logged-in users
+              if (!isFollowed) return null;
               
               return (
                 <div key={profile.user_id} className="flex flex-col items-center group flex-shrink-0 relative">
