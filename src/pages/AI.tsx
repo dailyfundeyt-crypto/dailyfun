@@ -333,24 +333,17 @@ ${currentArticleSource ? `\nSource: ${currentArticleSource}` : ''}
         const prompt = language === 'de' ? basePromptDe : basePromptEn;
 
         const callOpenRouter = async (p: string, temp = 0.2) => {
-          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer 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',
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://dailyfun.app',
-              'X-Title': 'Daily Fun - Article Quiz Generation (Strict)'
-            },
-            body: JSON.stringify({
-              model: 'meta-llama/llama-3.1-405b-instruct:free',
-              messages: [{ role: 'user', content: p }],
+          const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+            body: { 
+              prompt: p, 
               temperature: temp,
+              model: 'meta-llama/llama-3.1-405b-instruct:free',
               max_tokens: 400
-            })
+            }
           });
-          if (!response.ok) throw new Error(`OpenRouter API error: ${response.status}`);
-          const data = await response.json();
-          return (data.choices?.[0]?.message?.content || '').trim();
+          if (error) throw error;
+          if (data?.error) throw new Error(data.error);
+          return data?.content || '';
         };
 
         try {
@@ -2048,40 +2041,24 @@ The text to be summarized is:
       // Custom OpenRouter API function  
       const callOpenRouterAPI = async (promptText: string): Promise<string> => {
         try {
-          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer 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',
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://dailyfun.app',
-              'X-Title': 'Daily Fun - AI Summary'
-            },
-            body: JSON.stringify({
-              model: 'meta-llama/llama-3.1-405b-instruct:free',
-              messages: [
-                {
-                  role: 'system',
-                  content: language === 'de' 
-                    ? 'Du bist ein Experte für präzise Textzusammenfassung. Deine Aufgabe ist es, Texte klar, strukturiert und verständlich zusammenzufassen.'
-                    : 'You are an expert at precise text summarization. Your task is to summarize texts clearly, structurally and comprehensibly.'
-                },
-                {
-                  role: 'user',
-                  content: promptText
-                }
-              ],
+          const systemPrompt = language === 'de' 
+            ? 'Du bist ein Experte für präzise Textzusammenfassung. Deine Aufgabe ist es, Texte klar, strukturiert und verständlich zusammenzufassen.'
+            : 'You are an expert at precise text summarization. Your task is to summarize texts clearly, structurally and comprehensibly.';
+          
+          const fullPrompt = `${systemPrompt}\n\n${promptText}`;
+          
+          const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+            body: { 
+              prompt: fullPrompt,
               temperature: 0.7,
-              top_p: 0.9,
+              model: 'meta-llama/llama-3.1-405b-instruct:free',
               max_tokens: 400
-            }),
+            }
           });
 
-          if (!response.ok) {
-            throw new Error(`OpenRouter API error: ${response.status}`);
-          }
-
-          const data = await response.json();
-          return data.choices?.[0]?.message?.content || '';
+          if (error) throw error;
+          if (data?.error) throw new Error(data.error);
+          return data?.content || '';
         } catch (error) {
           console.error('OpenRouter API call failed:', error);
           throw error;
