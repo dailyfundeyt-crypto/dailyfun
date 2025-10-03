@@ -21,7 +21,6 @@ interface UserProfile {
   profession: string | null;
   description: string | null;
   website: string | null;
-  email: string | null;
   alias: string | null;
   is_public: boolean;
   created_at: string;
@@ -41,7 +40,6 @@ const ProfileManagement = () => {
     profession: '',
     description: '',
     website: '',
-    email: '',
     alias: '',
     is_public: true
   });
@@ -79,7 +77,6 @@ const ProfileManagement = () => {
           profession: data.profession || '',
           description: data.description || '',
           website: data.website || '',
-          email: data.email || '',
           alias: data.alias || '',
           is_public: data.is_public
         });
@@ -181,7 +178,6 @@ const ProfileManagement = () => {
         profession: formData.profession,
         description: formData.description,
         website: formData.website,
-        email: formData.email,
         alias: formData.alias,
         is_public: formData.is_public,
         updated_at: new Date().toISOString()
@@ -220,7 +216,6 @@ const ProfileManagement = () => {
         profession: profile.profession || '',
         description: profile.description || '',
         website: profile.website || '',
-        email: profile.email || '',
         alias: profile.alias || '',
         is_public: profile.is_public
       });
@@ -519,19 +514,6 @@ const ProfileManagement = () => {
               onChange={(e) => handleInputChange('display_name', e.target.value)}
               placeholder="Marshall Rise"
             />
-          </div>
-
-          {/* Email */}
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-black font-medium">E-Mail</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
-              placeholder="deine@email.de"
-            />
-            <p className="text-sm text-gray-500">Diese E-Mail wird in deinem Profil angezeigt (optional)</p>
           </div>
 
           {/* Bio */}
