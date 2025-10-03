@@ -7,7 +7,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, temperature = 0.2, model = 'meta-llama/llama-3.1-405b-instruct:free', max_tokens = 400 } = await req.json();
+    const { prompt, systemPrompt, temperature = 0.2, model = 'meta-llama/llama-3.1-405b-instruct:free', max_tokens = 400 } = await req.json();
     
     const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
     if (!OPENROUTER_API_KEY) {
@@ -15,6 +15,13 @@ serve(async (req) => {
     }
 
     console.log('🤖 Calling OpenRouter API with model:', model);
+
+    // Build messages array with optional system prompt
+    const messages = [];
+    if (systemPrompt) {
+      messages.push({ role: 'system', content: systemPrompt });
+    }
+    messages.push({ role: 'user', content: prompt });
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -26,7 +33,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: messages,
         temperature: temperature,
         max_tokens: max_tokens
       })

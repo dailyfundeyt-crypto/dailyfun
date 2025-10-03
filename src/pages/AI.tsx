@@ -979,34 +979,26 @@ FORMAT (verwende genau dieses JSON-Format):
         try {
           console.log(`Trying AI model: ${aiModel.name}`);
           
-          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Bearer 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',
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://dailyfun.app',
-              'X-Title': 'Daily Fun - German Quiz Generation'
-            },
-            body: JSON.stringify({
-              model: aiModel.model,
-              messages: [
-                {
-                  role: 'user',
-                  content: prompt
-                }
-              ],
+          const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+            body: { 
+              prompt: prompt,
               temperature: 0.8,
+              model: aiModel.model,
               max_tokens: 600
-            })
+            }
           });
 
-          if (!response.ok) {
-            console.error(`${aiModel.name} API error:`, response.status);
-            throw new Error(`${aiModel.name} API error: ${response.status}`);
+          if (error) {
+            console.error(`${aiModel.name} API error:`, error);
+            throw error;
           }
 
-          const data = await response.json();
-          const quizContent = data.choices?.[0]?.message?.content?.trim() || '';
+          if (data?.error) {
+            console.error(`${aiModel.name} API error:`, data.error);
+            throw new Error(data.error);
+          }
+
+          const quizContent = data?.content?.trim() || '';
           
           console.log(`Raw AI response from ${aiModel.name}:`, quizContent);
 
@@ -2234,33 +2226,24 @@ Important: Create EXACTLY one quiz based on the provided context. Output ONLY th
       try {
         console.log('🤖 Using OpenRouter API for quiz generation');
         
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer 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',
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://dailyfun.app',
-            'X-Title': 'Daily Fun - Quiz Generation'
-          },
-          body: JSON.stringify({
-            model: 'meta-llama/llama-3.1-405b-instruct:free',
-            messages: [
-              {
-                role: 'user',
-                content: prompt
-              }
-            ],
+        const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+          body: { 
+            prompt: prompt,
             temperature: 0.7,
+            model: 'meta-llama/llama-3.1-405b-instruct:free',
             max_tokens: 500
-          })
+          }
         });
 
-        if (!response.ok) {
-          throw new Error(`OpenRouter API error: ${response.status}`);
+        if (error) {
+          throw error;
         }
 
-        const data = await response.json();
-        const quizText = data.choices?.[0]?.message?.content?.trim() || '';
+        if (data?.error) {
+          throw new Error(data.error);
+        }
+
+        const quizText = data?.content?.trim() || '';
         
         if (quizText && quizText.length > 10) {
           // Parse the semicolon-separated format
@@ -2389,25 +2372,19 @@ ${infoQuizSeedSource ? `\nSource: ${infoQuizSeedSource}` : ''}
 
       const prompt = language === 'de' ? promptDe : promptEn;
 
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer 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',
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://dailyfun.app',
-          'X-Title': 'Daily Fun - Info Quiz (Seed Context)'
-        },
-        body: JSON.stringify({
-          model: 'meta-llama/llama-3.1-405b-instruct:free',
-          messages: [{ role: 'user', content: prompt }],
+      const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+        body: { 
+          prompt: prompt,
           temperature: 0.2,
+          model: 'meta-llama/llama-3.1-405b-instruct:free',
           max_tokens: 400
-        })
+        }
       });
 
-      if (!response.ok) throw new Error(`OpenRouter API error: ${response.status}`);
-      const data = await response.json();
-      const raw = (data.choices?.[0]?.message?.content || '').trim();
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      
+      const raw = data?.content?.trim() || '';
       if (/^NO_QUIZ_POSSIBLE$/i.test(raw)) {
         throw new Error(language === 'de' ? 'Nicht genug Informationen im Kontext für ein weiteres Quiz.' : 'Not enough information in the context for another quiz.');
       }
@@ -2842,40 +2819,29 @@ ${additionalInfo}
         // Use OpenRouter API with Llama 3.1 405B for article-based analysis
         console.log('🤖 Using OpenRouter API with Meta Llama 3.1 405B for article analysis');
         
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer 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',
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://dailyfun.app',
-            'X-Title': 'Daily Fun - Article Analysis'
-          },
-          body: JSON.stringify({
-            model: 'meta-llama/llama-3.1-405b-instruct:free',
-            messages: [
-              {
-                role: 'system',
-                content: language === 'de' 
-                  ? 'Du bist ein hilfreicher AI-Assistent, der Fragen zu Artikeln beantwortet. Gib fundierte, informative Antworten basierend auf dem bereitgestellten Artikel-Inhalt.'
-                  : 'You are a helpful AI assistant that answers questions about articles. Provide well-informed, informative answers based on the provided article content.'
-              },
-              {
-                role: 'user',
-                content: combinedPrompt
-              }
-            ],
+        const systemPrompt = language === 'de' 
+          ? 'Du bist ein hilfreicher AI-Assistent, der Fragen zu Artikeln beantwortet. Gib fundierte, informative Antworten basierend auf dem bereitgestellten Artikel-Inhalt.'
+          : 'You are a helpful AI assistant that answers questions about articles. Provide well-informed, informative answers based on the provided article content.';
+        
+        const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+          body: { 
+            prompt: combinedPrompt,
+            systemPrompt: systemPrompt,
             temperature: 0.7,
-            top_p: 0.9,
+            model: 'meta-llama/llama-3.1-405b-instruct:free',
             max_tokens: 500
-          }),
+          }
         });
 
-        if (!response.ok) {
-          throw new Error(`OpenRouter API error: ${response.status}`);
+        if (error) {
+          throw error;
         }
 
-        const data = await response.json();
-        const aiResponse = data.choices?.[0]?.message?.content || '';
+        if (data?.error) {
+          throw new Error(data.error);
+        }
+
+        const aiResponse = data?.content || '';
         
         if (aiResponse && aiResponse.trim().length > 10) {
           const responseHeader = language === 'de' ? '🤖 **AI-Antwort basierend auf dem Artikel:**' : '🤖 **AI Answer based on the article:**';
@@ -3159,40 +3125,31 @@ ${additionalInfo}
               let modelResponse = '';
               
               if (aiModel.type === 'openrouter') {
-                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': 'Bearer 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',
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': 'https://dailyfun.app',
-                    'X-Title': 'Daily Fun - Internet Search'
-                  },
-                  body: JSON.stringify({
-                    model: aiModel.model,
-                    messages: [
-                      {
-                        role: 'system',
-                        content: language === 'de' 
-                          ? `Du bist ein KI-Assistant mit fundiertem Wissen. Analysiere die gegebenen Wikipedia-Informationen und beantworte die Frage präzise. Wikipedia-Information: ${extract}`
-                          : `You are an AI assistant with solid knowledge. Analyze the given Wikipedia information and answer the question precisely. Wikipedia information: ${extract}`
-                      },
-                      {
-                        role: 'user',
-                        content: aiAnalysisPrompt
-                      }
-                    ],
+                const systemPrompt = language === 'de' 
+                  ? `Du bist ein KI-Assistant mit fundiertem Wissen. Analysiere die gegebenen Wikipedia-Informationen und beantworte die Frage präzise. Wikipedia-Information: ${extract}`
+                  : `You are an AI assistant with solid knowledge. Analyze the given Wikipedia information and answer the question precisely. Wikipedia information: ${extract}`;
+                
+                const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+                  body: { 
+                    prompt: aiAnalysisPrompt,
+                    systemPrompt: systemPrompt,
                     temperature: 0.7,
-                    top_p: 0.9,
+                    model: aiModel.model,
                     max_tokens: 400
-                  }),
+                  }
                 });
 
-                if (!response.ok) {
-                  throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+                if (error) {
+                  console.error(`${aiModel.name} API error:`, error);
+                  throw error;
                 }
 
-                const data = await response.json();
-                modelResponse = data.choices?.[0]?.message?.content || '';
+                if (data?.error) {
+                  console.error(`${aiModel.name} API error:`, data.error);
+                  throw new Error(data.error);
+                }
+
+                modelResponse = data?.content || '';
               } else if (aiModel.type === 'puter') {
                 await waitForPuterReady();
                 const puter = (window as any).puter;
@@ -3440,40 +3397,31 @@ ${additionalInfo}
               let modelResponse = '';
               
               if (aiModel.type === 'openrouter') {
-                const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': 'Bearer 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',
-                    'Content-Type': 'application/json',
-                    'HTTP-Referer': 'https://dailyfun.app',
-                    'X-Title': 'Daily Fun - Internet Search'
-                  },
-                  body: JSON.stringify({
-                    model: aiModel.model,
-                    messages: [
-                      {
-                        role: 'system',
-                        content: language === 'de' 
-                          ? `Du bist ein KI-Assistant mit fundiertem Wissen. Beantworte die Frage präzise basierend auf deinem Wissen und verfügbaren aktuellen Informationen.`
-                          : `You are an AI assistant with solid knowledge. Answer the question precisely based on your knowledge and available current information.`
-                      },
-                      {
-                        role: 'user',
-                        content: aiAnalysisPrompt
-                      }
-                    ],
+                const systemPrompt = language === 'de' 
+                  ? `Du bist ein KI-Assistant mit fundiertem Wissen. Beantworte die Frage präzise basierend auf deinem Wissen und verfügbaren aktuellen Informationen.`
+                  : `You are an AI assistant with solid knowledge. Answer the question precisely based on your knowledge and available current information.`;
+                
+                const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+                  body: { 
+                    prompt: aiAnalysisPrompt,
+                    systemPrompt: systemPrompt,
                     temperature: 0.7,
-                    top_p: 0.9,
+                    model: aiModel.model,
                     max_tokens: 400
-                  }),
+                  }
                 });
 
-                if (!response.ok) {
-                  throw new Error(`OpenRouter API error: ${response.status} ${response.statusText}`);
+                if (error) {
+                  console.error(`${aiModel.name} API error:`, error);
+                  throw error;
                 }
 
-                const data = await response.json();
-                modelResponse = data.choices?.[0]?.message?.content || '';
+                if (data?.error) {
+                  console.error(`${aiModel.name} API error:`, data.error);
+                  throw new Error(data.error);
+                }
+
+                modelResponse = data?.content || '';
               } else if (aiModel.type === 'puter') {
                 await waitForPuterReady();
                 const puter = (window as any).puter;
