@@ -6,10 +6,18 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { Loader2, Edit, MapPin, Calendar, Heart, Upload, AtSign, Save, LogOut, Trash2 } from 'lucide-react';
+import { Loader2, Edit, MapPin, Calendar, Heart, Upload, AtSign, Save, LogOut, Trash2, Shield, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import InstallSidebar from '../components/InstallSidebar';
 import Auth from './Auth';
+
+interface ProfileVisibility {
+  show_location: boolean;
+  show_profession: boolean;
+  show_website: boolean;
+  show_description: boolean;
+  show_bio: boolean;
+}
 
 interface UserProfile {
   id: string;
@@ -23,6 +31,7 @@ interface UserProfile {
   website: string | null;
   alias: string | null;
   is_public: boolean;
+  profile_visibility: ProfileVisibility;
   created_at: string;
   updated_at: string;
   // Note: email field removed for security - emails stored only in auth.users
@@ -42,7 +51,14 @@ const ProfileManagement = () => {
     description: '',
     website: '',
     alias: '',
-    is_public: true
+    is_public: true,
+    profile_visibility: {
+      show_location: false,
+      show_profession: false,
+      show_website: false,
+      show_description: false,
+      show_bio: true
+    }
   });
   const [uploading, setUploading] = useState(false);
   const [aliasError, setAliasError] = useState('');
@@ -70,7 +86,19 @@ const ProfileManagement = () => {
       }
 
       if (data) {
-        setProfile(data);
+        const profileVisibility = (data.profile_visibility as any) || {
+          show_location: false,
+          show_profession: false,
+          show_website: false,
+          show_description: false,
+          show_bio: true
+        };
+        
+        setProfile({
+          ...data,
+          profile_visibility: profileVisibility
+        } as UserProfile);
+        
         setFormData({
           display_name: data.display_name || '',
           bio: data.bio || '',
@@ -79,7 +107,8 @@ const ProfileManagement = () => {
           description: data.description || '',
           website: data.website || '',
           alias: data.alias || '',
-          is_public: data.is_public
+          is_public: data.is_public,
+          profile_visibility: profileVisibility
         });
       }
     } catch (error) {
@@ -90,10 +119,20 @@ const ProfileManagement = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string | boolean) => {
+  const handleInputChange = (field: string, value: string | boolean | ProfileVisibility) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handlePrivacyToggle = (field: keyof ProfileVisibility) => {
+    setFormData(prev => ({
+      ...prev,
+      profile_visibility: {
+        ...prev.profile_visibility,
+        [field]: !prev.profile_visibility[field]
+      }
     }));
   };
 
@@ -181,6 +220,7 @@ const ProfileManagement = () => {
         website: formData.website,
         alias: formData.alias,
         is_public: formData.is_public,
+        profile_visibility: formData.profile_visibility,
         updated_at: new Date().toISOString()
       };
 
@@ -192,7 +232,10 @@ const ProfileManagement = () => {
 
       if (error) throw error;
 
-      setProfile(data);
+      setProfile({
+        ...data,
+        profile_visibility: data.profile_visibility as any
+      } as UserProfile);
       setIsEditing(false);
       toast.success('Profil erfolgreich gespeichert!');
     } catch (error) {
@@ -210,6 +253,14 @@ const ProfileManagement = () => {
   const handleCancel = () => {
     // Reset form data to original profile data
     if (profile) {
+      const profileVisibility = profile.profile_visibility || {
+        show_location: false,
+        show_profession: false,
+        show_website: false,
+        show_description: false,
+        show_bio: true
+      };
+      
       setFormData({
         display_name: profile.display_name || '',
         bio: profile.bio || '',
@@ -218,7 +269,8 @@ const ProfileManagement = () => {
         description: profile.description || '',
         website: profile.website || '',
         alias: profile.alias || '',
-        is_public: profile.is_public
+        is_public: profile.is_public,
+        profile_visibility: profileVisibility
       });
     }
     setIsEditing(false);
@@ -572,6 +624,130 @@ const ProfileManagement = () => {
               placeholder="Hallo ich bin Marshall Rise"
               rows={4}
             />
+          </div>
+
+          {/* Privacy Settings Section */}
+          <div className="mt-8 pt-8 border-t border-gray-200">
+            <div className="flex items-center gap-2 mb-4">
+              <Shield className="h-5 w-5 text-purple-600" />
+              <h3 className="text-lg font-semibold text-black">Datenschutz-Einstellungen</h3>
+            </div>
+            <p className="text-sm text-gray-600 mb-6">
+              Steuern Sie, welche Informationen öffentlich sichtbar sind. Standardmäßig sind nur Ihr Name und Avatar sichtbar.
+            </p>
+            
+            <div className="space-y-4 bg-gray-50 p-4 rounded-lg">
+              {/* Bio Visibility */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {formData.profile_visibility.show_bio ? (
+                    <Eye className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  )}
+                  <div>
+                    <Label className="text-sm font-medium text-black">Kurz Bio anzeigen</Label>
+                    <p className="text-xs text-gray-500">Zeigt Ihre Kurzbeschreibung öffentlich</p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.profile_visibility.show_bio}
+                  onChange={() => handlePrivacyToggle('show_bio')}
+                  className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                />
+              </div>
+
+              {/* Location Visibility */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {formData.profile_visibility.show_location ? (
+                    <Eye className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  )}
+                  <div>
+                    <Label className="text-sm font-medium text-black">Standort anzeigen</Label>
+                    <p className="text-xs text-gray-500">Zeigt Ihren Standort öffentlich</p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.profile_visibility.show_location}
+                  onChange={() => handlePrivacyToggle('show_location')}
+                  className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                />
+              </div>
+
+              {/* Profession Visibility */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {formData.profile_visibility.show_profession ? (
+                    <Eye className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  )}
+                  <div>
+                    <Label className="text-sm font-medium text-black">Beruf anzeigen</Label>
+                    <p className="text-xs text-gray-500">Zeigt Ihren Beruf öffentlich</p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.profile_visibility.show_profession}
+                  onChange={() => handlePrivacyToggle('show_profession')}
+                  className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                />
+              </div>
+
+              {/* Website Visibility */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {formData.profile_visibility.show_website ? (
+                    <Eye className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  )}
+                  <div>
+                    <Label className="text-sm font-medium text-black">Website anzeigen</Label>
+                    <p className="text-xs text-gray-500">Zeigt Ihre Website-URL öffentlich</p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.profile_visibility.show_website}
+                  onChange={() => handlePrivacyToggle('show_website')}
+                  className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                />
+              </div>
+
+              {/* Description Visibility */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {formData.profile_visibility.show_description ? (
+                    <Eye className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-gray-400" />
+                  )}
+                  <div>
+                    <Label className="text-sm font-medium text-black">Persönliche Beschreibung anzeigen</Label>
+                    <p className="text-xs text-gray-500">Zeigt Ihre ausführliche Beschreibung öffentlich</p>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={formData.profile_visibility.show_description}
+                  onChange={() => handlePrivacyToggle('show_description')}
+                  className="w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                />
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                🔒 <strong>Sicherheitshinweis:</strong> Ihre E-Mail-Adresse und Account-ID sind immer privat und werden niemals öffentlich angezeigt.
+              </p>
+            </div>
           </div>
         </div>
 

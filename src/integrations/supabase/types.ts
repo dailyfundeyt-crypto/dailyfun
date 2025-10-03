@@ -66,9 +66,10 @@ export type Database = {
           profession: string | null
           profile_image_url: string | null
           profile_type: string | null
+          profile_visibility: Json | null
           social_links: Json | null
           updated_at: string
-          user_id: string | null
+          user_id: string
           website: string | null
         }
         Insert: {
@@ -86,9 +87,10 @@ export type Database = {
           profession?: string | null
           profile_image_url?: string | null
           profile_type?: string | null
+          profile_visibility?: Json | null
           social_links?: Json | null
           updated_at?: string
-          user_id?: string | null
+          user_id: string
           website?: string | null
         }
         Update: {
@@ -106,9 +108,10 @@ export type Database = {
           profession?: string | null
           profile_image_url?: string | null
           profile_type?: string | null
+          profile_visibility?: Json | null
           social_links?: Json | null
           updated_at?: string
-          user_id?: string | null
+          user_id?: string
           website?: string | null
         }
         Relationships: []
@@ -163,6 +166,7 @@ export type Database = {
           id: string
           location: string
           profession: string
+          website: string
         }[]
       }
     }
