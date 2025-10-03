@@ -58,6 +58,7 @@ export type Database = {
           created_at: string
           description: string | null
           display_name: string | null
+          email: string | null
           followers_count: number | null
           following_count: number | null
           id: string
@@ -66,10 +67,9 @@ export type Database = {
           profession: string | null
           profile_image_url: string | null
           profile_type: string | null
-          profile_visibility: Json | null
           social_links: Json | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           website: string | null
         }
         Insert: {
@@ -79,6 +79,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_name?: string | null
+          email?: string | null
           followers_count?: number | null
           following_count?: number | null
           id?: string
@@ -87,10 +88,9 @@ export type Database = {
           profession?: string | null
           profile_image_url?: string | null
           profile_type?: string | null
-          profile_visibility?: Json | null
           social_links?: Json | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           website?: string | null
         }
         Update: {
@@ -100,6 +100,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_name?: string | null
+          email?: string | null
           followers_count?: number | null
           following_count?: number | null
           id?: string
@@ -108,64 +109,16 @@ export type Database = {
           profession?: string | null
           profile_image_url?: string | null
           profile_type?: string | null
-          profile_visibility?: Json | null
           social_links?: Json | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           website?: string | null
         }
         Relationships: []
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          alias: string | null
-          avatar_url: string | null
-          bio: string | null
-          created_at: string | null
-          description: string | null
-          display_name: string | null
-          followers_count: number | null
-          following_count: number | null
-          id: string | null
-          is_public: boolean | null
-          location: string | null
-          profession: string | null
-          website: string | null
-        }
-        Insert: {
-          alias?: string | null
-          avatar_url?: string | null
-          bio?: never
-          created_at?: string | null
-          description?: never
-          display_name?: string | null
-          followers_count?: number | null
-          following_count?: number | null
-          id?: string | null
-          is_public?: boolean | null
-          location?: never
-          profession?: never
-          website?: never
-        }
-        Update: {
-          alias?: string | null
-          avatar_url?: string | null
-          bio?: never
-          created_at?: string | null
-          description?: never
-          display_name?: string | null
-          followers_count?: number | null
-          following_count?: number | null
-          id?: string | null
-          is_public?: boolean | null
-          location?: never
-          profession?: never
-          website?: never
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_public_profile: {
@@ -213,7 +166,6 @@ export type Database = {
           id: string
           location: string
           profession: string
-          website: string
         }[]
       }
     }

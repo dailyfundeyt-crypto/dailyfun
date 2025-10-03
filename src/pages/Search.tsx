@@ -16,6 +16,7 @@ import { Search as SearchIcon, User } from 'lucide-react';
 
 interface UserProfile {
   id: string;
+  user_id: string;
   display_name: string | null;
   bio: string | null;
   profession: string | null;
@@ -26,7 +27,7 @@ interface UserProfile {
   is_public: boolean;
   created_at: string;
   updated_at: string;
-  // Note: user_id and email are NOT included in public profiles for security reasons
+  // Note: email is NOT included in public profiles for security reasons
   aiGenerated?: {
     description: string;
     interests: string[];
@@ -171,11 +172,11 @@ const Search = () => {
   useEffect(() => {
     const fetchUserProfiles = async () => {
       try {
-        // Use public_profiles view which excludes user_id for security
-        // This view respects privacy settings and only shows fields users have made public
+        // Use direct query with specific field selection (excluding sensitive fields like email)
         const { data, error } = await supabase
-          .from('public_profiles')
-          .select('id, display_name, bio, profession, location, description, avatar_url, alias, is_public, created_at');
+          .from('profiles')
+          .select('id, user_id, display_name, bio, profession, location, description, avatar_url, alias, is_public, created_at, updated_at')
+          .eq('is_public', true);
 
         if (error) throw error;
         
@@ -183,14 +184,7 @@ const Search = () => {
         const validProfiles = (data || []).filter(profile => 
           profile.display_name && profile.display_name.trim() !== ''
         );
-        
-        // Add empty updated_at for compatibility with UserProfile interface
-        const profilesWithUpdatedAt = validProfiles.map(p => ({
-          ...p,
-          updated_at: p.created_at // Use created_at as fallback
-        }));
-        
-        setUserProfiles(profilesWithUpdatedAt);
+        setUserProfiles(validProfiles);
       } catch (error) {
         console.error('Error fetching user profiles:', error);
       }
@@ -225,7 +219,7 @@ const Search = () => {
       if (authorMapping[selectedAuthor as keyof typeof authorMapping]) {
         authorName = authorMapping[selectedAuthor as keyof typeof authorMapping];
       } else {
-        const prof = userProfiles.find(p => p.id === selectedAuthor);
+        const prof = userProfiles.find(p => p.user_id === selectedAuthor);
         authorName = prof?.display_name || undefined;
       }
 
@@ -316,11 +310,11 @@ const Search = () => {
     }
 
     // Check if it's a user profile
-    const userProfile = userProfiles.find(profile => profile.id === employeeId);
+    const userProfile = userProfiles.find(profile => profile.user_id === employeeId);
     
     if (userProfile) {
       return {
-        id: userProfile.id,
+        id: userProfile.user_id,
         name: userProfile.display_name || 'User',
         image: '', // User profiles don't have images yet
         description: userProfile.description || userProfile.bio || '',
@@ -376,8 +370,8 @@ const Search = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {searchResults.profiles.map((profile) => (
                         <Link
-                          key={profile.id} 
-                          to={`/profile/${profile.id}`}
+                          key={profile.user_id} 
+                          to={`/profile/${profile.user_id}`}
                           className="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                         >
                           <div className="flex items-start space-x-3">
@@ -490,7 +484,7 @@ const Search = () => {
               <span className="text-xs sm:text-sm font-medium mt-2 text-center max-w-16 sm:max-w-20">{t('search.all')}</span>
             </div>
 
-            {/* Employee Profiles - Always show default authors */}
+            {/* Employee Profiles - Only show followed authors if user is logged in */}
             {employees.map((employee) => {
               // Map employee names to match follow system
               const authorMapping = {
@@ -502,7 +496,8 @@ const Search = () => {
               const authorName = authorMapping[employee.id];
               const isFollowed = followedAuthors.includes(authorName);
               
-              // Always show these default authors
+              // If user is logged in, only show followed authors
+              if (user && !isFollowed) return null;
               
               return (
                 <div key={employee.id} className="flex flex-col items-center group flex-shrink-0 relative">
@@ -529,21 +524,21 @@ const Search = () => {
               );
             })}
 
-            {/* User Profiles - Only show if user is logged in and followed */}
-            {user && userProfiles.map((profile) => {
+            {/* User Profiles - Only show if followed */}
+            {userProfiles.map((profile) => {
               const isFollowed = followedAuthors.includes(profile.display_name || '');
               
-              // Only show followed profiles for logged-in users
-              if (!isFollowed) return null;
+              // If user is logged in, only show followed profiles
+              if (user && !isFollowed) return null;
               
               return (
-                <div key={profile.id} className="flex flex-col items-center group flex-shrink-0 relative">
+                <div key={profile.user_id} className="flex flex-col items-center group flex-shrink-0 relative">
                   <div 
                     className="cursor-pointer"
-                    onClick={() => handleEmployeeClick(profile.id)}
+                    onClick={() => handleEmployeeClick(profile.user_id)}
                   >
                     <div className={`w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 rounded-full border-4 flex items-center justify-center bg-gray-100 transition-all ${
-                      selectedAuthor === profile.id 
+                      selectedAuthor === profile.user_id 
                         ? 'border-red-accent' 
                         : 'border-gray-300 group-hover:border-red-accent/50'
                     }`}>
