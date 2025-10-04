@@ -308,7 +308,11 @@ const Search = () => {
       return {
         ...employee,
         description: getDescription(employeeId),
-        role: getRole(employeeId)
+        role: getRole(employeeId),
+        location: undefined,
+        bio: undefined,
+        website: undefined,
+        created_at: undefined
       };
     }
 
@@ -320,8 +324,12 @@ const Search = () => {
         id: userProfile.user_id,
         name: userProfile.display_name || 'User',
         image: userProfile.avatar_url || '',
-        description: userProfile.description || userProfile.bio || '',
-        role: userProfile.profession || 'Community Member'
+        description: userProfile.description || '',
+        role: userProfile.profession || 'Community Member',
+        location: userProfile.location,
+        bio: userProfile.bio,
+        website: userProfile.website,
+        created_at: userProfile.created_at
       };
     }
 
@@ -645,6 +653,13 @@ const Search = () => {
                   </div>
                   <div className="text-sm text-gray-600">Posts</div>
                 </div>
+                
+                {currentEmployeeInfo.location && (
+                  <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                    <MapPin className="h-4 w-4" />
+                    <span className="text-sm">{currentEmployeeInfo.location}</span>
+                  </div>
+                )}
               </div>
               
               {/* Name */}
@@ -652,21 +667,64 @@ const Search = () => {
                 {currentEmployeeInfo.name}
               </h2>
               
-              {/* Role/Profession (no link for employees, just text) */}
+              {/* Profession as Link */}
               {currentEmployeeInfo.role && (
-                <p className="text-gray-700 mb-4">
-                  {currentEmployeeInfo.role}
+                <div className="mb-3">
+                  {currentEmployeeInfo.website ? (
+                    <a 
+                      href={currentEmployeeInfo.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-red-500 hover:underline font-medium"
+                    >
+                      {currentEmployeeInfo.role}
+                    </a>
+                  ) : (
+                    <p className="text-gray-700 font-medium">
+                      {currentEmployeeInfo.role}
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* Bio */}
+              {currentEmployeeInfo.bio && (
+                <p className="text-gray-700 mb-4 max-w-md mx-auto">
+                  {currentEmployeeInfo.bio}
                 </p>
               )}
               
-              {/* Join Date - using a placeholder date for employees */}
+              {/* Website Link */}
+              {currentEmployeeInfo.website && (
+                <div className="mb-4">
+                  <a 
+                    href={currentEmployeeInfo.website} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-blue-500 hover:underline text-sm"
+                  >
+                    Website besuchen
+                  </a>
+                </div>
+              )}
+              
+              {/* Join Date */}
               <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-8">
                 <Calendar className="h-4 w-4" />
-                <span>Mitglied seit {new Date().toLocaleDateString('de-DE', { 
-                  day: 'numeric', 
-                  month: 'numeric', 
-                  year: 'numeric' 
-                })}</span>
+                <span>
+                  Mitglied seit {currentEmployeeInfo.created_at 
+                    ? new Date(currentEmployeeInfo.created_at).toLocaleDateString('de-DE', { 
+                        day: 'numeric', 
+                        month: 'numeric', 
+                        year: 'numeric' 
+                      })
+                    : new Date().toLocaleDateString('de-DE', { 
+                        day: 'numeric', 
+                        month: 'numeric', 
+                        year: 'numeric' 
+                      })
+                  }
+                </span>
               </div>
             </div>
 
