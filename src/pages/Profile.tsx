@@ -194,21 +194,34 @@ const Profile = () => {
           </div>
           
           {/* Name */}
-          <h2 className="text-xl font-bold text-black mb-2">
+          <h2 className="text-xl font-bold text-black mb-1">
             {profile.display_name || 'Unbekannter Nutzer'}
           </h2>
+          
+          {/* Alias */}
+          {profile.alias && (
+            <p className="text-gray-500 text-sm mb-2">
+              @{profile.alias}
+            </p>
+          )}
           
           {/* Profession as Link */}
           {profile.profession && (
             <div className="mb-3">
-              <a 
-                href={profile.website || '#'} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-red-500 hover:underline font-medium"
-              >
-                {profile.profession}
-              </a>
+              {profile.website ? (
+                <a 
+                  href={profile.website} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-red-500 hover:underline font-medium"
+                >
+                  {profile.profession}
+                </a>
+              ) : (
+                <p className="text-gray-700 font-medium">
+                  {profile.profession}
+                </p>
+              )}
             </div>
           )}
           
@@ -234,7 +247,7 @@ const Profile = () => {
           )}
           
           {/* Join Date */}
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-6">
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-8">
             <Calendar className="h-4 w-4" />
             <span>
               Mitglied seit {new Date(profile.created_at).toLocaleDateString('de-DE', { 
@@ -249,7 +262,7 @@ const Profile = () => {
           {user && user.id !== profile.user_id && (
             <Button 
               onClick={handleFollowToggle}
-              className={`rounded-full px-6 py-2 mb-8 ${
+              className={`rounded-full px-6 py-2 ${
                 isFollowing 
                   ? 'bg-black text-white hover:bg-gray-800' 
                   : 'bg-white text-black border border-black hover:bg-gray-50'
@@ -262,7 +275,7 @@ const Profile = () => {
         </div>
 
         {/* Latest Articles Section */}
-        <div className="text-center">
+        <div className="text-center pt-4">
           <h3 className="text-xl font-bold text-black mb-2">Latest Articles</h3>
           <p className="text-gray-600 text-sm mb-6">by {profile.display_name}</p>
           
