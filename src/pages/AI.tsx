@@ -2815,19 +2815,19 @@ ${additionalInfo}
           ? `Basierend auf folgendem Artikel-Inhalt: "${cleanArticleContent}"\n\nBitte beantworte diese Frage: ${userInput}`
           : `Based on the following article content: "${cleanArticleContent}"\n\nPlease answer this question: ${userInput}`;
 
-        // Use OpenRouter API with Llama 3.1 405B for article-based analysis
-        console.log('🤖 Using OpenRouter API with Meta Llama 3.1 405B for article analysis');
+        // Use Lovable AI Gateway with Gemini for article-based analysis
+        console.log('🤖 Using Lovable AI Gateway with Gemini for article analysis');
         
         const systemPrompt = language === 'de' 
           ? 'Du bist ein hilfreicher AI-Assistent, der Fragen zu Artikeln beantwortet. Gib fundierte, informative Antworten basierend auf dem bereitgestellten Artikel-Inhalt.'
           : 'You are a helpful AI assistant that answers questions about articles. Provide well-informed, informative answers based on the provided article content.';
         
-        const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+        const { data, error } = await supabase.functions.invoke('lovable-ai-proxy', {
           body: { 
             prompt: combinedPrompt,
             systemPrompt: systemPrompt,
             temperature: 0.7,
-            model: 'x-ai/grok-4-fast:free',
+            model: 'google/gemini-2.5-flash',
             max_tokens: 500
           }
         });
@@ -3104,10 +3104,10 @@ ${additionalInfo}
           let aiAnalysisContent = '';
           let successfulAIModel = null;
           
-          // Enhanced AI models array with multiple fallbacks
+          // Enhanced AI models array with multiple fallbacks - Using Lovable AI (Gemini) first
           const aiModels = [
-            { name: 'Grok 4 Fast', type: 'openrouter', model: 'x-ai/grok-4-fast:free' },
-            { name: 'Grok 4', type: 'openrouter', model: 'x-ai/grok-4' },
+            { name: 'Gemini 2.5 Flash', type: 'lovable', model: 'google/gemini-2.5-flash' },
+            { name: 'Gemini 2.5 Pro', type: 'lovable', model: 'google/gemini-2.5-pro' },
             { name: 'GPT-5', type: 'puter', model: 'gpt-5' },
             { name: 'Claude Sonnet 4', type: 'puter', model: 'claude-sonnet-4' },
             { name: 'GPT-4.1', type: 'puter', model: 'gpt-4.1' },
@@ -3123,12 +3123,12 @@ ${additionalInfo}
               
               let modelResponse = '';
               
-              if (aiModel.type === 'openrouter') {
+              if (aiModel.type === 'lovable') {
                 const systemPrompt = language === 'de' 
                   ? `Du bist ein KI-Assistant mit fundiertem Wissen. Analysiere die gegebenen Wikipedia-Informationen und beantworte die Frage präzise. Wikipedia-Information: ${extract}`
                   : `You are an AI assistant with solid knowledge. Analyze the given Wikipedia information and answer the question precisely. Wikipedia information: ${extract}`;
                 
-                const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+                const { data, error } = await supabase.functions.invoke('lovable-ai-proxy', {
                   body: { 
                     prompt: aiAnalysisPrompt,
                     systemPrompt: systemPrompt,
@@ -3376,10 +3376,10 @@ ${additionalInfo}
           let aiAnalysisContent = '';
           let successfulAIModel = null;
           
-          // Enhanced AI models array with multiple fallbacks
+          // Enhanced AI models array with multiple fallbacks - Using Lovable AI (Gemini) first
           const aiModels = [
-            { name: 'Grok 4 Fast', type: 'openrouter', model: 'x-ai/grok-4-fast:free' },
-            { name: 'Grok 4', type: 'openrouter', model: 'x-ai/grok-4' },
+            { name: 'Gemini 2.5 Flash', type: 'lovable', model: 'google/gemini-2.5-flash' },
+            { name: 'Gemini 2.5 Pro', type: 'lovable', model: 'google/gemini-2.5-pro' },
             { name: 'GPT-5', type: 'puter', model: 'gpt-5' },
             { name: 'Claude Sonnet 4', type: 'puter', model: 'claude-sonnet-4' },
             { name: 'GPT-4.1', type: 'puter', model: 'gpt-4.1' },
@@ -3395,12 +3395,12 @@ ${additionalInfo}
               
               let modelResponse = '';
               
-              if (aiModel.type === 'openrouter') {
+              if (aiModel.type === 'lovable') {
                 const systemPrompt = language === 'de' 
                   ? `Du bist ein KI-Assistant mit fundiertem Wissen. Beantworte die Frage präzise basierend auf deinem Wissen und verfügbaren aktuellen Informationen.`
                   : `You are an AI assistant with solid knowledge. Answer the question precisely based on your knowledge and available current information.`;
                 
-                const { data, error } = await supabase.functions.invoke('openrouter-proxy', {
+                const { data, error } = await supabase.functions.invoke('lovable-ai-proxy', {
                   body: { 
                     prompt: aiAnalysisPrompt,
                     systemPrompt: systemPrompt,
