@@ -14,7 +14,7 @@ import { supabase } from '../integrations/supabase/client';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { Search as SearchIcon, User, MapPin } from 'lucide-react';
+import { Search as SearchIcon, User, MapPin, Calendar } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -619,9 +619,17 @@ const Search = () => {
 
         {/* Profile Info Section */}
         {showProfileInfo && currentEmployeeInfo && (
-          <div className="relative mb-8 bg-white rounded-lg border border-gray-200 p-8 mx-auto max-w-2xl">
-            {/* Profile Section - matching Profile.tsx design */}
-            <div className="text-center mb-6">
+          <div className="relative mb-8 bg-white mx-auto max-w-2xl">
+            {/* Share Menu positioned in top right corner */}
+            <div className="absolute top-4 right-4">
+              <ProfileShareMenu 
+                profileName={currentEmployeeInfo.name}
+                profileId={currentEmployeeInfo.id}
+              />
+            </div>
+
+            {/* Profile Section - matching Profile.tsx design exactly */}
+            <div className="text-center pt-8 pb-4">
               {/* Avatar and Posts Counter */}
               <div className="flex items-center justify-center gap-8 mb-6">
                 <Avatar className="w-20 h-20">
@@ -635,9 +643,7 @@ const Search = () => {
                   <div className="text-2xl font-bold text-black">
                     {filteredArticles.length}
                   </div>
-                  <div className="text-sm text-gray-600">
-                    {t('search.posts')}
-                  </div>
+                  <div className="text-sm text-gray-600">Posts</div>
                 </div>
               </div>
               
@@ -646,73 +652,102 @@ const Search = () => {
                 {currentEmployeeInfo.name}
               </h2>
               
-              {/* Role/Profession */}
+              {/* Role/Profession (no link for employees, just text) */}
               {currentEmployeeInfo.role && (
-                <div className="mb-3">
-                  <span className="text-red-500 font-medium">
-                    {currentEmployeeInfo.role}
-                  </span>
-                </div>
+                <p className="text-gray-700 mb-4">
+                  {currentEmployeeInfo.role}
+                </p>
               )}
+              
+              {/* Join Date - using a placeholder date for employees */}
+              <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-8">
+                <Calendar className="h-4 w-4" />
+                <span>Mitglied seit {new Date().toLocaleDateString('de-DE', { 
+                  day: 'numeric', 
+                  month: 'numeric', 
+                  year: 'numeric' 
+                })}</span>
+              </div>
             </div>
 
-            {/* Description Section */}
+            {/* Latest Articles Section */}
+            <div className="text-center pt-4">
+              <h3 className="text-xl font-bold text-black mb-2">Latest Articles</h3>
+              <p className="text-gray-600 text-sm mb-6">by {currentEmployeeInfo.name}</p>
+              
+              {/* Tabs */}
+              <div className="flex justify-center mb-8">
+                <div className="bg-gray-100 rounded-full p-1 flex">
+                  <button 
+                    onClick={() => handleSortModeChange('latest')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      sortMode === 'latest'
+                        ? 'bg-white rounded-full shadow-sm text-black'
+                        : 'text-gray-600 hover:text-black'
+                    }`}
+                  >
+                    Latest Articles
+                  </button>
+                  <button 
+                    onClick={() => handleSortModeChange('random')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      sortMode === 'random'
+                        ? 'bg-white rounded-full shadow-sm text-black'
+                        : 'text-gray-600 hover:text-black'
+                    }`}
+                  >
+                    Random Articles
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Description Section - moved to bottom if available */}
             {currentEmployeeInfo.description && (
-              <div className="p-6 bg-gray-50 rounded-lg">
+              <div className="p-6 bg-gray-50 rounded-lg mx-4 mb-4">
                 <p className="text-gray-700 leading-relaxed">
                   {currentEmployeeInfo.description}
                 </p>
               </div>
             )}
-
-            {/* Share Menu positioned in top right corner */}
-            <div className="absolute top-4 right-4">
-              <ProfileShareMenu 
-                profileName={currentEmployeeInfo.name}
-                profileId={currentEmployeeInfo.id}
-              />
-            </div>
           </div>
         )}
 
 
-        {/* Articles Section with Sort Toggle */}
-        <div className="mb-8">
-          <div className="flex flex-col items-center space-y-4">
-            <h2 className="text-3xl font-bold text-black font-serif text-center">
-              {sortMode === 'latest' ? t('home.latest') : t('home.random')}
-              {selectedAuthor !== 'all' && (
-                <span className="text-lg font-normal text-gray-600 block mt-2">
-                  {t('search.by')} {employees.find(emp => emp.id === selectedAuthor)?.name}
-                </span>
-              )}
-            </h2>
-            
-            {/* Sort Mode Toggle */}
-            <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => handleSortModeChange('latest')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  sortMode === 'latest'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-600 hover:text-black'
-                }`}
-              >
-                {t('home.latest')}
-              </button>
-              <button
-                onClick={() => handleSortModeChange('random')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  sortMode === 'random'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-600 hover:text-black'
-                }`}
-              >
-                {t('home.random')}
-              </button>
+        {/* Articles Section Header - Only show when profile is not selected */}
+        {!showProfileInfo && (
+          <div className="mb-8">
+            <div className="flex flex-col items-center space-y-4">
+              <h2 className="text-3xl font-bold text-black font-serif text-center">
+                {sortMode === 'latest' ? t('home.latest') : t('home.random')}
+              </h2>
+              
+              {/* Sort Mode Toggle */}
+              <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => handleSortModeChange('latest')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    sortMode === 'latest'
+                      ? 'bg-white text-black shadow-sm'
+                      : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  {t('home.latest')}
+                </button>
+                <button
+                  onClick={() => handleSortModeChange('random')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    sortMode === 'random'
+                      ? 'bg-white text-black shadow-sm'
+                      : 'text-gray-600 hover:text-black'
+                  }`}
+                >
+                  {t('home.random')}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Articles Grid with alternating backgrounds */}
         <div className="space-y-0">
