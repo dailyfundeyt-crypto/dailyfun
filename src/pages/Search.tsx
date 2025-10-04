@@ -12,7 +12,9 @@ import { useAutoFollow } from '../hooks/useAutoFollow';
 import { employees } from '../data/employees';
 import { supabase } from '../integrations/supabase/client';
 import { Input } from '../components/ui/input';
-import { Search as SearchIcon, User } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
+import { Search as SearchIcon, User, MapPin } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -24,6 +26,7 @@ interface UserProfile {
   description: string | null;
   avatar_url: string | null;
   alias: string | null;
+  website: string | null;
   is_public: boolean;
   created_at: string;
   updated_at: string;
@@ -175,7 +178,7 @@ const Search = () => {
         // Use direct query with specific field selection (excluding sensitive fields like email)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, user_id, display_name, bio, profession, location, description, avatar_url, alias, is_public, created_at, updated_at')
+          .select('id, user_id, display_name, bio, profession, location, description, avatar_url, alias, website, is_public, created_at, updated_at')
           .eq('is_public', true);
 
         if (error) throw error;
@@ -367,54 +370,97 @@ const Search = () => {
                       <User className="h-5 w-5 mr-2" />
                       Benutzerprofile ({searchResults.profiles.length})
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-8">
                       {searchResults.profiles.map((profile) => (
-                        <Link
-                          key={profile.user_id} 
-                          to={`/profile/${profile.user_id}`}
-                          className="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                        <div
+                          key={profile.user_id}
+                          className="bg-white border border-gray-200 rounded-lg p-8"
                         >
-                          <div className="flex items-start space-x-3">
-                            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
-                              {profile.avatar_url ? (
-                                <img 
-                                  src={profile.avatar_url} 
-                                  alt={profile.display_name || 'User'} 
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-lg font-bold text-gray-600">
-                                  {profile.display_name?.charAt(0)?.toUpperCase() || 'U'}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-black">{profile.display_name}</h4>
-                              {profile.profession && (
-                                <p className="text-sm text-red-accent">{profile.profession}</p>
-                              )}
+                          {/* Profile Section - matching Profile.tsx design */}
+                          <div className="text-center mb-6">
+                            {/* Avatar and Posts Counter */}
+                            <div className="flex items-center justify-center gap-8 mb-6">
+                              <Avatar className="w-20 h-20">
+                                <AvatarImage src={profile.avatar_url || ''} />
+                                <AvatarFallback className="bg-gray-300 text-gray-600 text-2xl font-bold">
+                                  {(profile.display_name || 'U').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-black">0</div>
+                                <div className="text-sm text-gray-600">Posts</div>
+                              </div>
+                              
                               {profile.location && (
-                                <p className="text-xs text-gray-500">{profile.location}</p>
-                              )}
-                              {profile.aiGenerated ? (
-                                <div className="mt-2">
-                                  <p className="text-sm text-gray-700">{profile.aiGenerated.description}</p>
-                                  {profile.aiGenerated.interests && (
-                                    <div className="mt-2">
-                                      <p className="text-xs font-medium text-gray-600">Interessen:</p>
-                                      <p className="text-xs text-gray-600">{profile.aiGenerated.interests.join(', ')}</p>
-                                    </div>
-                                  )}
+                                <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                                  <MapPin className="h-4 w-4" />
+                                  <span className="text-sm">{profile.location}</span>
                                 </div>
-                              ) : (
-                                <>
-                                  {profile.bio && <p className="text-sm text-gray-700 mt-1">{profile.bio}</p>}
-                                  {profile.description && <p className="text-sm text-gray-700 mt-1">{profile.description}</p>}
-                                </>
                               )}
                             </div>
+                            
+                            {/* Name */}
+                            <h2 className="text-xl font-bold text-black mb-2">
+                              {profile.display_name || 'Unbekannter Nutzer'}
+                            </h2>
+                            
+                            {/* Profession as Link */}
+                            {profile.profession && (
+                              <div className="mb-3">
+                                <a 
+                                  href={profile.website || '#'} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-red-500 hover:underline font-medium"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {profile.profession}
+                                </a>
+                              </div>
+                            )}
+                            
+                            {/* Bio */}
+                            {profile.bio && (
+                              <p className="text-gray-700 mb-4 max-w-md mx-auto">
+                                {profile.bio}
+                              </p>
+                            )}
+                            
+                            {/* Website Link */}
+                            {profile.website && (
+                              <div className="mb-4">
+                                <a 
+                                  href={profile.website} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="text-blue-500 hover:underline text-sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  Website besuchen
+                                </a>
+                              </div>
+                            )}
+                            
+                            {/* View Profile Button */}
+                            <Link 
+                              to={`/profile/${profile.user_id}`}
+                              className="inline-block"
+                            >
+                              <Button className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2 mb-4">
+                                Profil ansehen
+                              </Button>
+                            </Link>
                           </div>
-                        </Link>
+
+                          {/* Description Section (if available) */}
+                          {profile.description && (
+                            <div className="mt-6 p-6 bg-gray-50 rounded-lg">
+                              <h4 className="text-lg font-semibold text-black mb-3">Über mich</h4>
+                              <p className="text-gray-700 leading-relaxed">{profile.description}</p>
+                            </div>
+                          )}
+                        </div>
                       ))}
                     </div>
                   </div>
