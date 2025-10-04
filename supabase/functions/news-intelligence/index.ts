@@ -9,12 +9,12 @@ serve(async (req) => {
   try {
     const { action, timeframe = 'today', query, articleContent, language = 'en' } = await req.json()
 
-    const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY')
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
     const guardianApiKey = Deno.env.get('GUARDIAN_API_KEY')
     const gnewsApiKey = Deno.env.get('GNEWS_API_KEY')
 
-    if (!openrouterApiKey) {
-      throw new Error('OPENROUTER_API_KEY not configured')
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured')
     }
 
     // Action 1: Aggregate news and summarize
@@ -106,14 +106,14 @@ serve(async (req) => {
         ? 'Du bist ein Nachrichten-Analyst. Antworte ausschließlich auf Deutsch. Nutze nur die gegebenen Schlagzeilen und erfinde keine Informationen.'
         : 'You are a news analyst. Answer strictly in English. Use only the provided headlines and do not fabricate information.'
 
-      const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const lovableResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openrouterApiKey}`,
+          'Authorization': `Bearer ${lovableApiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'x-ai/grok-4-fast:free',
+          model: 'google/gemini-2.5-flash',
           messages: [
             { role: 'system', content: systemMessage },
             { role: 'user', content: prompt }
@@ -122,8 +122,14 @@ serve(async (req) => {
         })
       })
 
-      const openrouterData = await openrouterResponse.json()
-      const summary = openrouterData.choices?.[0]?.message?.content || (language === 'de' ? 'Fehler bei der Zusammenfassung' : 'Failed to generate summary')
+      if (!lovableResponse.ok) {
+        const errorText = await lovableResponse.text()
+        console.error('Lovable AI Gateway error:', lovableResponse.status, errorText)
+        throw new Error(`AI Gateway error: ${lovableResponse.status}`)
+      }
+
+      const lovableData = await lovableResponse.json()
+      const summary = lovableData.choices?.[0]?.message?.content || (language === 'de' ? 'Fehler bei der Zusammenfassung' : 'Failed to generate summary')
 
       return new Response(
         JSON.stringify({ 
@@ -151,14 +157,14 @@ serve(async (req) => {
         ? 'Du wandelst Fragen in Suchbegriffe um. Antworte ausschließlich mit den Suchbegriffen.'
         : 'You convert questions into search terms. Respond only with the search terms.'
 
-      const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const lovableResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openrouterApiKey}`,
+          'Authorization': `Bearer ${lovableApiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'x-ai/grok-4-fast:free',
+          model: 'google/gemini-2.5-flash',
           messages: [
             { role: 'system', content: systemMessage },
             { role: 'user', content: prompt }
@@ -167,8 +173,14 @@ serve(async (req) => {
         })
       })
 
-      const openrouterData = await openrouterResponse.json()
-      const searchTerms = openrouterData.choices?.[0]?.message?.content?.trim() || query
+      if (!lovableResponse.ok) {
+        const errorText = await lovableResponse.text()
+        console.error('Lovable AI Gateway error:', lovableResponse.status, errorText)
+        throw new Error(`AI Gateway error: ${lovableResponse.status}`)
+      }
+
+      const lovableData = await lovableResponse.json()
+      const searchTerms = lovableData.choices?.[0]?.message?.content?.trim() || query
 
       return new Response(
         JSON.stringify({ searchTerms }),
@@ -232,14 +244,14 @@ serve(async (req) => {
         ? `Basierend auf diesem Artikel beantworte die folgende Frage auf Deutsch. Beziehe dich nur auf den Artikel und erfinde nichts.\n\nArtikel (gekürzt): ${articleContent.substring(0, 3000)}\n\nFrage: ${query}\n\nAntworte präzise, ohne unnötige Einleitung.`
         : `Based on this article, answer the following question in English. Use only the article content and do not invent facts.\n\nArticle (truncated): ${articleContent.substring(0, 3000)}\n\nQuestion: ${query}\n\nAnswer concisely with no unnecessary preamble.`
 
-      const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      const lovableResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${openrouterApiKey}`,
+          'Authorization': `Bearer ${lovableApiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: 'x-ai/grok-4-fast:free',
+          model: 'google/gemini-2.5-flash',
           messages: [
             { role: 'system', content: (language === 'de'
               ? 'Du beantwortest Fragen basierend auf gegebenen Artikelinhalten. Antworte ausschließlich auf Deutsch und beziehe dich nur auf die verfügbaren Informationen.'
@@ -251,8 +263,14 @@ serve(async (req) => {
         })
       })
 
-      const openrouterData = await openrouterResponse.json()
-      const answer = openrouterData.choices?.[0]?.message?.content || 'Antwort konnte nicht generiert werden'
+      if (!lovableResponse.ok) {
+        const errorText = await lovableResponse.text()
+        console.error('Lovable AI Gateway error:', lovableResponse.status, errorText)
+        throw new Error(`AI Gateway error: ${lovableResponse.status}`)
+      }
+
+      const lovableData = await lovableResponse.json()
+      const answer = lovableData.choices?.[0]?.message?.content || 'Antwort konnte nicht generiert werden'
 
       return new Response(
         JSON.stringify({ answer }),
