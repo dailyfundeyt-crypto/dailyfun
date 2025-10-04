@@ -168,6 +168,10 @@ export type Database = {
       }
     }
     Functions: {
+      generate_unique_alias: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_public_profile: {
         Args: { profile_user_id: string }
         Returns: {

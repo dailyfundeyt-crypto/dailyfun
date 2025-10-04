@@ -312,7 +312,8 @@ const Search = () => {
         location: undefined,
         bio: undefined,
         website: undefined,
-        created_at: undefined
+        created_at: undefined,
+        alias: undefined
       };
     }
 
@@ -329,7 +330,8 @@ const Search = () => {
         location: userProfile.location,
         bio: userProfile.bio,
         website: userProfile.website,
-        created_at: userProfile.created_at
+        created_at: userProfile.created_at,
+        alias: userProfile.alias
       };
     }
 
@@ -663,9 +665,16 @@ const Search = () => {
               </div>
               
               {/* Name */}
-              <h2 className="text-xl font-bold text-black mb-2">
+              <h2 className="text-xl font-bold text-black mb-1">
                 {currentEmployeeInfo.name}
               </h2>
+              
+              {/* Alias */}
+              {currentEmployeeInfo.alias && (
+                <p className="text-gray-500 text-sm mb-2">
+                  @{currentEmployeeInfo.alias}
+                </p>
+              )}
               
               {/* Profession as Link */}
               {currentEmployeeInfo.role && (
