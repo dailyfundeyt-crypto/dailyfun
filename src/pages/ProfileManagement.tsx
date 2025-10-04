@@ -25,6 +25,8 @@ interface UserProfile {
   is_public: boolean;
   created_at: string;
   updated_at: string;
+  last_name_change: string | null;
+  last_alias_change: string | null;
 }
 
 const ProfileManagement = () => {
@@ -170,7 +172,8 @@ const ProfileManagement = () => {
     try {
       setSaving(true);
       
-      const profileData = {
+      const now = new Date();
+      const profileData: any = {
         user_id: user.id,
         display_name: formData.display_name,
         bio: formData.bio,
@@ -180,8 +183,39 @@ const ProfileManagement = () => {
         website: formData.website,
         alias: formData.alias,
         is_public: formData.is_public,
-        updated_at: new Date().toISOString()
+        updated_at: now.toISOString()
       };
+
+      // Check if name changed (and not first change from "User")
+      if (profile?.display_name && profile.display_name !== 'User' && formData.display_name !== profile.display_name) {
+        if (profile.last_name_change) {
+          const lastChange = new Date(profile.last_name_change);
+          const daysSinceLastChange = (now.getTime() - lastChange.getTime()) / (1000 * 60 * 60 * 24);
+          
+          if (daysSinceLastChange < 30) {
+            toast.error(`Du kannst deinen Namen erst wieder in ${Math.ceil(30 - daysSinceLastChange)} Tagen ändern`);
+            return;
+          }
+        }
+        profileData.last_name_change = now.toISOString();
+      } else if (profile?.display_name === 'User' && formData.display_name !== 'User') {
+        // First name change from "User" - set the timestamp
+        profileData.last_name_change = now.toISOString();
+      }
+
+      // Check if alias changed
+      if (profile?.alias && formData.alias !== profile.alias) {
+        if (profile.last_alias_change) {
+          const lastChange = new Date(profile.last_alias_change);
+          const daysSinceLastChange = (now.getTime() - lastChange.getTime()) / (1000 * 60 * 60 * 24);
+          
+          if (daysSinceLastChange < 30) {
+            toast.error(`Du kannst deinen Alias erst wieder in ${Math.ceil(30 - daysSinceLastChange)} Tagen ändern`);
+            return;
+          }
+        }
+        profileData.last_alias_change = now.toISOString();
+      }
 
       const { data, error } = await supabase
         .from('profiles')
@@ -308,9 +342,16 @@ const ProfileManagement = () => {
             </div>
             
             {/* Name */}
-            <h2 className="text-xl font-bold text-black mb-2">
+            <h2 className="text-xl font-bold text-black mb-1">
               {formData.display_name || user?.email || 'Dein Name'}
             </h2>
+            
+            {/* Alias */}
+            {formData.alias && (
+              <p className="text-gray-500 text-sm mb-2">
+                @{formData.alias}
+              </p>
+            )}
             
             {/* Profession as Link */}
             {formData.profession && (
@@ -348,7 +389,7 @@ const ProfileManagement = () => {
             )}
             
             {/* Join Date */}
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-6">
+            <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-8">
               <Calendar className="h-4 w-4" />
               <span>
                 Mitglied seit {new Date(user?.created_at || '').toLocaleDateString('de-DE', { 
@@ -360,14 +401,14 @@ const ProfileManagement = () => {
             </div>
             
             {/* Follow Button (placeholder) */}
-            <Button className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2 mb-8">
+            <Button className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2">
               <Heart className="h-4 w-4 mr-2 fill-current" />
               Gefolgt
             </Button>
           </div>
 
           {/* Latest Articles Section */}
-          <div className="text-center">
+          <div className="text-center pt-4">
             <h3 className="text-xl font-bold text-black mb-2">Latest Articles</h3>
             <p className="text-gray-600 text-sm mb-6">by</p>
             

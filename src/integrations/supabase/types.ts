@@ -62,6 +62,8 @@ export type Database = {
           following_count: number | null
           id: string
           is_public: boolean | null
+          last_alias_change: string | null
+          last_name_change: string | null
           location: string | null
           profession: string | null
           profile_image_url: string | null
@@ -83,6 +85,8 @@ export type Database = {
           following_count?: number | null
           id?: string
           is_public?: boolean | null
+          last_alias_change?: string | null
+          last_name_change?: string | null
           location?: string | null
           profession?: string | null
           profile_image_url?: string | null
@@ -104,6 +108,8 @@ export type Database = {
           following_count?: number | null
           id?: string
           is_public?: boolean | null
+          last_alias_change?: string | null
+          last_name_change?: string | null
           location?: string | null
           profession?: string | null
           profile_image_url?: string | null
