@@ -619,56 +619,59 @@ const Search = () => {
 
         {/* Profile Info Section */}
         {showProfileInfo && currentEmployeeInfo && (
-          <div className="mb-6 lg:mb-8 bg-white rounded-lg border border-gray-200 p-4 sm:p-6 mx-4 sm:mx-auto max-w-md">
-            {/* Profile Header with Stats */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3 sm:space-x-4">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-gray-200 flex-shrink-0 flex items-center justify-center bg-gray-100">
-                  {currentEmployeeInfo.image ? (
-                    <img 
-                      src={currentEmployeeInfo.image} 
-                      alt={currentEmployeeInfo.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-2xl font-bold text-gray-600">
-                      {currentEmployeeInfo.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </span>
-                  )}
-                </div>
+          <div className="relative mb-8 bg-white rounded-lg border border-gray-200 p-8 mx-auto max-w-2xl">
+            {/* Profile Section - matching Profile.tsx design */}
+            <div className="text-center mb-6">
+              {/* Avatar and Posts Counter */}
+              <div className="flex items-center justify-center gap-8 mb-6">
+                <Avatar className="w-20 h-20">
+                  <AvatarImage src={currentEmployeeInfo.image || ''} />
+                  <AvatarFallback className="bg-gray-300 text-gray-600 text-2xl font-bold">
+                    {currentEmployeeInfo.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                
                 <div className="text-center">
-                  <div className="font-bold text-base sm:text-lg text-black">
+                  <div className="text-2xl font-bold text-black">
                     {filteredArticles.length}
                   </div>
-                  <div className="text-xs sm:text-sm text-gray-600">
+                  <div className="text-sm text-gray-600">
                     {t('search.posts')}
                   </div>
                 </div>
               </div>
               
-              {/* Three Dots Menu */}
-              <div className="flex-shrink-0">
-                <ProfileShareMenu 
-                  profileName={currentEmployeeInfo.name}
-                  profileId={currentEmployeeInfo.id}
-                />
-              </div>
-            </div>
-
-            {/* Profile Name and Role */}
-            <div className="mb-3">
-              <h3 className="text-base sm:text-lg font-bold text-black">
+              {/* Name */}
+              <h2 className="text-xl font-bold text-black mb-2">
                 {currentEmployeeInfo.name}
-              </h3>
-              <p className="text-red-accent font-medium text-xs sm:text-sm">
-                {currentEmployeeInfo.role}
-              </p>
+              </h2>
+              
+              {/* Role/Profession */}
+              {currentEmployeeInfo.role && (
+                <div className="mb-3">
+                  <span className="text-red-500 font-medium">
+                    {currentEmployeeInfo.role}
+                  </span>
+                </div>
+              )}
             </div>
 
-            {/* Bio */}
-            <p className="text-gray-700 text-xs sm:text-sm leading-relaxed">
-              {currentEmployeeInfo.description}
-            </p>
+            {/* Description Section */}
+            {currentEmployeeInfo.description && (
+              <div className="p-6 bg-gray-50 rounded-lg">
+                <p className="text-gray-700 leading-relaxed">
+                  {currentEmployeeInfo.description}
+                </p>
+              </div>
+            )}
+
+            {/* Share Menu positioned in top right corner */}
+            <div className="absolute top-4 right-4">
+              <ProfileShareMenu 
+                profileName={currentEmployeeInfo.name}
+                profileId={currentEmployeeInfo.id}
+              />
+            </div>
           </div>
         )}
 
