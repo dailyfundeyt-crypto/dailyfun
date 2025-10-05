@@ -22,6 +22,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import AI from "./pages/AI";
 import Auth from "./pages/Auth";
+import CreateArticle from "./pages/CreateArticle";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
                 <Route path="/article/:id" element={<Article />} />
                 <Route path="/weird" element={<ProfileManagement />} />
                 <Route path="/profile/:userId" element={<Profile />} />
+                <Route path="/create-article" element={<CreateArticle />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

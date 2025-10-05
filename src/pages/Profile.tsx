@@ -8,6 +8,7 @@ import InstallSidebar from '../components/InstallSidebar';
 import { useAuth } from '../contexts/AuthContext';
 import { useFollows } from '../hooks/useFollows';
 import { toast } from 'sonner';
+import ArticleCard from '../components/ArticleCard';
 
 interface UserProfile {
   id: string;
@@ -33,10 +34,13 @@ const Profile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [articles, setArticles] = useState<any[]>([]);
+  const [articlesLoading, setArticlesLoading] = useState(true);
 
   useEffect(() => {
     if (userId) {
       fetchProfile(userId);
+      fetchUserArticles(userId);
     }
   }, [userId]);
 
@@ -75,6 +79,44 @@ const Profile = () => {
       toast.error('Fehler beim Laden des Profils');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserArticles = async (id: string) => {
+    try {
+      setArticlesLoading(true);
+      const { data, error } = await supabase
+        .from('user_articles')
+        .select('*')
+        .eq('user_id', id)
+        .eq('is_published', true)
+        .order('published_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching articles:', error);
+        return;
+      }
+
+      // Transform to match ArticleCard interface
+      const transformedArticles = data?.map(article => ({
+        id: article.id,
+        title: article.title,
+        titleEn: article.title_en,
+        excerpt: article.excerpt,
+        excerptEn: article.excerpt_en,
+        author: article.author_name,
+        publishedAt: article.published_at,
+        category: article.category,
+        categoryEn: article.category_en,
+        imageUrl: article.image_url || '/placeholder.svg',
+        views: article.views || 0
+      })) || [];
+
+      setArticles(transformedArticles);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setArticlesLoading(false);
     }
   };
 
@@ -291,11 +333,23 @@ const Profile = () => {
             </div>
           </div>
           
-          {/* No Articles Message */}
-          <div className="py-16">
-            <h4 className="text-lg font-semibold text-black mb-2">No articles found</h4>
-            <p className="text-gray-500 text-sm">No articles by {profile.display_name}.</p>
-          </div>
+          {/* Articles Grid */}
+          {articlesLoading ? (
+            <div className="flex justify-center py-16">
+              <Loader2 className="h-8 w-8 animate-spin text-red-accent" />
+            </div>
+          ) : articles.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {articles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+          ) : (
+            <div className="py-16">
+              <h4 className="text-lg font-semibold text-black mb-2">No articles found</h4>
+              <p className="text-gray-500 text-sm">No articles by {profile.display_name}.</p>
+            </div>
+          )}
         </div>
 
         {/* Description Section (if available) */}

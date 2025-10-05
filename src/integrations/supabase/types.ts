@@ -122,6 +122,69 @@ export type Database = {
         }
         Relationships: []
       }
+      user_articles: {
+        Row: {
+          author_name: string
+          category: string
+          category_en: string | null
+          content: string
+          content_en: string | null
+          excerpt: string
+          excerpt_en: string | null
+          id: string
+          image_url: string | null
+          is_published: boolean | null
+          published_at: string
+          tags: string[] | null
+          title: string
+          title_en: string | null
+          updated_at: string
+          user_id: string
+          video_url: string | null
+          views: number | null
+        }
+        Insert: {
+          author_name: string
+          category: string
+          category_en?: string | null
+          content: string
+          content_en?: string | null
+          excerpt: string
+          excerpt_en?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          published_at?: string
+          tags?: string[] | null
+          title: string
+          title_en?: string | null
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+          views?: number | null
+        }
+        Update: {
+          author_name?: string
+          category?: string
+          category_en?: string | null
+          content?: string
+          content_en?: string | null
+          excerpt?: string
+          excerpt_en?: string | null
+          id?: string
+          image_url?: string | null
+          is_published?: boolean | null
+          published_at?: string
+          tags?: string[] | null
+          title?: string
+          title_en?: string | null
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+          views?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       public_profiles: {

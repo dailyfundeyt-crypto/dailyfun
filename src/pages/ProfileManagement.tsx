@@ -9,6 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { Loader2, Edit, MapPin, Calendar, Heart, Upload, AtSign, Save, LogOut, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import InstallSidebar from '../components/InstallSidebar';
+import ArticleCard from '../components/ArticleCard';
 import Auth from './Auth';
 
 interface UserProfile {
@@ -48,10 +49,13 @@ const ProfileManagement = () => {
   const [uploading, setUploading] = useState(false);
   const [aliasError, setAliasError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [articles, setArticles] = useState<any[]>([]);
+  const [articlesLoading, setArticlesLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchProfile();
+      fetchUserArticles();
     } else if (!authLoading) {
       setLoading(false);
     }
@@ -88,6 +92,45 @@ const ProfileManagement = () => {
       toast.error('Fehler beim Laden des Profils');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserArticles = async () => {
+    if (!user) return;
+    
+    try {
+      setArticlesLoading(true);
+      const { data, error } = await supabase
+        .from('user_articles')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('published_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching articles:', error);
+        return;
+      }
+
+      // Transform to match ArticleCard interface
+      const transformedArticles = data?.map(article => ({
+        id: article.id,
+        title: article.title,
+        titleEn: article.title_en,
+        excerpt: article.excerpt,
+        excerptEn: article.excerpt_en,
+        author: article.author_name,
+        publishedAt: article.published_at,
+        category: article.category,
+        categoryEn: article.category_en,
+        imageUrl: article.image_url || '/placeholder.svg',
+        views: article.views || 0
+      })) || [];
+
+      setArticles(transformedArticles);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setArticlesLoading(false);
     }
   };
 
@@ -308,13 +351,21 @@ const ProfileManagement = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-lg text-gray-600">Live Vorschau</h1>
-            <Button 
-              onClick={handleEdit} 
-              className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2"
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Profil bearbeiten
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => window.location.href = '/create-article'} 
+                className="bg-red-accent text-white hover:bg-red-600 rounded-full px-6 py-2"
+              >
+                Artikel veröffentlichen
+              </Button>
+              <Button 
+                onClick={handleEdit} 
+                className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Profil bearbeiten
+              </Button>
+            </div>
           </div>
 
           {/* Profile Section */}
@@ -410,7 +461,7 @@ const ProfileManagement = () => {
           {/* Latest Articles Section */}
           <div className="text-center pt-4">
             <h3 className="text-xl font-bold text-black mb-2">Latest Articles</h3>
-            <p className="text-gray-600 text-sm mb-6">by</p>
+            <p className="text-gray-600 text-sm mb-6">by {formData.display_name || 'you'}</p>
             
             {/* Tabs */}
             <div className="flex justify-center mb-8">
@@ -424,11 +475,23 @@ const ProfileManagement = () => {
               </div>
             </div>
             
-            {/* No Articles Message */}
-            <div className="py-16">
-              <h4 className="text-lg font-semibold text-black mb-2">No articles found</h4>
-              <p className="text-gray-500 text-sm">No articles by undefined.</p>
-            </div>
+            {/* Articles Grid */}
+            {articlesLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-8 w-8 animate-spin text-red-accent" />
+              </div>
+            ) : articles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {articles.map((article) => (
+                  <ArticleCard key={article.id} article={article} />
+                ))}
+              </div>
+            ) : (
+              <div className="py-16">
+                <h4 className="text-lg font-semibold text-black mb-2">No articles found</h4>
+                <p className="text-gray-500 text-sm">Du hast noch keine Artikel veröffentlicht.</p>
+              </div>
+            )}
           </div>
 
           {!formData.is_public && (
