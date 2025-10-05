@@ -41,7 +41,7 @@ const Header = () => {
           {/* Left side - Daily Fun logo */}
           <div className="flex items-center">
             <Link to="/search" className="text-2xl font-bold text-black hover:text-red-accent transition-colors">
-              Daily Fun
+              {user ? 'Connect' : 'Daily Fun'}
             </Link>
           </div>
 
