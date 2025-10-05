@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Chrome } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import googleLogo from '@/assets/google-logo.png';
+import dailyFunLogo from '@/assets/daily-fun-logo.png';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -134,15 +136,12 @@ const Auth = () => {
       <div className="w-full max-w-md">
         {/* Header with Logo */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-24 h-24 mb-6 relative">
-            <div className="absolute inset-0 rounded-full border-4 border-pink-400 animate-[spin_10s_linear_infinite]" />
-            <div className="absolute inset-2 rounded-full border-4 border-blue-400 animate-[spin_8s_linear_infinite_reverse]" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <div className="font-signature text-xl font-bold text-foreground">Daily</div>
-                <div className="font-signature text-xl font-bold text-foreground">Fun</div>
-              </div>
-            </div>
+          <div className="mx-auto w-32 h-32 mb-6 relative">
+            <img 
+              src={dailyFunLogo} 
+              alt="Daily Fun Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <h1 className="text-5xl font-bold text-foreground mb-3">
             Welcome
@@ -162,7 +161,7 @@ const Auth = () => {
               onClick={handleGoogleSignIn}
               disabled={loading}
             >
-              <Chrome className="mr-2 h-5 w-5 text-red-500" />
+              <img src={googleLogo} alt="Google" className="mr-2 h-5 w-5" />
               <span>Continue with Google</span>
             </Button>
 
