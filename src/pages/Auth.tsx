@@ -130,148 +130,168 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
+        {/* Header with Logo */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-20 h-20 bg-black rounded-full flex items-center justify-center shadow-lg mb-6">
-            <span className="text-4xl">✨</span>
+          <div className="mx-auto w-24 h-24 mb-6 relative">
+            <div className="absolute inset-0 rounded-full border-4 border-pink-400 animate-[spin_10s_linear_infinite]" />
+            <div className="absolute inset-2 rounded-full border-4 border-blue-400 animate-[spin_8s_linear_infinite_reverse]" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center">
+                <div className="font-signature text-xl font-bold text-foreground">Daily</div>
+                <div className="font-signature text-xl font-bold text-foreground">Fun</div>
+              </div>
+            </div>
           </div>
-          <h1 className="text-4xl font-bold text-black mb-2">
-            {t('auth.welcome')}
+          <h1 className="text-5xl font-bold text-foreground mb-3">
+            Welcome
           </h1>
-          <p className="text-gray-600">
-            {t('auth.subtitle')}
+          <p className="text-muted-foreground text-base">
+            Sign in or create an account
           </p>
         </div>
 
-        <Card className="shadow-xl border border-gray-200">
-          <CardContent className="pt-6 space-y-6">
+        <Card className="shadow-xl border border-border bg-card">
+          <CardContent className="pt-8 pb-8 px-8 space-y-6">
             {/* Google Sign In Button */}
             <Button
               type="button"
               variant="outline"
-              className="w-full h-12 border-2 border-black hover:bg-gray-50 transition-all duration-200 font-medium"
+              className="apple-button w-full h-12 bg-background text-foreground border-2 border-border hover:bg-accent rounded-lg font-medium transition-all duration-200 ease-apple active:scale-95"
               onClick={handleGoogleSignIn}
               disabled={loading}
             >
-              <Chrome className="mr-2 h-5 w-5" />
-              <span>{t('auth.google')}</span>
+              <Chrome className="mr-2 h-5 w-5 text-red-500" />
+              <span>Continue with Google</span>
             </Button>
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200" />
+                <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">{t('auth.or')}</span>
+                <span className="px-4 bg-card text-foreground font-semibold">Daily Fun / Conect</span>
               </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 p-1 bg-gray-100">
-                <TabsTrigger 
-                  value="login" 
-                  className="data-[state=active]:bg-black data-[state=active]:text-white font-medium rounded-md"
+            <div className="space-y-6">
+              {/* Custom Tab Buttons */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('login')}
+                  className={`apple-button h-11 rounded-lg font-semibold transition-all duration-200 ease-apple active:scale-95 ${
+                    activeTab === 'login'
+                      ? 'bg-foreground text-background shadow-lg'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
                 >
-                  {t('auth.login')}
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="signup"
-                  className="data-[state=active]:bg-black data-[state=active]:text-white font-medium rounded-md"
+                  Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('signup')}
+                  className={`apple-button h-11 rounded-lg font-semibold transition-all duration-200 ease-apple active:scale-95 ${
+                    activeTab === 'signup'
+                      ? 'bg-foreground text-background shadow-lg'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
                 >
-                  {t('auth.signup')}
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login" className="mt-6">
-                <form onSubmit={handleLogin} className="space-y-4">
+                  Sign Up
+                </button>
+              </div>
+
+              {/* Login Form */}
+              {activeTab === 'login' && (
+                <form onSubmit={handleLogin} className="space-y-4 animate-fade-in">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-semibold text-black">
-                      {t('auth.email')}
+                    <Label htmlFor="email" className="text-sm font-semibold text-foreground">
+                      Email
                     </Label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder={t('auth.email.placeholder')}
+                      placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="h-11 border-2 border-gray-200 focus:border-black"
+                      className="h-12 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-semibold text-black">
-                      {t('auth.password')}
+                    <Label htmlFor="password" className="text-sm font-semibold text-foreground">
+                      Password
                     </Label>
                     <Input
                       id="password"
                       type="password"
-                      placeholder={t('auth.password.placeholder')}
+                      placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 border-2 border-gray-200 focus:border-black"
+                      className="h-12 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200"
                       required
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full h-11 bg-black text-white hover:bg-gray-800 font-semibold transition-all duration-200 rounded-md shadow-lg"
+                    className="apple-button w-full h-12 bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-lg shadow-lg transition-all duration-200 ease-apple active:scale-95 mt-2"
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {t('auth.login.button')}
+                    Sign In
                   </Button>
                 </form>
-              </TabsContent>
-              
-              <TabsContent value="signup" className="mt-6">
-                <form onSubmit={handleSignUp} className="space-y-4">
+              )}
+
+              {/* Sign Up Form */}
+              {activeTab === 'signup' && (
+                <form onSubmit={handleSignUp} className="space-y-4 animate-fade-in">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-sm font-semibold text-black">
-                      {t('auth.email')}
+                    <Label htmlFor="signup-email" className="text-sm font-semibold text-foreground">
+                      Email
                     </Label>
                     <Input
                       id="signup-email"
                       type="email"
-                      placeholder={t('auth.email.placeholder')}
+                      placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="h-11 border-2 border-gray-200 focus:border-black"
+                      className="h-12 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-sm font-semibold text-black">
-                      {t('auth.password')}
+                    <Label htmlFor="signup-password" className="text-sm font-semibold text-foreground">
+                      Password
                     </Label>
                     <Input
                       id="signup-password"
                       type="password"
-                      placeholder={t('auth.password.placeholder')}
+                      placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="h-11 border-2 border-gray-200 focus:border-black"
+                      className="h-12 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200"
                       required
                       minLength={6}
                     />
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full h-11 bg-black text-white hover:bg-gray-800 font-semibold transition-all duration-200 rounded-md shadow-lg"
+                    className="apple-button w-full h-12 bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-lg shadow-lg transition-all duration-200 ease-apple active:scale-95 mt-2"
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    {t('auth.signup.button')}
+                    Sign Up
                   </Button>
                 </form>
-              </TabsContent>
-            </Tabs>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         {/* Footer text */}
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-8">
           Daily Fun © 2025
         </p>
       </div>
