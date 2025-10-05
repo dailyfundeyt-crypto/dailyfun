@@ -136,7 +136,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         {/* Header with Logo */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-32 h-32 mb-6 relative">
+          <div className="mx-auto w-40 h-40 mb-6 relative">
             <img 
               src={dailyFunLogo} 
               alt="Daily Fun Logo" 
