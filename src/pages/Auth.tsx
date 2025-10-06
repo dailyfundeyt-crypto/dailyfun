@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { PasswordResetModal } from '@/components/PasswordResetModal';
 import googleLogo from '@/assets/google-logo.png';
 import dailyFunLogo from '@/assets/daily-fun-logo.png';
 
@@ -18,6 +19,8 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
   const [showPassword, setShowPassword] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -35,6 +38,7 @@ const Auth = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setLoginAttemptFailed(false);
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -43,6 +47,7 @@ const Auth = () => {
       });
 
       if (error) {
+        setLoginAttemptFailed(true);
         toast({
           title: t('auth.login.failed'),
           description: error.message,
@@ -56,6 +61,7 @@ const Auth = () => {
         navigate('/');
       }
     } catch (error) {
+      setLoginAttemptFailed(true);
       toast({
         title: t('auth.error'),
         description: t('auth.error.unexpected'),
@@ -133,8 +139,15 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <>
+      <PasswordResetModal
+        isOpen={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        initialEmail={email}
+      />
+      
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
         {/* Header with Logo */}
         <div className="text-center mb-8">
           <div className="mx-auto w-40 h-40 mb-6 relative">
@@ -250,6 +263,16 @@ const Auth = () => {
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Sign In
                   </Button>
+
+                  {loginAttemptFailed && (
+                    <button
+                      type="button"
+                      onClick={() => setShowResetModal(true)}
+                      className="w-full text-sm text-primary hover:text-primary/80 font-medium transition-colors mt-3 animate-in fade-in slide-in-from-top-2"
+                    >
+                      Passwort vergessen? Hier zurücksetzen
+                    </button>
+                  )}
                 </form>
               )}
 
@@ -312,8 +335,9 @@ const Auth = () => {
         <p className="text-center text-sm text-muted-foreground mt-8">
           Daily Fun © 2025
         </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
