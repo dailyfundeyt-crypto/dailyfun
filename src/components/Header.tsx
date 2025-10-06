@@ -8,9 +8,16 @@ import { Button } from './ui/button';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [logoText, setLogoText] = useState('Daily Fun');
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
   const { user, signOut } = useAuth();
+
+  const toggleLogo = useCallback(() => {
+    if (user) {
+      setLogoText(prev => prev === 'Daily Fun' ? 'Daily Connect' : 'Daily Fun');
+    }
+  }, [user]);
 
   const navigation = useMemo(() => [
     { icon: Home, href: '/search', label: 'Home' },
@@ -40,9 +47,12 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Left side - Daily Fun logo */}
           <div className="flex items-center">
-            <Link to="/search" className="text-2xl font-bold text-black hover:text-red-accent transition-colors">
-              {user ? 'Connect' : 'Daily Fun'}
-            </Link>
+            <button 
+              onClick={toggleLogo}
+              className="text-2xl font-bold text-black hover:text-red-accent transition-colors cursor-pointer"
+            >
+              {logoText}
+            </button>
           </div>
 
           {/* Desktop Navigation - Right side */}
