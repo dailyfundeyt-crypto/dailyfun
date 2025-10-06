@@ -49,7 +49,7 @@ const Search = () => {
   const [isSearching, setIsSearching] = useState(false);
   const { t, language } = useLanguage();
   const { user } = useAuth();
-  const { followedAuthors, loading: followsLoading, refetchFollows } = useFollows();
+  const { followedUserIds, followedAuthors, loading: followsLoading, refetchFollows } = useFollows();
   const { DEFAULT_AUTHORS } = useAutoFollow();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -200,11 +200,12 @@ const Search = () => {
     let filtered = articles;
 
     // Always filter by followed authors if user is logged in and has followed authors
+    // For hardcoded articles (from articles.ts), we still filter by author name
     if (user && followedAuthors.length > 0) {
       filtered = filtered.filter(article => 
         followedAuthors.includes(article.author)
       );
-    } else if (user && followedAuthors.length === 0) {
+    } else if (user && (followedAuthors.length === 0 && followedUserIds.length === 0)) {
       // If user has no followed authors yet, show nothing until auto-follow completes
       filtered = [];
     }
@@ -249,7 +250,7 @@ const Search = () => {
       // Sort by publication date (newest first)
       return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     }
-  }, [selectedAuthor, sortMode, randomSeed, user, followedAuthors, userProfiles]);
+  }, [selectedAuthor, sortMode, randomSeed, user, followedAuthors, followedUserIds, userProfiles]);
 
   // Update random seed when switching to random mode
   const handleSortModeChange = (mode: 'latest' | 'random') => {
@@ -589,7 +590,7 @@ const Search = () => {
 
             {/* User Profiles - Only show if user is logged in and followed */}
             {user && userProfiles.map((profile) => {
-              const isFollowed = followedAuthors.includes(profile.display_name || '');
+              const isFollowed = followedUserIds.includes(profile.user_id);
               
               // Only show followed profiles for logged-in users
               if (!isFollowed) return null;

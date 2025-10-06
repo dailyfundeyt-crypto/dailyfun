@@ -13,12 +13,14 @@ const DEFAULT_AUTHORS = [
 ];
 
 interface AuthorFollowButtonProps {
-  authorName: string;
+  authorUserId?: string; // For real users
+  authorName?: string; // For display (required for backwards compatibility with hardcoded authors)
   className?: string;
   onFollowChange?: () => void;
 }
 
 const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({ 
+  authorUserId,
   authorName, 
   className = '',
   onFollowChange
@@ -29,21 +31,21 @@ const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (user && authorUserId) {
       checkFollowStatus();
     }
-  }, [user, authorName]);
+  }, [user, authorUserId]);
 
   const checkFollowStatus = async () => {
-    if (!user) return;
+    if (!user || !authorUserId) return;
 
     try {
       const { data, error } = await supabase
         .from('follows')
         .select('id')
         .eq('follower_id', user.id)
-        .eq('following_author', authorName)
-        .single();
+        .eq('followed_user_id', authorUserId)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error checking follow status:', error);
@@ -66,6 +68,15 @@ const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({
       return;
     }
 
+    if (!authorUserId) {
+      toast({
+        title: 'Fehler',
+        description: 'Dieser Autor kann nicht gefolgt werden.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -75,14 +86,14 @@ const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({
           .from('follows')
           .delete()
           .eq('follower_id', user.id)
-          .eq('following_author', authorName);
+          .eq('followed_user_id', authorUserId);
 
         if (error) throw error;
 
         setIsFollowing(false);
         toast({
           title: 'Entfolgt',
-          description: `Sie folgen ${authorName} nicht mehr.`,
+          description: `Sie folgen ${authorName || 'diesem Autor'} nicht mehr.`,
         });
       } else {
         // Follow
@@ -90,7 +101,7 @@ const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({
           .from('follows')
           .insert({
             follower_id: user.id,
-            following_author: authorName,
+            followed_user_id: authorUserId,
           });
 
         if (error) throw error;
@@ -98,7 +109,7 @@ const AuthorFollowButton: React.FC<AuthorFollowButtonProps> = ({
         setIsFollowing(true);
         toast({
           title: 'Gefolgt',
-          description: `Sie folgen jetzt ${authorName}.`,
+          description: `Sie folgen jetzt ${authorName || 'diesem Autor'}.`,
         });
       }
       

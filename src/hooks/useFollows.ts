@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useFollows = () => {
+  const [followedUserIds, setFollowedUserIds] = useState<string[]>([]);
   const [followedAuthors, setFollowedAuthors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -11,6 +12,7 @@ export const useFollows = () => {
     if (user) {
       fetchFollowedAuthors();
     } else {
+      setFollowedUserIds([]);
       setFollowedAuthors([]);
       setLoading(false);
     }
@@ -21,17 +23,36 @@ export const useFollows = () => {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      // Get followed user IDs
+      const { data: followsData, error: followsError } = await supabase
         .from('follows')
-        .select('following_author')
+        .select('followed_user_id')
         .eq('follower_id', user.id);
 
-      if (error) {
-        console.error('Error fetching followed authors:', error);
+      if (followsError) {
+        console.error('Error fetching followed authors:', followsError);
         return;
       }
 
-      setFollowedAuthors(data?.map(follow => follow.following_author) || []);
+      const userIds = followsData?.map(follow => follow.followed_user_id) || [];
+      setFollowedUserIds(userIds);
+
+      // Get display names for these user IDs
+      if (userIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, display_name')
+          .in('user_id', userIds);
+
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+          return;
+        }
+
+        setFollowedAuthors(profilesData?.map(p => p.display_name || '') || []);
+      } else {
+        setFollowedAuthors([]);
+      }
     } catch (error) {
       console.error('Error fetching followed authors:', error);
     } finally {
@@ -39,5 +60,5 @@ export const useFollows = () => {
     }
   };
 
-  return { followedAuthors, loading, refetchFollows: fetchFollowedAuthors };
+  return { followedUserIds, followedAuthors, loading, refetchFollows: fetchFollowedAuthors };
 };

@@ -32,20 +32,20 @@ export type Database = {
       follows: {
         Row: {
           created_at: string
+          followed_user_id: string
           follower_id: string
-          following_author: string
           id: string
         }
         Insert: {
           created_at?: string
+          followed_user_id: string
           follower_id: string
-          following_author: string
           id?: string
         }
         Update: {
           created_at?: string
+          followed_user_id?: string
           follower_id?: string
-          following_author?: string
           id?: string
         }
         Relationships: []

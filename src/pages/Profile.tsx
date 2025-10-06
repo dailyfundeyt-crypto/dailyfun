@@ -44,11 +44,13 @@ const Profile = () => {
     }
   }, [userId]);
 
+  const { followedUserIds } = useFollows();
+
   useEffect(() => {
-    if (profile && profile.display_name) {
-      setIsFollowing(followedAuthors.includes(profile.display_name));
+    if (profile && profile.user_id) {
+      setIsFollowing(followedUserIds.includes(profile.user_id));
     }
-  }, [followedAuthors, profile]);
+  }, [followedUserIds, profile]);
 
   const fetchProfile = async (id: string) => {
     try {
@@ -126,7 +128,7 @@ const Profile = () => {
       return;
     }
 
-    if (!profile?.display_name) {
+    if (!profile?.user_id) {
       toast.error('Profil kann nicht gefolgt werden');
       return;
     }
@@ -138,7 +140,7 @@ const Profile = () => {
           .from('follows')
           .delete()
           .eq('follower_id', user.id)
-          .eq('following_author', profile.display_name);
+          .eq('followed_user_id', profile.user_id);
 
         if (error) throw error;
       } else {
@@ -147,7 +149,7 @@ const Profile = () => {
           .from('follows')
           .insert({
             follower_id: user.id,
-            following_author: profile.display_name
+            followed_user_id: profile.user_id
           });
 
         if (error) throw error;
