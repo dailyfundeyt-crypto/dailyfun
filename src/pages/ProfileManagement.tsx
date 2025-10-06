@@ -357,16 +357,19 @@ const ProfileManagement = () => {
               <Button 
                 onClick={() => window.location.href = '/create-article'} 
                 variant="destructive"
-                className="rounded-full px-6 py-2"
+                className="rounded-full px-3 sm:px-6 py-2"
+                size="sm"
               >
-                {t('profile.publish.article')}
+                <span className="hidden sm:inline">{t('profile.publish.article')}</span>
+                <span className="sm:hidden">Artikel</span>
               </Button>
               <Button 
                 onClick={handleEdit} 
-                className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2"
+                className="bg-black text-white hover:bg-gray-800 rounded-full px-3 sm:px-6 py-2"
+                size="sm"
               >
-                <Edit className="h-4 w-4 mr-2" />
-                {t('profile.edit.profile')}
+                <Edit className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('profile.edit.profile')}</span>
               </Button>
             </div>
           </div>
