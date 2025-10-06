@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../integrations/supabase/client';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -32,6 +33,7 @@ interface UserProfile {
 
 const ProfileManagement = () => {
   const { user, loading: authLoading, signOut } = useAuth();
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -350,20 +352,21 @@ const ProfileManagement = () => {
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-lg text-gray-600">Live Vorschau</h1>
+            <h1 className="text-lg text-gray-600">{t('profile.live.preview')}</h1>
             <div className="flex gap-2">
               <Button 
                 onClick={() => window.location.href = '/create-article'} 
-                className="bg-red-accent text-white hover:bg-red-600 rounded-full px-6 py-2"
+                variant="destructive"
+                className="rounded-full px-6 py-2"
               >
-                Artikel veröffentlichen
+                {t('profile.publish.article')}
               </Button>
               <Button 
                 onClick={handleEdit} 
                 className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2"
               >
                 <Edit className="h-4 w-4 mr-2" />
-                Profil bearbeiten
+                {t('profile.edit.profile')}
               </Button>
             </div>
           </div>

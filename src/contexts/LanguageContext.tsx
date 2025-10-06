@@ -190,6 +190,11 @@ const translations = {
     'auth.signup.email.verify': 'Please check your email for confirmation.',
     'auth.error': 'Error',
     'auth.error.unexpected': 'An unexpected error occurred.',
+    
+    // Profile Management Page
+    'profile.live.preview': 'Live Preview',
+    'profile.publish.article': 'Publish Article',
+    'profile.edit.profile': 'Edit Profile',
   },
   de: {
     // Header
@@ -371,6 +376,11 @@ const translations = {
     'auth.signup.email.verify': 'Bitte überprüfen Sie Ihre E-Mail für die Bestätigung.',
     'auth.error': 'Fehler',
     'auth.error.unexpected': 'Ein unerwarteter Fehler ist aufgetreten.',
+    
+    // Profile Management Page
+    'profile.live.preview': 'Live Vorschau',
+    'profile.publish.article': 'Artikel veröffentlichen',
+    'profile.edit.profile': 'Profil bearbeiten',
   }
 };
 
