@@ -15,6 +15,7 @@ import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { Search as SearchIcon, User, MapPin, Calendar } from 'lucide-react';
+import { sortBySimilarity } from '../utils/searchSimilarity';
 
 interface UserProfile {
   id: string;
@@ -108,6 +109,13 @@ const Search = () => {
         );
       });
 
+      // Sort articles by similarity to search query
+      const sortedArticles = sortBySimilarity(
+        matchingArticles,
+        query,
+        (article) => language === 'de' ? article.title : (article.titleEn || article.title)
+      );
+
       // Search user profiles
       const matchingProfiles = userProfiles.filter(profile => {
         const displayName = (profile.display_name || '').toLowerCase();
@@ -115,19 +123,28 @@ const Search = () => {
         const profession = (profile.profession || '').toLowerCase();
         const location = (profile.location || '').toLowerCase();
         const description = (profile.description || '').toLowerCase();
+        const alias = (profile.alias || '').toLowerCase();
         
         return searchTerms.some(term => 
           displayName.includes(term) || 
           bio.includes(term) || 
           profession.includes(term) ||
           location.includes(term) ||
-          description.includes(term)
+          description.includes(term) ||
+          alias.includes(term)
         );
       });
 
+      // Sort profiles by similarity to search query (prioritize display_name)
+      const sortedProfiles = sortBySimilarity(
+        matchingProfiles,
+        query,
+        (profile) => profile.display_name || ''
+      );
+
       // Generate AI info for profiles if they don't have much info
       const profilesWithAI = await Promise.all(
-        matchingProfiles.map(async (profile) => {
+        sortedProfiles.map(async (profile) => {
           if (!profile.description || profile.description.length < 50) {
             try {
               const response = await supabase.functions.invoke('generate-user-info', {
@@ -154,7 +171,7 @@ const Search = () => {
       );
 
       setSearchResults({
-        articles: matchingArticles,
+        articles: sortedArticles,
         profiles: profilesWithAI
       });
     } catch (error) {
