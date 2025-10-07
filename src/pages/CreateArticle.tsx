@@ -293,42 +293,6 @@ const CreateArticle = () => {
         {/* Step: Details */}
         {currentStep === 'details' && (
           <div className="space-y-6 animate-fade-in">
-            {/* Language Selection */}
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Welche Sprachen soll dein Artikel haben?</h2>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => toggleLanguage('de')}
-                  className={cn(
-                    "apple-button px-6 py-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-3",
-                    languages.includes('de')
-                      ? "border-primary bg-primary/5 text-primary shadow-md"
-                      : "border-border bg-card hover:border-primary/30"
-                  )}
-                >
-                  <Globe className="h-5 w-5" />
-                  <span className="font-medium">DE</span>
-                </button>
-                <button
-                  onClick={() => toggleLanguage('en')}
-                  className={cn(
-                    "apple-button px-6 py-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-3",
-                    languages.includes('en')
-                      ? "border-primary bg-primary/5 text-primary shadow-md"
-                      : "border-border bg-card hover:border-primary/30"
-                  )}
-                >
-                  <Globe className="h-5 w-5" />
-                  <span className="font-medium">EN</span>
-                </button>
-                <button
-                  className="apple-button px-6 py-4 rounded-2xl border-2 border-dashed border-border bg-card hover:border-primary/30 transition-all duration-200"
-                >
-                  <Plus className="h-6 w-6 text-muted-foreground" />
-                </button>
-              </div>
-            </div>
-
             {/* Details Section */}
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
               <div className="bg-muted/50 px-6 py-4 flex items-center justify-between border-b border-border">
@@ -339,6 +303,42 @@ const CreateArticle = () => {
               </div>
               
               <div className="p-6 space-y-6">
+                {/* Language Selection */}
+                <div className="space-y-4">
+                  <h2 className="text-base font-semibold">Welche Sprachen soll dein Artikel haben?</h2>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => toggleLanguage('de')}
+                      className={cn(
+                        "apple-button px-6 py-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-3",
+                        languages.includes('de')
+                          ? "border-primary bg-primary/5 text-primary shadow-md"
+                          : "border-border bg-card hover:border-primary/30"
+                      )}
+                    >
+                      <Globe className="h-5 w-5" />
+                      <span className="font-medium">DE</span>
+                    </button>
+                    <button
+                      onClick={() => toggleLanguage('en')}
+                      className={cn(
+                        "apple-button px-6 py-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-3",
+                        languages.includes('en')
+                          ? "border-primary bg-primary/5 text-primary shadow-md"
+                          : "border-border bg-card hover:border-primary/30"
+                      )}
+                    >
+                      <Globe className="h-5 w-5" />
+                      <span className="font-medium">EN</span>
+                    </button>
+                    <button
+                      className="apple-button px-6 py-4 rounded-2xl border-2 border-dashed border-border bg-card hover:border-primary/30 transition-all duration-200"
+                    >
+                      <Plus className="h-6 w-6 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+
                 {/* Thumbnail Upload */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Thumbnail</Label>
