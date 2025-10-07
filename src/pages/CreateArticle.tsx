@@ -339,6 +339,98 @@ const CreateArticle = () => {
               </div>
               
               <div className="p-6 space-y-6">
+                {/* Thumbnail Upload */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Thumbnail</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Erstelle ein Thumbnail, das auffällt und Interesse bei den Zuschauern erzeugt.
+                  </p>
+                  
+                  {!formData.image_url ? (
+                    <div className="space-y-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                        id="article-image-upload"
+                        disabled={uploading}
+                      />
+                      <label
+                        htmlFor="article-image-upload"
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-4 p-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
+                          uploading 
+                            ? "border-primary/50 bg-primary/5"
+                            : "border-border bg-card hover:border-primary hover:bg-accent"
+                        )}
+                      >
+                        {uploading ? (
+                          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                        ) : (
+                          <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                        )}
+                        <div className="text-center">
+                          <p className="text-base font-medium">
+                            {uploading ? 'Wird hochgeladen...' : 'Datei hochladen'}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {uploading ? 'Bitte warten' : 'Ziehen Sie eine Datei hierher oder klicken Sie'}
+                          </p>
+                        </div>
+                      </label>
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <div className="w-full border-t border-border"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                          <span className="px-4 bg-card text-muted-foreground">Oder</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => setAutoGenerateThumbnail(!autoGenerateThumbnail)}
+                        className={cn(
+                          "apple-button w-full p-8 rounded-2xl border-2 border-dashed transition-all duration-200 group",
+                          autoGenerateThumbnail
+                            ? "border-primary bg-primary/5"
+                            : "border-border bg-card hover:border-primary hover:bg-accent"
+                        )}
+                      >
+                        <div className="flex flex-col items-center gap-3">
+                          <Sparkles className={cn(
+                            "h-8 w-8 transition-colors",
+                            autoGenerateThumbnail ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                          )} />
+                          <span className={cn(
+                            "text-base font-medium transition-colors",
+                            autoGenerateThumbnail ? "text-primary" : "text-foreground"
+                          )}>
+                            Automatisch generiert
+                          </span>
+                        </div>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-border">
+                      <img 
+                        src={formData.image_url} 
+                        alt="Thumbnail" 
+                        className="w-full h-64 object-cover"
+                      />
+                      <Button
+                        onClick={() => handleInputChange('image_url', '')}
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-4 right-4 rounded-full shadow-lg"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 {/* Category Fields */}
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -360,6 +452,63 @@ const CreateArticle = () => {
                         placeholder="Optional: English category..."
                         className="bg-background border-border rounded-xl"
                       />
+                    </div>
+                  )}
+                </div>
+
+                {/* Video Upload */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Video Uploaden</Label>
+                  
+                  {!formData.video_url ? (
+                    <>
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={handleVideoUpload}
+                        className="hidden"
+                        id="article-video-upload"
+                        disabled={videoUploading}
+                      />
+                      <label
+                        htmlFor="article-video-upload"
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-4 p-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
+                          videoUploading
+                            ? "border-primary/50 bg-primary/5"
+                            : "border-border bg-card hover:border-primary hover:bg-accent"
+                        )}
+                      >
+                        {videoUploading ? (
+                          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                        ) : (
+                          <Video className="h-12 w-12 text-muted-foreground" />
+                        )}
+                        <div className="text-center">
+                          <p className="text-base font-medium">
+                            {videoUploading ? 'Video wird hochgeladen...' : 'Datei hochladen'}
+                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {videoUploading ? 'Bitte warten' : 'Ziehen Sie ein Video hierher oder klicken Sie'}
+                          </p>
+                        </div>
+                      </label>
+                    </>
+                  ) : (
+                    <div className="relative rounded-2xl overflow-hidden border-2 border-border bg-muted">
+                      <video 
+                        src={formData.video_url} 
+                        controls
+                        className="w-full h-64"
+                      />
+                      <Button
+                        onClick={() => handleInputChange('video_url', '')}
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-4 right-4 rounded-full shadow-lg"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -533,188 +682,8 @@ const CreateArticle = () => {
           </div>
         )}
 
-        {/* Step: Post Elements */}
-        {currentStep === 'post-elements' && (
-          <div className="space-y-6 animate-fade-in">
-            {/* Media Upload Section */}
-            <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-              <div className="bg-muted/50 px-6 py-4 border-b border-border">
-                <h3 className="text-lg font-semibold">Medien</h3>
-              </div>
-              
-              <div className="p-6 space-y-6">
-                {/* Thumbnail Upload */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Thumbnail</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Erstelle ein Thumbnail, das auffällt und Interesse bei den Zuschauern erzeugt.
-                  </p>
-                  
-                  {!formData.image_url ? (
-                    <div className="space-y-4">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        id="article-image-upload"
-                        disabled={uploading}
-                      />
-                      <label
-                        htmlFor="article-image-upload"
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-4 p-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
-                          uploading 
-                            ? "border-primary/50 bg-primary/5"
-                            : "border-border bg-card hover:border-primary hover:bg-accent"
-                        )}
-                      >
-                        {uploading ? (
-                          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        ) : (
-                          <ImageIcon className="h-12 w-12 text-muted-foreground" />
-                        )}
-                        <div className="text-center">
-                          <p className="text-base font-medium">
-                            {uploading ? 'Wird hochgeladen...' : 'Datei hochladen'}
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {uploading ? 'Bitte warten' : 'Ziehen Sie eine Datei hierher oder klicken Sie'}
-                          </p>
-                        </div>
-                      </label>
-
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <div className="w-full border-t border-border"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                          <span className="px-4 bg-card text-muted-foreground">Oder</span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => setAutoGenerateThumbnail(!autoGenerateThumbnail)}
-                        className={cn(
-                          "apple-button w-full p-8 rounded-2xl border-2 border-dashed transition-all duration-200 group",
-                          autoGenerateThumbnail
-                            ? "border-primary bg-primary/5"
-                            : "border-border bg-card hover:border-primary hover:bg-accent"
-                        )}
-                      >
-                        <div className="flex flex-col items-center gap-3">
-                          <Sparkles className={cn(
-                            "h-8 w-8 transition-colors",
-                            autoGenerateThumbnail ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
-                          )} />
-                          <span className={cn(
-                            "text-base font-medium transition-colors",
-                            autoGenerateThumbnail ? "text-primary" : "text-foreground"
-                          )}>
-                            Automatisch generiert
-                          </span>
-                        </div>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="relative rounded-2xl overflow-hidden border-2 border-border">
-                      <img 
-                        src={formData.image_url} 
-                        alt="Thumbnail" 
-                        className="w-full h-64 object-cover"
-                      />
-                      <Button
-                        onClick={() => handleInputChange('image_url', '')}
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-4 right-4 rounded-full shadow-lg"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Video Upload */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Video Uploaden</Label>
-                  
-                  {!formData.video_url ? (
-                    <>
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={handleVideoUpload}
-                        className="hidden"
-                        id="article-video-upload"
-                        disabled={videoUploading}
-                      />
-                      <label
-                        htmlFor="article-video-upload"
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-4 p-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
-                          videoUploading
-                            ? "border-primary/50 bg-primary/5"
-                            : "border-border bg-card hover:border-primary hover:bg-accent"
-                        )}
-                      >
-                        {videoUploading ? (
-                          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        ) : (
-                          <Video className="h-12 w-12 text-muted-foreground" />
-                        )}
-                        <div className="text-center">
-                          <p className="text-base font-medium">
-                            {videoUploading ? 'Video wird hochgeladen...' : 'Datei hochladen'}
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {videoUploading ? 'Bitte warten' : 'Ziehen Sie ein Video hierher oder klicken Sie'}
-                          </p>
-                        </div>
-                      </label>
-                    </>
-                  ) : (
-                    <div className="relative rounded-2xl overflow-hidden border-2 border-border bg-muted">
-                      <video 
-                        src={formData.video_url} 
-                        controls
-                        className="w-full h-64"
-                      />
-                      <Button
-                        onClick={() => handleInputChange('video_url', '')}
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-4 right-4 rounded-full shadow-lg"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <div className="flex justify-between gap-3 pt-4">
-              <Button
-                onClick={() => setCurrentStep('details')}
-                variant="outline"
-                className="rounded-xl px-8"
-              >
-                Zurück
-              </Button>
-              <Button
-                onClick={() => setCurrentStep('preview')}
-                className="apple-button bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-8 shadow-lg"
-              >
-                Weiter
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Other steps placeholder */}
-        {(currentStep === 'preview' || currentStep === 'visibility') && (
+        {/* Other steps would go here - for now just showing placeholder */}
+        {currentStep !== 'details' && (
           <div className="bg-card border border-border rounded-2xl p-12 text-center animate-fade-in">
             <p className="text-muted-foreground">
               Weitere Schritte werden hier angezeigt
