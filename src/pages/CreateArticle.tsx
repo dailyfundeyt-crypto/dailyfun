@@ -63,7 +63,7 @@ const CreateArticle = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [videoUploading, setVideoUploading] = useState(false);
-  const [languages, setLanguages] = useState<string[]>(['de']);
+  const [languages, setLanguages] = useState<string[]>(['en']);
   const [autoGenerateThumbnail, setAutoGenerateThumbnail] = useState(false);
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [languageSearch, setLanguageSearch] = useState('');
