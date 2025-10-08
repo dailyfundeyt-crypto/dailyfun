@@ -6,14 +6,55 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
-import { Loader2, ArrowLeft, Upload, X, Globe, Plus, Sparkles, Image as ImageIcon, Video } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, X, Globe, Plus, Sparkles, Image as ImageIcon, Video, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '../components/ui/checkbox';
 import InstallSidebar from '../components/InstallSidebar';
 import Auth from './Auth';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { ScrollArea } from '../components/ui/scroll-area';
 
 type Step = 'details' | 'post-elements' | 'preview' | 'visibility';
+
+interface Language {
+  code: string;
+  name: string;
+  nativeName: string;
+}
+
+const AVAILABLE_LANGUAGES: Language[] = [
+  { code: 'de', name: 'Deutsch', nativeName: 'Deutsch' },
+  { code: 'en', name: 'Englisch', nativeName: 'English' },
+  { code: 'es', name: 'Spanisch', nativeName: 'Español' },
+  { code: 'fr', name: 'Französisch', nativeName: 'Français' },
+  { code: 'it', name: 'Italienisch', nativeName: 'Italiano' },
+  { code: 'pt', name: 'Portugiesisch', nativeName: 'Português' },
+  { code: 'ru', name: 'Russisch', nativeName: 'Русский' },
+  { code: 'zh', name: 'Chinesisch', nativeName: '中文' },
+  { code: 'ja', name: 'Japanisch', nativeName: '日本語' },
+  { code: 'ko', name: 'Koreanisch', nativeName: '한국어' },
+  { code: 'ar', name: 'Arabisch', nativeName: 'العربية' },
+  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी' },
+  { code: 'tr', name: 'Türkisch', nativeName: 'Türkçe' },
+  { code: 'nl', name: 'Niederländisch', nativeName: 'Nederlands' },
+  { code: 'pl', name: 'Polnisch', nativeName: 'Polski' },
+  { code: 'sv', name: 'Schwedisch', nativeName: 'Svenska' },
+  { code: 'no', name: 'Norwegisch', nativeName: 'Norsk' },
+  { code: 'da', name: 'Dänisch', nativeName: 'Dansk' },
+  { code: 'fi', name: 'Finnisch', nativeName: 'Suomi' },
+  { code: 'cs', name: 'Tschechisch', nativeName: 'Čeština' },
+  { code: 'el', name: 'Griechisch', nativeName: 'Ελληνικά' },
+  { code: 'he', name: 'Hebräisch', nativeName: 'עברית' },
+  { code: 'th', name: 'Thailändisch', nativeName: 'ไทย' },
+  { code: 'vi', name: 'Vietnamesisch', nativeName: 'Tiếng Việt' },
+  { code: 'id', name: 'Indonesisch', nativeName: 'Bahasa Indonesia' },
+  { code: 'uk', name: 'Ukrainisch', nativeName: 'Українська' },
+  { code: 'ro', name: 'Rumänisch', nativeName: 'Română' },
+  { code: 'hu', name: 'Ungarisch', nativeName: 'Magyar' },
+  { code: 'bg', name: 'Bulgarisch', nativeName: 'Български' },
+  { code: 'hr', name: 'Kroatisch', nativeName: 'Hrvatski' },
+];
 
 const CreateArticle = () => {
   const { user, loading: authLoading } = useAuth();
@@ -24,6 +65,8 @@ const CreateArticle = () => {
   const [videoUploading, setVideoUploading] = useState(false);
   const [languages, setLanguages] = useState<string[]>(['de']);
   const [autoGenerateThumbnail, setAutoGenerateThumbnail] = useState(false);
+  const [showLanguageDialog, setShowLanguageDialog] = useState(false);
+  const [languageSearch, setLanguageSearch] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     title_en: '',
@@ -178,6 +221,28 @@ const CreateArticle = () => {
     );
   };
 
+  const addLanguage = (langCode: string) => {
+    if (!languages.includes(langCode)) {
+      setLanguages(prev => [...prev, langCode]);
+      toast.success(`${AVAILABLE_LANGUAGES.find(l => l.code === langCode)?.name} hinzugefügt`);
+    }
+  };
+
+  const removeLanguage = (langCode: string) => {
+    if (languages.length > 1) {
+      setLanguages(prev => prev.filter(l => l !== langCode));
+      toast.success(`${AVAILABLE_LANGUAGES.find(l => l.code === langCode)?.name} entfernt`);
+    } else {
+      toast.error('Mindestens eine Sprache muss ausgewählt sein');
+    }
+  };
+
+  const filteredLanguages = AVAILABLE_LANGUAGES.filter(lang =>
+    lang.name.toLowerCase().includes(languageSearch.toLowerCase()) ||
+    lang.nativeName.toLowerCase().includes(languageSearch.toLowerCase()) ||
+    lang.code.toLowerCase().includes(languageSearch.toLowerCase())
+  );
+
   const handleVideoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
@@ -306,38 +371,141 @@ const CreateArticle = () => {
                 {/* Language Selection */}
                 <div className="space-y-4">
                   <h2 className="text-base font-semibold">Welche Sprachen soll dein Artikel haben?</h2>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-wrap">
+                    {languages.map(langCode => {
+                      const lang = AVAILABLE_LANGUAGES.find(l => l.code === langCode);
+                      if (!lang) return null;
+                      
+                      return (
+                        <div
+                          key={langCode}
+                          className="apple-button px-6 py-4 rounded-2xl border-2 border-primary bg-primary/5 text-primary shadow-md transition-all duration-200 flex items-center gap-3 group relative"
+                        >
+                          <Globe className="h-5 w-5" />
+                          <span className="font-medium">{lang.code.toUpperCase()}</span>
+                          {languages.length > 1 && (
+                            <button
+                              onClick={() => removeLanguage(langCode)}
+                              className="ml-2 -mr-2 p-1 rounded-full hover:bg-primary/20 transition-colors"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                     <button
-                      onClick={() => toggleLanguage('de')}
-                      className={cn(
-                        "apple-button px-6 py-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-3",
-                        languages.includes('de')
-                          ? "border-primary bg-primary/5 text-primary shadow-md"
-                          : "border-border bg-card hover:border-primary/30"
-                      )}
+                      onClick={() => setShowLanguageDialog(true)}
+                      className="apple-button px-6 py-4 rounded-2xl border-2 border-dashed border-border bg-card hover:border-primary/30 hover:bg-primary/5 transition-all duration-200 group"
                     >
-                      <Globe className="h-5 w-5" />
-                      <span className="font-medium">DE</span>
-                    </button>
-                    <button
-                      onClick={() => toggleLanguage('en')}
-                      className={cn(
-                        "apple-button px-6 py-4 rounded-2xl border-2 transition-all duration-200 flex items-center gap-3",
-                        languages.includes('en')
-                          ? "border-primary bg-primary/5 text-primary shadow-md"
-                          : "border-border bg-card hover:border-primary/30"
-                      )}
-                    >
-                      <Globe className="h-5 w-5" />
-                      <span className="font-medium">EN</span>
-                    </button>
-                    <button
-                      className="apple-button px-6 py-4 rounded-2xl border-2 border-dashed border-border bg-card hover:border-primary/30 transition-all duration-200"
-                    >
-                      <Plus className="h-6 w-6 text-muted-foreground" />
+                      <Plus className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
                     </button>
                   </div>
                 </div>
+
+                {/* Language Selection Dialog */}
+                <Dialog open={showLanguageDialog} onOpenChange={setShowLanguageDialog}>
+                  <DialogContent className="max-w-2xl max-h-[85vh] p-0 bg-card border-2 border-border rounded-3xl overflow-hidden shadow-2xl">
+                    <DialogHeader className="px-8 pt-8 pb-6 border-b border-border bg-muted/30">
+                      <DialogTitle className="text-2xl font-semibold">Sprache hinzufügen</DialogTitle>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Wähle eine oder mehrere Sprachen für deinen Artikel
+                      </p>
+                    </DialogHeader>
+                    
+                    {/* Search Bar */}
+                    <div className="px-8 pt-6">
+                      <div className="relative">
+                        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input
+                          placeholder="Sprache suchen..."
+                          value={languageSearch}
+                          onChange={(e) => setLanguageSearch(e.target.value)}
+                          className="pl-12 pr-4 py-6 text-base rounded-2xl border-2 bg-background"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Language List */}
+                    <ScrollArea className="h-[50vh] px-8 py-4">
+                      <div className="space-y-2">
+                        {filteredLanguages.map((lang) => {
+                          const isSelected = languages.includes(lang.code);
+                          
+                          return (
+                            <button
+                              key={lang.code}
+                              onClick={() => {
+                                if (isSelected) {
+                                  removeLanguage(lang.code);
+                                } else {
+                                  addLanguage(lang.code);
+                                }
+                              }}
+                              className={cn(
+                                "w-full flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-200 group",
+                                isSelected
+                                  ? "border-primary bg-primary/5 shadow-md"
+                                  : "border-border bg-card hover:border-primary/30 hover:bg-accent"
+                              )}
+                            >
+                              <div className="flex items-center gap-4">
+                                <Globe className={cn(
+                                  "h-5 w-5 transition-colors",
+                                  isSelected ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
+                                )} />
+                                <div className="text-left">
+                                  <div className={cn(
+                                    "font-medium text-base",
+                                    isSelected ? "text-primary" : "text-foreground"
+                                  )}>
+                                    {lang.name}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {lang.nativeName}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className={cn(
+                                "px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200",
+                                isSelected
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "bg-muted text-muted-foreground group-hover:bg-muted/80"
+                              )}>
+                                {lang.code.toUpperCase()}
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {filteredLanguages.length === 0 && (
+                          <div className="text-center py-12 text-muted-foreground">
+                            <Globe className="h-12 w-12 mx-auto mb-4 opacity-30" />
+                            <p className="text-base">Keine Sprachen gefunden</p>
+                            <p className="text-sm mt-1">Versuche einen anderen Suchbegriff</p>
+                          </div>
+                        )}
+                      </div>
+                    </ScrollArea>
+
+                    {/* Footer */}
+                    <div className="px-8 py-6 border-t border-border bg-muted/30">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          {languages.length} {languages.length === 1 ? 'Sprache' : 'Sprachen'} ausgewählt
+                        </p>
+                        <Button
+                          onClick={() => {
+                            setShowLanguageDialog(false);
+                            setLanguageSearch('');
+                          }}
+                          className="apple-button bg-foreground text-background hover:bg-foreground/90 rounded-xl px-8 py-6 shadow-lg"
+                        >
+                          Fertig
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
 
                 {/* Thumbnail Upload */}
                 <div className="space-y-3">
