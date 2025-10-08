@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../integrations/supabase/client';
@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
-import { Loader2, ArrowLeft, Upload, X, Globe, Plus, Sparkles, Image as ImageIcon, Video, Search, FileText } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, X, Globe, Plus, Sparkles, Image as ImageIcon, Video, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '../components/ui/checkbox';
 import InstallSidebar from '../components/InstallSidebar';
@@ -14,7 +14,6 @@ import Auth from './Auth';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { ScrollArea } from '../components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 
 type Step = 'details' | 'post-elements' | 'preview' | 'visibility';
 
@@ -68,9 +67,6 @@ const CreateArticle = () => {
   const [autoGenerateThumbnail, setAutoGenerateThumbnail] = useState(false);
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [languageSearch, setLanguageSearch] = useState('');
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [showTemplatePopover, setShowTemplatePopover] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     title_en: '',
@@ -277,83 +273,6 @@ const CreateArticle = () => {
     }
   };
 
-  const loadTemplates = async () => {
-    if (!user) return;
-    
-    const { data, error } = await supabase
-      .from('article_templates')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('Error loading templates:', error);
-      return;
-    }
-    
-    setTemplates(data || []);
-  };
-
-  const saveTemplate = async () => {
-    if (!user || !newTemplateName.trim()) {
-      toast.error('Bitte gib einen Namen für die Vorlage ein');
-      return;
-    }
-
-    const { error } = await supabase
-      .from('article_templates')
-      .insert({
-        user_id: user.id,
-        name: newTemplateName,
-        category: formData.category,
-        category_en: formData.category_en,
-        tags: formData.tags.length > 0 ? formData.tags : null,
-        author_name: ''
-      });
-
-    if (error) {
-      toast.error('Fehler beim Speichern der Vorlage');
-      console.error(error);
-      return;
-    }
-
-    toast.success('Vorlage gespeichert');
-    setNewTemplateName('');
-    setShowTemplatePopover(false);
-    loadTemplates();
-  };
-
-  const loadTemplate = (template: any) => {
-    setFormData(prev => ({
-      ...prev,
-      category: template.category || '',
-      category_en: template.category_en || '',
-      tags: template.tags || []
-    }));
-    toast.success('Vorlage geladen');
-    setShowTemplatePopover(false);
-  };
-
-  const deleteTemplate = async (id: string) => {
-    const { error } = await supabase
-      .from('article_templates')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      toast.error('Fehler beim Löschen der Vorlage');
-      return;
-    }
-
-    toast.success('Vorlage gelöscht');
-    loadTemplates();
-  };
-
-  useEffect(() => {
-    if (user) {
-      loadTemplates();
-    }
-  }, [user, loadTemplates]);
-
   return (
     <div className="min-h-screen bg-background">
       <InstallSidebar />
@@ -443,75 +362,9 @@ const CreateArticle = () => {
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
               <div className="bg-muted/50 px-6 py-4 flex items-center justify-between border-b border-border">
                 <h3 className="text-lg font-semibold">Details</h3>
-                <Popover open={showTemplatePopover} onOpenChange={setShowTemplatePopover}>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Details wiederverwenden
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    className="w-80 p-0 bg-card border-2 border-border rounded-2xl shadow-2xl overflow-hidden"
-                    align="end"
-                  >
-                    <div className="p-4 space-y-3">
-                      {/* New Template Section */}
-                      <div className="space-y-2 pb-3 border-b border-border">
-                        <Label className="text-xs font-medium text-muted-foreground">Neue Vorlage erstellen</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            value={newTemplateName}
-                            onChange={(e) => setNewTemplateName(e.target.value)}
-                            placeholder="Vorlagenname..."
-                            className="flex-1 h-9 rounded-xl border-2"
-                            onKeyDown={(e) => e.key === 'Enter' && saveTemplate()}
-                          />
-                          <Button
-                            size="sm"
-                            onClick={saveTemplate}
-                            className="apple-button bg-primary hover:bg-primary/90 rounded-xl shadow-md"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Templates List */}
-                      <div className="space-y-2">
-                        <Label className="text-xs font-medium text-muted-foreground">Gespeicherte Vorlagen</Label>
-                        {templates.length === 0 ? (
-                          <p className="text-sm text-muted-foreground text-center py-6 px-4">
-                            Noch keine Vorlagen gespeichert
-                          </p>
-                        ) : (
-                          <ScrollArea className="max-h-64">
-                            <div className="space-y-1 pr-3">
-                              {templates.map((template) => (
-                                <div
-                                  key={template.id}
-                                  className="group flex items-center justify-between p-3 rounded-xl bg-muted/50 hover:bg-muted transition-all duration-200"
-                                >
-                                  <button
-                                    onClick={() => loadTemplate(template)}
-                                    className="flex-1 text-left text-sm font-medium hover:text-primary transition-colors"
-                                  >
-                                    {template.name}
-                                  </button>
-                                  <button
-                                    onClick={() => deleteTemplate(template.id)}
-                                    className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/10 rounded-lg transition-all"
-                                  >
-                                    <X className="w-3.5 h-3.5 text-destructive" />
-                                  </button>
-                                </div>
-                              ))}
-                            </div>
-                          </ScrollArea>
-                        )}
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  Details wiederverwenden
+                </Button>
               </div>
               
               <div className="p-6 space-y-6">
