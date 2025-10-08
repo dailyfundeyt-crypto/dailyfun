@@ -277,12 +277,6 @@ const CreateArticle = () => {
     }
   };
 
-  useEffect(() => {
-    if (user) {
-      loadTemplates();
-    }
-  }, [user]);
-
   const loadTemplates = async () => {
     if (!user) return;
     
@@ -353,6 +347,12 @@ const CreateArticle = () => {
     toast.success('Vorlage gelöscht');
     loadTemplates();
   };
+
+  useEffect(() => {
+    if (user) {
+      loadTemplates();
+    }
+  }, [user, loadTemplates]);
 
   return (
     <div className="min-h-screen bg-background">
