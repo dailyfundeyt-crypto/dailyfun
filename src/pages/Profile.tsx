@@ -155,6 +155,12 @@ const Profile = () => {
 
       setIsFollowing(!isFollowing);
       await refetchFollows();
+      
+      // Refetch profile to get updated follower count
+      if (userId) {
+        await fetchProfile(userId);
+      }
+      
       toast.success(isFollowing ? 'Nicht mehr gefolgt' : 'Gefolgt!');
     } catch (error) {
       console.error('Error toggling follow:', error);
