@@ -431,9 +431,18 @@ const Article = () => {
                 </button>
                 <AuthorFollowButton authorName={article.author} />
               </div>
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2" />
-                <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
+                </div>
+                {article.views > 0 && (
+                  <div className="flex items-center text-muted-foreground/80">
+                    <span className="text-sm">
+                      {article.views.toLocaleString()} {language === 'de' ? 'Aufrufe' : 'views'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
