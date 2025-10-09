@@ -47,8 +47,8 @@
     --sidebar-ring: 217.2 91.2% 59.8%;
 
     /* Custom accent colors */
-    --red-accent: 348 100% 44%;
-    --blue-accent: 207 100% 50%;
+    --red-accent: #E4002B;
+    --blue-accent: #007BFF;
     
     /* Custom icon navigation colors */
     --icon-default: 26 26% 10%; /* #1A1A1A */
