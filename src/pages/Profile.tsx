@@ -56,7 +56,11 @@ const Profile = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .rpc('get_safe_profile_view', { profile_user_id: id });
+        .from('profiles')
+        .select('*')
+        .eq('user_id', id)
+        .eq('is_public', true)
+        .single();
 
       if (error) {
         console.error('Error fetching profile:', error);
@@ -64,18 +68,12 @@ const Profile = () => {
         return;
       }
 
-      if (!data || data.length === 0) {
+      if (!data) {
         toast.error('Profil nicht gefunden oder nicht öffentlich');
         return;
       }
 
-      // Convert the RPC result to match our interface
-      const profileData = data[0];
-      setProfile({
-        ...profileData,
-        user_id: id,
-        updated_at: new Date().toISOString()
-      } as UserProfile);
+      setProfile(data as UserProfile);
     } catch (error) {
       console.error('Error:', error);
       toast.error('Fehler beim Laden des Profils');
@@ -215,22 +213,39 @@ const Profile = () => {
 
         {/* Profile Section */}
         <div className="text-center mb-8">
-          {/* Avatar and Posts Counter */}
-          <div className="flex items-center justify-center gap-8 mb-6">
-            <Avatar className="w-20 h-20">
+          {/* Avatar */}
+          <div className="flex justify-center mb-6">
+            <Avatar className="w-24 h-24 ring-4 ring-gray-100">
               <AvatarImage src={profile.avatar_url || ''} />
-              <AvatarFallback className="bg-gray-300 text-gray-600 text-2xl font-bold">
+              <AvatarFallback className="bg-gray-300 text-gray-600 text-3xl font-bold">
                 {(profile.display_name || 'U').charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
+          </div>
+
+          {/* Stats Row */}
+          <div className="flex items-center justify-center gap-8 mb-6">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-black">{articles.length}</div>
+              <div className="text-sm text-gray-600">Artikel</div>
+            </div>
             
             <div className="text-center">
-              <div className="text-2xl font-bold text-black">0</div>
-              <div className="text-sm text-gray-600">Posts</div>
+              <div className="text-2xl font-bold text-black">
+                {(profile as any).followers_count || 0}
+              </div>
+              <div className="text-sm text-gray-600">Follower</div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-2xl font-bold text-black">
+                {(profile as any).following_count || 0}
+              </div>
+              <div className="text-sm text-gray-600">Folge ich</div>
             </div>
             
             {profile.location && (
-              <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+              <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
                 <MapPin className="h-4 w-4" />
                 <span className="text-sm">{profile.location}</span>
               </div>

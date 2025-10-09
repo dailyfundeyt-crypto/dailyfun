@@ -29,6 +29,42 @@ export type Database = {
         }
         Relationships: []
       }
+      article_templates: {
+        Row: {
+          author_name: string | null
+          category: string | null
+          category_en: string | null
+          created_at: string
+          id: string
+          name: string
+          tags: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_name?: string | null
+          category?: string | null
+          category_en?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          tags?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_name?: string | null
+          category?: string | null
+          category_en?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          tags?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -318,6 +354,10 @@ export type Database = {
           profession: string
           website: string
         }[]
+      }
+      increment_article_views: {
+        Args: { article_id: string }
+        Returns: undefined
       }
     }
     Enums: {

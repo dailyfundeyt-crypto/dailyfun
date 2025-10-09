@@ -101,7 +101,7 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
             {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
           </p>
           
-          <div className="flex items-center text-sm text-muted-foreground">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center">
               {employee && (
                 <Avatar className="h-6 w-6 mr-2 ring-2 ring-primary/20 transition-all duration-300 ease-apple hover:ring-primary/40">
@@ -116,7 +116,14 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
                 {article.author}
               </button>
             </div>
-            <span className="ml-4">{new Date(article.publishedAt).toLocaleDateString()}</span>
+            <div className="flex items-center gap-4">
+              <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
+              {article.views > 0 && (
+                <span className="text-xs text-muted-foreground/80">
+                  {article.views.toLocaleString()} {language === 'de' ? 'Aufrufe' : 'views'}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </article>

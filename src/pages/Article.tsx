@@ -13,6 +13,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { articles } from '../data/articles';
 import { incrementViews } from '../utils/viewTracker';
 import OptimizedImage from '../components/OptimizedImage';
+import { supabase } from '../integrations/supabase/client';
 
 // Professional images for article detail pages
 import article1Professional from '../assets/article-1-professional.jpg';
@@ -50,8 +51,23 @@ const Article = () => {
     window.scrollTo(0, 0);
     
     if (article) {
-      // Increment view count when article page loads (still track internally)
+      // Increment view count when article page loads
       incrementViews(article.id);
+      
+      // Try to increment views in database if it's a user article
+      const incrementDatabaseViews = async () => {
+        try {
+          // Check if this is a user article (has uuid format)
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          if (uuidRegex.test(article.id)) {
+            await supabase.rpc('increment_article_views', { article_id: article.id });
+          }
+        } catch (error) {
+          console.error('Error incrementing database views:', error);
+        }
+      };
+      
+      incrementDatabaseViews();
     }
   }, [article]);
 
