@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
-import { Loader2, ArrowLeft, Upload, X, Globe, Plus, Sparkles, Image as ImageIcon, Video, Search, Save, FolderOpen, Trash2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, X, Globe, Plus, Sparkles, Image as ImageIcon, Video, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '../components/ui/checkbox';
 import InstallSidebar from '../components/InstallSidebar';
@@ -14,7 +14,6 @@ import Auth from './Auth';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { ScrollArea } from '../components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 
 type Step = 'details' | 'post-elements' | 'preview' | 'visibility';
 
@@ -68,10 +67,6 @@ const CreateArticle = () => {
   const [autoGenerateThumbnail, setAutoGenerateThumbnail] = useState(false);
   const [showLanguageDialog, setShowLanguageDialog] = useState(false);
   const [languageSearch, setLanguageSearch] = useState('');
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [templateName, setTemplateName] = useState('');
-  const [showTemplatePopover, setShowTemplatePopover] = useState(false);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     title_en: '',
@@ -278,95 +273,6 @@ const CreateArticle = () => {
     }
   };
 
-  // Template Functions
-  React.useEffect(() => {
-    if (user) {
-      loadTemplates();
-    }
-  }, [user]);
-
-  const loadTemplates = async () => {
-    if (!user) return;
-    
-    try {
-      setLoadingTemplates(true);
-      const { data, error } = await supabase
-        .from('article_templates' as any)
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTemplates(data || []);
-    } catch (error) {
-      console.error('Error loading templates:', error);
-    } finally {
-      setLoadingTemplates(false);
-    }
-  };
-
-  const saveTemplate = async () => {
-    if (!user || !templateName.trim()) {
-      toast.error('Bitte gib einen Namen für die Vorlage ein');
-      return;
-    }
-
-    if (!formData.category) {
-      toast.error('Bitte wähle zuerst eine Kategorie aus');
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('article_templates' as any)
-        .insert({
-          user_id: user.id,
-          name: templateName.trim(),
-          category: formData.category,
-          category_en: formData.category_en || null,
-          tags: formData.tags.length > 0 ? formData.tags : null
-        });
-
-      if (error) throw error;
-
-      toast.success('Vorlage erfolgreich gespeichert!');
-      setTemplateName('');
-      setShowTemplatePopover(false);
-      loadTemplates();
-    } catch (error) {
-      console.error('Error saving template:', error);
-      toast.error('Fehler beim Speichern der Vorlage');
-    }
-  };
-
-  const loadTemplate = (template: any) => {
-    setFormData(prev => ({
-      ...prev,
-      category: template.category || '',
-      category_en: template.category_en || '',
-      tags: template.tags || []
-    }));
-    setShowTemplatePopover(false);
-    toast.success(`Vorlage "${template.name}" geladen`);
-  };
-
-  const deleteTemplate = async (templateId: string) => {
-    try {
-      const { error } = await supabase
-        .from('article_templates' as any)
-        .delete()
-        .eq('id', templateId);
-
-      if (error) throw error;
-
-      toast.success('Vorlage gelöscht');
-      loadTemplates();
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      toast.error('Fehler beim Löschen der Vorlage');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <InstallSidebar />
@@ -456,91 +362,9 @@ const CreateArticle = () => {
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
               <div className="bg-muted/50 px-6 py-4 flex items-center justify-between border-b border-border">
                 <h3 className="text-lg font-semibold">Details</h3>
-                <Popover open={showTemplatePopover} onOpenChange={setShowTemplatePopover}>
-                  <PopoverTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-all"
-                    >
-                      <FolderOpen className="h-4 w-4 mr-2" />
-                      Details wiederverwenden
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    align="end" 
-                    className="w-80 p-0 bg-card border-2 border-border rounded-2xl shadow-2xl overflow-hidden"
-                  >
-                    <div className="p-4 border-b border-border bg-muted/30">
-                      <h4 className="font-semibold text-sm mb-3">Neue Vorlage erstellen</h4>
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Vorlagenname..."
-                          value={templateName}
-                          onChange={(e) => setTemplateName(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && saveTemplate()}
-                          className="flex-1 h-9 rounded-xl border-border"
-                        />
-                        <Button
-                          onClick={saveTemplate}
-                          size="sm"
-                          className="bg-primary hover:bg-primary/90 rounded-xl px-3"
-                        >
-                          <Save className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <ScrollArea className="max-h-64">
-                      {loadingTemplates ? (
-                        <div className="p-8 flex items-center justify-center">
-                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        </div>
-                      ) : templates.length === 0 ? (
-                        <div className="p-8 text-center text-sm text-muted-foreground">
-                          Noch keine Vorlagen vorhanden
-                        </div>
-                      ) : (
-                        <div className="p-2 space-y-1">
-                          {templates.map((template) => (
-                            <div
-                              key={template.id}
-                              className="group flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 transition-all cursor-pointer"
-                              onClick={() => loadTemplate(template)}
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm truncate">{template.name}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  {template.category && (
-                                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                                      {template.category}
-                                    </span>
-                                  )}
-                                  {template.tags && template.tags.length > 0 && (
-                                    <span className="text-xs text-muted-foreground">
-                                      {template.tags.length} Tags
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteTemplate(template.id);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive rounded-lg"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </ScrollArea>
-                  </PopoverContent>
-                </Popover>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  Details wiederverwenden
+                </Button>
               </div>
               
               <div className="p-6 space-y-6">
