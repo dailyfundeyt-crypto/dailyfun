@@ -31,6 +31,8 @@ interface UserProfile {
   is_public: boolean;
   created_at: string;
   updated_at: string;
+  followers_count?: number;
+  following_count?: number;
   // Note: email is NOT included in public profiles for security reasons
   aiGenerated?: {
     description: string;
@@ -192,10 +194,10 @@ const Search = () => {
   useEffect(() => {
     const fetchUserProfiles = async () => {
       try {
-        // Use direct query with specific field selection (excluding sensitive fields like email)
+        // Use direct query with specific field selection (including follower counts)
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, user_id, display_name, bio, profession, location, description, avatar_url, alias, website, is_public, created_at, updated_at')
+          .select('id, user_id, display_name, bio, profession, location, description, avatar_url, alias, website, is_public, created_at, updated_at, followers_count, following_count')
           .eq('is_public', true);
 
         if (error) throw error;
@@ -406,22 +408,32 @@ const Search = () => {
                         >
                           {/* Profile Section - matching Profile.tsx design */}
                           <div className="text-center mb-6">
-                            {/* Avatar and Posts Counter */}
-                            <div className="flex items-center justify-center gap-8 mb-6">
-                              <Avatar className="w-20 h-20">
+                            {/* Avatar */}
+                            <div className="flex justify-center mb-6">
+                              <Avatar className="w-24 h-24 ring-4 ring-gray-100">
                                 <AvatarImage src={profile.avatar_url || ''} />
-                                <AvatarFallback className="bg-gray-300 text-gray-600 text-2xl font-bold">
+                                <AvatarFallback className="bg-gray-300 text-gray-600 text-3xl font-bold">
                                   {(profile.display_name || 'U').charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              
+                            </div>
+
+                            {/* Stats Row */}
+                            <div className="flex items-center justify-center gap-8 mb-6">
                               <div className="text-center">
                                 <div className="text-2xl font-bold text-black">0</div>
-                                <div className="text-sm text-gray-600">Posts</div>
+                                <div className="text-sm text-gray-600">Artikel</div>
+                              </div>
+                              
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-black">
+                                  {profile.followers_count || 0}
+                                </div>
+                                <div className="text-sm text-gray-600">Follower</div>
                               </div>
                               
                               {profile.location && (
-                                <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                                <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
                                   <MapPin className="h-4 w-4" />
                                   <span className="text-sm">{profile.location}</span>
                                 </div>
