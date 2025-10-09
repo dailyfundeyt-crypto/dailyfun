@@ -63,8 +63,8 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				'red-accent': '#E4002B',
-				'blue-accent': '#007BFF'
+				'red-accent': 'hsl(var(--red-accent))',
+				'blue-accent': 'hsl(var(--blue-accent))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
