@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../integrations/supabase/client';
@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
-import { Loader2, ArrowLeft, Upload, X, Globe, Plus, Sparkles, Image as ImageIcon, Video, Search, Save, FolderOpen } from 'lucide-react';
+import { Loader2, ArrowLeft, Upload, X, Globe, Plus, Sparkles, Image as ImageIcon, Video, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '../components/ui/checkbox';
 import InstallSidebar from '../components/InstallSidebar';
@@ -14,7 +14,6 @@ import Auth from './Auth';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { ScrollArea } from '../components/ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from '../components/ui/popover';
 
 type Step = 'details' | 'post-elements' | 'preview' | 'visibility';
 
@@ -83,10 +82,6 @@ const CreateArticle = () => {
     is_published: true
   });
   const [tagInput, setTagInput] = useState('');
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [templateName, setTemplateName] = useState('');
-  const [showTemplatePopover, setShowTemplatePopover] = useState(false);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
 
   const steps: { id: Step; label: string }[] = [
     { id: 'details', label: 'Details' },
@@ -96,99 +91,6 @@ const CreateArticle = () => {
   ];
 
   const currentStepIndex = steps.findIndex(s => s.id === currentStep);
-
-  // Load templates on component mount
-  useEffect(() => {
-    if (user) {
-      loadTemplates();
-    }
-  }, [user]);
-
-  const loadTemplates = async () => {
-    if (!user) return;
-    
-    try {
-      setLoadingTemplates(true);
-      const { data, error } = await (supabase as any)
-        .from('article_templates')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTemplates(data || []);
-    } catch (error) {
-      console.error('Error loading templates:', error);
-    } finally {
-      setLoadingTemplates(false);
-    }
-  };
-
-  const saveTemplate = async () => {
-    if (!user || !templateName.trim()) {
-      toast.error('Bitte gib einen Namen für die Vorlage ein');
-      return;
-    }
-
-    if (!formData.category) {
-      toast.error('Bitte fülle mindestens die Kategorie aus');
-      return;
-    }
-
-    try {
-      const { error } = await (supabase as any)
-        .from('article_templates')
-        .insert({
-          user_id: user.id,
-          name: templateName,
-          category: formData.category,
-          category_en: formData.category_en || null,
-          tags: formData.tags.length > 0 ? formData.tags : null,
-          author_name: formData.title || null
-        });
-
-      if (error) throw error;
-
-      toast.success('Vorlage erfolgreich gespeichert!');
-      setTemplateName('');
-      setShowTemplatePopover(false);
-      await loadTemplates();
-    } catch (error) {
-      console.error('Error saving template:', error);
-      toast.error('Fehler beim Speichern der Vorlage');
-    }
-  };
-
-  const loadTemplate = (template: any) => {
-    setFormData(prev => ({
-      ...prev,
-      category: template.category || '',
-      category_en: template.category_en || '',
-      tags: template.tags || []
-    }));
-    setShowTemplatePopover(false);
-    toast.success(`Vorlage "${template.name}" geladen`);
-  };
-
-  const deleteTemplate = async (templateId: string) => {
-    if (!user) return;
-
-    try {
-      const { error } = await (supabase as any)
-        .from('article_templates')
-        .delete()
-        .eq('id', templateId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast.success('Vorlage gelöscht');
-      await loadTemplates();
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      toast.error('Fehler beim Löschen der Vorlage');
-    }
-  };
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -460,99 +362,9 @@ const CreateArticle = () => {
             <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
               <div className="bg-muted/50 px-6 py-4 flex items-center justify-between border-b border-border">
                 <h3 className="text-lg font-semibold">Details</h3>
-                <Popover open={showTemplatePopover} onOpenChange={setShowTemplatePopover}>
-                  <PopoverTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-muted-foreground hover:text-foreground gap-2 hover:bg-accent/50 transition-all duration-200"
-                    >
-                      <FolderOpen className="h-4 w-4" />
-                      Details wiederverwenden
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent 
-                    align="end" 
-                    className="w-80 p-0 bg-card border-2 border-border rounded-2xl shadow-2xl overflow-hidden"
-                  >
-                    <div className="p-4 bg-muted/30 border-b border-border">
-                      <h4 className="font-semibold text-sm">Vorlagen verwalten</h4>
-                    </div>
-                    
-                    {/* Save New Template */}
-                    <div className="p-4 border-b border-border bg-background/50">
-                      <div className="space-y-2">
-                        <Input
-                          placeholder="Name der neuen Vorlage..."
-                          value={templateName}
-                          onChange={(e) => setTemplateName(e.target.value)}
-                          className="rounded-xl border-2 focus:border-primary transition-all"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              saveTemplate();
-                            }
-                          }}
-                        />
-                        <Button
-                          onClick={saveTemplate}
-                          className="w-full rounded-xl gap-2 bg-primary hover:bg-primary/90 shadow-md"
-                          size="sm"
-                        >
-                          <Plus className="h-4 w-4" />
-                          Neue Vorlage speichern
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Templates List */}
-                    <ScrollArea className="max-h-[300px]">
-                      <div className="p-2">
-                        {loadingTemplates ? (
-                          <div className="flex items-center justify-center py-8">
-                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                          </div>
-                        ) : templates.length === 0 ? (
-                          <div className="py-8 text-center text-sm text-muted-foreground">
-                            Noch keine Vorlagen vorhanden
-                          </div>
-                        ) : (
-                          <div className="space-y-1">
-                            {templates.map((template) => (
-                              <div
-                                key={template.id}
-                                className="group flex items-center justify-between p-3 rounded-xl hover:bg-accent/50 transition-all duration-200 cursor-pointer"
-                                onClick={() => loadTemplate(template)}
-                              >
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm truncate">{template.name}</p>
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {template.category}
-                                    {template.tags && template.tags.length > 0 && (
-                                      <span className="ml-1">
-                                        • {template.tags.length} Tag{template.tags.length > 1 ? 's' : ''}
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteTemplate(template.id);
-                                  }}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </ScrollArea>
-                  </PopoverContent>
-                </Popover>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                  Details wiederverwenden
+                </Button>
               </div>
               
               <div className="p-6 space-y-6">
