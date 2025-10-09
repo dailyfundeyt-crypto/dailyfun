@@ -867,59 +867,42 @@ const CreateArticle = () => {
                   )}
                 </div>
 
-                {/* Video Upload */}
+                {/* Tags */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Video Uploaden</Label>
-                  
-                  {!formData.video_url ? (
-                    <>
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={handleVideoUpload}
-                        className="hidden"
-                        id="article-video-upload"
-                        disabled={videoUploading}
-                      />
-                      <label
-                        htmlFor="article-video-upload"
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-4 p-12 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
-                          videoUploading
-                            ? "border-primary/50 bg-primary/5"
-                            : "border-border bg-card hover:border-primary hover:bg-accent"
-                        )}
-                      >
-                        {videoUploading ? (
-                          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        ) : (
-                          <Video className="h-12 w-12 text-muted-foreground" />
-                        )}
-                        <div className="text-center">
-                          <p className="text-base font-medium">
-                            {videoUploading ? 'Video wird hochgeladen...' : 'Datei hochladen'}
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {videoUploading ? 'Bitte warten' : 'Ziehen Sie ein Video hierher oder klicken Sie'}
-                          </p>
-                        </div>
-                      </label>
-                    </>
-                  ) : (
-                    <div className="relative rounded-2xl overflow-hidden border-2 border-border bg-muted">
-                      <video 
-                        src={formData.video_url} 
-                        controls
-                        className="w-full h-64"
-                      />
-                      <Button
-                        onClick={() => handleInputChange('video_url', '')}
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-4 right-4 rounded-full shadow-lg"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                  <Label className="text-sm font-medium">Tags</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
+                      placeholder="Tag hinzufügen..."
+                      className="bg-background border-border rounded-xl"
+                    />
+                    <Button
+                      onClick={handleAddTag}
+                      type="button"
+                      variant="outline"
+                      className="rounded-xl"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {formData.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm"
+                        >
+                          {tag}
+                          <button
+                            onClick={() => handleRemoveTag(tag)}
+                            className="hover:bg-primary/20 rounded-full p-0.5 transition-colors"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
                     </div>
                   )}
                 </div>
