@@ -34,6 +34,7 @@ const Article = () => {
   const location = useLocation();
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [viewCount, setViewCount] = useState<number>(0);
 
   const handleAuthorClick = () => {
     if (article) {
@@ -51,23 +52,22 @@ const Article = () => {
     window.scrollTo(0, 0);
     
     if (article) {
-      // Increment view count when article page loads
-      incrementViews(article.id);
-      
-      // Try to increment views in database if it's a user article
-      const incrementDatabaseViews = async () => {
+      // Increment view count in database for all articles and get updated count
+      const incrementAndGetViews = async () => {
         try {
-          // Check if this is a user article (has uuid format)
-          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-          if (uuidRegex.test(article.id)) {
-            await supabase.rpc('increment_article_views', { article_id: article.id });
+          const { data, error } = await supabase.rpc('increment_article_view_count', { 
+            p_article_id: article.id 
+          });
+          
+          if (!error && data !== null) {
+            setViewCount(data);
           }
         } catch (error) {
-          console.error('Error incrementing database views:', error);
+          console.error('Error incrementing views:', error);
         }
       };
       
-      incrementDatabaseViews();
+      incrementAndGetViews();
     }
   }, [article]);
 
@@ -436,10 +436,10 @@ const Article = () => {
                   <Calendar className="h-4 w-4 mr-2" />
                   <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
                 </div>
-                {article.views > 0 && (
+                {viewCount > 0 && (
                   <div className="flex items-center text-muted-foreground/80">
                     <span className="text-sm">
-                      {article.views.toLocaleString()} {language === 'de' ? 'Aufrufe' : 'views'}
+                      {viewCount.toLocaleString()} {language === 'de' ? 'Aufrufe' : 'views'}
                     </span>
                   </div>
                 )}

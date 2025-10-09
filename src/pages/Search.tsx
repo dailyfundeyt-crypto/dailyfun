@@ -9,6 +9,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useFollows } from '../hooks/useFollows';
 import { useAutoFollow } from '../hooks/useAutoFollow';
+import { useArticleViews } from '../hooks/useArticleViews';
 import { employees } from '../data/employees';
 import { supabase } from '../integrations/supabase/client';
 import { Input } from '../components/ui/input';
@@ -357,6 +358,18 @@ const Search = () => {
       return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
     }
   }, [selectedAuthor, sortMode, randomSeed, user, followedAuthors, followedUserIds, userProfiles]);
+
+  // Fetch view counts for all articles
+  const articleIds = useMemo(() => filteredArticles.map(a => a.id), [filteredArticles]);
+  const { viewCounts } = useArticleViews(articleIds);
+
+  // Merge view counts with articles
+  const articlesWithViews = useMemo(() => {
+    return filteredArticles.map(article => ({
+      ...article,
+      views: viewCounts[article.id] || 0
+    }));
+  }, [filteredArticles, viewCounts]);
 
   // Update random seed when switching to random mode
   const handleSortModeChange = (mode: 'latest' | 'random') => {
@@ -994,7 +1007,7 @@ const Search = () => {
 
         {/* Articles Grid with alternating backgrounds */}
         <div className="space-y-0">
-          {filteredArticles.map((article, index) => (
+          {articlesWithViews.map((article, index) => (
             <Link
               key={article.id}
               to={`/article/${article.id}`}
@@ -1034,8 +1047,15 @@ const Search = () => {
                     <p className="text-lg mb-6 opacity-90 line-clamp-3">
                       {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
                     </p>
-                    <div className="text-sm opacity-75">
-                      {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {language === 'de' ? article.category : (article.categoryEn || article.category)}
+                    <div className="flex items-center justify-between text-sm opacity-75">
+                      <span>
+                        {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {language === 'de' ? article.category : (article.categoryEn || article.category)}
+                      </span>
+                      {article.views > 0 && (
+                        <span className="ml-4">
+                          {article.views.toLocaleString()} {language === 'de' ? 'Aufrufe' : 'views'}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1044,7 +1064,7 @@ const Search = () => {
           ))}
         </div>
 
-        {filteredArticles.length === 0 && (
+        {articlesWithViews.length === 0 && (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-black mb-2">{t('search.no.results')}</h3>
             <p className="text-gray-600">

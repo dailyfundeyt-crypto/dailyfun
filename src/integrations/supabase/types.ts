@@ -65,6 +65,33 @@ export type Database = {
         }
         Relationships: []
       }
+      article_views: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          last_viewed_at: string | null
+          updated_at: string
+          view_count: number
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          last_viewed_at?: string | null
+          updated_at?: string
+          view_count?: number
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          last_viewed_at?: string | null
+          updated_at?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -307,6 +334,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_article_view_count: {
+        Args: { p_article_id: string }
+        Returns: number
+      }
       get_public_profile: {
         Args: { profile_user_id: string }
         Returns: {
@@ -354,6 +385,10 @@ export type Database = {
           profession: string
           website: string
         }[]
+      }
+      increment_article_view_count: {
+        Args: { p_article_id: string }
+        Returns: number
       }
       increment_article_views: {
         Args: { article_id: string }
