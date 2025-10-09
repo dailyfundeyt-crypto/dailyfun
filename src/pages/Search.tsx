@@ -14,8 +14,9 @@ import { supabase } from '../integrations/supabase/client';
 import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { Search as SearchIcon, User, MapPin, Calendar } from 'lucide-react';
+import { Search as SearchIcon, User, MapPin, Calendar, Heart } from 'lucide-react';
 import { sortBySimilarity } from '../utils/searchSimilarity';
+import { toast } from 'sonner';
 
 interface UserProfile {
   id: string;
@@ -50,6 +51,7 @@ const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{articles: any[], profiles: UserProfile[]}>({articles: [], profiles: []});
   const [isSearching, setIsSearching] = useState(false);
+  const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const { followedUserIds, followedAuthors, loading: followsLoading, refetchFollows } = useFollows();
@@ -83,6 +85,73 @@ const Search = () => {
 
   // Generate random seed to keep random order stable during re-renders
   const [randomSeed, setRandomSeed] = useState(() => Math.random());
+
+  // Check follow status for profiles
+  useEffect(() => {
+    const states: Record<string, boolean> = {};
+    userProfiles.forEach(profile => {
+      states[profile.user_id] = followedUserIds.includes(profile.user_id);
+    });
+    setFollowingStates(states);
+  }, [followedUserIds, userProfiles]);
+
+  // Handle follow/unfollow
+  const handleFollowToggle = async (profileUserId: string) => {
+    if (!user) {
+      toast.error('Bitte loggen Sie sich ein, um zu folgen');
+      return;
+    }
+
+    const isCurrentlyFollowing = followingStates[profileUserId];
+
+    try {
+      if (isCurrentlyFollowing) {
+        // Unfollow
+        const { error } = await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('followed_user_id', profileUserId);
+
+        if (error) throw error;
+      } else {
+        // Follow
+        const { error } = await supabase
+          .from('follows')
+          .insert({
+            follower_id: user.id,
+            followed_user_id: profileUserId
+          });
+
+        if (error) throw error;
+      }
+
+      setFollowingStates(prev => ({
+        ...prev,
+        [profileUserId]: !isCurrentlyFollowing
+      }));
+
+      await refetchFollows();
+      
+      // Refetch profiles to update follower counts
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, user_id, display_name, bio, profession, location, description, avatar_url, alias, website, is_public, created_at, updated_at, followers_count, following_count')
+        .eq('is_public', true);
+
+      if (!error && data) {
+        const validProfiles = data.filter(profile => 
+          profile.display_name && profile.display_name.trim() !== ''
+        );
+        setUserProfiles(validProfiles);
+      }
+
+      toast.success(isCurrentlyFollowing ? 'Nicht mehr gefolgt' : 'Gefolgt!');
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+      toast.error('Fehler beim Folgen');
+    }
+  };
 
   // Search functionality
   const performSearch = async (query: string) => {
@@ -483,14 +552,34 @@ const Search = () => {
                             )}
                             
                             {/* View Profile Button */}
-                            <Link 
-                              to={`/profile/${profile.user_id}`}
-                              className="inline-block"
-                            >
-                              <Button className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2 mb-4">
-                                Profil ansehen
-                              </Button>
-                            </Link>
+                            <div className="flex items-center justify-center gap-4">
+                              <Link 
+                                to={`/profile/${profile.user_id}`}
+                                className="inline-block"
+                              >
+                                <Button className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2">
+                                  Profil ansehen
+                                </Button>
+                              </Link>
+
+                              {user && user.id !== profile.user_id && (
+                                <Button 
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleFollowToggle(profile.user_id);
+                                  }}
+                                  className={`rounded-full px-6 py-2 ${
+                                    followingStates[profile.user_id]
+                                      ? 'bg-black text-white hover:bg-gray-800' 
+                                      : 'bg-white text-black border border-black hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <Heart className={`h-4 w-4 mr-2 ${followingStates[profile.user_id] ? 'fill-current' : ''}`} />
+                                  {followingStates[profile.user_id] ? 'Gefolgt' : 'Folgen'}
+                                </Button>
+                              )}
+                            </div>
                           </div>
 
                           {/* Description Section (if available) */}
@@ -670,24 +759,37 @@ const Search = () => {
 
             {/* Profile Section - matching Profile.tsx design exactly */}
             <div className="text-center pt-8 pb-4">
-              {/* Avatar and Posts Counter */}
-              <div className="flex items-center justify-center gap-8 mb-6">
-                <Avatar className="w-20 h-20">
+              {/* Avatar */}
+              <div className="flex justify-center mb-6">
+                <Avatar className="w-24 h-24 ring-4 ring-gray-100">
                   <AvatarImage src={currentEmployeeInfo.image || ''} />
-                  <AvatarFallback className="bg-gray-300 text-gray-600 text-2xl font-bold">
+                  <AvatarFallback className="bg-gray-300 text-gray-600 text-3xl font-bold">
                     {currentEmployeeInfo.name?.charAt(0)?.toUpperCase() || 'U'}
                   </AvatarFallback>
                 </Avatar>
-                
+              </div>
+
+              {/* Stats Row */}
+              <div className="flex items-center justify-center gap-8 mb-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-black">
                     {filteredArticles.length}
                   </div>
-                  <div className="text-sm text-gray-600">Posts</div>
+                  <div className="text-sm text-gray-600">Artikel</div>
+                </div>
+                
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-black">
+                    {(() => {
+                      const profile = userProfiles.find(p => p.user_id === currentEmployeeInfo.id);
+                      return profile?.followers_count || 0;
+                    })()}
+                  </div>
+                  <div className="text-sm text-gray-600">Follower</div>
                 </div>
                 
                 {currentEmployeeInfo.location && (
-                  <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                  <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
                     <MapPin className="h-4 w-4" />
                     <span className="text-sm">{currentEmployeeInfo.location}</span>
                   </div>
@@ -748,23 +850,37 @@ const Search = () => {
               )}
               
               {/* Join Date */}
-              <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-8">
-                <Calendar className="h-4 w-4" />
-                <span>
-                  Mitglied seit {currentEmployeeInfo.created_at 
-                    ? new Date(currentEmployeeInfo.created_at).toLocaleDateString('de-DE', { 
-                        day: 'numeric', 
-                        month: 'numeric', 
-                        year: 'numeric' 
-                      })
-                    : new Date().toLocaleDateString('de-DE', { 
-                        day: 'numeric', 
-                        month: 'numeric', 
-                        year: 'numeric' 
-                      })
-                  }
-                </span>
-              </div>
+              {currentEmployeeInfo.created_at && (
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-4">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    Mitglied seit {new Date(currentEmployeeInfo.created_at).toLocaleDateString('de-DE', { 
+                      day: 'numeric', 
+                      month: 'numeric', 
+                      year: 'numeric' 
+                    })}
+                  </span>
+                </div>
+              )}
+
+              {/* Follow Button - only for user profiles, not employees */}
+              {user && currentEmployeeInfo.id && !employees.find(emp => emp.id === currentEmployeeInfo.id) && user.id !== currentEmployeeInfo.id && (
+                <Button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleFollowToggle(currentEmployeeInfo.id);
+                  }}
+                  className={`rounded-full px-6 py-2 mb-6 ${
+                    followingStates[currentEmployeeInfo.id]
+                      ? 'bg-black text-white hover:bg-gray-800' 
+                      : 'bg-white text-black border border-black hover:bg-gray-50'
+                  }`}
+                >
+                  <Heart className={`h-4 w-4 mr-2 ${followingStates[currentEmployeeInfo.id] ? 'fill-current' : ''}`} />
+                  {followingStates[currentEmployeeInfo.id] ? 'Gefolgt' : 'Folgen'}
+                </Button>
+              )}
             </div>
 
             {/* Latest Articles Section */}
