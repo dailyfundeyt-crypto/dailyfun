@@ -52,6 +52,7 @@ const Search = () => {
   const [searchResults, setSearchResults] = useState<{articles: any[], profiles: UserProfile[]}>({articles: [], profiles: []});
   const [isSearching, setIsSearching] = useState(false);
   const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
+  const [userArticleCounts, setUserArticleCounts] = useState<Record<string, number>>({});
   const { t, language } = useLanguage();
   const { user } = useAuth();
   const { followedUserIds, followedAuthors, loading: followsLoading, refetchFollows } = useFollows();
@@ -276,6 +277,23 @@ const Search = () => {
           profile.display_name && profile.display_name.trim() !== ''
         );
         setUserProfiles(validProfiles);
+
+        // Fetch article counts for each user profile
+        const counts: Record<string, number> = {};
+        await Promise.all(
+          validProfiles.map(async (profile) => {
+            const { count, error: countError } = await supabase
+              .from('user_articles')
+              .select('*', { count: 'exact', head: true })
+              .eq('user_id', profile.user_id)
+              .eq('is_published', true);
+            
+            if (!countError) {
+              counts[profile.user_id] = count || 0;
+            }
+          })
+        );
+        setUserArticleCounts(counts);
       } catch (error) {
         console.error('Error fetching user profiles:', error);
       }
@@ -490,7 +508,9 @@ const Search = () => {
                             {/* Stats Row */}
                             <div className="flex items-center justify-center gap-8 mb-6">
                               <div className="text-center">
-                                <div className="text-2xl font-bold text-black">0</div>
+                                <div className="text-2xl font-bold text-black">
+                                  {userArticleCounts[profile.user_id] || 0}
+                                </div>
                                 <div className="text-sm text-gray-600">Artikel</div>
                               </div>
                               
@@ -773,7 +793,17 @@ const Search = () => {
               <div className="flex items-center justify-center gap-8 mb-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-black">
-                    {filteredArticles.length}
+                    {(() => {
+                      // Check if it's a user profile or employee
+                      const profile = userProfiles.find(p => p.user_id === currentEmployeeInfo.id);
+                      if (profile) {
+                        // For user profiles, show actual published article count from database
+                        return userArticleCounts[currentEmployeeInfo.id] || 0;
+                      } else {
+                        // For employees, show filtered articles count
+                        return filteredArticles.length;
+                      }
+                    })()}
                   </div>
                   <div className="text-sm text-gray-600">Artikel</div>
                 </div>
