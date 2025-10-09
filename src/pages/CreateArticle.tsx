@@ -310,7 +310,18 @@ const CreateArticle = () => {
       return;
     }
 
+    if (!formData.category) {
+      toast.error('Bitte fülle mindestens die Kategorie aus, bevor du eine Vorlage speicherst');
+      return;
+    }
+
     try {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user.id)
+        .single();
+
       const { error } = await (supabase as any)
         .from('article_templates')
         .insert({
@@ -319,12 +330,14 @@ const CreateArticle = () => {
           category: formData.category,
           category_en: formData.category_en || null,
           tags: formData.tags.length > 0 ? formData.tags : null,
+          author_name: profileData?.display_name || 'Unbekannt'
         });
 
       if (error) throw error;
 
       toast.success('Vorlage erfolgreich gespeichert!');
       setNewTemplateName('');
+      setShowTemplatePopover(false);
       await loadTemplates();
     } catch (error) {
       console.error('Error saving template:', error);
@@ -332,7 +345,7 @@ const CreateArticle = () => {
     }
   };
 
-  const loadTemplate = async (template: Template) => {
+  const loadTemplate = (template: Template) => {
     setFormData(prev => ({
       ...prev,
       category: template.category,
