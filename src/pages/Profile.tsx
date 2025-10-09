@@ -237,13 +237,6 @@ const Profile = () => {
               <div className="text-sm text-gray-600">Follower</div>
             </div>
             
-            <div className="text-center">
-              <div className="text-2xl font-bold text-black">
-                {(profile as any).following_count || 0}
-              </div>
-              <div className="text-sm text-gray-600">Folge ich</div>
-            </div>
-            
             {profile.location && (
               <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
                 <MapPin className="h-4 w-4" />
