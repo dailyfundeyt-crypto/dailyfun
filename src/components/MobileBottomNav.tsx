@@ -1,16 +1,18 @@
-import { Home, Bot, User, Info, Globe } from 'lucide-react';
+import { Home, Bot, User, Info, Globe, MessageCircle } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const MobileBottomNav = () => {
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
+  const { user } = useAuth();
 
   const navigation = [
     { icon: Home, href: '/search', label: 'Home' },
     { icon: Bot, href: '/ai', label: 'AI Chat' },
     { icon: User, href: '/weird', label: 'My Page' },
-    { icon: Info, href: '/about', label: 'About' },
+    { icon: user ? MessageCircle : Info, href: '/about', label: user ? 'Messages' : 'About' },
     { icon: Globe, href: '#', label: language === 'en' ? 'EN' : 'DE', action: 'language' },
   ];
 

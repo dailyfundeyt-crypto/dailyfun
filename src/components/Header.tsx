@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useMemo } from 'react';
-import { Search, Menu, X, Home, Info, Globe, Bot, User, LogIn, LogOut } from 'lucide-react';
+import { Search, Menu, X, Home, Info, Globe, Bot, User, LogIn, LogOut, MessageCircle } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,9 +23,9 @@ const Header = () => {
     { icon: Home, href: '/search', label: 'Home' },
     { icon: Bot, href: '/ai', label: 'AI Chat' },
     { icon: User, href: '/weird', label: 'My Page' },
-    { icon: Info, href: '/about', label: 'About' },
+    { icon: user ? MessageCircle : Info, href: '/about', label: user ? 'Messages' : 'About' },
     { icon: Globe, href: '#', label: 'Language', action: 'language' },
-  ], []);
+  ], [user]);
 
   const handleNavigation = useCallback((item: typeof navigation[0]) => {
     if (item.action === 'language') {
