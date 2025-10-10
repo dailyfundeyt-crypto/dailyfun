@@ -1,12 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '../components/ui/card';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import InstallSidebar from '../components/InstallSidebar';
 import OptimizedImage from '../components/OptimizedImage';
 
 const AboutUs = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect authenticated users to Messages page
+  useEffect(() => {
+    if (user) {
+      navigate('/messages');
+    }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-white text-black">

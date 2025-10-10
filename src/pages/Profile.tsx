@@ -3,12 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { Button } from '../components/ui/button';
-import { Loader2, MapPin, Calendar, Heart, ArrowLeft } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Heart, ArrowLeft, MessageCircle } from 'lucide-react';
 import InstallSidebar from '../components/InstallSidebar';
 import { useAuth } from '../contexts/AuthContext';
 import { useFollows } from '../hooks/useFollows';
 import { toast } from 'sonner';
 import ArticleCard from '../components/ArticleCard';
+import ChatInterface from '../components/ChatInterface';
 
 interface UserProfile {
   id: string;
@@ -36,6 +37,7 @@ const Profile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [articles, setArticles] = useState<any[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(true);
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -200,6 +202,18 @@ const Profile = () => {
     return null;
   }
 
+  // Show chat interface if chat is open
+  if (showChat && profile) {
+    return (
+      <ChatInterface
+        recipientId={profile.user_id}
+        recipientName={profile.display_name || 'Unbekannt'}
+        recipientAvatar={profile.avatar_url}
+        onClose={() => setShowChat(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <InstallSidebar />
@@ -219,14 +233,29 @@ const Profile = () => {
 
         {/* Profile Section */}
         <div className="text-center mb-8">
-          {/* Avatar */}
+          {/* Avatar - Clickable to open chat */}
           <div className="flex justify-center mb-6">
-            <Avatar className="w-24 h-24 ring-4 ring-gray-100">
-              <AvatarImage src={profile.avatar_url || ''} />
-              <AvatarFallback className="bg-gray-300 text-gray-600 text-3xl font-bold">
-                {(profile.display_name || 'U').charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+            <div 
+              className="relative group cursor-pointer"
+              onClick={() => {
+                if (!user) {
+                  toast.error('Bitte melden Sie sich an, um Nachrichten zu senden');
+                  return;
+                }
+                setShowChat(true);
+              }}
+            >
+              <Avatar className="w-24 h-24 ring-4 ring-gray-100 group-hover:ring-primary/30 transition-all">
+                <AvatarImage src={profile.avatar_url || ''} />
+                <AvatarFallback className="bg-gray-300 text-gray-600 text-3xl font-bold">
+                  {(profile.display_name || 'U').charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              {/* Chat Icon Overlay */}
+              <div className="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <MessageCircle className="h-10 w-10 text-white" />
+              </div>
+            </div>
           </div>
 
           {/* Stats Row */}
