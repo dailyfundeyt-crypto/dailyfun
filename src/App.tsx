@@ -24,6 +24,8 @@ import AI from "./pages/AI";
 import Auth from "./pages/Auth";
 import CreateArticle from "./pages/CreateArticle";
 import Messages from "./pages/Messages";
+import Analytics from "./pages/Analytics";
+import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -71,6 +73,8 @@ const App = () => (
                 <Route path="/profile/:userId" element={<Profile />} />
                 <Route path="/create-article" element={<CreateArticle />} />
                 <Route path="/messages" element={<Messages />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/community" element={<Community />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
