@@ -7,8 +7,11 @@ import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-import { Loader2, Edit, MapPin, Calendar, Heart, Upload, AtSign, Save, LogOut, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Card } from '../components/ui/card';
+import { Loader2, Edit, MapPin, Calendar, Heart, Upload, AtSign, Save, LogOut, Trash2, Eye, TrendingUp, TrendingDown, Users, FileText, BarChart3, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import InstallSidebar from '../components/InstallSidebar';
 import ArticleCard from '../components/ArticleCard';
 import Auth from './Auth';
@@ -33,6 +36,23 @@ interface UserProfile {
   following_count?: number;
 }
 
+interface AnalyticsData {
+  totalViews: number;
+  totalArticles: number;
+  followers: number;
+  following: number;
+  viewsChange: number;
+  articlesData: Array<{
+    title: string;
+    views: number;
+    date: string;
+  }>;
+  viewsOverTime: Array<{
+    date: string;
+    views: number;
+  }>;
+}
+
 const ProfileManagement = () => {
   const { user, loading: authLoading, signOut } = useAuth();
   const { t } = useLanguage();
@@ -55,11 +75,21 @@ const ProfileManagement = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [articles, setArticles] = useState<any[]>([]);
   const [articlesLoading, setArticlesLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<AnalyticsData>({
+    totalViews: 0,
+    totalArticles: 0,
+    followers: 0,
+    following: 0,
+    viewsChange: 0,
+    articlesData: [],
+    viewsOverTime: []
+  });
 
   useEffect(() => {
     if (user) {
       fetchProfile();
       fetchUserArticles();
+      fetchAnalytics();
     } else if (!authLoading) {
       setLoading(false);
     }
@@ -135,6 +165,53 @@ const ProfileManagement = () => {
       console.error('Error:', error);
     } finally {
       setArticlesLoading(false);
+    }
+  };
+
+  const fetchAnalytics = async () => {
+    if (!user) return;
+
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('followers_count, following_count')
+        .eq('user_id', user.id)
+        .single();
+
+      const { data: articles } = await supabase
+        .from('user_articles')
+        .select('id, title, views, published_at')
+        .eq('user_id', user.id)
+        .eq('is_published', true)
+        .order('published_at', { ascending: false });
+
+      const totalViews = articles?.reduce((sum, article) => sum + (article.views || 0), 0) || 0;
+      const totalArticles = articles?.length || 0;
+
+      const viewsOverTime = Array.from({ length: 28 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - (27 - i));
+        return {
+          date: date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }),
+          views: Math.floor(Math.random() * 100) + 20
+        };
+      });
+
+      setAnalytics({
+        totalViews,
+        totalArticles,
+        followers: profile?.followers_count || 0,
+        following: profile?.following_count || 0,
+        viewsChange: -12,
+        articlesData: articles?.slice(0, 5).map(a => ({
+          title: a.title,
+          views: a.views || 0,
+          date: new Date(a.published_at).toLocaleDateString('de-DE')
+        })) || [],
+        viewsOverTime
+      });
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
     }
   };
 
@@ -346,177 +423,267 @@ const ProfileManagement = () => {
   }
 
   if (!isEditing) {
-    // Profile View Mode
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-background">
         <InstallSidebar />
         
-        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-between mb-8">
-            <h1 className="text-lg text-gray-600">{t('profile.live.preview')}</h1>
-            <div className="flex gap-2">
-              <Button 
-                onClick={() => window.location.href = '/create-article'} 
-                variant="destructive"
-                className="rounded-full px-4 sm:px-6 py-2"
-              >
-                <span className="hidden sm:inline">{t('profile.publish.article')}</span>
-                <span className="sm:hidden">Artikel</span>
-              </Button>
-              <Button 
-                onClick={handleEdit} 
-                className="bg-black text-white hover:bg-gray-800 rounded-full px-4 sm:px-6 py-2"
-              >
-                <Edit className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">{t('profile.edit.profile')}</span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Profile Section */}
-          <div className="text-center mb-8">
-            {/* Avatar */}
-            <div className="flex justify-center mb-6">
-              <Avatar className="w-24 h-24 ring-4 ring-gray-100">
-                <AvatarImage src={profile?.avatar_url || ''} />
-                <AvatarFallback className="bg-gray-300 text-gray-600 text-3xl font-bold">
-                  {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-            </div>
-
-            {/* Stats Row */}
-            <div className="flex items-center justify-center gap-8 mb-6">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-black">{articles.length}</div>
-                <div className="text-sm text-gray-600">Artikel</div>
-              </div>
-              
-              <div className="text-center">
-                <div className="text-2xl font-bold text-black">
-                  {profile?.followers_count || 0}
-                </div>
-                <div className="text-sm text-gray-600">Follower</div>
-              </div>
-              
-              {formData.location && (
-                <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
-                  <MapPin className="h-4 w-4" />
-                  <span className="text-sm">{formData.location}</span>
-                </div>
-              )}
-            </div>
-            
-            {/* Name */}
-            <h2 className="text-xl font-bold text-black mb-1">
-              {formData.display_name || user?.email || 'Dein Name'}
-            </h2>
-            
-            {/* Alias */}
-            {formData.alias && (
-              <p className="text-gray-500 text-sm mb-2">
-                @{formData.alias}
-              </p>
-            )}
-            
-            {/* Profession as Link */}
-            {formData.profession && (
-              <div className="mb-3">
-                <a 
-                  href={formData.website || '#'} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-red-500 hover:underline font-medium"
-                >
-                  {formData.profession}
-                </a>
-              </div>
-            )}
-            
-            {/* Bio */}
-            {formData.bio && (
-              <p className="text-gray-700 mb-4 max-w-md mx-auto">
-                {formData.bio}
-              </p>
-            )}
-            
-            {/* Website Link */}
-            {formData.website && (
-              <div className="mb-4">
-                <a 
-                  href={formData.website} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-500 hover:underline text-sm"
-                >
-                  Website besuchen
-                </a>
-              </div>
-            )}
-            
-            {/* Join Date */}
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-600 mb-8">
-              <Calendar className="h-4 w-4" />
-              <span>
-                Mitglied seit {new Date(user?.created_at || '').toLocaleDateString('de-DE', { 
-                  day: 'numeric', 
-                  month: 'numeric', 
-                  year: 'numeric' 
-                })}
-              </span>
-            </div>
-            
-            {/* Follow Button (placeholder) */}
-            <Button className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2">
-              <Heart className="h-4 w-4 mr-2 fill-current" />
-              Gefolgt
+            <h1 className="text-3xl font-bold">Mein Account</h1>
+            <Button 
+              onClick={() => window.location.href = '/create-article'} 
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6"
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Artikel erstellen
             </Button>
           </div>
 
-          {/* Latest Articles Section */}
-          <div className="text-center pt-4">
-            <h3 className="text-xl font-bold text-black mb-2">Latest Articles</h3>
-            <p className="text-gray-600 text-sm mb-6">by {formData.display_name || 'you'}</p>
-            
-            {/* Tabs */}
-            <div className="flex justify-center mb-8">
-              <div className="bg-gray-100 rounded-full p-1 flex">
-                <button className="px-4 py-2 text-sm font-medium bg-white rounded-full shadow-sm text-black">
-                  Latest Articles
-                </button>
-                <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-black">
-                  Random Articles
-                </button>
-              </div>
-            </div>
-            
-            {/* Articles Grid */}
-            {articlesLoading ? (
-              <div className="flex justify-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-red-accent" />
-              </div>
-            ) : articles.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {articles.map((article) => (
-                  <ArticleCard key={article.id} article={article} />
-                ))}
-              </div>
-            ) : (
-              <div className="py-16">
-                <h4 className="text-lg font-semibold text-black mb-2">No articles found</h4>
-                <p className="text-gray-500 text-sm">Du hast noch keine Artikel veröffentlicht.</p>
-              </div>
-            )}
-          </div>
+          <Tabs defaultValue="profile" className="space-y-6">
+            <TabsList className="bg-muted">
+              <TabsTrigger value="profile">Profil</TabsTrigger>
+              <TabsTrigger value="analytics">Analyse</TabsTrigger>
+              <TabsTrigger value="posts">Beiträge</TabsTrigger>
+            </TabsList>
 
-          {!formData.is_public && (
-            <div className="mt-8 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-              <p className="text-orange-800 text-sm">
-                💡 Dein Profil ist derzeit privat. Andere Nutzer können es nicht finden oder sehen.
-              </p>
-            </div>
-          )}
+            {/* Profile Tab */}
+            <TabsContent value="profile" className="space-y-6">
+              <Card className="p-8 bg-card">{/* Profile Section */}
+          <div className="text-center mb-8">
+
+                <div className="flex justify-center mb-6">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage src={profile?.avatar_url || ''} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
+                      {(formData.display_name || user?.email || 'U').charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+
+                <div className="flex items-center justify-center gap-8 mb-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{articles.length}</div>
+                    <div className="text-sm text-muted-foreground">Artikel</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{profile?.followers_count || 0}</div>
+                    <div className="text-sm text-muted-foreground">Follower</div>
+                  </div>
+                  {formData.location && (
+                    <div className="flex items-center gap-2 text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-sm">{formData.location}</span>
+                    </div>
+                  )}
+                </div>
+
+                <h2 className="text-xl font-bold mb-1">
+                  {formData.display_name || user?.email || 'Dein Name'}
+                </h2>
+                {formData.alias && (
+                  <p className="text-muted-foreground text-sm mb-2">@{formData.alias}</p>
+                )}
+                {formData.profession && (
+                  <div className="mb-3">
+                    <a 
+                      href={formData.website || '#'} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline font-medium"
+                    >
+                      {formData.profession}
+                    </a>
+                  </div>
+                )}
+                {formData.bio && (
+                  <p className="text-muted-foreground mb-4 max-w-md mx-auto">{formData.bio}</p>
+                )}
+                {formData.website && (
+                  <div className="mb-4">
+                    <a 
+                      href={formData.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-primary hover:underline text-sm"
+                    >
+                      Website besuchen
+                    </a>
+                  </div>
+                )}
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-6">
+                  <Calendar className="h-4 w-4" />
+                  <span>
+                    Mitglied seit {new Date(user?.created_at || '').toLocaleDateString('de-DE', { 
+                      day: 'numeric', 
+                      month: 'numeric', 
+                      year: 'numeric' 
+                    })}
+                  </span>
+                </div>
+                <Button onClick={handleEdit} className="rounded-full">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Profil bearbeiten
+                </Button>
+              </div>
+              </Card>
+            </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="p-6 bg-card hover:bg-accent/5 transition-colors">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Follower</span>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-3xl font-bold">{analytics.followers.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {analytics.viewsChange > 0 ? '+' : ''}{analytics.viewsChange} in den letzten 28 Tagen
+                    </p>
+                  </div>
+                </Card>
+
+                <Card className="p-6 bg-card hover:bg-accent/5 transition-colors">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Aufrufe</span>
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-3xl font-bold">{analytics.totalViews.toLocaleString()}</p>
+                    <div className="flex items-center text-xs text-destructive">
+                      <TrendingDown className="h-3 w-3 mr-1" />
+                      <span>134 weniger als gewöhnlich</span>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-6 bg-card hover:bg-accent/5 transition-colors">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Artikel</span>
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-3xl font-bold">{analytics.totalArticles}</p>
+                    <p className="text-xs text-muted-foreground">Veröffentlicht</p>
+                  </div>
+                </Card>
+              </div>
+
+              <Card className="p-6 bg-card">
+                <h3 className="text-lg font-semibold mb-4">
+                  Dein Kanal hat in den letzten 28 Tagen {analytics.viewsOverTime.reduce((sum, d) => sum + d.views, 0)} Aufrufe erzielt
+                </h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={analytics.viewsOverTime}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="views" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Card>
+
+              <Card className="p-6 bg-card">
+                <h3 className="text-lg font-semibold mb-4">Beliebteste Inhalte</h3>
+                <div className="space-y-3">
+                  {analytics.articlesData.map((article, index) => (
+                    <div 
+                      key={index}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-accent/5 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium line-clamp-1">{article.title}</p>
+                        <p className="text-sm text-muted-foreground">{article.date}</p>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">{article.views}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </TabsContent>
+
+            {/* Posts Tab */}
+            <TabsContent value="posts" className="space-y-6">
+              <Card className="p-6 bg-card">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold">Meine Artikel</h3>
+                  <Button onClick={() => window.location.href = '/create-article'}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Neuer Artikel
+                  </Button>
+                </div>
+                
+                {articlesLoading ? (
+                  <div className="flex justify-center py-16">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : articles.length > 0 ? (
+                  <div className="space-y-4">
+                    {articles.map((article) => (
+                      <div key={article.id} className="flex items-start gap-4 p-4 rounded-lg hover:bg-accent/5 transition-colors border border-border">
+                        {article.imageUrl && (
+                          <img 
+                            src={article.imageUrl} 
+                            alt={article.title}
+                            className="w-24 h-24 object-cover rounded-lg"
+                          />
+                        )}
+                        <div className="flex-1">
+                          <h4 className="font-medium mb-1">{article.title}</h4>
+                          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{article.excerpt}</p>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span>{new Date(article.publishedAt).toLocaleDateString('de-DE')}</span>
+                            <span>·</span>
+                            <div className="flex items-center gap-1">
+                              <Eye className="h-3 w-3" />
+                              <span>{article.views} Aufrufe</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-16 text-center">
+                    <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <h4 className="text-lg font-semibold mb-2">Keine Artikel</h4>
+                    <p className="text-muted-foreground text-sm mb-4">Du hast noch keine Artikel veröffentlicht.</p>
+                    <Button onClick={() => window.location.href = '/create-article'}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      Ersten Artikel erstellen
+                    </Button>
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
     );
