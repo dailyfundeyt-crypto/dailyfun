@@ -16,7 +16,9 @@ import { Input } from '../components/ui/input';
 import { Button } from '../components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { Search as SearchIcon, User, MapPin, Calendar, Heart } from 'lucide-react';
-import { sortBySimilarity } from '../utils/searchSimilarity';
+import { sortBySimilarity, calculateSimilarity } from '../utils/searchSimilarity';
+import { sortArticlesByScore } from '../utils/articleScoring';
+import { useArticleComments } from '../hooks/useArticleComments';
 import { toast } from 'sonner';
 
 interface UserProfile {
@@ -182,12 +184,49 @@ const Search = () => {
         );
       });
 
-      // Sort articles by similarity to search query
-      const sortedArticles = sortBySimilarity(
-        matchingArticles,
-        query,
-        (article) => language === 'de' ? article.title : (article.titleEn || article.title)
-      );
+      // Fetch engagement data for matching articles
+      const articleIds = matchingArticles.map(a => a.id);
+      
+      // Fetch view counts
+      const { data: viewData } = await supabase
+        .from('article_views')
+        .select('article_id, view_count')
+        .in('article_id', articleIds);
+      
+      // Fetch comment counts
+      const { data: commentData } = await supabase
+        .from('article_comments')
+        .select('article_id')
+        .in('article_id', articleIds);
+      
+      // Build engagement maps
+      const viewMap = new Map<string, number>();
+      viewData?.forEach(item => viewMap.set(item.article_id, item.view_count));
+      
+      const commentMap = new Map<string, number>();
+      commentData?.forEach(comment => {
+        commentMap.set(comment.article_id, (commentMap.get(comment.article_id) || 0) + 1);
+      });
+
+      // Calculate relevance scores for each article
+      const relevanceScores = new Map<string, number>();
+      matchingArticles.forEach(article => {
+        const title = language === 'de' ? article.title : (article.titleEn || article.title);
+        relevanceScores.set(article.id, calculateSimilarity(title, query));
+      });
+
+      // Add engagement data to articles
+      const articlesWithEngagement = matchingArticles.map(article => ({
+        ...article,
+        viewCount: viewMap.get(article.id) || 0,
+        commentCount: commentMap.get(article.id) || 0,
+      }));
+
+      // Sort by combined score (relevance + engagement + recency)
+      const sortedArticles = sortArticlesByScore(articlesWithEngagement, {
+        relevanceScores,
+        prioritizeRecency: false,
+      });
 
       // Search user profiles
       const matchingProfiles = userProfiles.filter(profile => {
@@ -344,32 +383,39 @@ const Search = () => {
       }
     }
 
-    // Sort articles based on selected mode
+    return filtered;
+  }, [selectedAuthor, user, followedAuthors, followedUserIds, userProfiles]);
+
+  // Fetch view counts and comment counts for all articles
+  const articleIds = useMemo(() => filteredArticles.map(a => a.id), [filteredArticles]);
+  const { viewCounts } = useArticleViews(articleIds);
+  const { commentCounts } = useArticleComments(articleIds);
+
+  // Merge view counts and comment counts with articles and apply intelligent sorting
+  const articlesWithEngagement = useMemo(() => {
+    const withEngagement = filteredArticles.map(article => ({
+      ...article,
+      views: viewCounts[article.id] || 0,
+      viewCount: viewCounts[article.id] || 0,
+      commentCount: commentCounts[article.id] || 0
+    }));
+
+    // Apply sorting based on mode
     if (sortMode === 'random') {
       // Create a true random shuffle
-      const shuffled = [...filtered];
+      const shuffled = [...withEngagement];
       for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor((randomSeed + i) * 1000) % (i + 1);
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
       }
       return shuffled;
     } else {
-      // Sort by publication date (newest first)
-      return filtered.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+      // Use intelligent sorting: recency + engagement
+      return sortArticlesByScore(withEngagement, {
+        prioritizeRecency: true,
+      });
     }
-  }, [selectedAuthor, sortMode, randomSeed, user, followedAuthors, followedUserIds, userProfiles]);
-
-  // Fetch view counts for all articles
-  const articleIds = useMemo(() => filteredArticles.map(a => a.id), [filteredArticles]);
-  const { viewCounts } = useArticleViews(articleIds);
-
-  // Merge view counts with articles
-  const articlesWithViews = useMemo(() => {
-    return filteredArticles.map(article => ({
-      ...article,
-      views: viewCounts[article.id] || 0
-    }));
-  }, [filteredArticles, viewCounts]);
+  }, [filteredArticles, viewCounts, commentCounts, sortMode, randomSeed]);
 
   // Update random seed when switching to random mode
   const handleSortModeChange = (mode: 'latest' | 'random') => {
@@ -1007,7 +1053,7 @@ const Search = () => {
 
         {/* Articles Grid with alternating backgrounds */}
         <div className="space-y-0">
-          {articlesWithViews.map((article, index) => (
+          {articlesWithEngagement.map((article, index) => (
             <Link
               key={article.id}
               to={`/article/${article.id}`}
@@ -1064,7 +1110,7 @@ const Search = () => {
           ))}
         </div>
 
-        {articlesWithViews.length === 0 && (
+        {articlesWithEngagement.length === 0 && (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-black mb-2">{t('search.no.results')}</h3>
             <p className="text-gray-600">

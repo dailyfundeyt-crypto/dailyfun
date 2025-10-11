@@ -1,5 +1,5 @@
 
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import ArticleCard from '../components/ArticleCard';
@@ -14,8 +14,10 @@ import {
   PaginationNext, 
   PaginationPrevious 
 } from '../components/ui/pagination';
-import { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useArticleViews } from '../hooks/useArticleViews';
+import { useArticleComments } from '../hooks/useArticleComments';
+import { sortArticlesByScore } from '../utils/articleScoring';
 import OptimizedImage from '../components/OptimizedImage';
 
 const CategoryPage = () => {
@@ -42,15 +44,32 @@ const CategoryPage = () => {
   const filteredArticles = useMemo(() => {
     if (!categoryName) return [];
     
-    return articles
-      .filter(article => article.category === categoryName)
-      .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    return articles.filter(article => article.category === categoryName);
   }, [categoryName]);
 
+  // Fetch engagement data
+  const articleIds = useMemo(() => filteredArticles.map(a => a.id), [filteredArticles]);
+  const { viewCounts } = useArticleViews(articleIds);
+  const { commentCounts } = useArticleComments(articleIds);
+
+  // Merge engagement data and sort by intelligent algorithm
+  const sortedArticles = useMemo(() => {
+    const articlesWithEngagement = filteredArticles.map(article => ({
+      ...article,
+      viewCount: viewCounts[article.id] || 0,
+      commentCount: commentCounts[article.id] || 0,
+    }));
+
+    // Sort by: recency (newest first) + engagement (views & comments)
+    return sortArticlesByScore(articlesWithEngagement, {
+      prioritizeRecency: true,
+    });
+  }, [filteredArticles, viewCounts, commentCounts]);
+
   // Pagination logic
-  const totalPages = Math.ceil(filteredArticles.length / articlesPerPage);
+  const totalPages = Math.ceil(sortedArticles.length / articlesPerPage);
   const startIndex = (currentPage - 1) * articlesPerPage;
-  const paginatedArticles = filteredArticles.slice(startIndex, startIndex + articlesPerPage);
+  const paginatedArticles = sortedArticles.slice(startIndex, startIndex + articlesPerPage);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -100,7 +119,7 @@ const CategoryPage = () => {
           <h1 className="text-3xl font-bold text-[#1A1A1A] mb-6 font-sans">{categoryName}</h1>
           
           <p className="text-[#1A1A1A] mb-6 font-sans">
-            {filteredArticles.length} {t('category.articles')}
+            {sortedArticles.length} {t('category.articles')}
           </p>
         </div>
 
@@ -154,7 +173,7 @@ const CategoryPage = () => {
           ))}
         </div>
 
-        {filteredArticles.length === 0 && (
+        {sortedArticles.length === 0 && (
           <Card className="mx-auto max-w-md">
             <CardContent className="text-center py-12">
               <h3 className="text-lg font-medium text-[#1A1A1A] mb-2 font-sans">{t('category.no.articles')}</h3>
