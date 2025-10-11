@@ -14,6 +14,7 @@ import { articles } from '../data/articles';
 import { incrementViews } from '../utils/viewTracker';
 import OptimizedImage from '../components/OptimizedImage';
 import { supabase } from '../integrations/supabase/client';
+import ArticleComments from '../components/ArticleComments';
 
 // Professional images for article detail pages
 import article1Professional from '../assets/article-1-professional.jpg';
@@ -537,6 +538,9 @@ const Article = () => {
               </div>
             </div>
           </div>
+
+          {/* Comments Section */}
+          <ArticleComments articleId={article.id} />
         </article>
       </main>
     </div>
