@@ -49,7 +49,6 @@ interface UserProfile {
 const Search = () => {
   const [selectedAuthor, setSelectedAuthor] = useState('all');
   const [showProfileInfo, setShowProfileInfo] = useState(false);
-  const [sortMode, setSortMode] = useState<'latest' | 'random'>('latest');
   const [userProfiles, setUserProfiles] = useState<UserProfile[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{articles: any[], profiles: UserProfile[]}>({articles: [], profiles: []});
@@ -87,8 +86,6 @@ const Search = () => {
     }
   }, [location, navigate]);
 
-  // Generate random seed to keep random order stable during re-renders
-  const [randomSeed, setRandomSeed] = useState(() => Math.random());
 
   // Check follow status for profiles
   useEffect(() => {
@@ -400,30 +397,12 @@ const Search = () => {
       commentCount: commentCounts[article.id] || 0
     }));
 
-    // Apply sorting based on mode
-    if (sortMode === 'random') {
-      // Create a true random shuffle
-      const shuffled = [...withEngagement];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor((randomSeed + i) * 1000) % (i + 1);
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      return shuffled;
-    } else {
-      // Use intelligent sorting: recency + engagement
-      return sortArticlesByScore(withEngagement, {
-        prioritizeRecency: true,
-      });
-    }
-  }, [filteredArticles, viewCounts, commentCounts, sortMode, randomSeed]);
+    // Use intelligent sorting: recency + engagement
+    return sortArticlesByScore(withEngagement, {
+      prioritizeRecency: true,
+    });
+  }, [filteredArticles, viewCounts, commentCounts]);
 
-  // Update random seed when switching to random mode
-  const handleSortModeChange = (mode: 'latest' | 'random') => {
-    setSortMode(mode);
-    if (mode === 'random') {
-      setRandomSeed(Math.random());
-    }
-  };
 
   const handleEmployeeClick = (employeeId: string) => {
     setSelectedAuthor(employeeId);
@@ -976,32 +955,6 @@ const Search = () => {
             <div className="text-center pt-4">
               <h3 className="text-xl font-bold text-black mb-2">Latest Articles</h3>
               <p className="text-gray-600 text-sm mb-6">by {currentEmployeeInfo.name}</p>
-              
-              {/* Tabs */}
-              <div className="flex justify-center mb-8">
-                <div className="bg-gray-100 rounded-full p-1 flex">
-                  <button 
-                    onClick={() => handleSortModeChange('latest')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      sortMode === 'latest'
-                        ? 'bg-white rounded-full shadow-sm text-black'
-                        : 'text-gray-600 hover:text-black'
-                    }`}
-                  >
-                    Latest Articles
-                  </button>
-                  <button 
-                    onClick={() => handleSortModeChange('random')}
-                    className={`px-4 py-2 text-sm font-medium transition-colors ${
-                      sortMode === 'random'
-                        ? 'bg-white rounded-full shadow-sm text-black'
-                        : 'text-gray-600 hover:text-black'
-                    }`}
-                  >
-                    Random Articles
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Description Section - moved to bottom if available */}
@@ -1021,32 +974,8 @@ const Search = () => {
           <div className="mb-8">
             <div className="flex flex-col items-center space-y-4">
               <h2 className="text-3xl font-bold text-black font-serif text-center">
-                {sortMode === 'latest' ? t('home.latest') : t('home.random')}
+                {t('home.latest')}
               </h2>
-              
-              {/* Sort Mode Toggle */}
-              <div className="flex space-x-2 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => handleSortModeChange('latest')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    sortMode === 'latest'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-gray-600 hover:text-black'
-                  }`}
-                >
-                  {t('home.latest')}
-                </button>
-                <button
-                  onClick={() => handleSortModeChange('random')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    sortMode === 'random'
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-gray-600 hover:text-black'
-                  }`}
-                >
-                  {t('home.random')}
-                </button>
-              </div>
             </div>
           </div>
         )}
