@@ -60,9 +60,9 @@ const CategoryPage = () => {
       commentCount: commentCounts[article.id] || 0,
     }));
 
-    // Sort by: recency (newest first) + engagement (views & comments)
+    // Sort by: hour first (newest), then engagement within same hour
     return sortArticlesByScore(articlesWithEngagement, {
-      prioritizeRecency: true,
+      strictRecency: true,
     });
   }, [filteredArticles, viewCounts, commentCounts]);
 

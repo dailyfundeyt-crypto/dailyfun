@@ -399,7 +399,7 @@ const Search = () => {
 
     // Use intelligent sorting: recency + engagement
     return sortArticlesByScore(withEngagement, {
-      prioritizeRecency: true,
+      strictRecency: true, // Use strict hour-based sorting for All Categories
     });
   }, [filteredArticles, viewCounts, commentCounts]);
 

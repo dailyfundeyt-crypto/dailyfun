@@ -85,8 +85,33 @@ export function sortArticlesByScore(
   options: {
     relevanceScores?: Map<string, number>;
     prioritizeRecency?: boolean;
+    strictRecency?: boolean; // New option for hour-based grouping
   } = {}
 ): ArticleWithEngagement[] {
+  // If strictRecency is enabled, sort by hour first, then by engagement within the same hour
+  if (options.strictRecency) {
+    return [...articles].sort((a, b) => {
+      const dateA = new Date(a.publishedAt);
+      const dateB = new Date(b.publishedAt);
+      
+      // Get hour-level timestamps (remove minutes/seconds/ms)
+      const hourA = new Date(dateA.getFullYear(), dateA.getMonth(), dateA.getDate(), dateA.getHours()).getTime();
+      const hourB = new Date(dateB.getFullYear(), dateB.getMonth(), dateB.getDate(), dateB.getHours()).getTime();
+      
+      // Primary sort: by hour (newest first)
+      if (hourB !== hourA) {
+        return hourB - hourA;
+      }
+      
+      // Secondary sort: by engagement within the same hour
+      const engagementA = calculateEngagementScore(a.viewCount, a.commentCount);
+      const engagementB = calculateEngagementScore(b.viewCount, b.commentCount);
+      
+      return engagementB - engagementA;
+    });
+  }
+  
+  // Default behavior: use calculated scores
   return [...articles].sort((a, b) => {
     const scoreA = calculateArticleScore(a, {
       relevanceScore: options.relevanceScores?.get(a.id),
