@@ -19,7 +19,9 @@ interface Comment {
   content: string;
   created_at: string;
   updated_at: string;
+  parent_comment_id: string | null;
   profiles?: ProfileData | ProfileData[] | null;
+  replies?: Comment[];
 }
 
 interface ArticleCommentsProps {
@@ -41,6 +43,8 @@ const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
 
   useEffect(() => {
     fetchComments();
@@ -85,13 +89,33 @@ const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
         .select('user_id, display_name, avatar_url')
         .in('user_id', userIds);
 
-      // Map profiles to comments
-      const commentsWithProfiles = commentsData?.map(comment => ({
-        ...comment,
-        profiles: profilesData?.find(p => p.user_id === comment.user_id)
-      })) || [];
+      // Map profiles to comments and build tree
+      const commentMap = new Map<string, Comment>();
+      
+      commentsData?.forEach(comment => {
+        commentMap.set(comment.id, {
+          ...comment,
+          profiles: profilesData?.find(p => p.user_id === comment.user_id),
+          replies: []
+        });
+      });
 
-      setComments(commentsWithProfiles as Comment[]);
+      // Build reply tree
+      commentsData?.forEach(comment => {
+        if (comment.parent_comment_id) {
+          const parent = commentMap.get(comment.parent_comment_id);
+          if (parent) {
+            parent.replies = parent.replies || [];
+            parent.replies.push(commentMap.get(comment.id)!);
+          }
+        }
+      });
+
+      // Get only top-level comments (no parent)
+      const topLevelComments = Array.from(commentMap.values())
+        .filter(c => !c.parent_comment_id);
+
+      setComments(topLevelComments);
     } catch (error) {
       console.error('Error fetching comments:', error);
       toast.error('Fehler beim Laden der Kommentare');
@@ -199,6 +223,221 @@ const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
     }
   };
 
+  const handleReply = async (parentCommentId: string) => {
+    if (!user) {
+      toast.error('Bitte melde dich an, um zu antworten');
+      return;
+    }
+
+    try {
+      // Validate input
+      const validationResult = commentSchema.safeParse({ content: replyContent });
+      if (!validationResult.success) {
+        toast.error(validationResult.error.errors[0].message);
+        return;
+      }
+
+      setSubmitting(true);
+
+      const { error } = await supabase
+        .from('article_comments')
+        .insert({
+          article_id: articleId,
+          user_id: user.id,
+          content: validationResult.data.content,
+          parent_comment_id: parentCommentId
+        });
+
+      if (error) throw error;
+
+      setReplyContent('');
+      setReplyingTo(null);
+      toast.success('Antwort gesendet!');
+      fetchComments();
+    } catch (error) {
+      console.error('Error replying to comment:', error);
+      toast.error('Fehler beim Antworten');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const CommentItem = ({ comment, isReply = false }: { comment: Comment; isReply?: boolean }) => (
+    <div className={`${isReply ? 'ml-12 mt-4' : ''}`}>
+      <div 
+        className="bg-muted/20 rounded-lg p-4 border border-border hover:border-primary/30 transition-colors"
+      >
+        <div className="flex items-start gap-3">
+          <Avatar className="h-10 w-10 shrink-0">
+            <AvatarImage src={
+              Array.isArray(comment.profiles) 
+                ? comment.profiles[0]?.avatar_url || '' 
+                : comment.profiles?.avatar_url || ''
+            } />
+            <AvatarFallback className="bg-primary/10 text-primary">
+              {(Array.isArray(comment.profiles) 
+                ? comment.profiles[0]?.display_name || 'U'
+                : comment.profiles?.display_name || 'U'
+              ).charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <p className="font-semibold text-sm text-foreground">
+                  {Array.isArray(comment.profiles)
+                    ? comment.profiles[0]?.display_name || 'Anonymer Nutzer'
+                    : comment.profiles?.display_name || 'Anonymer Nutzer'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(comment.created_at).toLocaleDateString('de-DE', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                  {comment.updated_at !== comment.created_at && ' (bearbeitet)'}
+                </p>
+              </div>
+              
+              {user?.id === comment.user_id && (
+                <div className="flex gap-2">
+                  {editingId !== comment.id && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(comment)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(comment.id)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {editingId === comment.id ? (
+              <div className="space-y-2">
+                <Textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="min-h-[80px] resize-none"
+                  maxLength={1000}
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {editContent.length}/1000
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCancelEdit}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Abbrechen
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleSaveEdit(comment.id)}
+                      disabled={!editContent.trim()}
+                    >
+                      Speichern
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-foreground whitespace-pre-wrap break-words mb-3">
+                  {comment.content}
+                </p>
+                
+                {/* Reply Button */}
+                {!isReply && user && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReplyingTo(comment.id)}
+                    className="text-xs h-7"
+                  >
+                    <MessageCircle className="h-3 w-3 mr-1" />
+                    Antworten
+                  </Button>
+                )}
+              </>
+            )}
+
+            {/* Reply Form */}
+            {replyingTo === comment.id && user && (
+              <div className="mt-3 animate-fade-in">
+                <Textarea
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  placeholder="Antwort schreiben..."
+                  className="min-h-[80px] resize-none mb-2"
+                  maxLength={1000}
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {replyContent.length}/1000
+                  </span>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setReplyingTo(null);
+                        setReplyContent('');
+                      }}
+                    >
+                      Abbrechen
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleReply(comment.id)}
+                      disabled={!replyContent.trim() || submitting}
+                    >
+                      {submitting ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Senden...
+                        </>
+                      ) : (
+                        'Antworten'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Render Replies */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="space-y-4">
+          {comment.replies.map(reply => (
+            <CommentItem key={reply.id} comment={reply} isReply />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="mt-12 pt-8 border-t border-gray-200">
       <div className="flex items-center gap-2 mb-6">
@@ -272,110 +511,7 @@ const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
       ) : (
         <div className="space-y-6">
           {comments.map((comment) => (
-            <div 
-              key={comment.id} 
-              className="bg-muted/20 rounded-lg p-4 border border-border hover:border-primary/30 transition-colors"
-            >
-              <div className="flex items-start gap-3">
-                <Avatar className="h-10 w-10 shrink-0">
-                  <AvatarImage src={
-                    Array.isArray(comment.profiles) 
-                      ? comment.profiles[0]?.avatar_url || '' 
-                      : comment.profiles?.avatar_url || ''
-                  } />
-                  <AvatarFallback className="bg-primary/10 text-primary">
-                    {(Array.isArray(comment.profiles) 
-                      ? comment.profiles[0]?.display_name || 'U'
-                      : comment.profiles?.display_name || 'U'
-                    ).charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-sm text-foreground">
-                        {Array.isArray(comment.profiles)
-                          ? comment.profiles[0]?.display_name || 'Anonymer Nutzer'
-                          : comment.profiles?.display_name || 'Anonymer Nutzer'}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(comment.created_at).toLocaleDateString('de-DE', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                        {comment.updated_at !== comment.created_at && ' (bearbeitet)'}
-                      </p>
-                    </div>
-                    
-                    {user?.id === comment.user_id && (
-                      <div className="flex gap-2">
-                        {editingId !== comment.id && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEdit(comment)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit2 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(comment.id)}
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {editingId === comment.id ? (
-                    <div className="space-y-2">
-                      <Textarea
-                        value={editContent}
-                        onChange={(e) => setEditContent(e.target.value)}
-                        className="min-h-[80px] resize-none"
-                        maxLength={1000}
-                      />
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">
-                          {editContent.length}/1000
-                        </span>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleCancelEdit}
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Abbrechen
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleSaveEdit(comment.id)}
-                            disabled={!editContent.trim()}
-                          >
-                            Speichern
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-foreground whitespace-pre-wrap break-words">
-                      {comment.content}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
+            <CommentItem key={comment.id} comment={comment} />
           ))}
         </div>
       )}

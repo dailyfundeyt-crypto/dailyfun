@@ -35,6 +35,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          parent_comment_id: string | null
           updated_at: string
           user_id: string
         }
@@ -43,6 +44,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          parent_comment_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -51,10 +53,19 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          parent_comment_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "article_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "article_comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       article_templates: {
         Row: {
@@ -118,6 +129,41 @@ export type Database = {
           view_count?: number
         }
         Relationships: []
+      }
+      comment_notifications: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          recipient_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          recipient_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          recipient_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "article_comments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversations: {
         Row: {
