@@ -96,16 +96,17 @@ const Messages = () => {
     );
   }
 
+  // Show chat interface if chat is open
   if (selectedChat) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto">
-          <div className="p-4 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="p-4 border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSelectedChat(null)}
-              className="gap-2"
+              className="gap-2 hover:bg-gray-100 rounded-full"
             >
               <ArrowLeft className="h-4 w-4" />
               Zurück zu Nachrichten
@@ -123,20 +124,26 @@ const Messages = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Nachrichten</h1>
-          <p className="text-muted-foreground">Private Chats und Kommentare verwalten</p>
+          <h1 className="text-3xl font-bold text-black mb-2">Nachrichten</h1>
+          <p className="text-gray-600">Private Chats und Kommentare verwalten</p>
         </div>
 
         <Tabs defaultValue="private" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-            <TabsTrigger value="private" className="data-[state=active]:bg-background">
+          <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-2xl p-1">
+            <TabsTrigger 
+              value="private" 
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-xl transition-all"
+            >
               <MessageCircle className="h-4 w-4 mr-2" />
               Nachrichten
             </TabsTrigger>
-            <TabsTrigger value="comments" className="data-[state=active]:bg-background">
+            <TabsTrigger 
+              value="comments" 
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-xl transition-all"
+            >
               <Reply className="h-4 w-4 mr-2" />
               Kommentare
             </TabsTrigger>
@@ -144,55 +151,67 @@ const Messages = () => {
 
           <TabsContent value="private" className="space-y-4">
             {conversations.length === 0 ? (
-              <Card className="p-12 text-center bg-card border-border">
-                <div className="max-w-sm mx-auto">
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <MessageCircle className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">Keine Nachrichten</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Du hast noch keine privaten Nachrichten erhalten.
-                  </p>
+              <div className="text-center py-16 animate-fade-in">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <MessageCircle className="h-10 w-10 text-gray-400" />
                 </div>
-              </Card>
+                <h3 className="text-xl font-bold text-black mb-2">Keine Nachrichten</h3>
+                <p className="text-gray-600 max-w-sm mx-auto">
+                  Du hast noch keine privaten Nachrichten erhalten. Starte eine Konversation, indem du auf ein Profil gehst.
+                </p>
+              </div>
             ) : (
-              conversations.map((conv) => (
-                <Card
-                  key={conv.id}
-                  className="p-5 bg-card hover:bg-accent/10 transition-all cursor-pointer border-border group"
-                  onClick={() => setSelectedChat({
-                    recipientId: conv.other_user_id,
-                    recipientName: conv.display_name,
-                    recipientAvatar: conv.avatar_url
-                  })}
-                >
-                  <div className="flex items-start gap-4">
-                    <Avatar className="h-12 w-12 ring-2 ring-transparent group-hover:ring-primary/20 transition-all">
-                      <AvatarImage src={conv.avatar_url || undefined} />
-                      <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                        {conv.display_name[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-semibold text-base truncate">{conv.display_name}</h3>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(conv.last_message_time), { 
-                            addSuffix: true, 
-                            locale: de 
-                          })}
-                        </span>
+              <div className="space-y-3">
+                {conversations.map((conv, index) => (
+                  <div
+                    key={conv.id}
+                    className="group bg-white rounded-2xl p-5 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300 cursor-pointer animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                    onClick={() => setSelectedChat({
+                      recipientId: conv.other_user_id,
+                      recipientName: conv.display_name,
+                      recipientAvatar: conv.avatar_url
+                    })}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="relative">
+                        <Avatar className="h-14 w-14 ring-2 ring-gray-100 group-hover:ring-primary/20 transition-all">
+                          <AvatarImage src={conv.avatar_url || undefined} />
+                          <AvatarFallback className="bg-gray-200 text-gray-700 text-lg font-bold">
+                            {conv.display_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        {/* Online indicator - optional */}
+                        <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                       </div>
-                      <p className="text-sm text-muted-foreground truncate">{conv.last_message}</p>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-bold text-black text-base truncate group-hover:text-primary transition-colors">
+                            {conv.display_name}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">
+                              {formatDistanceToNow(new Date(conv.last_message_time), { 
+                                addSuffix: true, 
+                                locale: de 
+                              })}
+                            </span>
+                            {conv.unread_count > 0 && (
+                              <div className="bg-primary text-white rounded-full min-w-[24px] h-6 px-2 flex items-center justify-center text-xs font-bold shadow-sm">
+                                {conv.unread_count}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 truncate line-clamp-2">
+                          {conv.last_message}
+                        </p>
+                      </div>
                     </div>
-                    {conv.unread_count > 0 && (
-                      <div className="bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold">
-                        {conv.unread_count}
-                      </div>
-                    )}
                   </div>
-                </Card>
-              ))
+                ))}
+              </div>
             )}
           </TabsContent>
 
