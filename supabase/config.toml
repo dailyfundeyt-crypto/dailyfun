@@ -12,6 +12,9 @@ verify_jwt = false
 [functions.lovable-ai-proxy]
 verify_jwt = false
 
+[functions.moderate-comment]
+verify_jwt = false
+
 [functions.send-reset-code]
 verify_jwt = false
 

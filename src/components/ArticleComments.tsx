@@ -142,6 +142,25 @@ const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
 
       setSubmitting(true);
 
+      // Moderate the comment before posting
+      const { data: moderationData, error: moderationError } = await supabase.functions.invoke('moderate-comment', {
+        body: { content: validationResult.data.content }
+      });
+
+      if (moderationError) {
+        console.error('Moderation error:', moderationError);
+        toast.error('Moderation fehlgeschlagen. Bitte versuche es erneut.');
+        setSubmitting(false);
+        return;
+      }
+
+      if (!moderationData.isAppropriate) {
+        toast.error(`Dein Kommentar wurde abgelehnt: ${moderationData.reason}`);
+        setSubmitting(false);
+        return;
+      }
+
+      // If moderation passed, post the comment
       const { error } = await supabase
         .from('article_comments')
         .insert({
@@ -239,6 +258,25 @@ const ArticleComments = ({ articleId }: ArticleCommentsProps) => {
 
       setSubmitting(true);
 
+      // Moderate the reply before posting
+      const { data: moderationData, error: moderationError } = await supabase.functions.invoke('moderate-comment', {
+        body: { content: validationResult.data.content }
+      });
+
+      if (moderationError) {
+        console.error('Moderation error:', moderationError);
+        toast.error('Moderation fehlgeschlagen. Bitte versuche es erneut.');
+        setSubmitting(false);
+        return;
+      }
+
+      if (!moderationData.isAppropriate) {
+        toast.error(`Deine Antwort wurde abgelehnt: ${moderationData.reason}`);
+        setSubmitting(false);
+        return;
+      }
+
+      // If moderation passed, post the reply
       const { error } = await supabase
         .from('article_comments')
         .insert({

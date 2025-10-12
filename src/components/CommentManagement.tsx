@@ -204,12 +204,31 @@ export const CommentManagement = () => {
     try {
       setSubmitting(true);
 
+      // Moderate the reply before posting
+      const { data: moderationData, error: moderationError } = await supabase.functions.invoke('moderate-comment', {
+        body: { content: replyContent }
+      });
+
+      if (moderationError) {
+        console.error('Moderation error:', moderationError);
+        toast.error('Moderation fehlgeschlagen. Bitte versuche es erneut.');
+        setSubmitting(false);
+        return;
+      }
+
+      if (!moderationData.isAppropriate) {
+        toast.error(`Deine Antwort wurde abgelehnt: ${moderationData.reason}`);
+        setSubmitting(false);
+        return;
+      }
+
       const comment = commentGroups
         .flatMap(g => g.comments)
         .find(c => c.id === commentId);
 
       if (!comment) return;
 
+      // If moderation passed, post the reply
       const { error } = await supabase
         .from('article_comments')
         .insert({
