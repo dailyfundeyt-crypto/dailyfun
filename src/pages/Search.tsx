@@ -680,7 +680,7 @@ const Search = () => {
                                 {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
                               </p>
                               <div className="text-xs text-gray-500">
-                                {article.author} • {new Date(article.publishedAt).toLocaleDateString('de-DE')}
+                                {article.author} • {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {article.viewCount || 0} Aufrufe
                               </div>
                             </div>
                           </div>
