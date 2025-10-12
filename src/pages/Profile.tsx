@@ -366,18 +366,6 @@ const Profile = () => {
           <h3 className="text-xl font-bold text-black mb-2">Latest Articles</h3>
           <p className="text-gray-600 text-sm mb-6">by {profile.display_name}</p>
           
-          {/* Tabs */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-gray-100 rounded-full p-1 flex">
-              <button className="px-4 py-2 text-sm font-medium bg-white rounded-full shadow-sm text-black">
-                Latest Articles
-              </button>
-              <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-black">
-                Random Articles
-              </button>
-            </div>
-          </div>
-          
           {/* Articles Grid */}
           {articlesLoading ? (
             <div className="flex justify-center py-16">
