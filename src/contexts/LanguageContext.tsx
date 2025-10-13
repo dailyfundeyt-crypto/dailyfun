@@ -2,7 +2,11 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 interface LanguageContextType {
   language: 'en' | 'de';
+  primaryLanguage: 'en' | 'de';
+  secondaryLanguage: 'en' | 'de';
   toggleLanguage: () => void;
+  setPrimaryLanguage: (lang: 'en' | 'de') => void;
+  setSecondaryLanguage: (lang: 'en' | 'de') => void;
   t: (key: string) => string;
 }
 
@@ -385,20 +389,56 @@ const translations = {
 };
 
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [language, setLanguage] = useState<'en' | 'de'>('en');
+  const [primaryLanguage, setPrimaryLanguage] = useState<'en' | 'de'>(() => {
+    const saved = localStorage.getItem('daily-fun-primary-language');
+    return (saved as 'en' | 'de') || 'de';
+  });
+  
+  const [secondaryLanguage, setSecondaryLanguage] = useState<'en' | 'de'>(() => {
+    const saved = localStorage.getItem('daily-fun-secondary-language');
+    return (saved as 'en' | 'de') || 'en';
+  });
 
-  // Always start with English on page load
+  const [language, setLanguage] = useState<'en' | 'de'>(primaryLanguage);
+
+  // Always start with primary language on page load
   useEffect(() => {
-    setLanguage('en'); // Always default to English on initial load
-  }, []);
+    setLanguage(primaryLanguage);
+  }, [primaryLanguage]);
 
-  // Save language preference whenever it changes
+  // Save language preferences whenever they change
   useEffect(() => {
     localStorage.setItem('daily-fun-language', language);
   }, [language]);
 
+  useEffect(() => {
+    localStorage.setItem('daily-fun-primary-language', primaryLanguage);
+  }, [primaryLanguage]);
+
+  useEffect(() => {
+    localStorage.setItem('daily-fun-secondary-language', secondaryLanguage);
+  }, [secondaryLanguage]);
+
   const toggleLanguage = () => {
-    setLanguage(prev => prev === 'en' ? 'de' : 'en');
+    setLanguage(prev => prev === primaryLanguage ? secondaryLanguage : primaryLanguage);
+  };
+
+  const handleSetPrimaryLanguage = (lang: 'en' | 'de') => {
+    setPrimaryLanguage(lang);
+    setLanguage(lang);
+    // If secondary is same as new primary, swap them
+    if (secondaryLanguage === lang) {
+      setSecondaryLanguage(lang === 'en' ? 'de' : 'en');
+    }
+  };
+
+  const handleSetSecondaryLanguage = (lang: 'en' | 'de') => {
+    setSecondaryLanguage(lang);
+    // If primary is same as new secondary, swap them
+    if (primaryLanguage === lang) {
+      setPrimaryLanguage(lang === 'en' ? 'de' : 'en');
+      setLanguage(lang === 'en' ? 'de' : 'en');
+    }
   };
 
   // Translation function - returns the translated text or the key if not found
@@ -407,7 +447,15 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ 
+      language, 
+      primaryLanguage, 
+      secondaryLanguage, 
+      toggleLanguage, 
+      setPrimaryLanguage: handleSetPrimaryLanguage,
+      setSecondaryLanguage: handleSetSecondaryLanguage,
+      t 
+    }}>
       {children}
     </LanguageContext.Provider>
   );

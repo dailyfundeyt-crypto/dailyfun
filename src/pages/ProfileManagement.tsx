@@ -15,6 +15,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { toast } from 'sonner';
 import InstallSidebar from '../components/InstallSidebar';
 import ArticleCard from '../components/ArticleCard';
+import { cn } from '@/lib/utils';
 import Auth from './Auth';
 
 interface UserProfile {
@@ -39,7 +40,7 @@ interface UserProfile {
 
 const ProfileManagement = () => {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { t } = useLanguage();
+  const { t, primaryLanguage, secondaryLanguage, setPrimaryLanguage, setSecondaryLanguage } = useLanguage();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -778,8 +779,9 @@ const ProfileManagement = () => {
           <h3 className="text-lg font-semibold text-black mb-6">Account-Einstellungen</h3>
           
           <Tabs defaultValue="settings" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50">
+            <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted/50">
               <TabsTrigger value="settings" className="data-[state=active]:bg-background">Einstellungen</TabsTrigger>
+              <TabsTrigger value="language" className="data-[state=active]:bg-background">Sprache</TabsTrigger>
               <TabsTrigger value="analytics" className="data-[state=active]:bg-background">Analyse</TabsTrigger>
               <TabsTrigger value="posts" className="data-[state=active]:bg-background">Post Verwalten</TabsTrigger>
             </TabsList>
@@ -795,7 +797,7 @@ const ProfileManagement = () => {
                   <LogOut className="h-4 w-4" />
                   Abmelden
                 </Button>
-                
+
                 {showDeleteConfirm ? (
                   <div className="space-y-3">
                     <p className="text-sm text-red-600 text-center">
@@ -830,6 +832,247 @@ const ProfileManagement = () => {
                   </Button>
                 )}
               </div>
+            </TabsContent>
+
+            {/* Language Tab */}
+            <TabsContent value="language" className="space-y-6">
+              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-100 overflow-hidden shadow-sm">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-blue-600" />
+                    Spracheinstellungen
+                  </CardTitle>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Wähle deine bevorzugten Sprachen aus. Die erste Sprache wird automatisch beim Öffnen der Website verwendet.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Primary Language */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">1</div>
+                      Hauptsprache
+                    </Label>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Diese Sprache wird automatisch verwendet, wenn du die Website öffnest
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => setPrimaryLanguage('de')}
+                        className={cn(
+                          "relative p-6 rounded-2xl border-2 transition-all duration-300 group overflow-hidden",
+                          primaryLanguage === 'de'
+                            ? "border-blue-600 bg-blue-600 shadow-lg shadow-blue-600/25 scale-[1.02]"
+                            : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:scale-[1.01]"
+                        )}
+                      >
+                        <div className={cn(
+                          "absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                          primaryLanguage === 'de' && "opacity-100"
+                        )} />
+                        <div className="relative z-10 flex flex-col items-center gap-3">
+                          <div className={cn(
+                            "w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110",
+                            primaryLanguage === 'de' ? "bg-white/20" : "bg-gray-100"
+                          )}>
+                            🇩🇪
+                          </div>
+                          <div className="text-center">
+                            <div className={cn(
+                              "font-bold text-base",
+                              primaryLanguage === 'de' ? "text-white" : "text-gray-900"
+                            )}>
+                              Deutsch
+                            </div>
+                            <div className={cn(
+                              "text-sm mt-1",
+                              primaryLanguage === 'de' ? "text-white/80" : "text-gray-500"
+                            )}>
+                              Deutschland
+                            </div>
+                          </div>
+                          {primaryLanguage === 'de' && (
+                            <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center animate-scale-in">
+                              <div className="w-3 h-3 bg-blue-600 rounded-full" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => setPrimaryLanguage('en')}
+                        className={cn(
+                          "relative p-6 rounded-2xl border-2 transition-all duration-300 group overflow-hidden",
+                          primaryLanguage === 'en'
+                            ? "border-blue-600 bg-blue-600 shadow-lg shadow-blue-600/25 scale-[1.02]"
+                            : "border-gray-200 bg-white hover:border-blue-300 hover:shadow-md hover:scale-[1.01]"
+                        )}
+                      >
+                        <div className={cn(
+                          "absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                          useLanguage().primaryLanguage === 'en' && "opacity-100"
+                        )} />
+                        <div className="relative z-10 flex flex-col items-center gap-3">
+                          <div className={cn(
+                            "w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110",
+                            useLanguage().primaryLanguage === 'en' ? "bg-white/20" : "bg-gray-100"
+                          )}>
+                            🇺🇸
+                          </div>
+                          <div className="text-center">
+                            <div className={cn(
+                              "font-bold text-base",
+                              useLanguage().primaryLanguage === 'en' ? "text-white" : "text-gray-900"
+                            )}>
+                              English
+                            </div>
+                            <div className={cn(
+                              "text-sm mt-1",
+                              useLanguage().primaryLanguage === 'en' ? "text-white/80" : "text-gray-500"
+                            )}>
+                              United States
+                            </div>
+                          </div>
+                          {useLanguage().primaryLanguage === 'en' && (
+                            <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center animate-scale-in">
+                              <div className="w-3 h-3 bg-blue-600 rounded-full" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200" />
+                    </div>
+                    <div className="relative flex justify-center">
+                      <span className="px-4 text-sm text-gray-500 bg-gradient-to-br from-blue-50 to-indigo-50">und</span>
+                    </div>
+                  </div>
+
+                  {/* Secondary Language */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">2</div>
+                      Zweitsprache
+                    </Label>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Klicke auf den Sprach-Button, um zwischen deinen Sprachen zu wechseln
+                    </p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => {
+                          const { setSecondaryLanguage } = useLanguage();
+                          setSecondaryLanguage('de');
+                        }}
+                        className={cn(
+                          "relative p-6 rounded-2xl border-2 transition-all duration-300 group overflow-hidden",
+                          useLanguage().secondaryLanguage === 'de'
+                            ? "border-indigo-600 bg-indigo-600 shadow-lg shadow-indigo-600/25 scale-[1.02]"
+                            : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md hover:scale-[1.01]"
+                        )}
+                      >
+                        <div className={cn(
+                          "absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                          useLanguage().secondaryLanguage === 'de' && "opacity-100"
+                        )} />
+                        <div className="relative z-10 flex flex-col items-center gap-3">
+                          <div className={cn(
+                            "w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110",
+                            useLanguage().secondaryLanguage === 'de' ? "bg-white/20" : "bg-gray-100"
+                          )}>
+                            🇩🇪
+                          </div>
+                          <div className="text-center">
+                            <div className={cn(
+                              "font-bold text-base",
+                              useLanguage().secondaryLanguage === 'de' ? "text-white" : "text-gray-900"
+                            )}>
+                              Deutsch
+                            </div>
+                            <div className={cn(
+                              "text-sm mt-1",
+                              useLanguage().secondaryLanguage === 'de' ? "text-white/80" : "text-gray-500"
+                            )}>
+                              Deutschland
+                            </div>
+                          </div>
+                          {useLanguage().secondaryLanguage === 'de' && (
+                            <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center animate-scale-in">
+                              <div className="w-3 h-3 bg-indigo-600 rounded-full" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const { setSecondaryLanguage } = useLanguage();
+                          setSecondaryLanguage('en');
+                        }}
+                        className={cn(
+                          "relative p-6 rounded-2xl border-2 transition-all duration-300 group overflow-hidden",
+                          useLanguage().secondaryLanguage === 'en'
+                            ? "border-indigo-600 bg-indigo-600 shadow-lg shadow-indigo-600/25 scale-[1.02]"
+                            : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md hover:scale-[1.01]"
+                        )}
+                      >
+                        <div className={cn(
+                          "absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                          useLanguage().secondaryLanguage === 'en' && "opacity-100"
+                        )} />
+                        <div className="relative z-10 flex flex-col items-center gap-3">
+                          <div className={cn(
+                            "w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110",
+                            useLanguage().secondaryLanguage === 'en' ? "bg-white/20" : "bg-gray-100"
+                          )}>
+                            🇺🇸
+                          </div>
+                          <div className="text-center">
+                            <div className={cn(
+                              "font-bold text-base",
+                              useLanguage().secondaryLanguage === 'en' ? "text-white" : "text-gray-900"
+                            )}>
+                              English
+                            </div>
+                            <div className={cn(
+                              "text-sm mt-1",
+                              useLanguage().secondaryLanguage === 'en' ? "text-white/80" : "text-gray-500"
+                            )}>
+                              United States
+                            </div>
+                          </div>
+                          {useLanguage().secondaryLanguage === 'en' && (
+                            <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center animate-scale-in">
+                              <div className="w-3 h-3 bg-indigo-600 rounded-full" />
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Info Box */}
+                  <div className="mt-6 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-blue-200">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                          <span className="text-lg">💡</span>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-gray-900 mb-1">Wie funktioniert es?</h4>
+                        <p className="text-sm text-gray-600">
+                          Deine Hauptsprache ({useLanguage().primaryLanguage === 'de' ? 'Deutsch' : 'English'}) wird beim Laden der Website automatisch aktiviert. Mit dem Sprach-Button oben kannst du jederzeit zu {useLanguage().secondaryLanguage === 'de' ? 'Deutsch' : 'English'} wechseln.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Analytics Tab */}
