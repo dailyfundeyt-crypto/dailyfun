@@ -910,30 +910,30 @@ const ProfileManagement = () => {
                       >
                         <div className={cn(
                           "absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-                          useLanguage().primaryLanguage === 'en' && "opacity-100"
+                          primaryLanguage === 'en' && "opacity-100"
                         )} />
                         <div className="relative z-10 flex flex-col items-center gap-3">
                           <div className={cn(
                             "w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110",
-                            useLanguage().primaryLanguage === 'en' ? "bg-white/20" : "bg-gray-100"
+                            primaryLanguage === 'en' ? "bg-white/20" : "bg-gray-100"
                           )}>
                             🇺🇸
                           </div>
                           <div className="text-center">
                             <div className={cn(
                               "font-bold text-base",
-                              useLanguage().primaryLanguage === 'en' ? "text-white" : "text-gray-900"
+                              primaryLanguage === 'en' ? "text-white" : "text-gray-900"
                             )}>
                               English
                             </div>
                             <div className={cn(
                               "text-sm mt-1",
-                              useLanguage().primaryLanguage === 'en' ? "text-white/80" : "text-gray-500"
+                              primaryLanguage === 'en' ? "text-white/80" : "text-gray-500"
                             )}>
                               United States
                             </div>
                           </div>
-                          {useLanguage().primaryLanguage === 'en' && (
+                          {primaryLanguage === 'en' && (
                             <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center animate-scale-in">
                               <div className="w-3 h-3 bg-blue-600 rounded-full" />
                             </div>
@@ -964,43 +964,40 @@ const ProfileManagement = () => {
                     </p>
                     <div className="grid grid-cols-2 gap-3">
                       <button
-                        onClick={() => {
-                          const { setSecondaryLanguage } = useLanguage();
-                          setSecondaryLanguage('de');
-                        }}
+                        onClick={() => setSecondaryLanguage('de')}
                         className={cn(
                           "relative p-6 rounded-2xl border-2 transition-all duration-300 group overflow-hidden",
-                          useLanguage().secondaryLanguage === 'de'
+                          secondaryLanguage === 'de'
                             ? "border-indigo-600 bg-indigo-600 shadow-lg shadow-indigo-600/25 scale-[1.02]"
                             : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md hover:scale-[1.01]"
                         )}
                       >
                         <div className={cn(
                           "absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-                          useLanguage().secondaryLanguage === 'de' && "opacity-100"
+                          secondaryLanguage === 'de' && "opacity-100"
                         )} />
                         <div className="relative z-10 flex flex-col items-center gap-3">
                           <div className={cn(
                             "w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110",
-                            useLanguage().secondaryLanguage === 'de' ? "bg-white/20" : "bg-gray-100"
+                            secondaryLanguage === 'de' ? "bg-white/20" : "bg-gray-100"
                           )}>
                             🇩🇪
                           </div>
                           <div className="text-center">
                             <div className={cn(
                               "font-bold text-base",
-                              useLanguage().secondaryLanguage === 'de' ? "text-white" : "text-gray-900"
+                              secondaryLanguage === 'de' ? "text-white" : "text-gray-900"
                             )}>
                               Deutsch
                             </div>
                             <div className={cn(
                               "text-sm mt-1",
-                              useLanguage().secondaryLanguage === 'de' ? "text-white/80" : "text-gray-500"
+                              secondaryLanguage === 'de' ? "text-white/80" : "text-gray-500"
                             )}>
                               Deutschland
                             </div>
                           </div>
-                          {useLanguage().secondaryLanguage === 'de' && (
+                          {secondaryLanguage === 'de' && (
                             <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center animate-scale-in">
                               <div className="w-3 h-3 bg-indigo-600 rounded-full" />
                             </div>
@@ -1009,43 +1006,40 @@ const ProfileManagement = () => {
                       </button>
 
                       <button
-                        onClick={() => {
-                          const { setSecondaryLanguage } = useLanguage();
-                          setSecondaryLanguage('en');
-                        }}
+                        onClick={() => setSecondaryLanguage('en')}
                         className={cn(
                           "relative p-6 rounded-2xl border-2 transition-all duration-300 group overflow-hidden",
-                          useLanguage().secondaryLanguage === 'en'
+                          secondaryLanguage === 'en'
                             ? "border-indigo-600 bg-indigo-600 shadow-lg shadow-indigo-600/25 scale-[1.02]"
                             : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md hover:scale-[1.01]"
                         )}
                       >
                         <div className={cn(
                           "absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-                          useLanguage().secondaryLanguage === 'en' && "opacity-100"
+                          secondaryLanguage === 'en' && "opacity-100"
                         )} />
                         <div className="relative z-10 flex flex-col items-center gap-3">
                           <div className={cn(
                             "w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110",
-                            useLanguage().secondaryLanguage === 'en' ? "bg-white/20" : "bg-gray-100"
+                            secondaryLanguage === 'en' ? "bg-white/20" : "bg-gray-100"
                           )}>
                             🇺🇸
                           </div>
                           <div className="text-center">
                             <div className={cn(
                               "font-bold text-base",
-                              useLanguage().secondaryLanguage === 'en' ? "text-white" : "text-gray-900"
+                              secondaryLanguage === 'en' ? "text-white" : "text-gray-900"
                             )}>
                               English
                             </div>
                             <div className={cn(
                               "text-sm mt-1",
-                              useLanguage().secondaryLanguage === 'en' ? "text-white/80" : "text-gray-500"
+                              secondaryLanguage === 'en' ? "text-white/80" : "text-gray-500"
                             )}>
                               United States
                             </div>
                           </div>
-                          {useLanguage().secondaryLanguage === 'en' && (
+                          {secondaryLanguage === 'en' && (
                             <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-full flex items-center justify-center animate-scale-in">
                               <div className="w-3 h-3 bg-indigo-600 rounded-full" />
                             </div>
@@ -1066,7 +1060,7 @@ const ProfileManagement = () => {
                       <div className="flex-1">
                         <h4 className="text-sm font-semibold text-gray-900 mb-1">Wie funktioniert es?</h4>
                         <p className="text-sm text-gray-600">
-                          Deine Hauptsprache ({useLanguage().primaryLanguage === 'de' ? 'Deutsch' : 'English'}) wird beim Laden der Website automatisch aktiviert. Mit dem Sprach-Button oben kannst du jederzeit zu {useLanguage().secondaryLanguage === 'de' ? 'Deutsch' : 'English'} wechseln.
+                          Deine Hauptsprache ({primaryLanguage === 'de' ? 'Deutsch' : 'English'}) wird beim Laden der Website automatisch aktiviert. Mit dem Sprach-Button oben kannst du jederzeit zu {secondaryLanguage === 'de' ? 'Deutsch' : 'English'} wechseln.
                         </p>
                       </div>
                     </div>
