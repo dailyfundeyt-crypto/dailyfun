@@ -951,12 +951,6 @@ const Search = () => {
               )}
             </div>
 
-            {/* Latest Articles Section */}
-            <div className="text-center pt-4">
-              <h3 className="text-xl font-bold text-black mb-2">Latest Articles</h3>
-              <p className="text-gray-600 text-sm mb-6">by {currentEmployeeInfo.name}</p>
-            </div>
-
             {/* Description Section - moved to bottom if available */}
             {currentEmployeeInfo.description && (
               <div className="p-6 bg-gray-50 rounded-lg mx-4 mb-4">
@@ -969,16 +963,6 @@ const Search = () => {
         )}
 
 
-        {/* Articles Section Header - Only show when profile is not selected */}
-        {!showProfileInfo && (
-          <div className="mb-8">
-            <div className="flex flex-col items-center space-y-4">
-              <h2 className="text-3xl font-bold text-black font-serif text-center">
-                {t('home.latest')}
-              </h2>
-            </div>
-          </div>
-        )}
 
         {/* Articles Grid with alternating backgrounds */}
         <div className="space-y-0">
