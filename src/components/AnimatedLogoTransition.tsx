@@ -30,6 +30,8 @@ const AnimatedLogoTransition: React.FC = () => {
           } else if (nextPhase === 'phase1') {
             window.dispatchEvent(new CustomEvent('logoPhaseChange', { detail: 'daily-fun' }));
             setCycle(prev => prev + 1);
+          } else if (nextPhase === 'phase2' || nextPhase === 'phase3' || nextPhase === 'phase4') {
+            window.dispatchEvent(new CustomEvent('logoPhaseChange', { detail: nextPhase }));
           }
         }, delay)
       );

@@ -22,9 +22,23 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
+  const [isGlimmer, setIsGlimmer] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  useEffect(() => {
+    const handlePhaseChange = (event: CustomEvent) => {
+      if (event.detail === 'conect') {
+        // Trigger glimmer effect
+        setIsGlimmer(true);
+        setTimeout(() => setIsGlimmer(false), 800);
+      }
+    };
+
+    window.addEventListener('logoPhaseChange', handlePhaseChange as EventListener);
+    return () => window.removeEventListener('logoPhaseChange', handlePhaseChange as EventListener);
+  }, []);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -147,7 +161,9 @@ const Auth = () => {
         initialEmail={email}
       />
       
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className={`min-h-screen flex items-center justify-center p-4 transition-all duration-300 ${
+        isGlimmer ? 'bg-black' : 'bg-background'
+      }`}>
         <div className="w-full max-w-md">
         {/* Header with Logo */}
         <div className="text-center mb-8">
@@ -162,7 +178,9 @@ const Auth = () => {
           </p>
         </div>
 
-        <Card className="shadow-xl border border-border bg-card">
+        <Card className={`shadow-xl border border-border bg-card transition-all duration-300 ${
+          isGlimmer ? 'shadow-[0_0_50px_rgba(255,255,255,0.8)]' : ''
+        }`}>
           <CardContent className="pt-8 pb-8 px-8 space-y-6">
             {/* Google Sign In Button */}
             <Button
