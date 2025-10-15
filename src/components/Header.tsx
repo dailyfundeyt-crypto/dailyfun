@@ -20,6 +20,8 @@ const Header = () => {
         setLogoText('Conect');
       } else if (event.detail === 'daily-fun') {
         setLogoText('Daily Fun');
+      } else if (event.detail === 'phase4' || event.detail === 'phase3' || event.detail === 'phase2') {
+        setLogoText('Daily Fun'); // Keep Daily Fun during transition phases
       }
     };
 
@@ -63,11 +65,28 @@ const Header = () => {
           <div className="flex items-center">
             <button 
               onClick={toggleLogo}
-              className="text-2xl font-bold text-black hover:text-red-accent transition-all duration-500 cursor-pointer"
+              className={`text-2xl font-bold text-black hover:text-red-accent transition-all duration-500 cursor-pointer ${
+                logoText === 'Conect' ? 'animate-glow-text' : ''
+              }`}
             >
               {logoText}
             </button>
           </div>
+          
+          <style>{`
+            @keyframes glow-text {
+              0%, 100% {
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(220, 220, 220, 0.6);
+              }
+              50% {
+                text-shadow: 0 0 20px rgba(255, 255, 255, 1), 0 0 40px rgba(220, 220, 220, 1), 0 0 60px rgba(255, 255, 255, 0.8);
+              }
+            }
+            
+            .animate-glow-text {
+              animation: glow-text 2s ease-in-out infinite;
+            }
+          `}</style>
 
           {/* Desktop Navigation - Right side */}
           <div className="hidden md:flex items-center space-x-6 ml-auto">
