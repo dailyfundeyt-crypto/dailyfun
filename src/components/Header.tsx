@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Search, Menu, X, Home, Info, Globe, Bot, User, LogIn, LogOut, MessageCircle } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -12,6 +12,20 @@ const Header = () => {
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
   const { user, signOut } = useAuth();
+
+  // Listen for logo phase changes from animation
+  useEffect(() => {
+    const handlePhaseChange = (event: CustomEvent) => {
+      if (event.detail === 'conect') {
+        setLogoText('Conect');
+      } else if (event.detail === 'daily-fun') {
+        setLogoText('Daily Fun');
+      }
+    };
+
+    window.addEventListener('logoPhaseChange', handlePhaseChange as EventListener);
+    return () => window.removeEventListener('logoPhaseChange', handlePhaseChange as EventListener);
+  }, []);
 
   const toggleLogo = useCallback(() => {
     if (user) {
@@ -49,7 +63,7 @@ const Header = () => {
           <div className="flex items-center">
             <button 
               onClick={toggleLogo}
-              className="text-2xl font-bold text-black hover:text-red-accent transition-colors cursor-pointer"
+              className="text-2xl font-bold text-black hover:text-red-accent transition-all duration-500 cursor-pointer"
             >
               {logoText}
             </button>
