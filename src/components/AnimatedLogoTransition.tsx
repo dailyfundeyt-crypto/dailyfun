@@ -23,15 +23,8 @@ const AnimatedLogoTransition: React.FC = () => {
       const timeouts = timeline.map(({ delay, nextPhase }) =>
         setTimeout(() => {
           setPhase(nextPhase);
-          
-          // Dispatch custom event for phase changes
-          if (nextPhase === 'phase5') {
-            window.dispatchEvent(new CustomEvent('logoPhaseChange', { detail: 'conect' }));
-          } else if (nextPhase === 'phase1') {
-            window.dispatchEvent(new CustomEvent('logoPhaseChange', { detail: 'daily-fun' }));
+          if (nextPhase === 'phase1') {
             setCycle(prev => prev + 1);
-          } else if (nextPhase === 'phase2' || nextPhase === 'phase3' || nextPhase === 'phase4') {
-            window.dispatchEvent(new CustomEvent('logoPhaseChange', { detail: nextPhase }));
           }
         }, delay)
       );
