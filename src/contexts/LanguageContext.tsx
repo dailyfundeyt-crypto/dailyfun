@@ -4,9 +4,13 @@ interface LanguageContextType {
   language: 'en' | 'de';
   primaryLanguage: 'en' | 'de';
   secondaryLanguage: 'en' | 'de';
+  enabledLanguages: string[];
   toggleLanguage: () => void;
   setPrimaryLanguage: (lang: 'en' | 'de') => void;
   setSecondaryLanguage: (lang: 'en' | 'de') => void;
+  setEnabledLanguages: (languages: string[]) => void;
+  addEnabledLanguage: (language: string) => void;
+  removeEnabledLanguage: (language: string) => void;
   t: (key: string) => string;
 }
 
@@ -399,6 +403,11 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     return (saved as 'en' | 'de') || 'en';
   });
 
+  const [enabledLanguages, setEnabledLanguagesState] = useState<string[]>(() => {
+    const saved = localStorage.getItem('daily-fun-enabled-languages');
+    return saved ? JSON.parse(saved) : ['de', 'en'];
+  });
+
   const [language, setLanguage] = useState<'en' | 'de'>(primaryLanguage);
 
   // Always start with primary language on page load
@@ -418,6 +427,10 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
   useEffect(() => {
     localStorage.setItem('daily-fun-secondary-language', secondaryLanguage);
   }, [secondaryLanguage]);
+
+  useEffect(() => {
+    localStorage.setItem('daily-fun-enabled-languages', JSON.stringify(enabledLanguages));
+  }, [enabledLanguages]);
 
   const toggleLanguage = () => {
     setLanguage(prev => prev === primaryLanguage ? secondaryLanguage : primaryLanguage);
@@ -441,6 +454,23 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   };
 
+  const setEnabledLanguages = (languages: string[]) => {
+    setEnabledLanguagesState(languages);
+  };
+
+  const addEnabledLanguage = (lang: string) => {
+    if (!enabledLanguages.includes(lang)) {
+      setEnabledLanguagesState([...enabledLanguages, lang]);
+    }
+  };
+
+  const removeEnabledLanguage = (lang: string) => {
+    // Always keep at least one language enabled
+    if (enabledLanguages.length > 1) {
+      setEnabledLanguagesState(enabledLanguages.filter(l => l !== lang));
+    }
+  };
+
   // Translation function - returns the translated text or the key if not found
   const t = (key: string):string => {
     return translations[language][key] || key;
@@ -451,9 +481,13 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
       language, 
       primaryLanguage, 
       secondaryLanguage, 
+      enabledLanguages,
       toggleLanguage, 
       setPrimaryLanguage: handleSetPrimaryLanguage,
       setSecondaryLanguage: handleSetSecondaryLanguage,
+      setEnabledLanguages,
+      addEnabledLanguage,
+      removeEnabledLanguage,
       t 
     }}>
       {children}

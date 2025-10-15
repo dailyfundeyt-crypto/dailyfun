@@ -55,7 +55,7 @@ const Search = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
   const [userArticleCounts, setUserArticleCounts] = useState<Record<string, number>>({});
-  const { t, language } = useLanguage();
+  const { t, language, enabledLanguages } = useLanguage();
   const { user } = useAuth();
   const { followedUserIds, followedAuthors, loading: followsLoading, refetchFollows } = useFollows();
   const { DEFAULT_AUTHORS } = useAutoFollow();
@@ -342,6 +342,20 @@ const Search = () => {
   const filteredArticles = useMemo(() => {
     let filtered = articles;
 
+    // Filter by enabled languages first
+    filtered = filtered.filter(article => {
+      // Check if article has content in any of the enabled languages
+      if (enabledLanguages.includes('de') && (article.title || article.content || article.excerpt)) return true;
+      if (enabledLanguages.includes('en') && (article.titleEn || article.contentEn || article.excerptEn)) return true;
+      
+      // For other languages, check if article has that language property
+      return enabledLanguages.some(lang => {
+        if (lang === 'de' || lang === 'en') return false;
+        return article[`title${lang.charAt(0).toUpperCase() + lang.slice(1)}`] || 
+               article[`content${lang.charAt(0).toUpperCase() + lang.slice(1)}`];
+      });
+    });
+
     // Always filter by followed authors if user is logged in and has followed authors
     // For hardcoded articles (from articles.ts), we still filter by author name
     if (user && followedAuthors.length > 0) {
@@ -381,7 +395,7 @@ const Search = () => {
     }
 
     return filtered;
-  }, [selectedAuthor, user, followedAuthors, followedUserIds, userProfiles]);
+  }, [selectedAuthor, user, followedAuthors, followedUserIds, userProfiles, enabledLanguages]);
 
   // Fetch view counts and comment counts for all articles
   const articleIds = useMemo(() => filteredArticles.map(a => a.id), [filteredArticles]);
