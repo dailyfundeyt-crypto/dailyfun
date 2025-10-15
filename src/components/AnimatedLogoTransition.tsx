@@ -114,7 +114,7 @@ const AnimatedLogoTransition: React.FC = () => {
         </div>
       </div>
 
-      {/* Phase 5: Conect Logo auf schwarzem Hintergrund */}
+      {/* Phase 5: Conect Logo auf schwarzem Hintergrund - bleibt für 60 Sekunden */}
       <div
         className={`absolute inset-0 flex items-center justify-center transition-all duration-1000 ${
           phase === 'phase5'
