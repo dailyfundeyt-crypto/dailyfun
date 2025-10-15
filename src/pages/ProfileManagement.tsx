@@ -792,176 +792,62 @@ const ProfileManagement = () => {
               {/* Language Settings */}
               <Card className="bg-background border shadow-sm overflow-hidden">
                 <CardHeader className="pb-4 border-b bg-muted/30">
-                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                    <Globe className="h-5 w-5" />
-                    Spracheinstellungen
+                  <CardTitle className="text-lg font-semibold">
+                    Welche Sprachen soll deine Website haben?
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6 space-y-6">
-                  {/* Primary Language */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">1</div>
-                      <Label className="text-base font-semibold">Hauptsprache</Label>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Diese Sprache wird automatisch verwendet, wenn du die Website öffnest
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setPrimaryLanguage('de')}
-                        className={cn(
-                          "flex items-center gap-3 p-4 rounded-xl border-2 transition-all flex-1",
-                          primaryLanguage === 'de'
-                            ? "border-primary bg-primary/5"
-                            : "border-muted hover:border-primary/50 hover:bg-accent/50"
-                        )}
-                      >
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-xl",
-                          primaryLanguage === 'de' ? "bg-primary/10" : "bg-muted"
-                        )}>
-                          🇩🇪
-                        </div>
-                        <div className="text-left flex-1">
-                          <div className="font-semibold">DE</div>
-                        </div>
-                        {primaryLanguage === 'de' && (
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-                          </div>
-                        )}
-                      </button>
+                <CardContent className="pt-6">
+                  <div className="flex flex-wrap gap-3">
+                    {/* Primary Language - Gold Border */}
+                    <button
+                      onClick={() => setPrimaryLanguage(primaryLanguage === 'de' ? 'en' : 'de')}
+                      className="relative flex items-center gap-3 px-6 py-4 rounded-2xl bg-background border-2 transition-all duration-200 hover:scale-105"
+                      style={{ borderColor: '#D4AF37' }}
+                    >
+                      <Globe className="w-5 h-5" />
+                      <span className="font-semibold text-lg">{primaryLanguage.toUpperCase()}</span>
+                    </button>
 
+                    {/* Secondary Language */}
+                    {secondaryLanguage && secondaryLanguage !== primaryLanguage && (
                       <button
-                        onClick={() => setPrimaryLanguage('en')}
-                        className={cn(
-                          "flex items-center gap-3 p-4 rounded-xl border-2 transition-all flex-1",
-                          primaryLanguage === 'en'
-                            ? "border-primary bg-primary/5"
-                            : "border-muted hover:border-primary/50 hover:bg-accent/50"
-                        )}
+                        onClick={() => setSecondaryLanguage(secondaryLanguage === 'de' ? 'en' : 'de')}
+                        className="relative flex items-center gap-3 px-6 py-4 rounded-2xl bg-background border-2 border-border transition-all duration-200 hover:scale-105 hover:border-muted-foreground/50"
                       >
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-xl",
-                          primaryLanguage === 'en' ? "bg-primary/10" : "bg-muted"
-                        )}>
-                          🇺🇸
-                        </div>
-                        <div className="text-left flex-1">
-                          <div className="font-semibold">EN</div>
-                        </div>
-                        {primaryLanguage === 'en' && (
-                          <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-primary-foreground" />
-                          </div>
-                        )}
+                        <Globe className="w-5 h-5" />
+                        <span className="font-semibold text-lg">{secondaryLanguage.toUpperCase()}</span>
                       </button>
-                    </div>
-                  </div>
-
-                  {/* Secondary Language */}
-                  <div className="space-y-3 pt-6 border-t">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-7 h-7 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center text-sm font-bold">2</div>
-                      <Label className="text-base font-semibold">Zweitsprache</Label>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Klicke auf den Sprach-Button, um zwischen deinen Sprachen zu wechseln
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => setSecondaryLanguage('de')}
-                        className={cn(
-                          "flex items-center gap-3 p-4 rounded-xl border-2 transition-all flex-1",
-                          secondaryLanguage === 'de'
-                            ? "border-secondary bg-secondary/5"
-                            : "border-muted hover:border-secondary/50 hover:bg-accent/50"
-                        )}
-                      >
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-xl",
-                          secondaryLanguage === 'de' ? "bg-secondary/10" : "bg-muted"
-                        )}>
-                          🇩🇪
-                        </div>
-                        <div className="text-left flex-1">
-                          <div className="font-semibold">DE</div>
-                        </div>
-                        {secondaryLanguage === 'de' && (
-                          <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-secondary-foreground" />
-                          </div>
-                        )}
-                      </button>
-
-                      <button
-                        onClick={() => setSecondaryLanguage('en')}
-                        className={cn(
-                          "flex items-center gap-3 p-4 rounded-xl border-2 transition-all flex-1",
-                          secondaryLanguage === 'en'
-                            ? "border-secondary bg-secondary/5"
-                            : "border-muted hover:border-secondary/50 hover:bg-accent/50"
-                        )}
-                      >
-                        <div className={cn(
-                          "w-10 h-10 rounded-full flex items-center justify-center text-xl",
-                          secondaryLanguage === 'en' ? "bg-secondary/10" : "bg-muted"
-                        )}>
-                          🇺🇸
-                        </div>
-                        <div className="text-left flex-1">
-                          <div className="font-semibold">EN</div>
-                        </div>
-                        {secondaryLanguage === 'en' && (
-                          <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center">
-                            <div className="w-2 h-2 rounded-full bg-secondary-foreground" />
-                          </div>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Additional Languages - Only visible for Plus users */}
-                  <div className="space-y-3 pt-6 border-t">
-                    <div className="flex items-center justify-between mb-3">
-                      <Label className="text-base font-semibold">Weitere Sprachen (Plus)</Label>
-                      <Button
-                        onClick={() => setLanguageDialogOpen(true)}
-                        size="sm"
-                        variant="outline"
-                        className="gap-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Hinzufügen
-                      </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Mit Plus kannst du unbegrenzt Sprachen hinzufügen und Artikel in allen deinen Sprachen sehen
-                    </p>
-                    
-                    {/* Show enabled languages */}
-                    {enabledLanguages.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {enabledLanguages.map((lang) => (
-                          <div
-                            key={lang}
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent border"
-                          >
-                            <span className="text-sm font-medium uppercase">{lang}</span>
-                            {enabledLanguages.length > 1 && (
-                              <button
-                                onClick={() => removeEnabledLanguage(lang)}
-                                className="text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                <X className="h-4 w-4" />
-                              </button>
-                            )}
-                          </div>
-                        ))}
-                      </div>
                     )}
+
+                    {/* Additional Languages */}
+                    {enabledLanguages.map((langCode) => (
+                      <div
+                        key={langCode}
+                        className="relative flex items-center gap-3 px-6 py-4 rounded-2xl bg-background border-2 border-border transition-all duration-200 hover:border-muted-foreground/50"
+                      >
+                        <Globe className="w-5 h-5" />
+                        <span className="font-semibold text-lg">{langCode.toUpperCase()}</span>
+                        <button
+                          onClick={() => removeEnabledLanguage(langCode)}
+                          className="ml-2 hover:bg-destructive/10 rounded-full p-1.5 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Add Language Button */}
+                    <button
+                      onClick={() => setLanguageDialogOpen(true)}
+                      className="flex items-center justify-center px-6 py-4 rounded-2xl border-2 border-dashed border-border hover:border-muted-foreground/50 transition-all duration-200 hover:scale-105"
+                    >
+                      <Plus className="w-6 h-6" />
+                    </button>
                   </div>
+                  
+                  <p className="text-sm text-muted-foreground mt-6">
+                    Die goldene Umrandung zeigt deine Standardsprache. Artikel werden nur in deinen ausgewählten Sprachen angezeigt.
+                  </p>
                 </CardContent>
               </Card>
 
