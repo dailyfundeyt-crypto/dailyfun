@@ -16,8 +16,6 @@ const AnimatedLogoTransition: React.FC = () => {
         { delay: 3500, nextPhase: 'phase3' as const },  // Phase 2 → Phase 3: Formung
         { delay: 5000, nextPhase: 'phase4' as const },  // Phase 3 → Phase 4: Vollständig
         { delay: 6500, nextPhase: 'phase5' as const },  // Phase 4 → Phase 5: Schwarzer Hintergrund
-        { delay: 9000, nextPhase: 'returning' as const }, // Zurück
-        { delay: 10500, nextPhase: 'phase1' as const }, // Neustart
       ];
 
       const timeouts = timeline.map(({ delay, nextPhase }) =>
@@ -27,9 +25,13 @@ const AnimatedLogoTransition: React.FC = () => {
           // Dispatch custom event for phase changes
           if (nextPhase === 'phase5') {
             window.dispatchEvent(new CustomEvent('logoPhaseChange', { detail: 'conect' }));
-          } else if (nextPhase === 'phase1') {
-            window.dispatchEvent(new CustomEvent('logoPhaseChange', { detail: 'daily-fun' }));
-            setCycle(prev => prev + 1);
+            
+            // Nach Phase 5: Warte 60 Sekunden, dann zurück zu Phase 1
+            setTimeout(() => {
+              setPhase('phase1');
+              window.dispatchEvent(new CustomEvent('logoPhaseChange', { detail: 'daily-fun' }));
+              setCycle(prev => prev + 1);
+            }, 60000); // 60 Sekunden = 1 Minute
           } else if (nextPhase === 'phase2' || nextPhase === 'phase3' || nextPhase === 'phase4') {
             window.dispatchEvent(new CustomEvent('logoPhaseChange', { detail: nextPhase }));
           }
