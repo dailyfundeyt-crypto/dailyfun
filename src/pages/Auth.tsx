@@ -30,9 +30,12 @@ const Auth = () => {
   useEffect(() => {
     const handlePhaseChange = (event: CustomEvent) => {
       if (event.detail === 'conect') {
-        // Trigger glimmer effect
+        // Trigger glimmer effect for 59 seconds (ends shortly before animation restarts)
         setIsGlimmer(true);
-        setTimeout(() => setIsGlimmer(false), 800);
+        setTimeout(() => setIsGlimmer(false), 59000); // 59 Sekunden
+      } else if (event.detail === 'daily-fun') {
+        // Ensure glimmer is off when returning to phase 1
+        setIsGlimmer(false);
       }
     };
 
