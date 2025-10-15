@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { PasswordResetModal } from '@/components/PasswordResetModal';
+import AnimatedLogoTransition from '@/components/AnimatedLogoTransition';
 import googleLogo from '@/assets/google-logo.png';
 import dailyFunLogo from '@/assets/daily-fun-logo.png';
 
@@ -150,12 +151,8 @@ const Auth = () => {
         <div className="w-full max-w-md">
         {/* Header with Logo */}
         <div className="text-center mb-8">
-          <div className="mx-auto w-40 h-40 mb-6 relative">
-            <img 
-              src={dailyFunLogo} 
-              alt="Daily Fun Logo" 
-              className="w-full h-full object-contain"
-            />
+          <div className="mb-6">
+            <AnimatedLogoTransition />
           </div>
           <h1 className="text-5xl font-bold text-foreground mb-3">
             Welcome
