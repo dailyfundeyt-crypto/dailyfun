@@ -22,9 +22,18 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
+  const [brandText, setBrandText] = useState('Daily Fun');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+
+  const handlePhaseChange = (phase: 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'returning') => {
+    if (phase === 'phase5') {
+      setBrandText('Conect');
+    } else if (phase === 'phase1') {
+      setBrandText('Daily Fun');
+    }
+  };
 
   useEffect(() => {
     const checkUser = async () => {
@@ -152,10 +161,10 @@ const Auth = () => {
         {/* Header with Logo */}
         <div className="text-center mb-8">
           <div className="mb-6">
-            <AnimatedLogoTransition />
+            <AnimatedLogoTransition onPhaseChange={handlePhaseChange} />
           </div>
-          <h1 className="text-5xl font-bold text-foreground mb-3">
-            Welcome
+          <h1 className="text-5xl font-bold text-foreground mb-3 transition-all duration-500">
+            {brandText}
           </h1>
           <p className="text-muted-foreground text-base">
             Sign in or create an account
