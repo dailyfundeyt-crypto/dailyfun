@@ -5,7 +5,11 @@ import phase3 from '@/assets/phase3-forming.png';
 import phase4 from '@/assets/phase4-glowing.png';
 import phase5 from '@/assets/phase5-black-background.png';
 
-const AnimatedLogoTransition: React.FC = () => {
+interface AnimatedLogoTransitionProps {
+  onPhaseChange?: (phase: string) => void;
+}
+
+const AnimatedLogoTransition: React.FC<AnimatedLogoTransitionProps> = ({ onPhaseChange }) => {
   const [phase, setPhase] = useState<'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'returning'>('phase1');
   const [cycle, setCycle] = useState(0);
 
@@ -23,6 +27,7 @@ const AnimatedLogoTransition: React.FC = () => {
       const timeouts = timeline.map(({ delay, nextPhase }) =>
         setTimeout(() => {
           setPhase(nextPhase);
+          onPhaseChange?.(nextPhase);
           if (nextPhase === 'phase1') {
             setCycle(prev => prev + 1);
           }
@@ -34,7 +39,7 @@ const AnimatedLogoTransition: React.FC = () => {
 
     const cleanup = runCycle();
     return cleanup;
-  }, [cycle]);
+  }, [cycle, onPhaseChange]);
 
   return (
     <div className="relative w-48 h-48 mx-auto">
