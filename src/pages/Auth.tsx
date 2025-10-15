@@ -27,7 +27,7 @@ const Auth = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
 
-  const handlePhaseChange = (phase: 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'phase5' | 'returning') => {
+  const handlePhaseChange = (phase: string) => {
     if (phase === 'phase5') {
       setBrandText('Conect');
     } else if (phase === 'phase1') {
@@ -156,15 +156,22 @@ const Auth = () => {
         initialEmail={email}
       />
       
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+        {/* Brand Text in der oberen rechten Ecke */}
+        <div className="absolute top-8 right-8">
+          <h2 className="text-2xl font-bold text-foreground transition-all duration-500 ease-in-out">
+            {brandText}
+          </h2>
+        </div>
+
         <div className="w-full max-w-md">
         {/* Header with Logo */}
         <div className="text-center mb-8">
           <div className="mb-6">
             <AnimatedLogoTransition onPhaseChange={handlePhaseChange} />
           </div>
-          <h1 className="text-5xl font-bold text-foreground mb-3 transition-all duration-500">
-            {brandText}
+          <h1 className="text-5xl font-bold text-foreground mb-3">
+            Welcome
           </h1>
           <p className="text-muted-foreground text-base">
             Sign in or create an account
