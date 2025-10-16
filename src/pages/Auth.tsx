@@ -164,19 +164,19 @@ const Auth = () => {
         initialEmail={email}
       />
       
-      <div className={`min-h-screen flex items-center justify-center p-4 transition-all duration-300 ${
+      <div className={`min-h-screen flex items-center justify-center p-3 transition-all duration-300 ${
         isGlimmer ? 'bg-black' : 'bg-background'
       }`}>
         <div className="w-full max-w-md">
         {/* Header with Logo */}
-        <div className="text-center mb-8">
-          <div className="mb-6">
+        <div className="text-center mb-4">
+          <div className="mb-3">
             <AnimatedLogoTransition />
           </div>
-          <h1 className="text-5xl font-bold text-foreground mb-3">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             Welcome
           </h1>
-          <p className="text-muted-foreground text-base">
+          <p className="text-muted-foreground text-sm">
             Sign in or create an account
           </p>
         </div>
@@ -184,17 +184,17 @@ const Auth = () => {
         <Card className={`shadow-xl border border-border bg-card transition-all duration-300 ${
           isGlimmer ? 'shadow-[0_0_50px_rgba(255,255,255,0.8)]' : ''
         }`}>
-          <CardContent className="pt-8 pb-8 px-8 space-y-6">
+          <CardContent className="pt-4 pb-4 px-6 space-y-4">
             {/* Google Sign In Button */}
             <Button
               type="button"
               variant="outline"
-              className="apple-button w-full h-12 bg-background text-foreground border-2 border-border hover:bg-accent rounded-lg font-medium transition-all duration-200 ease-apple active:scale-95"
+              className="apple-button w-full h-10 bg-background text-foreground border-2 border-border hover:bg-accent rounded-lg font-medium transition-all duration-200 ease-apple active:scale-95"
               onClick={handleGoogleSignIn}
               disabled={loading}
             >
-              <img src={googleLogo} alt="Google" className="mr-2 h-5 w-5" />
-              <span>Continue with Google</span>
+              <img src={googleLogo} alt="Google" className="mr-2 h-4 w-4" />
+              <span className="text-sm">Continue with Google</span>
             </Button>
 
             <div className="relative">
@@ -206,13 +206,13 @@ const Auth = () => {
               </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Custom Tab Buttons */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => setActiveTab('login')}
-                  className={`apple-button h-11 rounded-lg font-semibold transition-all duration-200 ease-apple active:scale-95 ${
+                  className={`apple-button h-9 rounded-lg font-semibold text-sm transition-all duration-200 ease-apple active:scale-95 ${
                     activeTab === 'login'
                       ? 'bg-foreground text-background shadow-lg'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -223,7 +223,7 @@ const Auth = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab('signup')}
-                  className={`apple-button h-11 rounded-lg font-semibold transition-all duration-200 ease-apple active:scale-95 ${
+                  className={`apple-button h-9 rounded-lg font-semibold text-sm transition-all duration-200 ease-apple active:scale-95 ${
                     activeTab === 'signup'
                       ? 'bg-foreground text-background shadow-lg'
                       : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -235,9 +235,9 @@ const Auth = () => {
 
               {/* Login Form */}
               {activeTab === 'login' && (
-                <form onSubmit={handleLogin} className="space-y-4 animate-fade-in">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm font-semibold text-foreground">
+                <form onSubmit={handleLogin} className="space-y-3 animate-fade-in">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email" className="text-xs font-semibold text-foreground">
                       Email
                     </Label>
                     <Input
@@ -246,12 +246,12 @@ const Auth = () => {
                       placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="h-12 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200"
+                      className="h-10 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200 text-sm"
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm font-semibold text-foreground">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="password" className="text-xs font-semibold text-foreground">
                       Password
                     </Label>
                     <div className="relative">
@@ -261,7 +261,7 @@ const Auth = () => {
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="h-12 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200 pr-12"
+                        className="h-10 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200 pr-10 text-sm"
                         required
                       />
                       <button
@@ -275,7 +275,7 @@ const Auth = () => {
                   </div>
                   <Button 
                     type="submit" 
-                    className="apple-button w-full h-12 bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-lg shadow-lg transition-all duration-200 ease-apple active:scale-95 mt-2"
+                    className="apple-button w-full h-10 bg-foreground text-background hover:bg-foreground/90 font-semibold text-sm rounded-lg shadow-lg transition-all duration-200 ease-apple active:scale-95 mt-2"
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -296,9 +296,9 @@ const Auth = () => {
 
               {/* Sign Up Form */}
               {activeTab === 'signup' && (
-                <form onSubmit={handleSignUp} className="space-y-4 animate-fade-in">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email" className="text-sm font-semibold text-foreground">
+                <form onSubmit={handleSignUp} className="space-y-3 animate-fade-in">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="signup-email" className="text-xs font-semibold text-foreground">
                       Email
                     </Label>
                     <Input
@@ -307,12 +307,12 @@ const Auth = () => {
                       placeholder="your@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="h-12 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200"
+                      className="h-10 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200 text-sm"
                       required
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password" className="text-sm font-semibold text-foreground">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="signup-password" className="text-xs font-semibold text-foreground">
                       Password
                     </Label>
                     <div className="relative">
@@ -322,7 +322,7 @@ const Auth = () => {
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="h-12 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200 pr-12"
+                        className="h-10 bg-background border-2 border-border focus:border-foreground rounded-lg transition-all duration-200 pr-10 text-sm"
                         required
                         minLength={6}
                       />
@@ -337,7 +337,7 @@ const Auth = () => {
                   </div>
                   <Button 
                     type="submit" 
-                    className="apple-button w-full h-12 bg-foreground text-background hover:bg-foreground/90 font-semibold rounded-lg shadow-lg transition-all duration-200 ease-apple active:scale-95 mt-2"
+                    className="apple-button w-full h-10 bg-foreground text-background hover:bg-foreground/90 font-semibold text-sm rounded-lg shadow-lg transition-all duration-200 ease-apple active:scale-95 mt-2"
                     disabled={loading}
                   >
                     {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -350,7 +350,7 @@ const Auth = () => {
         </Card>
 
         {/* Footer text */}
-        <p className="text-center text-sm text-muted-foreground mt-8">
+        <p className="text-center text-xs text-muted-foreground mt-4">
           Daily Fun © 2025
         </p>
         </div>
