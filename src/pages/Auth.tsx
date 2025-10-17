@@ -73,7 +73,7 @@ const Auth = () => {
       if (error) {
         setLoginAttemptFailed(true);
         const desc = error.message === 'Invalid login credentials'
-          ? 'Ungültige Zugangsdaten. Bitte E-Mail-Bestätigung prüfen oder Passwort neu setzen.'
+          ? 'Ungültige Zugangsdaten. Bitte Passwort neu setzen oder erneut versuchen.'
           : error.message;
         toast({
           title: t('auth.login.failed'),
@@ -155,12 +155,20 @@ const Auth = () => {
           variant: 'destructive',
         });
       } else {
-        toast({
-          title: t('auth.signup.success'),
-          description: 'Account erstellt! Bitte bestätige deine E-Mail und logge dich ein. Sicherheitsfragen kannst du nach dem Login im Profil einrichten.',
-        });
-        // Wechsel zum Login-Tab, da Anmeldung erst nach E-Mail-Bestätigung möglich ist
-        setActiveTab('login');
+        if (data?.session && data.user) {
+          toast({
+            title: t('auth.signup.success'),
+            description: 'Registrierung erfolgreich! Richte jetzt deine Sicherheitsfragen ein.',
+          });
+          setNewUserId(data.user.id);
+          setShowSecurityQuestionsModal(true);
+        } else {
+          toast({
+            title: t('auth.signup.success'),
+            description: 'Account erstellt! Du kannst dich jetzt einloggen.',
+          });
+          setActiveTab('login');
+        }
       }
     } catch (error) {
       toast({
