@@ -220,6 +220,9 @@ const Auth = () => {
             setShowSecurityQuestionsModal(false);
             setNewUserId(null);
           }}
+          onSuccess={() => {
+            navigate('/');
+          }}
           userId={newUserId}
         />
       )}

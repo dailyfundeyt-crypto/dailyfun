@@ -7,6 +7,7 @@ interface SecurityQuestionsModalProps {
   isOpen: boolean;
   onClose: () => void;
   userId: string;
+  onSuccess?: () => void;
 }
 
 const AVAILABLE_QUESTIONS = [
@@ -21,6 +22,7 @@ export const SecurityQuestionsModal: React.FC<SecurityQuestionsModalProps> = ({
   isOpen,
   onClose,
   userId,
+  onSuccess,
 }) => {
   const [questions, setQuestions] = useState<{ question: string; answer: string }[]>([
     { question: AVAILABLE_QUESTIONS[0], answer: '' },
@@ -76,6 +78,7 @@ export const SecurityQuestionsModal: React.FC<SecurityQuestionsModalProps> = ({
         description: 'Sicherheitsfragen gespeichert',
       });
       onClose();
+      onSuccess?.();
     } catch (err: any) {
       console.error(err);
       toast({
