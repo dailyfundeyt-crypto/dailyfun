@@ -40,13 +40,32 @@ export const SecurityQuestionsModal: React.FC<SecurityQuestionsModalProps> = ({
       return;
     }
 
+    // Ensure all three selected questions are distinct
+    const selected = questions.map((q) => q.question);
+    if (new Set(selected).size !== questions.length) {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte wähle 3 unterschiedliche Fragen',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast({
+          title: 'Nicht eingeloggt',
+          description: 'Bitte bestätige zuerst deine E-Mail und logge dich ein, um Sicherheitsfragen zu speichern.',
+          variant: 'destructive',
+        });
+        return;
+      }
       const { error } = await supabase.functions.invoke('set-security-questions', {
         body: { questions },
         headers: {
-          Authorization: `Bearer ${session?.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
