@@ -308,18 +308,22 @@ Deno.serve(async (req) => {
     // Determine email type and content
     if (emailActionType === 'signup') {
       // Confirmation email for new signups
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const confirmLink = `${supabaseUrl}/auth/v1/verify?token=${email_data.token_hash}&type=signup&redirect_to=${email_data.redirect_to || window.location.origin}`;
-      
-      subject = 'E-Mail bestätigen - Daily Fun X Connect';
-      htmlContent = getConfirmEmailHTML(confirmLink);
+       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+       const redirectTo = email_data?.redirect_to || Deno.env.get('SITE_URL') || '';
+       const redirectPart = redirectTo ? `&redirect_to=${encodeURIComponent(redirectTo)}` : '';
+       const confirmLink = `${supabaseUrl}/auth/v1/verify?token=${email_data.token_hash}&type=signup${redirectPart}`;
+       
+       subject = 'E-Mail bestätigen - Daily Fun X Connect';
+       htmlContent = getConfirmEmailHTML(confirmLink);
     } else if (emailActionType === 'recovery' || emailActionType === 'magiclink') {
       // Password reset or magic link email
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const resetLink = `${supabaseUrl}/auth/v1/verify?token=${email_data.token_hash}&type=${emailActionType}&redirect_to=${email_data.redirect_to || window.location.origin}`;
-      
-      subject = 'Passwort zurücksetzen - Daily Fun X Connect';
-      htmlContent = getPasswordResetHTML(resetLink);
+       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+       const redirectTo = email_data?.redirect_to || Deno.env.get('SITE_URL') || '';
+       const redirectPart = redirectTo ? `&redirect_to=${encodeURIComponent(redirectTo)}` : '';
+       const resetLink = `${supabaseUrl}/auth/v1/verify?token=${email_data.token_hash}&type=${emailActionType}${redirectPart}`;
+       
+       subject = 'Passwort zurücksetzen - Daily Fun X Connect';
+       htmlContent = getPasswordResetHTML(resetLink);
     } else {
       // Default welcome email
       subject = 'Willkommen bei Daily Fun X Connect!';
