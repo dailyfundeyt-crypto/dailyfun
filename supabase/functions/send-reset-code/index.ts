@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.56.0";
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -90,7 +90,7 @@ async function sendEmail(to: string, subject: string, html: string) {
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -207,14 +207,21 @@ serve(async (req) => {
   </body>
 </html>`;
 
-    try {
-      await sendEmail(email, 'Passwort zurücksetzen - Ihr Bestätigungscode', htmlContent);
-      console.log('✅ Reset code sent successfully to:', email);
-    } catch (emailError) {
-      console.error('Error sending email:', emailError);
-      throw new Error('Failed to send email');
-    }
+    // Send email in background to avoid timeout
+    const emailPromise = (async () => {
+      try {
+        console.log('Sending reset code email to:', email);
+        await sendEmail(email, 'Passwort zurücksetzen - Ihr Bestätigungscode', htmlContent);
+        console.log('✅ Reset code sent successfully to:', email);
+      } catch (error) {
+        console.error('Error sending email in background:', error);
+      }
+    })();
 
+    // Use waitUntil to keep function alive until email is sent
+    EdgeRuntime.waitUntil(emailPromise);
+
+    // Return immediately
     return new Response(
       JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

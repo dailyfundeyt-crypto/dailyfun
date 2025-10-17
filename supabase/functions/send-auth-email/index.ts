@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 // Simple SMTP client function
 async function sendEmail(to: string, subject: string, html: string) {
@@ -287,7 +287,7 @@ function getPasswordResetHTML(resetLink: string): string {
 </html>`;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   try {
     const payload = await req.json();
     console.log('Received auth hook payload:', JSON.stringify(payload, null, 2));
@@ -326,9 +326,21 @@ serve(async (req) => {
       htmlContent = getWelcomeEmailHTML(displayName);
     }
 
-    await sendEmail(email, subject, htmlContent);
-    console.log(`✅ Email sent successfully to: ${email} (type: ${emailActionType || 'welcome'})`);
+    // Send email in background to avoid timeout
+    const emailPromise = (async () => {
+      try {
+        console.log('Sending email to:', email);
+        await sendEmail(email, subject, htmlContent);
+        console.log(`✅ Email sent successfully to: ${email} (type: ${emailActionType || 'welcome'})`);
+      } catch (error) {
+        console.error('Error sending email in background:', error);
+      }
+    })();
 
+    // Use waitUntil to keep function alive until email is sent
+    EdgeRuntime.waitUntil(emailPromise);
+
+    // Return immediately
     return new Response(
       JSON.stringify({ success: true }),
       { 
