@@ -1,20 +1,20 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { corsHeaders } from '../_shared/cors.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { topic, language = 'en' } = await req.json()
+    const { topic, language = 'en' } = await req.json();
 
     if (!topic) {
-      throw new Error('Missing topic')
+      throw new Error('Missing topic');
     }
 
-    console.log('Fetching news for topic:', topic, 'in language:', language)
+    console.log('Fetching news for topic:', topic, 'in language:', language);
 
     // Try Guardian API first (free)
     try {
@@ -110,7 +110,7 @@ serve(async (req) => {
     throw new Error('All news APIs failed');
 
   } catch (error) {
-    console.error('Error fetching news:', error)
+    console.error('Error fetching news:', error);
     return new Response(
       JSON.stringify({ 
         error: (error as Error).message || 'Failed to fetch news',
@@ -123,6 +123,6 @@ serve(async (req) => {
           'Content-Type': 'application/json' 
         } 
       }
-    )
+    );
   }
-})
+});
