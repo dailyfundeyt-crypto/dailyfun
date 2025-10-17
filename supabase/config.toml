@@ -26,3 +26,12 @@ verify_jwt = false
 
 [functions.send-welcome-email]
 verify_jwt = false
+
+[functions.set-security-questions]
+verify_jwt = true
+
+[functions.get-security-questions]
+verify_jwt = false
+
+[functions.reset-password-by-questions]
+verify_jwt = false

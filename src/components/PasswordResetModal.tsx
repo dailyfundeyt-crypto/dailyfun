@@ -14,7 +14,8 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
   onClose,
   initialEmail = ''
 }) => {
-  const [step, setStep] = useState<'email' | 'code' | 'password' | 'success'>('email');
+  const [step, setStep] = useState<'method' | 'email' | 'code' | 'password' | 'success' | 'security-questions' | 'sq-answers'>('method');
+  const [resetMethod, setResetMethod] = useState<'code' | 'security'>('code');
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [newPassword, setNewPassword] = useState('');
@@ -22,6 +23,8 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
+  const [securityQuestions, setSecurityQuestions] = useState<string[]>([]);
+  const [securityAnswers, setSecurityAnswers] = useState<string[]>(['', '', '']);
   const { toast } = useToast();
   
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -154,13 +157,22 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
     setError('');
 
     try {
-      const fullCode = code.join('');
-      
-      const { error } = await supabase.functions.invoke('reset-password', {
-        body: { email, code: fullCode, newPassword }
-      });
-
-      if (error) throw error;
+      if (resetMethod === 'code') {
+        const fullCode = code.join('');
+        const { error } = await supabase.functions.invoke('reset-password', {
+          body: { email, code: fullCode, newPassword }
+        });
+        if (error) throw error;
+      } else {
+        const answers = securityQuestions.map((q, i) => ({
+          question: q,
+          answer: securityAnswers[i],
+        }));
+        const { error } = await supabase.functions.invoke('reset-password-by-questions', {
+          body: { email, answers, newPassword }
+        });
+        if (error) throw error;
+      }
 
       setStep('success');
       
@@ -171,10 +183,11 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
       
       setTimeout(() => {
         onClose();
-        setStep('email');
+        setStep('method');
         setCode(['', '', '', '', '', '']);
         setNewPassword('');
         setConfirmPassword('');
+        setSecurityAnswers(['', '', '']);
       }, 3000);
 
     } catch (err: any) {
@@ -182,6 +195,40 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
       toast({
         title: 'Fehler',
         description: 'Das Passwort konnte nicht zurückgesetzt werden.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFetchSecurityQuestions = async () => {
+    if (!email) {
+      setError('Bitte geben Sie Ihre E-Mail-Adresse ein');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-security-questions', {
+        body: { email }
+      });
+
+      if (error) throw error;
+
+      if (data && data.questions) {
+        setSecurityQuestions(data.questions);
+        setStep('sq-answers');
+      } else {
+        throw new Error('Keine Sicherheitsfragen gefunden');
+      }
+    } catch (err: any) {
+      setError('Fehler beim Abrufen der Sicherheitsfragen. Bitte versuchen Sie es erneut.');
+      toast({
+        title: 'Fehler',
+        description: 'Die Sicherheitsfragen konnten nicht abgerufen werden.',
         variant: 'destructive',
       });
     } finally {
@@ -204,9 +251,19 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
           </button>
           
           <div className="flex items-center gap-3">
-            {step !== 'email' && step !== 'success' && (
+            {(step !== 'method' && step !== 'success') && (
               <button
-                onClick={() => setStep(step === 'code' ? 'email' : 'code')}
+                onClick={() => {
+                  if (step === 'email' || step === 'security-questions') {
+                    setStep('method');
+                  } else if (step === 'code') {
+                    setStep('email');
+                  } else if (step === 'sq-answers') {
+                    setStep('security-questions');
+                  } else {
+                    setStep(resetMethod === 'code' ? 'code' : 'sq-answers');
+                  }
+                }}
                 className="text-white/80 hover:text-white transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -214,14 +271,20 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
             )}
             <div>
               <h2 className="text-2xl font-bold text-white">
-                {step === 'email' && 'Passwort zurücksetzen'}
+                {step === 'method' && 'Passwort zurücksetzen'}
+                {step === 'email' && 'E-Mail eingeben'}
+                {step === 'security-questions' && 'E-Mail eingeben'}
                 {step === 'code' && 'Code eingeben'}
+                {step === 'sq-answers' && 'Sicherheitsfragen'}
                 {step === 'password' && 'Neues Passwort'}
                 {step === 'success' && 'Erfolgreich!'}
               </h2>
               <p className="text-white/80 text-sm mt-1">
+                {step === 'method' && 'Wähle eine Methode'}
                 {step === 'email' && 'Wir senden Ihnen einen Bestätigungscode'}
+                {step === 'security-questions' && 'Wir zeigen Ihnen Ihre Sicherheitsfragen'}
                 {step === 'code' && 'Geben Sie den 6-stelligen Code ein'}
+                {step === 'sq-answers' && 'Beantworte deine Sicherheitsfragen'}
                 {step === 'password' && 'Wählen Sie ein neues, sicheres Passwort'}
                 {step === 'success' && 'Ihr Passwort wurde aktualisiert'}
               </p>
@@ -238,7 +301,32 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
             </div>
           )}
 
-          {/* Email Step */}
+          {/* Method Selection Step */}
+          {step === 'method' && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">Wähle eine Methode zum Zurücksetzen:</p>
+              <button
+                onClick={() => {
+                  setResetMethod('code');
+                  setStep('email');
+                }}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
+              >
+                Per E-Mail-Code
+              </button>
+              <button
+                onClick={() => {
+                  setResetMethod('security');
+                  setStep('security-questions');
+                }}
+                className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-medium py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
+              >
+                Per Sicherheitsfragen
+              </button>
+            </div>
+          )}
+
+          {/* Email Step (for code method) */}
           {step === 'email' && (
             <div className="space-y-4">
               <div>
@@ -263,6 +351,66 @@ export const PasswordResetModal: React.FC<PasswordResetModalProps> = ({
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
               >
                 {loading ? 'Wird gesendet...' : 'Code senden'}
+              </button>
+            </div>
+          )}
+
+          {/* Security Questions Email Step */}
+          {step === 'security-questions' && (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  E-Mail-Adresse
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    placeholder="ihre.email@beispiel.de"
+                    onKeyPress={(e) => e.key === 'Enter' && handleFetchSecurityQuestions()}
+                  />
+                </div>
+              </div>
+              <button
+                onClick={handleFetchSecurityQuestions}
+                disabled={loading}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+              >
+                {loading ? 'Laden...' : 'Sicherheitsfragen abrufen'}
+              </button>
+            </div>
+          )}
+
+          {/* Security Questions Answers Step */}
+          {step === 'sq-answers' && (
+            <div className="space-y-4">
+              {securityQuestions.map((q, idx) => (
+                <div key={idx}>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    {q}
+                  </label>
+                  <input
+                    type="text"
+                    value={securityAnswers[idx]}
+                    onChange={(e) => {
+                      const newAnswers = [...securityAnswers];
+                      newAnswers[idx] = e.target.value;
+                      setSecurityAnswers(newAnswers);
+                    }}
+                    className="w-full px-4 py-3 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    placeholder="Antwort"
+                  />
+                </div>
+              ))}
+              <button
+                onClick={() => setStep('password')}
+                disabled={loading || securityAnswers.some((a) => !a.trim())}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+              >
+                Weiter
               </button>
             </div>
           )}

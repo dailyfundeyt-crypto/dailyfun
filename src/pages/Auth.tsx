@@ -13,6 +13,8 @@ import { PasswordResetModal } from '@/components/PasswordResetModal';
 import AnimatedLogoTransition from '@/components/AnimatedLogoTransition';
 import googleLogo from '@/assets/google-logo.png';
 import dailyFunLogo from '@/assets/daily-fun-logo.png';
+import { CircleCaptcha } from '@/components/CircleCaptcha';
+import { SecurityQuestionsModal } from '@/components/SecurityQuestionsModal';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -23,6 +25,10 @@ const Auth = () => {
   const [showResetModal, setShowResetModal] = useState(false);
   const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
   const [isGlimmer, setIsGlimmer] = useState(false);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [captchaPassed, setCaptchaPassed] = useState(false);
+  const [showSecurityQuestionsModal, setShowSecurityQuestionsModal] = useState(false);
+  const [newUserId, setNewUserId] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -120,12 +126,18 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!captchaPassed) {
+      setShowCaptcha(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
       const redirectUrl = `${window.location.origin}/`;
       
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -142,8 +154,12 @@ const Auth = () => {
       } else {
         toast({
           title: t('auth.signup.success'),
-          description: t('auth.signup.email.verify'),
+          description: 'Account erstellt! Bitte Sicherheitsfragen einrichten.',
         });
+        if (data.user) {
+          setNewUserId(data.user.id);
+          setShowSecurityQuestionsModal(true);
+        }
       }
     } catch (error) {
       toast({
@@ -156,6 +172,24 @@ const Auth = () => {
     }
   };
 
+  const handleCaptchaSuccess = () => {
+    setCaptchaPassed(true);
+    setShowCaptcha(false);
+    toast({
+      title: 'Captcha bestanden!',
+      description: 'Du kannst dich jetzt registrieren.',
+    });
+  };
+
+  const handleCaptchaFail = () => {
+    setShowCaptcha(false);
+    toast({
+      title: 'Captcha fehlgeschlagen',
+      description: 'Zu viele Fehlversuche. Bitte versuche es später erneut.',
+      variant: 'destructive',
+    });
+  };
+
   return (
     <>
       <PasswordResetModal
@@ -163,6 +197,23 @@ const Auth = () => {
         onClose={() => setShowResetModal(false)}
         initialEmail={email}
       />
+      {showCaptcha && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-card rounded-2xl shadow-2xl p-6 max-w-lg">
+            <CircleCaptcha onSuccess={handleCaptchaSuccess} onFail={handleCaptchaFail} />
+          </div>
+        </div>
+      )}
+      {newUserId && (
+        <SecurityQuestionsModal
+          isOpen={showSecurityQuestionsModal}
+          onClose={() => {
+            setShowSecurityQuestionsModal(false);
+            setNewUserId(null);
+          }}
+          userId={newUserId}
+        />
+      )}
       
       <div className={`min-h-screen flex items-center justify-center p-3 transition-all duration-300 ${
         isGlimmer ? 'bg-black' : 'bg-background'

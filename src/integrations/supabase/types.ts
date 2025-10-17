@@ -350,6 +350,33 @@ export type Database = {
         }
         Relationships: []
       }
+      security_questions: {
+        Row: {
+          answer_hash: string
+          created_at: string
+          email: string
+          id: string
+          question: string
+          user_id: string
+        }
+        Insert: {
+          answer_hash: string
+          created_at?: string
+          email: string
+          id?: string
+          question: string
+          user_id: string
+        }
+        Update: {
+          answer_hash?: string
+          created_at?: string
+          email?: string
+          id?: string
+          question?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_articles: {
         Row: {
           author_name: string

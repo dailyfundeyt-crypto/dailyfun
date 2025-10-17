@@ -18,6 +18,7 @@ import ArticleCard from '../components/ArticleCard';
 import { cn } from '@/lib/utils';
 import Auth from './Auth';
 import { LanguageSelectionDialog } from '../components/LanguageSelectionDialog';
+import { SecurityQuestionsModal } from '../components/SecurityQuestionsModal';
 
 interface UserProfile {
   id: string;
@@ -64,6 +65,7 @@ const ProfileManagement = () => {
   const { viewCounts } = useArticleViews(articles.map(a => a.id));
   const [viewsOverTime, setViewsOverTime] = useState<Array<{ date: string; views: number }>>([]);
   const [languageDialogOpen, setLanguageDialogOpen] = useState(false);
+  const [showSecurityQuestionsModal, setShowSecurityQuestionsModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -851,6 +853,28 @@ const ProfileManagement = () => {
                 </CardContent>
               </Card>
 
+              {/* Security Questions Section */}
+              <Card className="bg-background border shadow-sm overflow-hidden">
+                <CardHeader className="pb-4 border-b bg-muted/30">
+                  <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                    <Lock className="w-5 h-5" />
+                    Sicherheitsfragen
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Richte Sicherheitsfragen ein, um dein Passwort zurücksetzen zu können, falls du es vergisst.
+                  </p>
+                  <Button
+                    onClick={() => setShowSecurityQuestionsModal(true)}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <Lock className="h-4 w-4 mr-2" />
+                    Sicherheitsfragen einrichten
+                  </Button>
+                </CardContent>
+              </Card>
+
               {/* Account Actions */}
               <div className="flex flex-col gap-4">
                 <Button
@@ -1113,6 +1137,12 @@ const ProfileManagement = () => {
         }}
         title="Sprache hinzufügen"
         description="Wähle weitere Sprachen aus. Nur Artikel in diesen Sprachen werden angezeigt."
+      />
+      
+      <SecurityQuestionsModal
+        isOpen={showSecurityQuestionsModal}
+        onClose={() => setShowSecurityQuestionsModal(false)}
+        userId={user?.id || ''}
       />
     </div>
   );
