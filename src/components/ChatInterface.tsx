@@ -5,9 +5,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink, Lock } from 'lucide-react';
+import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink, Lock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEncryption } from '@/hooks/useEncryption';
+import { useMessageSync } from '@/hooks/useMessageSync';
 
 interface Message {
   id: string;
@@ -43,12 +44,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isInitialized: encryptionReady, encrypt, decrypt } = useEncryption();
+  const { loadMessages, saveAndDeleteFromServer, getAttachmentUrl, deleteMessageLocally } = useMessageSync();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [canSendMedia, setCanSendMedia] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -137,43 +140,37 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const fetchMessages = async (convId: string) => {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', convId)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching messages:', error);
-      return;
-    }
-
-    // Decrypt messages
-    const decryptedMessages = await Promise.all(
-      (data || []).map(async (msg: any) => {
-        if (msg.is_encrypted && msg.sender_id !== user?.id) {
-          try {
-            const decryptedContent = await decrypt(msg.content);
-            return { ...msg, content: decryptedContent } as Message;
-          } catch (error) {
-            console.error('Error decrypting message:', error);
-            return { ...msg, content: '[🔒 Verschlüsselt]' } as Message;
-          }
-        }
-        return msg as Message;
-      })
-    );
-
-    setMessages(decryptedMessages);
+    if (!user) return;
     
-    // Mark messages as delivered
-    if (data && data.length > 0) {
-      await supabase
-        .from('messages')
-        .update({ delivered_at: new Date().toISOString() })
-        .eq('conversation_id', convId)
-        .eq('sender_id', recipientId)
-        .is('delivered_at', null);
+    try {
+      // Load messages from local storage + server
+      const allMessages = await loadMessages(convId, user.id);
+
+      // Decrypt messages from other person
+      const decryptedMessages = await Promise.all(
+        allMessages.map(async (msg: any) => {
+          if (msg.sender_id !== user.id && msg.message_type === 'text') {
+            try {
+              const decryptedContent = await decrypt(msg.content);
+              
+              // Save locally and delete from server after successful decryption
+              await saveAndDeleteFromServer(msg, decryptedContent);
+              
+              return { ...msg, content: decryptedContent } as Message;
+            } catch (error) {
+              console.error('Error decrypting message:', error);
+              return { ...msg, content: '[🔒 Verschlüsselt]' } as Message;
+            }
+          }
+          
+          // If it's our own message or already decrypted, just return it
+          return msg as Message;
+        })
+      );
+
+      setMessages(decryptedMessages);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
   };
 
@@ -192,10 +189,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           const newMsg = payload.new as any;
           
           // Decrypt message if it's from the other person
-          if (newMsg.is_encrypted && newMsg.sender_id !== user?.id) {
+          if (newMsg.sender_id !== user?.id && newMsg.message_type === 'text') {
             try {
               const decryptedContent = await decrypt(newMsg.content);
               newMsg.content = decryptedContent;
+              
+              // Save locally and delete from server
+              await saveAndDeleteFromServer(newMsg, decryptedContent);
             } catch (error) {
               console.error('Error decrypting new message:', error);
               newMsg.content = '[🔒 Verschlüsselt]';
@@ -203,14 +203,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           }
           
           setMessages((prev) => [...prev, newMsg as Message]);
-          
-          // Mark as delivered
-          if (newMsg.sender_id === recipientId) {
-            await supabase
-              .from('messages')
-              .update({ delivered_at: new Date().toISOString() })
-              .eq('id', newMsg.id);
-          }
           
           // Re-check media permission after new message
           checkMediaPermission(convId);
@@ -341,6 +333,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       if (error) throw error;
 
+      // Save own message locally (unencrypted for display)
+      await saveAndDeleteFromServer(
+        { ...data, content: encryptedContent } as any,
+        messageContent
+      );
+
       // Replace temp message with real one (keep unencrypted for sender)
       setMessages((prev) => 
         prev.map((msg) => msg.id === tempId ? { ...data, content: messageContent } as unknown as Message : msg)
@@ -358,6 +356,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       toast.error('Fehler beim Senden der Nachricht');
       // Remove failed message
       setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
+    }
+  };
+
+  const handleDeleteMessage = async (messageId: string, attachmentUrl?: string) => {
+    try {
+      await deleteMessageLocally(messageId, attachmentUrl || undefined);
+      setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+      setSelectedMessage(null);
+      toast.success('Nachricht gelöscht');
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error('Fehler beim Löschen');
     }
   };
 
@@ -527,9 +537,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                   </div>
                 )}
                 <div
-                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'} group relative`}
+                  onClick={() => setSelectedMessage(selectedMessage === message.id ? null : message.id)}
                 >
                   {renderMessage(message)}
+                  
+                  {/* Delete button - only show for selected message */}
+                  {selectedMessage === message.id && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteMessage(message.id, message.attachment_url || undefined);
+                      }}
+                      className="absolute -right-2 top-1/2 -translate-y-1/2 rounded-full w-8 h-8 p-0 shadow-lg"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             );
