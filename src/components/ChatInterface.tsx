@@ -427,7 +427,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Messages Container - Apple iMessage Style */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-3 bg-gray-50">
+      <div className="flex-1 overflow-y-auto px-4 py-6 pb-32 md:pb-6 space-y-3 bg-gray-50">
         {loading ? (
           <div className="flex justify-center items-center h-full">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
