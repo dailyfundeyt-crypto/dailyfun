@@ -180,8 +180,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         async (payload) => {
           const newMsg = payload.new as any;
           
-          // Save received message locally and delete from server
-          if (newMsg.sender_id !== user?.id && newMsg.message_type === 'text') {
+          // Save received message locally and delete from server (for all message types)
+          if (newMsg.sender_id !== user?.id) {
             await saveReceivedMessageAndDeleteFromServer(newMsg, newMsg.content);
           }
           
@@ -238,15 +238,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       const messageType = file.type.startsWith('image/') ? 'image' : 'pdf';
       const content = messageType === 'image' ? '📷 Bild' : '📄 PDF-Dokument';
 
-      const { error: messageError } = await supabase.from('messages').insert({
+      const { data: messageData, error: messageError } = await supabase.from('messages').insert({
         conversation_id: conversationId,
         sender_id: user.id,
         content,
         message_type: messageType,
         attachment_url: publicUrl,
-      });
+      }).select().single();
 
       if (messageError) throw messageError;
+
+      // Save own message locally (including attachment info)
+      await saveOwnMessageLocally(messageData as any, content);
 
       // Send push notification in background
       supabase.functions.invoke('notify-new-message', {
@@ -384,13 +387,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
 
     if (message.message_type === 'image' && message.attachment_url) {
+      const [localUrl, setLocalUrl] = React.useState<string>(message.attachment_url);
+      
+      React.useEffect(() => {
+        // Try to get local attachment first
+        getAttachmentUrl(message.attachment_url!).then(url => {
+          setLocalUrl(url);
+        }).catch(() => {
+          // Fallback to original URL if local not available
+          setLocalUrl(message.attachment_url!);
+        });
+      }, [message.attachment_url]);
+
       return (
         <div className="max-w-[75%]">
           <img
-            src={message.attachment_url}
+            src={localUrl}
             alt="Geteiltes Bild"
             className="rounded-2xl max-h-80 object-cover shadow-md cursor-pointer"
-            onClick={() => window.open(message.attachment_url!, '_blank')}
+            onClick={() => window.open(localUrl, '_blank')}
           />
         </div>
       );
