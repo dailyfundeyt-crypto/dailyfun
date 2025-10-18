@@ -2,13 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEncryption } from '@/hooks/useEncryption';
+import { useMessageSync } from '@/hooks/useMessageSync';
+import { PassphraseBackupDialog } from './PassphraseBackupDialog';
+import { PassphraseRestoreDialog } from './PassphraseRestoreDialog';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink, Lock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useEncryption } from '@/hooks/useEncryption';
-import { useMessageSync } from '@/hooks/useMessageSync';
 
 interface Message {
   id: string;
@@ -43,7 +45,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { isInitialized: encryptionReady, encrypt, decrypt, getRecipientPublicKey } = useEncryption();
+  const { 
+    isInitialized: encryptionReady, 
+    encrypt, 
+    decrypt, 
+    getRecipientPublicKey,
+    backupPassphrase,
+    needsPassphrase,
+    restoreFromPassphrase
+  } = useEncryption();
   const { loadMessages, saveReceivedMessageAndDeleteFromServer, saveOwnMessageLocally, getAttachmentUrl, deleteMessageLocally } = useMessageSync();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -52,6 +62,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [canSendMedia, setCanSendMedia] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
+  const [showBackupDialog, setShowBackupDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,6 +82,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
     initializeChat();
   }, [user, recipientId]);
+
+  useEffect(() => {
+    if (backupPassphrase) {
+      setShowBackupDialog(true);
+    }
+  }, [backupPassphrase]);
 
   const initializeChat = async () => {
     if (!user) return;
@@ -483,17 +500,29 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col pb-24 md:pb-0">
-      {/* Header - Apple Style */}
-      <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200 px-4 py-4 flex items-center gap-3 shadow-sm">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          className="hover:bg-gray-100 rounded-full p-2 -ml-2"
-        >
-          <ArrowLeft className="h-5 w-5 text-gray-700" />
-        </Button>
+    <>
+      {needsPassphrase && (
+        <PassphraseRestoreDialog onRestore={restoreFromPassphrase} />
+      )}
+
+      {showBackupDialog && backupPassphrase && (
+        <PassphraseBackupDialog
+          passphrase={backupPassphrase}
+          onClose={() => setShowBackupDialog(false)}
+        />
+      )}
+
+      <div className="fixed inset-0 z-50 bg-white flex flex-col pb-24 md:pb-0">
+        {/* Header - Apple Style */}
+        <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200 px-4 py-4 flex items-center gap-3 shadow-sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+            className="hover:bg-gray-100 rounded-full p-2 -ml-2"
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-700" />
+          </Button>
         
         <Avatar className="w-11 h-11 ring-2 ring-gray-100">
           <AvatarImage src={recipientAvatar || ''} />
@@ -624,6 +653,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         )}
       </div>
     </div>
+    </>
   );
 };
 

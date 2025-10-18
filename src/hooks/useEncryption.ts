@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { generateKeyPair, encryptMessage, decryptMessage } from '@/utils/cryptoUtils';
+import { 
+  generateKeyPair, 
+  encryptMessage, 
+  decryptMessage, 
+  generatePassphrase,
+  encryptPrivateKey,
+  decryptPrivateKey 
+} from '@/utils/cryptoUtils';
 import { storeKeysLocally, getPrivateKey, hasKeys } from '@/utils/indexedDBHelper';
 import { toast } from 'sonner';
 
@@ -9,6 +16,8 @@ export function useEncryption() {
   const { user } = useAuth();
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [backupPassphrase, setBackupPassphrase] = useState<string | null>(null);
+  const [needsPassphrase, setNeedsPassphrase] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -26,24 +35,53 @@ export function useEncryption() {
       const hasLocalKeys = await hasKeys(user.id);
       
       if (!hasLocalKeys) {
+        // Check if encrypted backup exists on server
+        const { data: serverKeys } = await supabase
+          .from('encryption_keys')
+          .select('encrypted_private_key, key_derivation_salt, public_key')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (serverKeys?.encrypted_private_key && serverKeys?.key_derivation_salt) {
+          // User has backup but needs to restore it
+          console.log('Backup found, needs passphrase to restore');
+          setNeedsPassphrase(true);
+          setIsLoading(false);
+          return;
+        }
+
         // Generate new key pair
         console.log('Generating new encryption keys...');
         const keyPair = await generateKeyPair();
         
-        // Store private key locally (never send to server!)
+        // Generate backup passphrase
+        const passphrase = generatePassphrase();
+        setBackupPassphrase(passphrase);
+        
+        // Encrypt private key with passphrase
+        const encrypted = await encryptPrivateKey(keyPair.privateKey, passphrase);
+        encrypted.publicKey = keyPair.publicKey;
+        
+        // Store private key locally
         await storeKeysLocally(user.id, keyPair.privateKey, keyPair.publicKey);
         
-        // Store public key on server
+        // Store public key and encrypted backup on server
         const { error } = await supabase
           .from('encryption_keys')
           .upsert({
             user_id: user.id,
             public_key: keyPair.publicKey,
+            encrypted_private_key: encrypted.encryptedPrivateKey,
+            key_derivation_salt: encrypted.salt,
           });
 
         if (error) throw error;
         
-        console.log('Encryption keys generated and stored');
+        console.log('Encryption keys generated and backed up');
+        toast.success('Verschlüsselung eingerichtet', {
+          description: 'Bitte speichern Sie Ihre Backup-Passphrase!',
+          duration: 10000,
+        });
       } else {
         console.log('Using existing encryption keys');
       }
@@ -54,6 +92,42 @@ export function useEncryption() {
       toast.error('Verschlüsselung konnte nicht initialisiert werden');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const restoreFromPassphrase = async (passphrase: string): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const { data: serverKeys, error } = await supabase
+        .from('encryption_keys')
+        .select('encrypted_private_key, key_derivation_salt, public_key')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error || !serverKeys) {
+        toast.error('Keine Backup-Daten gefunden');
+        return false;
+      }
+
+      // Decrypt private key
+      const privateKey = await decryptPrivateKey(
+        serverKeys.encrypted_private_key!,
+        serverKeys.key_derivation_salt!,
+        passphrase
+      );
+
+      // Store locally
+      await storeKeysLocally(user.id, privateKey, serverKeys.public_key);
+
+      setNeedsPassphrase(false);
+      setIsInitialized(true);
+      toast.success('Schlüssel erfolgreich wiederhergestellt');
+      return true;
+    } catch (error) {
+      console.error('Restore failed:', error);
+      toast.error('Wiederherstellung fehlgeschlagen - falsche Passphrase?');
+      return false;
     }
   };
 
@@ -113,5 +187,8 @@ export function useEncryption() {
     encrypt,
     decrypt,
     getRecipientPublicKey,
+    backupPassphrase,
+    needsPassphrase,
+    restoreFromPassphrase,
   };
 }

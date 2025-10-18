@@ -192,21 +192,27 @@ export type Database = {
       encryption_keys: {
         Row: {
           created_at: string | null
+          encrypted_private_key: string | null
           id: string
+          key_derivation_salt: string | null
           public_key: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
+          encrypted_private_key?: string | null
           id?: string
+          key_derivation_salt?: string | null
           public_key: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
+          encrypted_private_key?: string | null
           id?: string
+          key_derivation_salt?: string | null
           public_key?: string
           updated_at?: string | null
           user_id?: string

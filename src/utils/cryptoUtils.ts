@@ -1,11 +1,17 @@
 /**
  * End-to-End Encryption Utilities using Web Crypto API
- * Keys are generated locally and private keys never leave the device
+ * Keys are generated locally and private keys are encrypted before backup
  */
 
 export interface KeyPair {
   publicKey: string;
   privateKey: string;
+}
+
+export interface EncryptedKeyBackup {
+  encryptedPrivateKey: string;
+  publicKey: string;
+  salt: string;
 }
 
 /**
@@ -115,4 +121,110 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes.buffer;
+}
+
+/**
+ * Generate a random passphrase for key encryption
+ */
+export function generatePassphrase(): string {
+  const words: string[] = [];
+  const wordList = [
+    'Apfel', 'Baum', 'Sonne', 'Mond', 'Stern', 'Wasser', 'Feuer', 'Erde',
+    'Wind', 'Berg', 'Tal', 'Fluss', 'See', 'Meer', 'Wolke', 'Regen',
+    'Schnee', 'Blume', 'Gras', 'Wald', 'Wiese', 'Stein', 'Sand', 'Gold'
+  ];
+  
+  for (let i = 0; i < 6; i++) {
+    const randomIndex = Math.floor(Math.random() * wordList.length);
+    words.push(wordList[randomIndex]);
+  }
+  
+  return words.join('-');
+}
+
+/**
+ * Derive an AES key from a passphrase using PBKDF2
+ */
+async function deriveKeyFromPassphrase(passphrase: string, salt: BufferSource): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const passphraseKey = await window.crypto.subtle.importKey(
+    'raw',
+    encoder.encode(passphrase),
+    'PBKDF2',
+    false,
+    ['deriveBits', 'deriveKey']
+  );
+
+  return window.crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000,
+      hash: 'SHA-256',
+    },
+    passphraseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+/**
+ * Encrypt private key with passphrase using AES-GCM
+ */
+export async function encryptPrivateKey(privateKey: string, passphrase: string): Promise<EncryptedKeyBackup> {
+  const salt = window.crypto.getRandomValues(new Uint8Array(16));
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  
+  const aesKey = await deriveKeyFromPassphrase(passphrase, salt);
+  
+  const encoder = new TextEncoder();
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv },
+    aesKey,
+    encoder.encode(privateKey)
+  );
+
+  // Combine IV and encrypted data
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(encrypted), iv.length);
+
+  return {
+    encryptedPrivateKey: arrayBufferToBase64(combined.buffer),
+    publicKey: '', // Will be set by caller
+    salt: arrayBufferToBase64(salt.buffer),
+  };
+}
+
+/**
+ * Decrypt private key with passphrase
+ */
+export async function decryptPrivateKey(
+  encryptedPrivateKey: string,
+  salt: string,
+  passphrase: string
+): Promise<string> {
+  const saltBuffer = new Uint8Array(base64ToArrayBuffer(salt));
+  const combined = new Uint8Array(base64ToArrayBuffer(encryptedPrivateKey));
+  
+  // Extract IV and encrypted data
+  const iv = combined.slice(0, 12);
+  const encrypted = combined.slice(12);
+
+  const aesKey = await deriveKeyFromPassphrase(passphrase, saltBuffer);
+  
+  try {
+    const decrypted = await window.crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: iv },
+      aesKey,
+      encrypted
+    );
+
+    const decoder = new TextDecoder();
+    return decoder.decode(decrypted);
+  } catch (error) {
+    console.error('Private key decryption failed:', error);
+    throw new Error('Falsche Passphrase');
+  }
 }
