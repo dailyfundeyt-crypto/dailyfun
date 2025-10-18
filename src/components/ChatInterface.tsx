@@ -43,7 +43,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { isInitialized: encryptionReady, encrypt, decrypt } = useEncryption();
+  const { isInitialized: encryptionReady, encrypt, decrypt, getRecipientPublicKey } = useEncryption();
   const { loadMessages, saveReceivedMessageAndDeleteFromServer, saveOwnMessageLocally, getAttachmentUrl, deleteMessageLocally } = useMessageSync();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -313,16 +313,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       message_type: 'text',
     };
     
-    setMessages((prev) => [...prev, optimisticMessage]);
-    setNewMessage('');
 
     try {
+      // Check recipient has a public key
+      const recipientKey = await getRecipientPublicKey(recipientId);
+      if (!recipientKey) {
+        toast.error('Empfänger ist noch nicht eingerichtet. Bitte den Chat einmal öffnen lassen.');
+        return;
+      }
+
       // Encrypt message before sending
       const encryptedContent = await encrypt(messageContent, recipientId);
       
       if (!encryptedContent) {
-        throw new Error('Encryption failed');
+        toast.error('Verschlüsselung fehlgeschlagen. Bitte erneut versuchen.');
+        return;
       }
+
+      // Now show optimistic message
+      setMessages((prev) => [...prev, optimisticMessage]);
+      setNewMessage('');
 
       const { data, error } = await supabase.from('messages').insert({
         conversation_id: conversationId,

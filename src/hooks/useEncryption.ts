@@ -63,7 +63,7 @@ export function useEncryption() {
         .from('encryption_keys')
         .select('public_key')
         .eq('user_id', recipientId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data?.public_key || null;
