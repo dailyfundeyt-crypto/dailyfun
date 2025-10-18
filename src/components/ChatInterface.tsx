@@ -5,8 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink, Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEncryption } from '@/hooks/useEncryption';
 
 interface Message {
   id: string;
@@ -41,6 +42,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isInitialized: encryptionReady, encrypt, decrypt } = useEncryption();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -146,7 +148,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return;
     }
 
-    setMessages((data || []) as unknown as Message[]);
+    // Decrypt messages
+    const decryptedMessages = await Promise.all(
+      (data || []).map(async (msg: any) => {
+        if (msg.is_encrypted && msg.sender_id !== user?.id) {
+          try {
+            const decryptedContent = await decrypt(msg.content);
+            return { ...msg, content: decryptedContent } as Message;
+          } catch (error) {
+            console.error('Error decrypting message:', error);
+            return { ...msg, content: '[🔒 Verschlüsselt]' } as Message;
+          }
+        }
+        return msg as Message;
+      })
+    );
+
+    setMessages(decryptedMessages);
+    
+    // Mark messages as delivered
+    if (data && data.length > 0) {
+      await supabase
+        .from('messages')
+        .update({ delivered_at: new Date().toISOString() })
+        .eq('conversation_id', convId)
+        .eq('sender_id', recipientId)
+        .is('delivered_at', null);
+    }
   };
 
   const subscribeToMessages = (convId: string) => {
@@ -160,8 +188,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           table: 'messages',
           filter: `conversation_id=eq.${convId}`,
         },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+        async (payload) => {
+          const newMsg = payload.new as any;
+          
+          // Decrypt message if it's from the other person
+          if (newMsg.is_encrypted && newMsg.sender_id !== user?.id) {
+            try {
+              const decryptedContent = await decrypt(newMsg.content);
+              newMsg.content = decryptedContent;
+            } catch (error) {
+              console.error('Error decrypting new message:', error);
+              newMsg.content = '[🔒 Verschlüsselt]';
+            }
+          }
+          
+          setMessages((prev) => [...prev, newMsg as Message]);
+          
+          // Mark as delivered
+          if (newMsg.sender_id === recipientId) {
+            await supabase
+              .from('messages')
+              .update({ delivered_at: new Date().toISOString() })
+              .eq('id', newMsg.id);
+          }
+          
           // Re-check media permission after new message
           checkMediaPermission(convId);
         }
@@ -250,11 +300,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !conversationId || !user) return;
+    
+    if (!encryptionReady) {
+      toast.error('Verschlüsselung wird initialisiert...');
+      return;
+    }
 
     const messageContent = newMessage.trim();
     const tempId = `temp-${Date.now()}`;
     
-    // Optimistic update - add message immediately
+    // Optimistic update - add message immediately (unencrypted for display)
     const optimisticMessage: Message = {
       id: tempId,
       conversation_id: conversationId,
@@ -269,24 +324,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setNewMessage('');
 
     try {
+      // Encrypt message before sending
+      const encryptedContent = await encrypt(messageContent, recipientId);
+      
+      if (!encryptedContent) {
+        throw new Error('Encryption failed');
+      }
+
       const { data, error } = await supabase.from('messages').insert({
         conversation_id: conversationId,
         sender_id: user.id,
-        content: messageContent,
+        content: encryptedContent,
         message_type: 'text',
+        is_encrypted: true,
       }).select().single();
 
       if (error) throw error;
 
-      // Replace temp message with real one
+      // Replace temp message with real one (keep unencrypted for sender)
       setMessages((prev) => 
-        prev.map((msg) => msg.id === tempId ? data as unknown as Message : msg)
+        prev.map((msg) => msg.id === tempId ? { ...data, content: messageContent } as unknown as Message : msg)
       );
 
       // Send push notification in background
       supabase.functions.invoke('notify-new-message', {
         body: {
-          message: data,
+          message: { ...data, content: 'Neue Nachricht' }, // Don't send encrypted content in notification
           conversation_id: conversationId,
         },
       }).catch(err => console.error('Push notification error:', err));
@@ -420,8 +483,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         <div className="flex-1">
           <h2 className="text-base font-bold text-black">{recipientName}</h2>
-          <p className="text-xs text-gray-500">
-            {canSendMedia ? 'Medien erlaubt' : 'Nur Text'}
+          <p className="text-xs text-gray-500 flex items-center gap-1">
+            <Lock className="h-3 w-3" />
+            Ende-zu-Ende verschlüsselt
           </p>
         </div>
       </div>

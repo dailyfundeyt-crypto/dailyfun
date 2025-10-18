@@ -189,6 +189,30 @@ export type Database = {
         }
         Relationships: []
       }
+      encryption_keys: {
+        Row: {
+          created_at: string | null
+          id: string
+          public_key: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          public_key: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          public_key?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       follows: {
         Row: {
           created_at: string
@@ -217,7 +241,9 @@ export type Database = {
           content: string
           conversation_id: string
           created_at: string
+          delivered_at: string | null
           id: string
+          is_encrypted: boolean | null
           is_read: boolean | null
           message_type: string | null
           sender_id: string
@@ -229,7 +255,9 @@ export type Database = {
           content: string
           conversation_id: string
           created_at?: string
+          delivered_at?: string | null
           id?: string
+          is_encrypted?: boolean | null
           is_read?: boolean | null
           message_type?: string | null
           sender_id: string
@@ -241,7 +269,9 @@ export type Database = {
           content?: string
           conversation_id?: string
           created_at?: string
+          delivered_at?: string | null
           id?: string
+          is_encrypted?: boolean | null
           is_read?: boolean | null
           message_type?: string | null
           sender_id?: string
