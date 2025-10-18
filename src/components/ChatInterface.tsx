@@ -46,15 +46,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { 
-    isInitialized: encryptionReady, 
-    encrypt, 
-    decrypt, 
-    getRecipientPublicKey,
-    backupPassphrase,
-    needsPassphrase,
-    restoreFromPassphrase
-  } = useEncryption();
   const { loadMessages, saveReceivedMessageAndDeleteFromServer, saveOwnMessageLocally, getAttachmentUrl, deleteMessageLocally } = useMessageSync();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -63,7 +54,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [canSendMedia, setCanSendMedia] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
-  const [showBackupDialog, setShowBackupDialog] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -84,11 +74,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     initializeChat();
   }, [user, recipientId]);
 
-  useEffect(() => {
-    if (backupPassphrase) {
-      setShowBackupDialog(true);
-    }
-  }, [backupPassphrase]);
 
   const initializeChat = async () => {
     if (!user) return;
@@ -161,37 +146,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (!user) return;
     
     try {
-      // Load messages from local storage + server
+      // Load messages from local storage + server (no decryption needed)
       const allMessages = await loadMessages(convId, user.id);
 
-      // Decrypt messages from other person
-      const decryptedMessages = await Promise.all(
+      // Process messages - save received ones locally
+      const processedMessages = await Promise.all(
         allMessages.map(async (msg: any) => {
-          // Only decrypt and process messages from other person
+          // Save received messages locally and delete from server
           if (msg.sender_id !== user.id && msg.message_type === 'text') {
-            try {
-              if (msg.is_encrypted) {
-                const decryptedContent = await decrypt(msg.content);
-                // Save received message locally and delete from server
-                await saveReceivedMessageAndDeleteFromServer(msg, decryptedContent);
-                return { ...msg, content: decryptedContent } as Message;
-              } else {
-                // Legacy/plaintext message: save and keep as-is
-                await saveReceivedMessageAndDeleteFromServer(msg, msg.content);
-                return { ...msg } as Message;
-              }
-            } catch (error) {
-              console.error('Error decrypting message:', error);
-              return { ...msg, content: '[🔒 Verschlüsselt]' } as Message;
-            }
+            await saveReceivedMessageAndDeleteFromServer(msg, msg.content);
           }
-          
-          // If it's our own message, just return it (already unencrypted in local storage)
           return msg as Message;
         })
       );
 
-      setMessages(decryptedMessages);
+      setMessages(processedMessages);
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -211,22 +180,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         async (payload) => {
           const newMsg = payload.new as any;
           
-          // Decrypt message if it's from the other person
+          // Save received message locally and delete from server
           if (newMsg.sender_id !== user?.id && newMsg.message_type === 'text') {
-            try {
-              if (newMsg.is_encrypted) {
-                const decryptedContent = await decrypt(newMsg.content);
-                newMsg.content = decryptedContent;
-                // Save received message locally and delete from server
-                await saveReceivedMessageAndDeleteFromServer(newMsg, decryptedContent);
-              } else {
-                // Legacy/plaintext message: save and keep as-is
-                await saveReceivedMessageAndDeleteFromServer(newMsg, newMsg.content);
-              }
-            } catch (error) {
-              console.error('Error decrypting new message:', error);
-              newMsg.content = '[🔒 Verschlüsselt]';
-            }
+            await saveReceivedMessageAndDeleteFromServer(newMsg, newMsg.content);
           }
           
           setMessages((prev) => [...prev, newMsg as Message]);
@@ -319,16 +275,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !conversationId || !user) return;
-    
-    if (!encryptionReady) {
-      toast.error('Verschlüsselung wird initialisiert...');
-      return;
-    }
 
     const messageContent = newMessage.trim();
     const tempId = `temp-${Date.now()}`;
     
-    // Optimistic update - add message immediately (unencrypted for display)
+    // Optimistic update - add message immediately
     const optimisticMessage: Message = {
       id: tempId,
       conversation_id: conversationId,
@@ -339,44 +290,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       message_type: 'text',
     };
     
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setNewMessage('');
 
     try {
-      // Check recipient has a public key
-      const recipientKey = await getRecipientPublicKey(recipientId);
-      if (!recipientKey) {
-        toast.error('Empfänger ist noch nicht eingerichtet. Bitte den Chat einmal öffnen lassen.');
-        return;
-      }
-
-      // Encrypt message before sending
-      const encryptedContent = await encrypt(messageContent, recipientId);
-      
-      if (!encryptedContent) {
-        toast.error('Verschlüsselung fehlgeschlagen. Bitte erneut versuchen.');
-        return;
-      }
-
-      // Now show optimistic message
-      setMessages((prev) => [...prev, optimisticMessage]);
-      setNewMessage('');
-
       const { data, error } = await supabase.from('messages').insert({
         conversation_id: conversationId,
         sender_id: user.id,
-        content: encryptedContent,
+        content: messageContent,
         message_type: 'text',
-        is_encrypted: true,
+        is_encrypted: false,
       }).select().single();
 
       if (error) throw error;
 
-      // Save own message locally (unencrypted for display, stays on server for recipient)
-      await saveOwnMessageLocally(
-        data as any,
-        messageContent
-      );
+      // Save own message locally
+      await saveOwnMessageLocally(data as any, messageContent);
 
-      // Replace temp message with real one (keep unencrypted for sender)
+      // Replace temp message with real one
       setMessages((prev) => 
         prev.map((msg) => msg.id === tempId ? { ...data, content: messageContent } as unknown as Message : msg)
       );
@@ -384,14 +315,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       // Send push notification in background
       supabase.functions.invoke('notify-new-message', {
         body: {
-          message: { ...data, content: 'Neue Nachricht' }, // Don't send encrypted content in notification
+          message: { ...data, content: messageContent },
           conversation_id: conversationId,
         },
       }).catch(err => console.error('Push notification error:', err));
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Fehler beim Senden der Nachricht');
-      // Remove failed message
       setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
     }
   };
@@ -509,19 +439,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <>
-      {needsPassphrase && (
-        <PassphraseRestoreDialog onRestore={restoreFromPassphrase} />
-      )}
-
-      {showBackupDialog && backupPassphrase && (
-        <PassphraseBackupDialog
-          passphrase={backupPassphrase}
-          onClose={() => setShowBackupDialog(false)}
-        />
-      )}
-
-      <div className="fixed inset-0 z-50 bg-white flex flex-col pb-24 md:pb-0">
+    <div className="fixed inset-0 z-50 bg-white flex flex-col pb-24 md:pb-0">
         {/* Header - Apple Style */}
         <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200 px-4 py-4 flex items-center gap-3 shadow-sm">
           <Button
@@ -542,10 +460,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         <div className="flex-1">
           <h2 className="text-base font-bold text-black">{recipientName}</h2>
-          <p className="text-xs text-gray-500 flex items-center gap-1">
-            <Lock className="h-3 w-3" />
-            Ende-zu-Ende verschlüsselt
-          </p>
+          <p className="text-xs text-gray-500">Online</p>
         </div>
       </div>
 
@@ -662,7 +577,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         )}
       </div>
     </div>
-    </>
   );
 };
 
