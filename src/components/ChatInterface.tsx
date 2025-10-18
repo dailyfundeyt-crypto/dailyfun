@@ -186,7 +186,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col pb-20 md:pb-0">
+    <div className="fixed inset-0 z-50 bg-white flex flex-col pb-24 md:pb-0">
       {/* Header - Apple Style */}
       <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200 px-4 py-4 flex items-center gap-3 shadow-sm">
         <Button
@@ -270,7 +270,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Input Area - Apple Style */}
-      <div className="bg-white/95 backdrop-blur-xl border-t border-gray-200 px-4 py-4 shadow-lg mb-20 md:mb-0">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 px-4 py-4 shadow-lg mb-16 md:mb-0">
         <div className="flex items-end gap-3">
           <div className="flex-1 relative">
             <Input
