@@ -389,30 +389,46 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     if (message.message_type === 'image' && message.attachment_url) {
       const [localUrl, setLocalUrl] = React.useState<string>(message.attachment_url);
-      const [loadingLocal, setLoadingLocal] = React.useState(true);
       
       React.useEffect(() => {
         const loadImage = async () => {
           try {
-            // Try to load from local directory first
-            const fileName = message.attachment_url!.split('/').pop();
-            if (fileName) {
-              const localFile = await readFileFromLocalDirectory(fileName);
-              if (localFile) {
-                setLocalUrl(URL.createObjectURL(localFile));
-                setLoadingLocal(false);
-                return;
+            // Check if we have directory access
+            const hasAccess = await hasDirectoryAccess();
+            
+            if (hasAccess) {
+              // Try to load from local directory first
+              const fileName = message.attachment_url!.split('/').pop();
+              if (fileName) {
+                try {
+                  const localFile = await readFileFromLocalDirectory(fileName);
+                  if (localFile) {
+                    setLocalUrl(URL.createObjectURL(localFile));
+                    return;
+                  }
+                } catch (err) {
+                  console.log('Could not load from local directory:', err);
+                }
               }
             }
             
             // Try IndexedDB next
-            const indexedDBUrl = await getAttachmentUrl(message.attachment_url!);
-            setLocalUrl(indexedDBUrl);
-          } catch (error) {
+            try {
+              const indexedDBUrl = await getAttachmentUrl(message.attachment_url!);
+              if (indexedDBUrl && indexedDBUrl !== message.attachment_url) {
+                setLocalUrl(indexedDBUrl);
+                return;
+              }
+            } catch (err) {
+              console.log('Could not load from IndexedDB:', err);
+            }
+            
             // Fallback to original URL
             setLocalUrl(message.attachment_url!);
-          } finally {
-            setLoadingLocal(false);
+          } catch (error) {
+            console.error('Error loading image:', error);
+            // Always fallback to original URL
+            setLocalUrl(message.attachment_url!);
           }
         };
         
