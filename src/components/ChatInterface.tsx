@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink, Lock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { saveFileToLocalDirectory, readFileFromLocalDirectory, hasDirectoryAccess } from '@/utils/fileSystemStorage';
 
 interface Message {
   id: string;
@@ -388,15 +389,34 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     if (message.message_type === 'image' && message.attachment_url) {
       const [localUrl, setLocalUrl] = React.useState<string>(message.attachment_url);
+      const [loadingLocal, setLoadingLocal] = React.useState(true);
       
       React.useEffect(() => {
-        // Try to get local attachment first
-        getAttachmentUrl(message.attachment_url!).then(url => {
-          setLocalUrl(url);
-        }).catch(() => {
-          // Fallback to original URL if local not available
-          setLocalUrl(message.attachment_url!);
-        });
+        const loadImage = async () => {
+          try {
+            // Try to load from local directory first
+            const fileName = message.attachment_url!.split('/').pop();
+            if (fileName) {
+              const localFile = await readFileFromLocalDirectory(fileName);
+              if (localFile) {
+                setLocalUrl(URL.createObjectURL(localFile));
+                setLoadingLocal(false);
+                return;
+              }
+            }
+            
+            // Try IndexedDB next
+            const indexedDBUrl = await getAttachmentUrl(message.attachment_url!);
+            setLocalUrl(indexedDBUrl);
+          } catch (error) {
+            // Fallback to original URL
+            setLocalUrl(message.attachment_url!);
+          } finally {
+            setLoadingLocal(false);
+          }
+        };
+        
+        loadImage();
       }, [message.attachment_url]);
 
       return (

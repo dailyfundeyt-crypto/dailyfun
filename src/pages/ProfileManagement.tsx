@@ -20,6 +20,7 @@ import Auth from './Auth';
 import { LanguageSelectionDialog } from '../components/LanguageSelectionDialog';
 import { SecurityQuestionsModal } from '../components/SecurityQuestionsModal';
 import { NotificationSettings } from '../components/NotificationSettings';
+import { LocalStorageSettings } from '../components/LocalStorageSettings';
 
 interface UserProfile {
   id: string;
@@ -878,6 +879,9 @@ const ProfileManagement = () => {
 
               {/* Push Notifications Section */}
               <NotificationSettings />
+
+              {/* Local Storage for Chat Images */}
+              <LocalStorageSettings />
 
               {/* Account Actions */}
               <div className="flex flex-col gap-4">
