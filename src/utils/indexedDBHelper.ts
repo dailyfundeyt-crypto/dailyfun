@@ -16,7 +16,7 @@ interface StoredKey {
   createdAt: Date;
 }
 
-interface StoredMessage {
+export interface StoredMessage {
   id: string;
   conversationId: string;
   senderId: string;

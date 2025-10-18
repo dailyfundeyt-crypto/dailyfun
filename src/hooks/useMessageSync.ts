@@ -86,13 +86,16 @@ export function useMessageSync() {
   }, []);
 
   /**
-   * Save message locally and delete from server after delivery
+   * Save RECEIVED message locally and delete from server after delivery
+   * Only for messages we receive, not for our own messages!
    */
-  const saveAndDeleteFromServer = useCallback(async (
+  const saveReceivedMessageAndDeleteFromServer = useCallback(async (
     message: Message, 
     decryptedContent: string
   ) => {
     try {
+      console.log('Saving received message locally:', message.id);
+      
       // Save locally
       await storeMessageLocally({
         id: message.id,
@@ -119,15 +122,43 @@ export function useMessageSync() {
         }
       }
 
-      // Mark as delivered and delete from server
+      // Delete from server after we received it
       await supabase
         .from('messages')
         .delete()
         .eq('id', message.id);
 
-      console.log('Message saved locally and deleted from server:', message.id);
+      console.log('Received message saved locally and deleted from server:', message.id);
     } catch (error) {
-      console.error('Error in saveAndDeleteFromServer:', error);
+      console.error('Error in saveReceivedMessageAndDeleteFromServer:', error);
+    }
+  }, []);
+
+  /**
+   * Save OWN sent message locally (keep on server until recipient downloads)
+   */
+  const saveOwnMessageLocally = useCallback(async (
+    message: Message,
+    unencryptedContent: string
+  ) => {
+    try {
+      console.log('Saving own message locally:', message.id);
+      
+      await storeMessageLocally({
+        id: message.id,
+        conversationId: message.conversation_id,
+        senderId: message.sender_id,
+        content: unencryptedContent,
+        messageType: (message.message_type || 'text') as 'text' | 'image' | 'pdf' | 'article',
+        attachmentUrl: message.attachment_url || undefined,
+        articleData: message.article_data,
+        createdAt: message.created_at,
+        isRead: false,
+      });
+      
+      console.log('Own message saved locally (stays on server for recipient):', message.id);
+    } catch (error) {
+      console.error('Error saving own message locally:', error);
     }
   }, []);
 
@@ -173,7 +204,8 @@ export function useMessageSync() {
 
   return {
     loadMessages,
-    saveAndDeleteFromServer,
+    saveReceivedMessageAndDeleteFromServer,
+    saveOwnMessageLocally,
     getAttachmentUrl,
     deleteMessageLocally,
   };

@@ -44,7 +44,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isInitialized: encryptionReady, encrypt, decrypt } = useEncryption();
-  const { loadMessages, saveAndDeleteFromServer, getAttachmentUrl, deleteMessageLocally } = useMessageSync();
+  const { loadMessages, saveReceivedMessageAndDeleteFromServer, saveOwnMessageLocally, getAttachmentUrl, deleteMessageLocally } = useMessageSync();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -149,12 +149,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       // Decrypt messages from other person
       const decryptedMessages = await Promise.all(
         allMessages.map(async (msg: any) => {
+          // Only decrypt and process messages from other person
           if (msg.sender_id !== user.id && msg.message_type === 'text') {
             try {
               const decryptedContent = await decrypt(msg.content);
               
-              // Save locally and delete from server after successful decryption
-              await saveAndDeleteFromServer(msg, decryptedContent);
+              // Save received message locally and delete from server
+              await saveReceivedMessageAndDeleteFromServer(msg, decryptedContent);
               
               return { ...msg, content: decryptedContent } as Message;
             } catch (error) {
@@ -163,7 +164,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             }
           }
           
-          // If it's our own message or already decrypted, just return it
+          // If it's our own message, just return it (already unencrypted in local storage)
           return msg as Message;
         })
       );
@@ -194,8 +195,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               const decryptedContent = await decrypt(newMsg.content);
               newMsg.content = decryptedContent;
               
-              // Save locally and delete from server
-              await saveAndDeleteFromServer(newMsg, decryptedContent);
+              // Save received message locally and delete from server
+              await saveReceivedMessageAndDeleteFromServer(newMsg, decryptedContent);
             } catch (error) {
               console.error('Error decrypting new message:', error);
               newMsg.content = '[🔒 Verschlüsselt]';
@@ -333,9 +334,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       if (error) throw error;
 
-      // Save own message locally (unencrypted for display)
-      await saveAndDeleteFromServer(
-        { ...data, content: encryptedContent } as any,
+      // Save own message locally (unencrypted for display, stays on server for recipient)
+      await saveOwnMessageLocally(
+        data as any,
         messageContent
       );
 
