@@ -223,6 +223,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       if (messageError) throw messageError;
 
+      // Send push notification in background
+      supabase.functions.invoke('notify-new-message', {
+        body: {
+          message: {
+            sender_id: user.id,
+            content,
+            message_type: messageType,
+            attachment_url: publicUrl,
+          },
+          conversation_id: conversationId,
+        },
+      }).catch(err => console.error('Push notification error:', err));
+
       toast.success('Datei gesendet!');
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -269,6 +282,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       setMessages((prev) => 
         prev.map((msg) => msg.id === tempId ? data as unknown as Message : msg)
       );
+
+      // Send push notification in background
+      supabase.functions.invoke('notify-new-message', {
+        body: {
+          message: data,
+          conversation_id: conversationId,
+        },
+      }).catch(err => console.error('Push notification error:', err));
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Fehler beim Senden der Nachricht');

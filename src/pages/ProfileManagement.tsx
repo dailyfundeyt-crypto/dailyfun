@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import Auth from './Auth';
 import { LanguageSelectionDialog } from '../components/LanguageSelectionDialog';
 import { SecurityQuestionsModal } from '../components/SecurityQuestionsModal';
+import { NotificationSettings } from '../components/NotificationSettings';
 
 interface UserProfile {
   id: string;
@@ -874,6 +875,9 @@ const ProfileManagement = () => {
                   </Button>
                 </CardContent>
               </Card>
+
+              {/* Push Notifications Section */}
+              <NotificationSettings />
 
               {/* Account Actions */}
               <div className="flex flex-col gap-4">

@@ -97,15 +97,23 @@ export const ShareArticleDialog: React.FC<ShareArticleDialogProps> = ({
         category: article.category,
       };
 
-      const { error } = await supabase.from('messages').insert({
+      const { data, error } = await supabase.from('messages').insert({
         conversation_id: conversationId,
         sender_id: user.id,
         content: `📰 Artikel: ${article.title}`,
         message_type: 'article',
         article_data: articleData,
-      });
+      }).select().single();
 
       if (error) throw error;
+
+      // Send push notification in background
+      supabase.functions.invoke('notify-new-message', {
+        body: {
+          message: data,
+          conversation_id: conversationId,
+        },
+      }).catch(err => console.error('Push notification error:', err));
 
       toast.success('Artikel geteilt!');
       onClose();
