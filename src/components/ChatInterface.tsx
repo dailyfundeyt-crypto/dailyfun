@@ -19,6 +19,7 @@ interface Message {
   content: string;
   is_read: boolean;
   created_at: string;
+  is_encrypted?: boolean;
   message_type?: 'text' | 'image' | 'pdf' | 'article';
   attachment_url?: string | null;
   article_data?: {
@@ -169,12 +170,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           // Only decrypt and process messages from other person
           if (msg.sender_id !== user.id && msg.message_type === 'text') {
             try {
-              const decryptedContent = await decrypt(msg.content);
-              
-              // Save received message locally and delete from server
-              await saveReceivedMessageAndDeleteFromServer(msg, decryptedContent);
-              
-              return { ...msg, content: decryptedContent } as Message;
+              if (msg.is_encrypted) {
+                const decryptedContent = await decrypt(msg.content);
+                // Save received message locally and delete from server
+                await saveReceivedMessageAndDeleteFromServer(msg, decryptedContent);
+                return { ...msg, content: decryptedContent } as Message;
+              } else {
+                // Legacy/plaintext message: save and keep as-is
+                await saveReceivedMessageAndDeleteFromServer(msg, msg.content);
+                return { ...msg } as Message;
+              }
             } catch (error) {
               console.error('Error decrypting message:', error);
               return { ...msg, content: '[🔒 Verschlüsselt]' } as Message;
@@ -209,11 +214,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           // Decrypt message if it's from the other person
           if (newMsg.sender_id !== user?.id && newMsg.message_type === 'text') {
             try {
-              const decryptedContent = await decrypt(newMsg.content);
-              newMsg.content = decryptedContent;
-              
-              // Save received message locally and delete from server
-              await saveReceivedMessageAndDeleteFromServer(newMsg, decryptedContent);
+              if (newMsg.is_encrypted) {
+                const decryptedContent = await decrypt(newMsg.content);
+                newMsg.content = decryptedContent;
+                // Save received message locally and delete from server
+                await saveReceivedMessageAndDeleteFromServer(newMsg, decryptedContent);
+              } else {
+                // Legacy/plaintext message: save and keep as-is
+                await saveReceivedMessageAndDeleteFromServer(newMsg, newMsg.content);
+              }
             } catch (error) {
               console.error('Error decrypting new message:', error);
               newMsg.content = '[🔒 Verschlüsselt]';
