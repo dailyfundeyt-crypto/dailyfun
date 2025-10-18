@@ -169,7 +169,13 @@ const Article = () => {
               <Bot className="h-4 w-4 mr-2" />
               <span>{language === 'de' ? 'Mit AI sprechen' : 'Ask AI'}</span>
             </button>
-            <ArticleShareButton articleId={article.id} title={translatedTitle} />
+            <ArticleShareButton 
+              articleId={article.id} 
+              title={translatedTitle}
+              excerpt={translatedExcerpt}
+              imageUrl={getProfessionalImage(article.id)}
+              category={language === 'de' ? article.category : (article.categoryEn || article.category)}
+            />
             <LanguageSwitcher />
           </div>
         </div>

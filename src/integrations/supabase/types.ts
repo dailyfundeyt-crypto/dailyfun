@@ -212,29 +212,38 @@ export type Database = {
       }
       messages: {
         Row: {
+          article_data: Json | null
+          attachment_url: string | null
           content: string
           conversation_id: string
           created_at: string
           id: string
           is_read: boolean | null
+          message_type: string | null
           sender_id: string
           updated_at: string
         }
         Insert: {
+          article_data?: Json | null
+          attachment_url?: string | null
           content: string
           conversation_id: string
           created_at?: string
           id?: string
           is_read?: boolean | null
+          message_type?: string | null
           sender_id: string
           updated_at?: string
         }
         Update: {
+          article_data?: Json | null
+          attachment_url?: string | null
           content?: string
           conversation_id?: string
           created_at?: string
           id?: string
           is_read?: boolean | null
+          message_type?: string | null
           sender_id?: string
           updated_at?: string
         }
@@ -492,6 +501,10 @@ export type Database = {
       }
     }
     Functions: {
+      can_send_media: {
+        Args: { p_conversation_id: string; p_recipient_id: string }
+        Returns: boolean
+      }
       generate_unique_alias: {
         Args: Record<PropertyKey, never>
         Returns: string

@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Send, ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Message {
@@ -15,6 +15,15 @@ interface Message {
   content: string;
   is_read: boolean;
   created_at: string;
+  message_type?: 'text' | 'image' | 'pdf' | 'article';
+  attachment_url?: string | null;
+  article_data?: {
+    id: string;
+    title: string;
+    excerpt: string;
+    image_url?: string;
+    category: string;
+  } | null;
 }
 
 interface ChatInterfaceProps {
@@ -36,7 +45,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [newMessage, setNewMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [canSendMedia, setCanSendMedia] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -92,12 +104,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       setConversationId(conversation.id);
       await fetchMessages(conversation.id);
+      await checkMediaPermission(conversation.id);
       subscribeToMessages(conversation.id);
     } catch (error) {
       console.error('Error initializing chat:', error);
       toast.error('Fehler beim Laden des Chats');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkMediaPermission = async (convId: string) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.rpc('can_send_media', {
+        p_conversation_id: convId,
+        p_recipient_id: recipientId,
+      });
+
+      if (error) {
+        console.error('Error checking media permission:', error);
+        return;
+      }
+
+      setCanSendMedia(data || false);
+    } catch (error) {
+      console.error('Error checking media permission:', error);
     }
   };
 
@@ -113,7 +146,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return;
     }
 
-    setMessages(data || []);
+    setMessages((data || []) as unknown as Message[]);
   };
 
   const subscribeToMessages = (convId: string) => {
@@ -129,6 +162,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         },
         (payload) => {
           setMessages((prev) => [...prev, payload.new as Message]);
+          // Re-check media permission after new message
+          checkMediaPermission(convId);
         }
       )
       .subscribe();
@@ -136,6 +171,68 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return () => {
       supabase.removeChannel(channel);
     };
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !conversationId || !user) return;
+
+    if (!canSendMedia) {
+      toast.error('Der andere muss dir erst 3 Nachrichten senden, bevor du Dateien teilen kannst');
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Nur Bilder (JPG, PNG, GIF, WEBP) und PDFs sind erlaubt');
+      return;
+    }
+
+    // Validate file size (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Datei zu groß. Maximal 10MB erlaubt');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('message-attachments')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('message-attachments')
+        .getPublicUrl(fileName);
+
+      const messageType = file.type.startsWith('image/') ? 'image' : 'pdf';
+      const content = messageType === 'image' ? '📷 Bild' : '📄 PDF-Dokument';
+
+      const { error: messageError } = await supabase.from('messages').insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content,
+        message_type: messageType,
+        attachment_url: publicUrl,
+      });
+
+      if (messageError) throw messageError;
+
+      toast.success('Datei gesendet!');
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Fehler beim Hochladen der Datei');
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const sendMessage = async () => {
@@ -152,6 +249,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       content: messageContent,
       is_read: false,
       created_at: new Date().toISOString(),
+      message_type: 'text',
     };
     
     setMessages((prev) => [...prev, optimisticMessage]);
@@ -162,13 +260,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         conversation_id: conversationId,
         sender_id: user.id,
         content: messageContent,
+        message_type: 'text',
       }).select().single();
 
       if (error) throw error;
 
       // Replace temp message with real one
       setMessages((prev) => 
-        prev.map((msg) => msg.id === tempId ? data : msg)
+        prev.map((msg) => msg.id === tempId ? data as unknown as Message : msg)
       );
     } catch (error) {
       console.error('Error sending message:', error);
@@ -183,6 +282,99 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const renderMessage = (message: Message) => {
+    const isOwn = message.sender_id === user?.id;
+
+    if (message.message_type === 'article' && message.article_data) {
+      return (
+        <div
+          className={`max-w-[85%] rounded-2xl overflow-hidden shadow-md ${
+            isOwn ? 'bg-primary text-white' : 'bg-white border border-gray-200'
+          }`}
+        >
+          {message.article_data.image_url && (
+            <img
+              src={message.article_data.image_url}
+              alt={message.article_data.title}
+              className="w-full h-32 object-cover"
+            />
+          )}
+          <div className="p-3">
+            <h4 className={`font-bold text-sm mb-1 ${isOwn ? 'text-white' : 'text-black'}`}>
+              {message.article_data.title}
+            </h4>
+            <p className={`text-xs mb-2 line-clamp-2 ${isOwn ? 'text-white/90' : 'text-gray-600'}`}>
+              {message.article_data.excerpt}
+            </p>
+            <Button
+              size="sm"
+              variant={isOwn ? 'secondary' : 'default'}
+              onClick={() => navigate(`/article/${message.article_data?.id}`)}
+              className="w-full gap-2"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Artikel öffnen
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    if (message.message_type === 'image' && message.attachment_url) {
+      return (
+        <div className="max-w-[75%]">
+          <img
+            src={message.attachment_url}
+            alt="Geteiltes Bild"
+            className="rounded-2xl max-h-80 object-cover shadow-md cursor-pointer"
+            onClick={() => window.open(message.attachment_url!, '_blank')}
+          />
+        </div>
+      );
+    }
+
+    if (message.message_type === 'pdf' && message.attachment_url) {
+      return (
+        <div
+          className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3 ${
+            isOwn
+              ? 'bg-primary text-white'
+              : 'bg-white text-black border border-gray-100'
+          }`}
+        >
+          <FileText className="h-10 w-10 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-sm truncate">PDF-Dokument</p>
+            <Button
+              size="sm"
+              variant={isOwn ? 'secondary' : 'default'}
+              onClick={() => window.open(message.attachment_url!, '_blank')}
+              className="mt-2 gap-2"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Öffnen
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Text message
+    return (
+      <div
+        className={`max-w-[75%] rounded-[20px] px-4 py-2.5 shadow-sm ${
+          isOwn
+            ? 'bg-primary text-white rounded-br-sm'
+            : 'bg-white text-black rounded-bl-sm border border-gray-100'
+        }`}
+      >
+        <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
+          {message.content}
+        </p>
+      </div>
+    );
   };
 
   return (
@@ -207,7 +399,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         
         <div className="flex-1">
           <h2 className="text-base font-bold text-black">{recipientName}</h2>
-          <p className="text-xs text-gray-500">Aktiv</p>
+          <p className="text-xs text-gray-500">
+            {canSendMedia ? 'Medien erlaubt' : 'Nur Text'}
+          </p>
         </div>
       </div>
 
@@ -250,17 +444,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <div
                   className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div
-                    className={`max-w-[75%] rounded-[20px] px-4 py-2.5 shadow-sm ${
-                      isOwn
-                        ? 'bg-primary text-white rounded-br-sm'
-                        : 'bg-white text-black rounded-bl-sm border border-gray-100'
-                    }`}
-                  >
-                    <p className="text-[15px] leading-relaxed break-words whitespace-pre-wrap">
-                      {message.content}
-                    </p>
-                  </div>
+                  {renderMessage(message)}
                 </div>
               </div>
             );
@@ -271,7 +455,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       {/* Input Area - Apple Style */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200 px-4 py-4 shadow-lg mb-[68px] md:mb-0">
-        <div className="flex items-end gap-3">
+        <div className="flex items-end gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={!canSendMedia || uploading}
+            className="rounded-full p-2 hover:bg-gray-100"
+            title={canSendMedia ? 'Datei anhängen' : '3 Nachrichten vom Empfänger nötig'}
+          >
+            <Paperclip className="h-5 w-5 text-gray-600" />
+          </Button>
           <div className="flex-1 relative">
             <Input
               value={newMessage}
@@ -279,17 +480,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               onKeyPress={handleKeyPress}
               placeholder="Nachricht"
               className="rounded-full bg-gray-100 border-0 px-5 py-3 text-[15px] focus-visible:ring-2 focus-visible:ring-primary/20 resize-none h-11"
-              disabled={!conversationId}
+              disabled={!conversationId || uploading}
             />
           </div>
           <Button
             onClick={sendMessage}
-            disabled={!newMessage.trim() || !conversationId}
+            disabled={!newMessage.trim() || !conversationId || uploading}
             className="rounded-full w-11 h-11 p-0 bg-primary hover:bg-primary/90 shadow-md disabled:opacity-40 transition-all"
           >
-            <Send className="h-5 w-5" />
+            {uploading ? (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
           </Button>
         </div>
+        {!canSendMedia && (
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            Bilder & PDFs werden freigeschaltet, sobald {recipientName} dir 3 Nachrichten gesendet hat
+          </p>
+        )}
       </div>
     </div>
   );
