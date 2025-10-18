@@ -141,19 +141,40 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const sendMessage = async () => {
     if (!newMessage.trim() || !conversationId || !user) return;
 
+    const messageContent = newMessage.trim();
+    const tempId = `temp-${Date.now()}`;
+    
+    // Optimistic update - add message immediately
+    const optimisticMessage: Message = {
+      id: tempId,
+      conversation_id: conversationId,
+      sender_id: user.id,
+      content: messageContent,
+      is_read: false,
+      created_at: new Date().toISOString(),
+    };
+    
+    setMessages((prev) => [...prev, optimisticMessage]);
+    setNewMessage('');
+
     try {
-      const { error } = await supabase.from('messages').insert({
+      const { data, error } = await supabase.from('messages').insert({
         conversation_id: conversationId,
         sender_id: user.id,
-        content: newMessage.trim(),
-      });
+        content: messageContent,
+      }).select().single();
 
       if (error) throw error;
 
-      setNewMessage('');
+      // Replace temp message with real one
+      setMessages((prev) => 
+        prev.map((msg) => msg.id === tempId ? data : msg)
+      );
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Fehler beim Senden der Nachricht');
+      // Remove failed message
+      setMessages((prev) => prev.filter((msg) => msg.id !== tempId));
     }
   };
 
@@ -165,7 +186,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col">
+    <div className="fixed inset-0 z-50 bg-white flex flex-col pb-20 md:pb-0">
       {/* Header - Apple Style */}
       <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200 px-4 py-4 flex items-center gap-3 shadow-sm">
         <Button
@@ -249,7 +270,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       </div>
 
       {/* Input Area - Apple Style */}
-      <div className="bg-white/95 backdrop-blur-xl border-t border-gray-200 px-4 py-4 shadow-lg">
+      <div className="bg-white/95 backdrop-blur-xl border-t border-gray-200 px-4 py-4 shadow-lg mb-20 md:mb-0">
         <div className="flex items-end gap-3">
           <div className="flex-1 relative">
             <Input
