@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink, Lock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveFileToLocalDirectory, readFileFromLocalDirectory, hasDirectoryAccess } from '@/utils/fileSystemStorage';
+import MessageImage from './MessageImage';
 
 interface Message {
   id: string;
@@ -388,60 +389,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
 
     if (message.message_type === 'image' && message.attachment_url) {
-      const [localUrl, setLocalUrl] = React.useState<string>(message.attachment_url);
-      
-      React.useEffect(() => {
-        const loadImage = async () => {
-          try {
-            // Check if we have directory access
-            const hasAccess = await hasDirectoryAccess();
-            
-            if (hasAccess) {
-              // Try to load from local directory first
-              const fileName = message.attachment_url!.split('/').pop();
-              if (fileName) {
-                try {
-                  const localFile = await readFileFromLocalDirectory(fileName);
-                  if (localFile) {
-                    setLocalUrl(URL.createObjectURL(localFile));
-                    return;
-                  }
-                } catch (err) {
-                  console.log('Could not load from local directory:', err);
-                }
-              }
-            }
-            
-            // Try IndexedDB next
-            try {
-              const indexedDBUrl = await getAttachmentUrl(message.attachment_url!);
-              if (indexedDBUrl && indexedDBUrl !== message.attachment_url) {
-                setLocalUrl(indexedDBUrl);
-                return;
-              }
-            } catch (err) {
-              console.log('Could not load from IndexedDB:', err);
-            }
-            
-            // Fallback to original URL
-            setLocalUrl(message.attachment_url!);
-          } catch (error) {
-            console.error('Error loading image:', error);
-            // Always fallback to original URL
-            setLocalUrl(message.attachment_url!);
-          }
-        };
-        
-        loadImage();
-      }, [message.attachment_url]);
-
       return (
         <div className="max-w-[75%]">
-          <img
-            src={localUrl}
+          <MessageImage
+            url={message.attachment_url}
             alt="Geteiltes Bild"
             className="rounded-2xl max-h-80 object-cover shadow-md cursor-pointer"
-            onClick={() => window.open(localUrl, '_blank')}
+            onClick={(resolvedUrl) => window.open(resolvedUrl, '_blank')}
           />
         </div>
       );
