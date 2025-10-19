@@ -14,6 +14,8 @@ interface FileSystemHandlePermissionDescriptor {
 }
 
 let directoryHandle: FileSystemDirectoryHandle | null = null;
+const BASE_DIR_NAME = 'Daily Fun';
+const CHAT_PARENT_DIR = 'Chats';
 
 /**
  * Ordner für Chat-Bilder auswählen
@@ -37,6 +39,12 @@ export async function selectStorageDirectory(): Promise<boolean> {
       throw new Error('Zugriff verweigert');
     }
 
+    // Ensure base structure exists
+    try {
+      const baseDir = await ensureBaseDir(directoryHandle);
+      await baseDir.getDirectoryHandle(CHAT_PARENT_DIR, { create: true });
+    } catch (_) {}
+
     // Save directory handle to IndexedDB
     await saveDirectoryHandle(directoryHandle);
     
@@ -52,7 +60,8 @@ export async function selectStorageDirectory(): Promise<boolean> {
  */
 export async function saveFileToLocalDirectory(
   fileName: string,
-  file: File | Blob
+  file: File | Blob,
+  subPath: string[] = [CHAT_PARENT_DIR]
 ): Promise<string> {
   try {
     if (!directoryHandle) {
@@ -69,16 +78,19 @@ export async function saveFileToLocalDirectory(
       throw new Error('Zugriff verweigert');
     }
 
-    // Create "DailyFun-Chats" subdirectory if it doesn't exist
-    let chatDir: FileSystemDirectoryHandle;
-    try {
-      chatDir = await directoryHandle.getDirectoryHandle('DailyFun-Chats', { create: true });
-    } catch (error) {
-      chatDir = directoryHandle;
+    // Ensure base dir "Daily Fun" and optional subfolders (e.g., Chats/<conversationId>)
+    const baseDir = await ensureBaseDir(directoryHandle);
+    let targetDir: FileSystemDirectoryHandle = baseDir;
+    for (const part of (subPath || [])) {
+      try {
+        targetDir = await targetDir.getDirectoryHandle(part, { create: true });
+      } catch (_) {
+        // Fallback: keep current targetDir
+      }
     }
 
     // Create file
-    const fileHandle = await chatDir.getFileHandle(fileName, { create: true });
+    const fileHandle = await targetDir.getFileHandle(fileName, { create: true });
     const writable = await fileHandle.createWritable();
     await writable.write(file);
     await writable.close();
@@ -103,16 +115,38 @@ export async function readFileFromLocalDirectory(fileName: string): Promise<File
       }
     }
 
-    // Try to get from subdirectory first
-    let chatDir: FileSystemDirectoryHandle;
-    try {
-      chatDir = await directoryHandle.getDirectoryHandle('DailyFun-Chats');
-    } catch {
-      chatDir = directoryHandle;
-    }
+    // Suche in bevorzugter Struktur: Daily Fun/[Chats/<convId>] + Legacy-Fallback
+    const baseDir = await ensureBaseDir(directoryHandle);
 
-    const fileHandle = await chatDir.getFileHandle(fileName);
-    return await fileHandle.getFile();
+    // 1) Direkt im Basisordner
+    try {
+      const directHandle = await baseDir.getFileHandle(fileName);
+      return await directHandle.getFile();
+    } catch (_) {}
+
+    // 2) Legacy: alter Ordnername
+    try {
+      const legacyDir = await directoryHandle.getDirectoryHandle('DailyFun-Chats');
+      const fileHandle = await legacyDir.getFileHandle(fileName);
+      return await fileHandle.getFile();
+    } catch (_) {}
+
+    // 3) Neue Struktur: Daily Fun/Chats/<conversationId>/*
+    try {
+      const chatsDir = await baseDir.getDirectoryHandle(CHAT_PARENT_DIR);
+      // Iterate all conversation subfolders
+      // @ts-ignore - entries() exists in modern browsers
+      for await (const [name, handle] of (chatsDir as any).entries?.() || []) {
+        if ((handle as any).kind === 'directory') {
+          try {
+            const fh = await (handle as FileSystemDirectoryHandle).getFileHandle(fileName);
+            return await fh.getFile();
+          } catch (_) {}
+        }
+      }
+    } catch (_) {}
+
+    return null;
   } catch (error) {
     console.error('Error reading file from local directory:', error);
     return null;
@@ -136,6 +170,17 @@ export async function hasDirectoryAccess(): Promise<boolean> {
     return permission === 'granted';
   } catch {
     return false;
+  }
+}
+
+/**
+ * Hilfsfunktionen für Verzeichnisstruktur
+ */
+async function ensureBaseDir(root: FileSystemDirectoryHandle): Promise<FileSystemDirectoryHandle> {
+  try {
+    return await root.getDirectoryHandle(BASE_DIR_NAME, { create: true });
+  } catch (_) {
+    return root; // Fallback: direkt im gewählten Ordner speichern
   }
 }
 

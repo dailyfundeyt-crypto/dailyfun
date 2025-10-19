@@ -258,7 +258,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         const canSave = await hasDirectoryAccess();
         if (canSave) {
           const localName = publicUrl.split('/').pop() || `${Date.now()}.${fileExt}`;
-          await saveFileToLocalDirectory(localName, file);
+          await saveFileToLocalDirectory(localName, file, ['Chats', conversationId]);
 
           const record = {
             id: (messageData as any).id,
@@ -271,7 +271,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             is_read: false,
           };
           const jsonBlob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
-          await saveFileToLocalDirectory(`msg-${(messageData as any).id}.json`, jsonBlob);
+          await saveFileToLocalDirectory(`msg-${(messageData as any).id}.json`, jsonBlob, ['Chats', conversationId]);
         }
       } catch (e) {
         console.warn('Local mirror for sent attachment failed:', e);
@@ -351,7 +351,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             is_read: false,
           };
           const jsonBlob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
-          await saveFileToLocalDirectory(`msg-${(data as any).id}.json`, jsonBlob);
+          await saveFileToLocalDirectory(`msg-${(data as any).id}.json`, jsonBlob, ['Chats', conversationId]);
         }
       } catch (e) {
         console.warn('Local mirror for sent text message failed:', e);

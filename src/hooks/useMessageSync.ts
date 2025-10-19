@@ -125,7 +125,7 @@ export function useMessageSync() {
             is_read: message.is_read,
           };
           const jsonBlob = new Blob([JSON.stringify(messageRecord, null, 2)], { type: 'application/json' });
-          await saveFileToLocalDirectory(`msg-${message.id}.json`, jsonBlob);
+          await saveFileToLocalDirectory(`msg-${message.id}.json`, jsonBlob, ['Chats', message.conversation_id]);
         }
       } catch (e) {
         console.warn('Mirroring received message to local folder failed:', e);
@@ -142,7 +142,7 @@ export function useMessageSync() {
             const fileName = message.attachment_url.split('/').pop() || `${message.id}-attachment`;
             const resp = await fetch(message.attachment_url);
             const blob = await resp.blob();
-            await saveFileToLocalDirectory(fileName, blob);
+            await saveFileToLocalDirectory(fileName, blob, ['Chats', message.conversation_id]);
           }
         } catch (e) {
           console.warn('Mirroring received attachment to local folder failed:', e);
@@ -206,7 +206,7 @@ export function useMessageSync() {
             is_read: false,
           };
           const jsonBlob = new Blob([JSON.stringify(messageRecord, null, 2)], { type: 'application/json' });
-          await saveFileToLocalDirectory(`msg-${message.id}.json`, jsonBlob);
+          await saveFileToLocalDirectory(`msg-${message.id}.json`, jsonBlob, ['Chats', message.conversation_id]);
         }
       } catch (e) {
         console.warn('Mirroring own message to local folder failed:', e);
