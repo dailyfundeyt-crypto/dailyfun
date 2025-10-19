@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink, Lock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveFileToLocalDirectory, readFileFromLocalDirectory, hasDirectoryAccess } from '@/utils/fileSystemStorage';
-import MessageImage from './MessageImage';
+import MessageAttachment from './MessageAttachment';
 
 interface Message {
   id: string;
@@ -435,40 +435,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
     if (message.message_type === 'image' && message.attachment_url) {
       return (
-        <div className="max-w-[75%]">
-          <MessageImage
-            url={message.attachment_url}
-            alt="Geteiltes Bild"
-            className="rounded-2xl max-h-80 object-cover shadow-md cursor-pointer"
-            onClick={(resolvedUrl) => window.open(resolvedUrl, '_blank')}
-          />
-        </div>
+        <MessageAttachment
+          url={message.attachment_url}
+          type="image"
+          isOwn={isOwn}
+        />
       );
     }
 
     if (message.message_type === 'pdf' && message.attachment_url) {
       return (
-        <div
-          className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3 ${
-            isOwn
-              ? 'bg-primary text-white'
-              : 'bg-white text-black border border-gray-100'
-          }`}
-        >
-          <FileText className="h-10 w-10 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm truncate">PDF-Dokument</p>
-            <Button
-              size="sm"
-              variant={isOwn ? 'secondary' : 'default'}
-              onClick={() => window.open(message.attachment_url!, '_blank')}
-              className="mt-2 gap-2"
-            >
-              <ExternalLink className="h-3 w-3" />
-              Öffnen
-            </Button>
-          </div>
-        </div>
+        <MessageAttachment
+          url={message.attachment_url}
+          type="pdf"
+          isOwn={isOwn}
+        />
       );
     }
 

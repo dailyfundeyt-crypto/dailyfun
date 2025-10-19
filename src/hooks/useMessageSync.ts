@@ -133,27 +133,46 @@ export function useMessageSync() {
 
       // Download and save attachment if exists
       if (message.attachment_url) {
+        // Download to IndexedDB first
         await downloadAndStoreAttachment(message.attachment_url);
         
-        // Also mirror attachment into local folder if permitted
+        // Mirror attachment into local folder
         try {
           const canSave = await hasDirectoryAccess();
+          console.log('hasDirectoryAccess:', canSave);
+          
           if (canSave) {
             const fileName = message.attachment_url.split('/').pop() || `${message.id}-attachment`;
+            console.log('Downloading attachment:', fileName, 'from:', message.attachment_url);
+            
             const resp = await fetch(message.attachment_url);
+            if (!resp.ok) {
+              throw new Error(`Fetch failed: ${resp.status} ${resp.statusText}`);
+            }
+            
             const blob = await resp.blob();
+            console.log('Blob received, size:', blob.size, 'type:', blob.type);
+            
             await saveFileToLocalDirectory(fileName, blob, ['Chats', message.conversation_id]);
+            console.log('✓ Attachment saved to local folder:', fileName);
+          } else {
+            console.warn('No directory access for saving attachments');
           }
         } catch (e) {
-          console.warn('Mirroring received attachment to local folder failed:', e);
+          console.error('Mirroring received attachment to local folder failed:', e);
         }
         
         // Delete from Supabase Storage
-        const pathParts = message.attachment_url.split('/message-attachments/');
-        if (pathParts[1]) {
-          await supabase.storage
-            .from('message-attachments')
-            .remove([pathParts[1]]);
+        try {
+          const pathParts = message.attachment_url.split('/message-attachments/');
+          if (pathParts[1]) {
+            await supabase.storage
+              .from('message-attachments')
+              .remove([pathParts[1]]);
+            console.log('✓ Attachment deleted from Supabase Storage');
+          }
+        } catch (e) {
+          console.error('Failed to delete attachment from Supabase:', e);
         }
       }
 
