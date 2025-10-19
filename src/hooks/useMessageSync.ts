@@ -8,6 +8,7 @@ import {
   getLocalAttachment,
   deleteLocalAttachment
 } from '@/utils/indexedDBHelper';
+import { saveFileToLocalDirectory, hasDirectoryAccess } from '@/utils/fileSystemStorage';
 
 interface Message {
   id: string;
@@ -109,9 +110,43 @@ export function useMessageSync() {
         isRead: message.is_read,
       });
 
+      // Mirror message JSON into selected local folder (Obsidian-like)
+      try {
+        const canSave = await hasDirectoryAccess();
+        if (canSave) {
+          const messageRecord = {
+            id: message.id,
+            conversation_id: message.conversation_id,
+            sender_id: message.sender_id,
+            content: decryptedContent,
+            message_type: message.message_type || 'text',
+            attachment_url: message.attachment_url || null,
+            created_at: message.created_at,
+            is_read: message.is_read,
+          };
+          const jsonBlob = new Blob([JSON.stringify(messageRecord, null, 2)], { type: 'application/json' });
+          await saveFileToLocalDirectory(`msg-${message.id}.json`, jsonBlob);
+        }
+      } catch (e) {
+        console.warn('Mirroring received message to local folder failed:', e);
+      }
+
       // Download and save attachment if exists
       if (message.attachment_url) {
         await downloadAndStoreAttachment(message.attachment_url);
+        
+        // Also mirror attachment into local folder if permitted
+        try {
+          const canSave = await hasDirectoryAccess();
+          if (canSave) {
+            const fileName = message.attachment_url.split('/').pop() || `${message.id}-attachment`;
+            const resp = await fetch(message.attachment_url);
+            const blob = await resp.blob();
+            await saveFileToLocalDirectory(fileName, blob);
+          }
+        } catch (e) {
+          console.warn('Mirroring received attachment to local folder failed:', e);
+        }
         
         // Delete from Supabase Storage
         const pathParts = message.attachment_url.split('/message-attachments/');
@@ -155,6 +190,27 @@ export function useMessageSync() {
         createdAt: message.created_at,
         isRead: false,
       });
+
+      // Mirror message JSON into selected local folder
+      try {
+        const canSave = await hasDirectoryAccess();
+        if (canSave) {
+          const messageRecord = {
+            id: message.id,
+            conversation_id: message.conversation_id,
+            sender_id: message.sender_id,
+            content: unencryptedContent,
+            message_type: message.message_type || 'text',
+            attachment_url: message.attachment_url || null,
+            created_at: message.created_at,
+            is_read: false,
+          };
+          const jsonBlob = new Blob([JSON.stringify(messageRecord, null, 2)], { type: 'application/json' });
+          await saveFileToLocalDirectory(`msg-${message.id}.json`, jsonBlob);
+        }
+      } catch (e) {
+        console.warn('Mirroring own message to local folder failed:', e);
+      }
       
       console.log('Own message saved locally (stays on server for recipient):', message.id);
     } catch (error) {

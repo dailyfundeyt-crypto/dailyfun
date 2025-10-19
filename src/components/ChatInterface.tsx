@@ -253,6 +253,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       // Save own message locally (including attachment info)
       await saveOwnMessageLocally(messageData as any, content);
 
+      // Mirror to local directory (attachment + message JSON)
+      try {
+        const canSave = await hasDirectoryAccess();
+        if (canSave) {
+          const localName = publicUrl.split('/').pop() || `${Date.now()}.${fileExt}`;
+          await saveFileToLocalDirectory(localName, file);
+
+          const record = {
+            id: (messageData as any).id,
+            conversation_id: conversationId,
+            sender_id: user.id,
+            content,
+            message_type: messageType,
+            attachment_url: publicUrl,
+            created_at: (messageData as any).created_at,
+            is_read: false,
+          };
+          const jsonBlob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
+          await saveFileToLocalDirectory(`msg-${(messageData as any).id}.json`, jsonBlob);
+        }
+      } catch (e) {
+        console.warn('Local mirror for sent attachment failed:', e);
+      }
+
       // Send push notification in background
       supabase.functions.invoke('notify-new-message', {
         body: {
@@ -311,6 +335,27 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       // Save own message locally
       await saveOwnMessageLocally(data as any, messageContent);
+
+      // Mirror text message JSON to local directory
+      try {
+        const canSave = await hasDirectoryAccess();
+        if (canSave) {
+          const record = {
+            id: (data as any).id,
+            conversation_id: conversationId,
+            sender_id: user.id,
+            content: messageContent,
+            message_type: 'text',
+            attachment_url: null,
+            created_at: (data as any).created_at,
+            is_read: false,
+          };
+          const jsonBlob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
+          await saveFileToLocalDirectory(`msg-${(data as any).id}.json`, jsonBlob);
+        }
+      } catch (e) {
+        console.warn('Local mirror for sent text message failed:', e);
+      }
 
       // Replace temp message with real one
       setMessages((prev) => 
