@@ -801,96 +801,63 @@ const ProfileManagement = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    {/* Language mapping */}
-                    {(() => {
-                      const languageMap: Record<string, { name: string; nativeName: string }> = {
-                        de: { name: 'German', nativeName: 'Deutsch' },
-                        en: { name: 'English', nativeName: 'English' },
-                        es: { name: 'Spanish', nativeName: 'Español' },
-                        fr: { name: 'French', nativeName: 'Français' },
-                        it: { name: 'Italian', nativeName: 'Italiano' },
-                        pt: { name: 'Portuguese', nativeName: 'Português' },
-                        zh: { name: 'Chinese', nativeName: '中文' },
-                        ja: { name: 'Japanese', nativeName: '日本語' },
-                        ko: { name: 'Korean', nativeName: '한국어' },
-                        ar: { name: 'Arabic', nativeName: 'العربية' },
-                        ru: { name: 'Russian', nativeName: 'Русский' },
-                        hi: { name: 'Hindi', nativeName: 'हिन्दी' },
-                      };
-
-                      const allLanguages: string[] = [primaryLanguage];
-                      if (secondaryLanguage && secondaryLanguage !== primaryLanguage) {
-                        allLanguages.push(secondaryLanguage);
-                      }
-                      enabledLanguages.forEach(lang => {
-                        if (!allLanguages.includes(lang)) {
-                          allLanguages.push(lang);
+                  <div className="space-y-4">
+                    <div className="flex gap-3 flex-wrap">
+                      {(() => {
+                        const allLanguages: string[] = [primaryLanguage];
+                        if (secondaryLanguage && secondaryLanguage !== primaryLanguage) {
+                          allLanguages.push(secondaryLanguage);
                         }
-                      });
+                        enabledLanguages.forEach(lang => {
+                          if (!allLanguages.includes(lang)) {
+                            allLanguages.push(lang);
+                          }
+                        });
 
-                      return allLanguages.map((langCode) => {
-                        const lang = languageMap[langCode] || { name: langCode, nativeName: langCode };
-                        const isDefault = langCode === primaryLanguage;
-                        const isSecondary = langCode === secondaryLanguage;
-                        
-                        return (
-                          <div
-                            key={langCode}
-                            className={cn(
-                              'w-full flex items-center gap-4 p-4 rounded-2xl transition-all duration-200',
-                              'bg-background',
-                              isDefault 
-                                ? 'border-2 shadow-lg' 
-                                : 'border-2 border-border hover:border-muted-foreground/50'
-                            )}
-                            style={isDefault ? { borderColor: '#D4AF37' } : undefined}
-                          >
-                            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
-                              <Globe className="w-6 h-6 text-muted-foreground" />
-                            </div>
-                            
-                            <div className="flex-1 text-left">
-                              <div className="font-semibold text-base">{lang.nativeName}</div>
-                              <div className="text-sm text-muted-foreground">{lang.name}</div>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <div className="flex items-center justify-center px-4 py-2 rounded-full bg-foreground text-background font-semibold text-sm">
-                                {langCode.toUpperCase()}
-                              </div>
-                              
+                        return allLanguages.map((langCode) => {
+                          const isDefault = langCode === primaryLanguage;
+                          
+                          return (
+                            <div
+                              key={langCode}
+                              className={cn(
+                                "apple-button px-6 py-4 rounded-2xl border-2 shadow-md transition-all duration-200 flex items-center gap-3 group relative",
+                                isDefault 
+                                  ? "bg-primary/5 text-primary" 
+                                  : "border-primary bg-primary/5 text-primary"
+                              )}
+                              style={isDefault ? { borderColor: '#D4AF37' } : undefined}
+                            >
+                              <Globe className="h-5 w-5" />
+                              <span className="font-medium">{langCode.toUpperCase()}</span>
                               {!isDefault && (
                                 <button
                                   onClick={() => {
-                                    if (isSecondary && (langCode === 'de' || langCode === 'en')) {
-                                      // Toggle secondary language between de and en
+                                    if (langCode === secondaryLanguage && (langCode === 'de' || langCode === 'en')) {
                                       const newSecondary = langCode === 'de' ? ('en' as const) : ('de' as const);
                                       setSecondaryLanguage(newSecondary);
                                     } else {
                                       removeEnabledLanguage(langCode);
                                     }
                                   }}
-                                  className="ml-1 hover:bg-destructive/10 rounded-full p-2 transition-colors"
+                                  className="ml-2 -mr-2 p-1 rounded-full hover:bg-primary/20 transition-colors"
                                   aria-label="Sprache entfernen"
                                 >
-                                  <X className="w-5 h-5" />
+                                  <X className="h-4 w-4" />
                                 </button>
                               )}
                             </div>
-                          </div>
-                        );
-                      });
-                    })()}
-
-                    {/* Add Language Button */}
-                    <button
-                      onClick={() => setLanguageDialogOpen(true)}
-                      className="w-full flex items-center justify-center p-4 rounded-2xl border-2 border-dashed border-border hover:border-muted-foreground/50 transition-all duration-200 hover:bg-accent/50"
-                    >
-                      <Plus className="w-6 h-6 mr-2" />
-                      <span className="font-medium">Sprache hinzufügen</span>
-                    </button>
+                          );
+                        });
+                      })()}
+                      
+                      <button
+                        onClick={() => setLanguageDialogOpen(true)}
+                        className="apple-button px-6 py-4 rounded-2xl border-2 border-dashed border-border bg-card hover:border-primary/30 hover:bg-primary/5 transition-all duration-200 group"
+                      >
+                        <Plus className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </button>
+                    </div>
                   </div>
                   
                   <p className="text-sm text-muted-foreground mt-6">

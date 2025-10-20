@@ -53,60 +53,73 @@ export const LanguageSelectionDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] p-0 gap-0 bg-background">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
+      <DialogContent className="max-w-2xl max-h-[85vh] p-0 bg-card border-2 border-border rounded-3xl overflow-hidden shadow-2xl">
+        <DialogHeader className="px-8 pt-8 pb-6 border-b border-border bg-muted/30">
           <DialogTitle className="text-2xl font-semibold">{title}</DialogTitle>
           {description && (
             <p className="text-sm text-muted-foreground mt-2">{description}</p>
           )}
         </DialogHeader>
 
-        <div className="px-6 py-4 border-b">
+        {/* Search Bar */}
+        <div className="px-8 pt-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Sprache suchen..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12 text-base border-2 rounded-xl focus-visible:ring-offset-0"
+              className="pl-12 pr-4 py-6 text-base rounded-2xl border-2 bg-background"
             />
           </div>
         </div>
 
-        <div className="max-h-[400px] overflow-y-auto px-4 py-2">
-          {filteredLanguages.map((lang) => {
-            const isSelected = selectedLanguages.includes(lang.code);
-            return (
-              <button
-                key={lang.code}
-                onClick={() => onLanguageSelect(lang.code)}
-                className={cn(
-                  'w-full flex items-center gap-4 p-4 rounded-2xl mb-2 transition-all duration-200',
-                  'hover:bg-accent/50',
-                  isSelected && 'bg-primary/5 border-2 border-primary'
-                )}
-              >
-                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-muted">
-                  <Globe className="w-6 h-6 text-muted-foreground" />
-                </div>
-                
-                <div className="flex-1 text-left">
-                  <div className="font-semibold text-base">{lang.nativeName}</div>
-                  <div className="text-sm text-muted-foreground">{lang.name}</div>
-                </div>
-
-                {isSelected && (
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary">
-                    <Check className="w-5 h-5 text-primary-foreground" />
+        {/* Language List */}
+        <div className="h-[50vh] overflow-y-auto px-8 py-4">
+          <div className="space-y-2">
+            {filteredLanguages.map((lang) => {
+              const isSelected = selectedLanguages.includes(lang.code);
+              return (
+                <button
+                  key={lang.code}
+                  onClick={() => onLanguageSelect(lang.code)}
+                  className={cn(
+                    'w-full flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-200 group',
+                    isSelected
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border bg-card hover:border-primary/30 hover:bg-accent'
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <Globe className={cn(
+                      'h-5 w-5 transition-colors',
+                      isSelected ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'
+                    )} />
+                    <div className="text-left">
+                      <div className={cn(
+                        'font-medium text-base',
+                        isSelected ? 'text-primary' : 'text-foreground'
+                      )}>
+                        {lang.name}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {lang.nativeName}
+                      </div>
+                    </div>
                   </div>
-                )}
-                {!isSelected && (
-                  <div className="w-10 h-10 rounded-full border-2 border-muted-foreground/30" />
-                )}
-              </button>
-            );
-          })}
+                  <div className={cn(
+                    'px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200',
+                    isSelected
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-muted text-muted-foreground group-hover:bg-muted/80'
+                  )}>
+                    {lang.code.toUpperCase()}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
