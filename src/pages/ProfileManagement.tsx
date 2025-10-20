@@ -808,20 +808,16 @@ const ProfileManagement = () => {
                         if (secondaryLanguage && secondaryLanguage !== primaryLanguage) {
                           allLanguages.push(secondaryLanguage);
                         }
-                        enabledLanguages.forEach(lang => {
-                          if (!allLanguages.includes(lang)) {
-                            allLanguages.push(lang);
-                          }
-                        });
 
                         return allLanguages.map((langCode) => {
                           const isDefault = langCode === primaryLanguage;
+                          const isBaseLanguage = langCode === 'de' || langCode === 'en';
                           
                           return (
                             <div
                               key={langCode}
                               className={cn(
-                                "apple-button px-6 py-4 rounded-2xl border-2 shadow-md transition-all duration-200 flex items-center gap-3 group relative",
+                                "apple-button min-w-[120px] px-6 py-4 rounded-2xl border-2 shadow-md transition-all duration-200 flex items-center justify-center gap-3 group relative",
                                 isDefault 
                                   ? "bg-primary/5 text-primary" 
                                   : "border-primary bg-primary/5 text-primary"
@@ -833,15 +829,14 @@ const ProfileManagement = () => {
                               {!isDefault && (
                                 <button
                                   onClick={() => {
-                                    if (langCode === secondaryLanguage && (langCode === 'de' || langCode === 'en')) {
-                                      const newSecondary = langCode === 'de' ? ('en' as const) : ('de' as const);
-                                      setSecondaryLanguage(newSecondary);
+                                    if (isBaseLanguage) {
+                                      setLanguageDialogOpen(true);
                                     } else {
                                       removeEnabledLanguage(langCode);
                                     }
                                   }}
                                   className="ml-2 -mr-2 p-1 rounded-full hover:bg-primary/20 transition-colors"
-                                  aria-label="Sprache entfernen"
+                                  aria-label="Sprache austauschen"
                                 >
                                   <X className="h-4 w-4" />
                                 </button>
