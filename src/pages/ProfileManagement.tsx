@@ -797,7 +797,7 @@ const ProfileManagement = () => {
               <Card className="bg-background border shadow-sm overflow-hidden">
                 <CardHeader className="pb-4 border-b bg-muted/30">
                   <CardTitle className="text-lg font-semibold">
-                    Welche Sprachen soll deine Website haben?
+                    Welche Sprache sprichst du?
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
