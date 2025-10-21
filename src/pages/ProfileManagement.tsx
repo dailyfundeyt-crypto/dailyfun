@@ -826,21 +826,19 @@ const ProfileManagement = () => {
                             >
                               <Globe className="h-5 w-5" />
                               <span className="font-medium">{langCode.toUpperCase()}</span>
-                              {!isDefault && (
-                                <button
-                                  onClick={() => {
-                                    if (isBaseLanguage) {
-                                      setLanguageDialogOpen(true);
-                                    } else {
-                                      removeEnabledLanguage(langCode);
-                                    }
-                                  }}
-                                  className="ml-2 -mr-2 p-1 rounded-full hover:bg-primary/20 transition-colors"
-                                  aria-label="Sprache austauschen"
-                                >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              )}
+                              <button
+                                onClick={() => {
+                                  if (isDefault || isBaseLanguage) {
+                                    setLanguageDialogOpen(true);
+                                  } else {
+                                    removeEnabledLanguage(langCode);
+                                  }
+                                }}
+                                className="ml-2 -mr-2 p-1 rounded-full hover:bg-primary/20 transition-colors"
+                                aria-label="Sprache austauschen"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
                             </div>
                           );
                         });
