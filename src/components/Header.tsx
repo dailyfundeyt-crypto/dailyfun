@@ -17,7 +17,7 @@ const Header = () => {
   useEffect(() => {
     const handlePhaseChange = (event: CustomEvent) => {
       if (event.detail === 'conect') {
-        setLogoText('Conect');
+        setLogoText('Connect');
       } else if (event.detail === 'daily-fun') {
         setLogoText('Daily Fun');
       } else if (event.detail === 'phase4' || event.detail === 'phase3' || event.detail === 'phase2') {
@@ -31,7 +31,7 @@ const Header = () => {
 
   const toggleLogo = useCallback(() => {
     if (user) {
-      setLogoText(prev => prev === 'Daily Fun' ? 'Daily Connect' : 'Daily Fun');
+      setLogoText(prev => prev === 'Daily Fun' ? 'Connect' : 'Daily Fun');
     }
   }, [user]);
 
@@ -66,7 +66,7 @@ const Header = () => {
             <button 
               onClick={toggleLogo}
               className={`text-2xl font-bold text-black hover:text-red-accent transition-all duration-500 cursor-pointer ${
-                logoText === 'Conect' ? 'animate-glow-text' : ''
+                logoText === 'Connect' ? 'animate-glow-text' : ''
               }`}
             >
               {logoText}
