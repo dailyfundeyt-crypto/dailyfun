@@ -824,8 +824,14 @@ const ProfileManagement = () => {
                               <span className="font-medium">{langCode.toUpperCase()}</span>
                               <button
                                 onClick={() => {
-                                  setLanguageReplaceIndex(idx);
-                                  setLanguageDialogOpen(true);
+                                  if (idx < 2) {
+                                    // Erste zwei Sprachen: nur austauschen
+                                    setLanguageReplaceIndex(idx);
+                                    setLanguageDialogOpen(true);
+                                  } else {
+                                    // Ab der dritten Sprache: entfernen
+                                    removeEnabledLanguage(langCode);
+                                  }
                                 }}
                                 className="ml-2 -mr-2 p-1 rounded-full hover:bg-primary/20 transition-colors"
                                 aria-label="Sprache austauschen"
