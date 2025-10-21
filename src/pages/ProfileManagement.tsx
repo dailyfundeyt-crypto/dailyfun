@@ -805,7 +805,7 @@ const ProfileManagement = () => {
                   <div className="space-y-4">
                     <div className="flex gap-3 flex-wrap">
                       {(() => {
-                        const displayedLanguages: string[] = Array.from(new Set(enabledLanguages)).slice(0, 2);
+                        const displayedLanguages: string[] = Array.from(new Set(enabledLanguages));
                         return displayedLanguages.map((langCode, idx) => {
                           const isDefault = idx === 0;
                           
