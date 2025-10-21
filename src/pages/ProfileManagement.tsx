@@ -44,7 +44,7 @@ interface UserProfile {
 
 const ProfileManagement = () => {
   const { user, loading: authLoading, signOut } = useAuth();
-  const { t, primaryLanguage, secondaryLanguage, setPrimaryLanguage, setSecondaryLanguage, enabledLanguages, addEnabledLanguage, removeEnabledLanguage } = useLanguage();
+  const { t, primaryLanguage, secondaryLanguage, setPrimaryLanguage, setSecondaryLanguage, enabledLanguages, setEnabledLanguages, addEnabledLanguage, removeEnabledLanguage } = useLanguage();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -67,6 +67,7 @@ const ProfileManagement = () => {
   const { viewCounts } = useArticleViews(articles.map(a => a.id));
   const [viewsOverTime, setViewsOverTime] = useState<Array<{ date: string; views: number }>>([]);
   const [languageDialogOpen, setLanguageDialogOpen] = useState(false);
+  const [languageReplaceIndex, setLanguageReplaceIndex] = useState<number | null>(null);
   const [showSecurityQuestionsModal, setShowSecurityQuestionsModal] = useState(false);
 
   useEffect(() => {
@@ -804,14 +805,9 @@ const ProfileManagement = () => {
                   <div className="space-y-4">
                     <div className="flex gap-3 flex-wrap">
                       {(() => {
-                        const allLanguages: string[] = [primaryLanguage];
-                        if (secondaryLanguage && secondaryLanguage !== primaryLanguage) {
-                          allLanguages.push(secondaryLanguage);
-                        }
-
-                        return allLanguages.map((langCode) => {
-                          const isDefault = langCode === primaryLanguage;
-                          const isBaseLanguage = langCode === 'de' || langCode === 'en';
+                        const displayedLanguages: string[] = Array.from(new Set(enabledLanguages)).slice(0, 2);
+                        return displayedLanguages.map((langCode, idx) => {
+                          const isDefault = idx === 0;
                           
                           return (
                             <div
@@ -828,11 +824,8 @@ const ProfileManagement = () => {
                               <span className="font-medium">{langCode.toUpperCase()}</span>
                               <button
                                 onClick={() => {
-                                  if (isDefault || isBaseLanguage) {
-                                    setLanguageDialogOpen(true);
-                                  } else {
-                                    removeEnabledLanguage(langCode);
-                                  }
+                                  setLanguageReplaceIndex(idx);
+                                  setLanguageDialogOpen(true);
                                 }}
                                 className="ml-2 -mr-2 p-1 rounded-full hover:bg-primary/20 transition-colors"
                                 aria-label="Sprache austauschen"
@@ -1141,10 +1134,19 @@ const ProfileManagement = () => {
         onOpenChange={setLanguageDialogOpen}
         selectedLanguages={enabledLanguages}
         onLanguageSelect={(lang) => {
-          if (enabledLanguages.includes(lang)) {
-            removeEnabledLanguage(lang);
+          if (languageReplaceIndex !== null) {
+            let arr = enabledLanguages.filter((_, i) => i !== languageReplaceIndex);
+            arr = arr.filter(l => l !== lang);
+            arr.splice(languageReplaceIndex, 0, lang);
+            setEnabledLanguages(arr);
+            setLanguageReplaceIndex(null);
+            setLanguageDialogOpen(false);
           } else {
-            addEnabledLanguage(lang);
+            if (enabledLanguages.includes(lang)) {
+              removeEnabledLanguage(lang);
+            } else {
+              addEnabledLanguage(lang);
+            }
           }
         }}
         title="Sprache hinzufügen"

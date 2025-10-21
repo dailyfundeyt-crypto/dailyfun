@@ -395,17 +395,17 @@ const translations = {
 export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [primaryLanguage, setPrimaryLanguage] = useState<'en' | 'de'>(() => {
     const saved = localStorage.getItem('daily-fun-primary-language');
-    return (saved as 'en' | 'de') || 'de';
+    return (saved as 'en' | 'de') || 'en';
   });
   
   const [secondaryLanguage, setSecondaryLanguage] = useState<'en' | 'de'>(() => {
     const saved = localStorage.getItem('daily-fun-secondary-language');
-    return (saved as 'en' | 'de') || 'en';
+    return (saved as 'en' | 'de') || 'de';
   });
 
   const [enabledLanguages, setEnabledLanguagesState] = useState<string[]>(() => {
     const saved = localStorage.getItem('daily-fun-enabled-languages');
-    return saved ? JSON.parse(saved) : ['de', 'en'];
+    return saved ? JSON.parse(saved) : ['en', 'de'];
   });
 
   const [language, setLanguage] = useState<'en' | 'de'>(primaryLanguage);
