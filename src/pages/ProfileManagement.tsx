@@ -838,7 +838,10 @@ const ProfileManagement = () => {
                       })()}
                       
                       <button
-                        onClick={() => setLanguageDialogOpen(true)}
+                        onClick={() => {
+                          setLanguageReplaceIndex(null);
+                          setLanguageDialogOpen(true);
+                        }}
                         className="apple-button px-6 py-4 rounded-2xl border-2 border-dashed border-border bg-card hover:border-primary/30 hover:bg-primary/5 transition-all duration-200 group"
                       >
                         <Plus className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -1131,7 +1134,10 @@ const ProfileManagement = () => {
       {/* Language Selection Dialog */}
       <LanguageSelectionDialog
         open={languageDialogOpen}
-        onOpenChange={setLanguageDialogOpen}
+        onOpenChange={(open) => {
+          setLanguageDialogOpen(open);
+          if (!open) setLanguageReplaceIndex(null);
+        }}
         selectedLanguages={enabledLanguages}
         onLanguageSelect={(lang) => {
           if (languageReplaceIndex !== null) {
