@@ -15,6 +15,7 @@ import {
   PaginationPrevious 
 } from '../components/ui/pagination';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useArticleViews } from '../hooks/useArticleViews';
 import { useArticleComments } from '../hooks/useArticleComments';
 import { sortArticlesByScore } from '../utils/articleScoring';
@@ -28,6 +29,7 @@ const CategoryPage = () => {
   const { t, language, enabledLanguages, primaryLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   // For the /weird route, we want to show "Weird News" category
   // Map URL paths to actual category names
@@ -48,9 +50,9 @@ const CategoryPage = () => {
     // First filter by category
     const categoryFiltered = articles.filter(article => article.category === categoryName);
     
-    // Then apply language filter with priority logic
-    return filterArticlesByLanguage(categoryFiltered, enabledLanguages, primaryLanguage);
-  }, [categoryName, enabledLanguages, primaryLanguage]);
+    // Then apply language filter with priority logic (pass user authentication status)
+    return filterArticlesByLanguage(categoryFiltered, enabledLanguages, primaryLanguage, !!user);
+  }, [categoryName, enabledLanguages, primaryLanguage, user]);
 
   // Fetch engagement data
   const articleIds = useMemo(() => filteredArticles.map(a => a.id), [filteredArticles]);

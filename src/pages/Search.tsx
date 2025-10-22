@@ -169,8 +169,8 @@ const Search = () => {
       // Search articles
       const searchTerms = query.toLowerCase().split(' ');
       
-      // First apply language filter
-      const languageFilteredArticles = filterArticlesByLanguage(articles, enabledLanguages, primaryLanguage);
+      // First apply language filter (pass user authentication status)
+      const languageFilteredArticles = filterArticlesByLanguage(articles, enabledLanguages, primaryLanguage, !!user);
       
       const matchingArticles = languageFilteredArticles.filter(article => {
         const title = (language === 'de' ? article.title : (article.titleEn || article.title)).toLowerCase();
@@ -347,19 +347,22 @@ const Search = () => {
   const filteredArticles = useMemo(() => {
     let filtered = articles;
 
-    // Apply language filter with priority logic
-    filtered = filterArticlesByLanguage(filtered, enabledLanguages, primaryLanguage);
+    // Apply language filter with priority logic (pass user authentication status)
+    filtered = filterArticlesByLanguage(filtered, enabledLanguages, primaryLanguage, !!user);
 
-    // Always filter by followed authors if user is logged in and has followed authors
-    // For hardcoded articles (from articles.ts), we still filter by author name
-    if (user && followedAuthors.length > 0) {
-      filtered = filtered.filter(article => 
-        followedAuthors.includes(article.author)
-      );
-    } else if (user && (followedAuthors.length === 0 && followedUserIds.length === 0)) {
-      // If user has no followed authors yet, show nothing until auto-follow completes
-      filtered = [];
+    // For authenticated users: filter by followed authors
+    // For unauthenticated users: show all articles
+    if (user) {
+      if (followedAuthors.length > 0) {
+        filtered = filtered.filter(article => 
+          followedAuthors.includes(article.author)
+        );
+      } else if (followedAuthors.length === 0 && followedUserIds.length === 0) {
+        // If user has no followed authors yet, show nothing until auto-follow completes
+        filtered = [];
+      }
     }
+    // else: user is not logged in, show all articles (no filtering by author)
 
     if (selectedAuthor !== 'all') {
       const authorMapping = {
