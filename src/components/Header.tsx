@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [logoText, setLogoText] = useState('Daily Fun');
+  const [logoText, setLogoText] = useState('Fun');
   const location = useLocation();
   const { language, toggleLanguage } = useLanguage();
   const { user, signOut } = useAuth();
@@ -19,9 +19,9 @@ const Header = () => {
       if (event.detail === 'conect') {
         setLogoText('Connect');
       } else if (event.detail === 'daily-fun') {
-        setLogoText('Daily Fun');
+        setLogoText('Fun');
       } else if (event.detail === 'phase4' || event.detail === 'phase3' || event.detail === 'phase2') {
-        setLogoText('Daily Fun'); // Keep Daily Fun during transition phases
+        setLogoText('Fun'); // Keep Fun during transition phases
       }
     };
 
@@ -31,7 +31,7 @@ const Header = () => {
 
   const toggleLogo = useCallback(() => {
     if (user) {
-      setLogoText(prev => prev === 'Daily Fun' ? 'Connect' : 'Daily Fun');
+      setLogoText(prev => prev === 'Fun' ? 'Connect' : 'Fun');
     }
   }, [user]);
 
