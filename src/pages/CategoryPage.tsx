@@ -18,13 +18,14 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useArticleViews } from '../hooks/useArticleViews';
 import { useArticleComments } from '../hooks/useArticleComments';
 import { sortArticlesByScore } from '../utils/articleScoring';
+import { filterArticlesByLanguage } from '../utils/articleLanguageFilter';
 import OptimizedImage from '../components/OptimizedImage';
 
 const CategoryPage = () => {
   const { category } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
   const articlesPerPage = 6;
-  const { t, language } = useLanguage();
+  const { t, language, enabledLanguages, primaryLanguage } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -44,8 +45,12 @@ const CategoryPage = () => {
   const filteredArticles = useMemo(() => {
     if (!categoryName) return [];
     
-    return articles.filter(article => article.category === categoryName);
-  }, [categoryName]);
+    // First filter by category
+    const categoryFiltered = articles.filter(article => article.category === categoryName);
+    
+    // Then apply language filter with priority logic
+    return filterArticlesByLanguage(categoryFiltered, enabledLanguages, primaryLanguage);
+  }, [categoryName, enabledLanguages, primaryLanguage]);
 
   // Fetch engagement data
   const articleIds = useMemo(() => filteredArticles.map(a => a.id), [filteredArticles]);

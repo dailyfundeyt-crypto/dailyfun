@@ -18,6 +18,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import { Search as SearchIcon, User, MapPin, Calendar, Heart } from 'lucide-react';
 import { sortBySimilarity, calculateSimilarity } from '../utils/searchSimilarity';
 import { sortArticlesByScore } from '../utils/articleScoring';
+import { filterArticlesByLanguage } from '../utils/articleLanguageFilter';
 import { useArticleComments } from '../hooks/useArticleComments';
 import { toast } from 'sonner';
 
@@ -55,7 +56,7 @@ const Search = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
   const [userArticleCounts, setUserArticleCounts] = useState<Record<string, number>>({});
-  const { t, language, enabledLanguages } = useLanguage();
+  const { t, language, enabledLanguages, primaryLanguage } = useLanguage();
   const { user } = useAuth();
   const { followedUserIds, followedAuthors, loading: followsLoading, refetchFollows } = useFollows();
   const { DEFAULT_AUTHORS } = useAutoFollow();
@@ -167,7 +168,11 @@ const Search = () => {
     try {
       // Search articles
       const searchTerms = query.toLowerCase().split(' ');
-      const matchingArticles = articles.filter(article => {
+      
+      // First apply language filter
+      const languageFilteredArticles = filterArticlesByLanguage(articles, enabledLanguages, primaryLanguage);
+      
+      const matchingArticles = languageFilteredArticles.filter(article => {
         const title = (language === 'de' ? article.title : (article.titleEn || article.title)).toLowerCase();
         const content = (language === 'de' ? article.content : (article.contentEn || article.content)).toLowerCase();
         const author = article.author.toLowerCase();
@@ -342,19 +347,8 @@ const Search = () => {
   const filteredArticles = useMemo(() => {
     let filtered = articles;
 
-    // Filter by enabled languages first
-    filtered = filtered.filter(article => {
-      // Check if article has content in any of the enabled languages
-      if (enabledLanguages.includes('de') && (article.title || article.content || article.excerpt)) return true;
-      if (enabledLanguages.includes('en') && (article.titleEn || article.contentEn || article.excerptEn)) return true;
-      
-      // For other languages, check if article has that language property
-      return enabledLanguages.some(lang => {
-        if (lang === 'de' || lang === 'en') return false;
-        return article[`title${lang.charAt(0).toUpperCase() + lang.slice(1)}`] || 
-               article[`content${lang.charAt(0).toUpperCase() + lang.slice(1)}`];
-      });
-    });
+    // Apply language filter with priority logic
+    filtered = filterArticlesByLanguage(filtered, enabledLanguages, primaryLanguage);
 
     // Always filter by followed authors if user is logged in and has followed authors
     // For hardcoded articles (from articles.ts), we still filter by author name
@@ -395,7 +389,7 @@ const Search = () => {
     }
 
     return filtered;
-  }, [selectedAuthor, user, followedAuthors, followedUserIds, userProfiles, enabledLanguages]);
+  }, [selectedAuthor, user, followedAuthors, followedUserIds, userProfiles, enabledLanguages, primaryLanguage]);
 
   // Fetch view counts and comment counts for all articles
   const articleIds = useMemo(() => filteredArticles.map(a => a.id), [filteredArticles]);
