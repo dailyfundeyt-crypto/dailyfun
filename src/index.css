@@ -56,40 +56,41 @@
   }
 
   .dark {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 0%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 0%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 0%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 0%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 0 0% 20%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 89.4%;
-    --input: 0 0% 89.4%;
-    --ring: 0 0% 0%;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 0 0% 20%;
-    --sidebar-primary: 0 0% 10%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 95.9%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 0 0% 91%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 0% 98%;
+    
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 20%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 20%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -100,11 +101,17 @@
   }
 
   body {
-    @apply bg-white text-black;
+    @apply bg-background text-foreground;
     position: relative;
     overflow-x: hidden;
     scroll-behavior: smooth;
     font-display: swap;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  .dark body {
+    background-color: hsl(0 0% 5%);
+    color: hsl(0 0% 98%);
   }
 
   /* Apple-style button animations and effects */
@@ -199,6 +206,7 @@
     height: 100%;
     pointer-events: none;
     z-index: 0;
+    transition: opacity 0.3s ease;
     background-image: 
       /* Red curved lines */
       radial-gradient(ellipse 800px 200px at 20% 10%, transparent 40%, rgba(228, 0, 43, 0.08) 50%, transparent 60%),
@@ -208,6 +216,18 @@
       radial-gradient(ellipse 700px 180px at 70% 20%, transparent 40%, rgba(0, 123, 255, 0.07) 50%, transparent 60%),
       radial-gradient(ellipse 500px 120px at 30% 50%, transparent 40%, rgba(0, 123, 255, 0.06) 50%, transparent 60%),
       radial-gradient(ellipse 350px 90px at 90% 80%, transparent 40%, rgba(0, 123, 255, 0.05) 50%, transparent 60%);
+  }
+  
+  .dark body::before {
+    background-image: 
+      /* Red glowing lines for dark mode */
+      radial-gradient(ellipse 800px 200px at 20% 10%, transparent 40%, rgba(228, 0, 43, 0.15) 50%, transparent 60%),
+      radial-gradient(ellipse 600px 150px at 80% 30%, transparent 40%, rgba(228, 0, 43, 0.12) 50%, transparent 60%),
+      radial-gradient(ellipse 400px 100px at 40% 70%, transparent 40%, rgba(228, 0, 43, 0.10) 50%, transparent 60%),
+      /* Blue glowing lines for dark mode */
+      radial-gradient(ellipse 700px 180px at 70% 20%, transparent 40%, rgba(0, 123, 255, 0.14) 50%, transparent 60%),
+      radial-gradient(ellipse 500px 120px at 30% 50%, transparent 40%, rgba(0, 123, 255, 0.12) 50%, transparent 60%),
+      radial-gradient(ellipse 350px 90px at 90% 80%, transparent 40%, rgba(0, 123, 255, 0.10) 50%, transparent 60%);
   }
 
   /* Ensure content appears above background lines */
