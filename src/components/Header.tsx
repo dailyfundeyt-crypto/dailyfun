@@ -2,6 +2,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Search, Menu, X, Home, Info, Globe, Bot, User, LogIn, LogOut, MessageCircle } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
@@ -22,6 +23,7 @@ const Header = () => {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { setTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
   const { user, signOut } = useAuth();
 
@@ -50,8 +52,15 @@ const Header = () => {
       return;
     }
     
+    // Dark Mode aktivieren/deaktivieren basierend auf Logo
+    if (newText === 'Connect') {
+      setTheme('dark');
+    } else {
+      setTheme('light');
+    }
+    
     setLogoText(newText);
-  }, [logoText, user]);
+  }, [logoText, user, setTheme]);
 
   const handleAuthConfirm = useCallback(() => {
     setShowAuthDialog(false);
