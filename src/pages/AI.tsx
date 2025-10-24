@@ -4074,7 +4074,7 @@ ${additionalInfo}
                                         }}
                                         size="sm"
                                         variant="outline"
-                                        className="bg-card flex-1"
+                                        className="bg-white flex-1"
                                       >
                                         {language === 'de' ? 'Random Quiz' : 'Random Quiz'}
                                       </Button>
@@ -4121,7 +4121,7 @@ ${additionalInfo}
                                 key={idx}
                                 size="sm"
                                 variant="outline"
-                                className="bg-card"
+                                className="bg-white"
                                 onClick={(e) => { e.stopPropagation(); handleWikiResultClick(title); }}
                               >
                                 {title}
@@ -4205,9 +4205,9 @@ ${additionalInfo}
                            downloadQRCode(message.qrCode!);
                          }}
                          size="sm"
-                          variant="outline"
-                          className="mt-3 bg-card/90 hover:bg-card"
-                        >
+                         variant="outline"
+                         className="mt-3 bg-white/90 hover:bg-white"
+                       >
                          <Download className="w-4 h-4 mr-2" />
                          {language === 'de' ? 'Herunterladen' : 'Download'}
                        </Button>
@@ -4217,9 +4217,9 @@ ${additionalInfo}
                        <div className="mt-3">
                          <Button
                            size="sm"
-                            variant="outline"
-                            className="bg-card"
-                            onClick={(e) => {
+                           variant="outline"
+                           className="bg-white"
+                           onClick={(e) => { 
                              e.stopPropagation(); 
                              if (isArticleMode) {
                                endArticleConversation();
@@ -4238,9 +4238,9 @@ ${additionalInfo}
                         <div className="mt-3">
                           <Button
                             size="sm"
-                             variant="outline"
-                             className="bg-card"
-                             onClick={(e) => {
+                            variant="outline"
+                            className="bg-white"
+                            onClick={(e) => { 
                               e.stopPropagation(); 
                               downloadSummaryAsPDF(message.text);
                             }}
@@ -4291,9 +4291,9 @@ ${additionalInfo}
                         copyToClipboard(message.text);
                       }}
                       size="sm"
-                       variant="outline"
-                       className="absolute -bottom-2 -right-2 opacity-90 bg-card shadow-lg"
-                     >
+                      variant="outline"
+                      className="absolute -bottom-2 -right-2 opacity-90 bg-white shadow-lg"
+                    >
                       <Copy className="w-4 h-4" />
                     </Button>
                   )}
@@ -4302,7 +4302,7 @@ ${additionalInfo}
             ))}
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-card border border-border p-4 rounded-2xl shadow-sm">
+                <div className="bg-white border border-gray-100 p-4 rounded-2xl shadow-sm">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                     <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -4317,7 +4317,7 @@ ${additionalInfo}
 
 
       {/* Floating bottom container with action cards, mode switcher and input */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border shadow-2xl z-50 pb-20 md:pb-0">
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-gray-200 shadow-2xl z-50 pb-20 md:pb-0">
         <div className="max-w-4xl mx-auto p-4 space-y-4">
           
 
@@ -4326,7 +4326,7 @@ ${additionalInfo}
             {/* Mode selector dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="justify-between bg-card shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10">
+                <Button variant="outline" className="justify-between bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10">
                   <div className="flex items-center gap-1 md:gap-2">
                     {isArticleMode ? (
                       <Newspaper className="w-3 h-3 md:w-4 md:h-4" />
@@ -4476,7 +4476,7 @@ ${additionalInfo}
                 <Button
                   variant="outline"
                   onClick={() => handleActionCardClick(actionCards[0])}
-                  className="flex items-center gap-1 md:gap-2 bg-card shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
                 >
                   <MessageCircle className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">{language === 'de' ? actionCards[0].titleDe : actionCards[0].titleEn}</span>
@@ -4486,7 +4486,7 @@ ${additionalInfo}
                 <Button
                   variant="outline"
                   onClick={() => handleActionCardClick(actionCards[1])}
-                  className="flex items-center gap-1 md:gap-2 bg-card shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
                 >
                   <Brain className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">{language === 'de' ? actionCards[1].titleDe : actionCards[1].titleEn}</span>
@@ -4508,7 +4508,7 @@ ${additionalInfo}
                     };
                     setMessages(prev => [...prev, newMessage]);
                   }}
-                  className="flex items-center gap-1 md:gap-2 bg-card shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
                 >
                   <Search className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">{language === 'de' ? 'Artikel Suche' : 'Article Search'}</span>
@@ -4529,7 +4529,7 @@ ${additionalInfo}
                     };
                     setMessages(prev => [...prev, newMessage]);
                   }}
-                  className="flex items-center gap-1 md:gap-2 bg-card shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
                 >
                   <QrCode className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">{language === 'de' ? 'QR Code erstellen' : 'Generate QR Code'}</span>
@@ -4551,7 +4551,7 @@ ${additionalInfo}
                     };
                     setMessages(prev => [...prev, newMessage]);
                   }}
-                  className="flex items-center gap-1 md:gap-2 bg-card shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
+                  className="flex items-center gap-1 md:gap-2 bg-white shadow-sm text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 h-8 md:h-10"
                 >
                   <Brain className="w-3 h-3 md:w-4 md:h-4" />
                   <span className="hidden sm:inline">Quiz</span>
@@ -4564,7 +4564,7 @@ ${additionalInfo}
           {/* Suggestions (like examples) */}
           {showSuggestions && (filteredSuggestions.length > 0 || userSuggestions.length > 0) && searchMode !== 'internet' && (
             <div className="flex justify-center">
-              <div className="w-full md:w-[80%] bg-card/90 border border-border rounded-xl shadow-sm overflow-hidden">
+              <div className="w-full md:w-[80%] bg-white/90 border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                 {/* User suggestions have priority */}
                 {userSuggestions.length > 0 ? (
                   userSuggestions.map((s, idx) => (
@@ -4690,7 +4690,7 @@ ${additionalInfo}
                 variant="outline"
                 onClick={toggleSpeakMode}
                 disabled={!puterReady}
-                className={`rounded-full w-10 h-10 p-0 border ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-card shadow-sm'} ${!puterReady ? 'opacity-60 cursor-not-allowed' : ''}`}
+                className={`rounded-full w-10 h-10 p-0 border ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-white shadow-sm'} ${!puterReady ? 'opacity-60 cursor-not-allowed' : ''}`}
               >
                 <Mic className="w-4 h-4" />
               </Button>

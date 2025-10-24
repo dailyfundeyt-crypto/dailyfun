@@ -2,7 +2,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Search, Menu, X, Home, Info, Globe, Bot, User, LogIn, LogOut, MessageCircle } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useTheme } from 'next-themes';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
@@ -23,7 +22,6 @@ const Header = () => {
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { setTheme } = useTheme();
   const { language, toggleLanguage } = useLanguage();
   const { user, signOut } = useAuth();
 
@@ -52,15 +50,8 @@ const Header = () => {
       return;
     }
     
-    // Dark Mode aktivieren/deaktivieren basierend auf Logo
-    if (newText === 'Connect') {
-      setTheme('dark');
-    } else {
-      setTheme('light');
-    }
-    
     setLogoText(newText);
-  }, [logoText, user, setTheme]);
+  }, [logoText, user]);
 
   const handleAuthConfirm = useCallback(() => {
     setShowAuthDialog(false);
@@ -117,15 +108,15 @@ const Header = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <header className="bg-background shadow-sm border-b border-border relative z-50 transition-colors duration-300">
+      <header className="bg-white shadow-sm border-b border-gray-200 relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Left side - Fun/Connect logo */}
             <div className="flex items-center">
               <button 
                 onClick={toggleLogo}
-                className={`text-2xl font-bold text-foreground hover:text-red-accent transition-all duration-500 cursor-pointer ${
-                  logoText === 'Connect' ? 'animate-glow-text-connect' : ''
+                className={`text-2xl font-bold text-black hover:text-red-accent transition-all duration-500 cursor-pointer ${
+                  logoText === 'Connect' ? 'animate-glow-text' : ''
                 }`}
               >
                 {logoText}
@@ -133,29 +124,17 @@ const Header = () => {
             </div>
           
           <style>{`
-            @keyframes glow-text-connect {
+            @keyframes glow-text {
               0%, 100% {
-                text-shadow: 
-                  0 0 10px rgba(0, 123, 255, 0.6),
-                  0 0 20px rgba(0, 123, 255, 0.4),
-                  0 0 30px rgba(0, 123, 255, 0.3);
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(220, 220, 220, 0.6);
               }
               50% {
-                text-shadow: 
-                  0 0 20px rgba(0, 123, 255, 0.8),
-                  0 0 40px rgba(0, 123, 255, 0.6),
-                  0 0 60px rgba(0, 123, 255, 0.5),
-                  0 0 80px rgba(0, 123, 255, 0.4);
+                text-shadow: 0 0 20px rgba(255, 255, 255, 1), 0 0 40px rgba(220, 220, 220, 1), 0 0 60px rgba(255, 255, 255, 0.8);
               }
             }
             
-            .dark .animate-glow-text-connect {
-              animation: glow-text-connect 2s ease-in-out infinite;
-              color: rgba(255, 255, 255, 0.95);
-            }
-            
-            .animate-glow-text-connect {
-              animation: glow-text-connect 2s ease-in-out infinite;
+            .animate-glow-text {
+              animation: glow-text 2s ease-in-out infinite;
             }
           `}</style>
 
@@ -173,8 +152,8 @@ const Header = () => {
                     onClick={() => handleNavigation(item)}
                     className={`apple-language-badge px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 ease-apple-spring ${
                       isActive
-                        ? 'text-foreground bg-accent shadow-md'
-                        : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                        ? 'text-primary bg-primary/10 shadow-md'
+                        : 'text-muted-foreground hover:text-primary hover:bg-primary/5'
                     }`}
                     title={`${item.label} (${language === 'en' ? 'EN' : 'DE'})`}
                   >
@@ -189,8 +168,8 @@ const Header = () => {
                   to={item.href}
                   className={`apple-nav-item p-2.5 transition-all duration-300 ease-apple ${
                     isActive
-                      ? 'active text-foreground shadow-lg bg-accent'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                      ? 'active text-primary shadow-lg'
+                      : 'text-muted-foreground hover:text-primary'
                   }`}
                   title={item.label}
                 >
