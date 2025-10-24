@@ -21,6 +21,7 @@ import { LanguageSelectionDialog } from '../components/LanguageSelectionDialog';
 import { SecurityQuestionsModal } from '../components/SecurityQuestionsModal';
 import { NotificationSettings } from '../components/NotificationSettings';
 import { LocalStorageSettings } from '../components/LocalStorageSettings';
+import { ThemeSelector } from '../components/ThemeSelector';
 
 interface UserProfile {
   id: string;
@@ -786,8 +787,9 @@ const ProfileManagement = () => {
           <h3 className="text-lg font-semibold text-black mb-6">Account-Einstellungen</h3>
           
           <Tabs defaultValue="settings" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6 bg-muted/50">
+            <TabsList className="grid w-full grid-cols-4 mb-6 bg-muted/50">
               <TabsTrigger value="settings" className="data-[state=active]:bg-background">Einstellungen</TabsTrigger>
+              <TabsTrigger value="style" className="data-[state=active]:bg-background">Style</TabsTrigger>
               <TabsTrigger value="analytics" className="data-[state=active]:bg-background">Analyse</TabsTrigger>
               <TabsTrigger value="posts" className="data-[state=active]:bg-background">Post Verwalten</TabsTrigger>
             </TabsList>
@@ -934,6 +936,11 @@ const ProfileManagement = () => {
                   </Button>
                 )}
               </div>
+            </TabsContent>
+
+            {/* Style Tab */}
+            <TabsContent value="style" className="space-y-6">
+              <ThemeSelector />
             </TabsContent>
 
             {/* Analytics Tab */}

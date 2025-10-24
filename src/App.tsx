@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation, useNavigationType } from "re
 import { useEffect } from "react";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import Header from "./components/Header";
 import MobileBottomNav from "./components/MobileBottomNav";
 import Search from "./pages/Search";
@@ -49,7 +50,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <LanguageProvider>
-        <TooltipProvider>
+        <ThemeProvider>
+          <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -82,7 +84,8 @@ const App = () => (
             <MobileBottomNav />
           </div>
         </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </ThemeProvider>
       </LanguageProvider>
     </AuthProvider>
   </QueryClientProvider>
