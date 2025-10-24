@@ -65,9 +65,9 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
         sessionStorage.setItem(`scroll:${location.pathname}${location.search}`, String(window.scrollY));
       }}
     >
-      <article className={`apple-popup-animation bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/50 overflow-hidden transition-all duration-300 ease-apple cursor-pointer hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] active:scale-[0.98] ${featured ? 'md:flex' : ''}`}>
+      <article className={`apple-popup-animation bg-card/80 backdrop-blur-sm rounded-2xl shadow-sm border border-border/50 overflow-hidden transition-all duration-300 ease-apple cursor-pointer hover:shadow-xl hover:shadow-primary/10 hover:border-primary/30 hover:scale-[1.02] active:scale-[0.98] ${featured ? 'md:flex' : ''}`}>
         <div className={`relative overflow-hidden rounded-t-2xl ${featured ? 'md:w-1/2 md:rounded-l-2xl md:rounded-tr-none' : ''}`}>
-          <div className="aspect-video bg-gray-100 overflow-hidden">
+          <div className="aspect-video bg-muted overflow-hidden">
             <OptimizedImage
               src={article.imageUrl}
               alt={translatedTitle}
@@ -80,7 +80,7 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
             {!imageLoaded && (
-              <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+              <div className="absolute inset-0 bg-muted animate-pulse" />
             )}
           </div>
           <div className="absolute top-4 left-4">

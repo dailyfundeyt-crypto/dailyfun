@@ -497,20 +497,20 @@ const Search = () => {
   const currentEmployeeInfo = selectedAuthor !== 'all' ? getEmployeeInfo(selectedAuthor) : null;
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-background text-foreground">
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Input */}
         <div className="mb-8">
           <div className="relative max-w-md mx-auto">
-            <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder={t('search.placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-accent focus:border-transparent"
+              className="pl-10 pr-4 py-2 w-full bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             />
           </div>
         </div>
@@ -518,21 +518,21 @@ const Search = () => {
         {/* Search Results */}
         {searchQuery.trim() && (
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-black mb-6">
+            <h2 className="text-2xl font-bold text-foreground mb-6">
               Suchergebnisse für "{searchQuery}"
             </h2>
             
             {isSearching ? (
               <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-accent mx-auto"></div>
-                <p className="text-gray-600 mt-2">Suche läuft...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground mt-2">Suche läuft...</p>
               </div>
             ) : (
               <>
                 {/* User Profile Results */}
                 {searchResults.profiles.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-black mb-4 flex items-center">
+                    <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
                       <User className="h-5 w-5 mr-2" />
                       Benutzerprofile ({searchResults.profiles.length})
                     </h3>
@@ -540,15 +540,15 @@ const Search = () => {
                       {searchResults.profiles.map((profile) => (
                         <div
                           key={profile.user_id}
-                          className="bg-white border border-gray-200 rounded-lg p-8"
+                          className="bg-card border border-border rounded-lg p-8"
                         >
                           {/* Profile Section - matching Profile.tsx design */}
                           <div className="text-center mb-6">
                             {/* Avatar */}
                             <div className="flex justify-center mb-6">
-                              <Avatar className="w-24 h-24 ring-4 ring-gray-100">
+                              <Avatar className="w-24 h-24 ring-4 ring-muted">
                                 <AvatarImage src={profile.avatar_url || ''} />
-                                <AvatarFallback className="bg-gray-300 text-gray-600 text-3xl font-bold">
+                                <AvatarFallback className="bg-muted text-muted-foreground text-3xl font-bold">
                                   {(profile.display_name || 'U').charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
@@ -557,21 +557,21 @@ const Search = () => {
                             {/* Stats Row */}
                             <div className="flex items-center justify-center gap-8 mb-6">
                               <div className="text-center">
-                                <div className="text-2xl font-bold text-black">
+                                <div className="text-2xl font-bold text-foreground">
                                   {userArticleCounts[profile.user_id] || 0}
                                 </div>
-                                <div className="text-sm text-gray-600">Artikel</div>
+                                <div className="text-sm text-muted-foreground">Artikel</div>
                               </div>
                               
                               <div className="text-center">
-                                <div className="text-2xl font-bold text-black">
+                                <div className="text-2xl font-bold text-foreground">
                                   {profile.followers_count || 0}
                                 </div>
-                                <div className="text-sm text-gray-600">Follower</div>
+                                <div className="text-sm text-muted-foreground">Follower</div>
                               </div>
                               
                               {profile.location && (
-                                <div className="flex items-center gap-2 text-gray-600 bg-gray-100 px-3 py-1.5 rounded-full">
+                                <div className="flex items-center gap-2 text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
                                   <MapPin className="h-4 w-4" />
                                   <span className="text-sm">{profile.location}</span>
                                 </div>
@@ -579,7 +579,7 @@ const Search = () => {
                             </div>
                             
                             {/* Name */}
-                            <h2 className="text-xl font-bold text-black mb-2">
+                            <h2 className="text-xl font-bold text-foreground mb-2">
                               {profile.display_name || 'Unbekannter Nutzer'}
                             </h2>
                             
@@ -600,7 +600,7 @@ const Search = () => {
                             
                             {/* Bio */}
                             {profile.bio && (
-                              <p className="text-gray-700 mb-4 max-w-md mx-auto">
+                              <p className="text-foreground/80 mb-4 max-w-md mx-auto">
                                 {profile.bio}
                               </p>
                             )}
@@ -626,7 +626,7 @@ const Search = () => {
                                 to={`/profile/${profile.user_id}`}
                                 className="inline-block"
                               >
-                                <Button className="bg-black text-white hover:bg-gray-800 rounded-full px-6 py-2">
+                                <Button className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 py-2">
                                   Profil ansehen
                                 </Button>
                               </Link>
@@ -640,8 +640,8 @@ const Search = () => {
                                   }}
                                   className={`rounded-full px-6 py-2 ${
                                     followingStates[profile.user_id]
-                                      ? 'bg-black text-white hover:bg-gray-800' 
-                                      : 'bg-white text-black border border-black hover:bg-gray-50'
+                                      ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
+                                      : 'bg-background text-foreground border border-border hover:bg-muted'
                                   }`}
                                 >
                                   <Heart className={`h-4 w-4 mr-2 ${followingStates[profile.user_id] ? 'fill-current' : ''}`} />
@@ -653,9 +653,9 @@ const Search = () => {
 
                           {/* Description Section (if available) */}
                           {profile.description && (
-                            <div className="mt-6 p-6 bg-gray-50 rounded-lg">
-                              <h4 className="text-lg font-semibold text-black mb-3">Über mich</h4>
-                              <p className="text-gray-700 leading-relaxed">{profile.description}</p>
+                            <div className="mt-6 p-6 bg-muted/50 rounded-lg">
+                              <h4 className="text-lg font-semibold text-foreground mb-3">Über mich</h4>
+                              <p className="text-foreground/80 leading-relaxed">{profile.description}</p>
                             </div>
                           )}
                         </div>
@@ -667,7 +667,7 @@ const Search = () => {
                 {/* Article Results */}
                 {searchResults.articles.length > 0 && (
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-black mb-4">
+                    <h3 className="text-lg font-semibold text-foreground mb-4">
                       Artikel ({searchResults.articles.length})
                     </h3>
                     <div className="space-y-4">
@@ -675,7 +675,7 @@ const Search = () => {
                         <Link
                           key={article.id}
                           to={`/article/${article.id}`}
-                          className="block bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                          className="block bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow"
                         >
                           <div className="flex space-x-4">
                             <img
@@ -684,13 +684,13 @@ const Search = () => {
                               className="w-20 h-20 object-cover rounded"
                             />
                             <div className="flex-1">
-                              <h4 className="font-semibold text-black mb-1">
+                              <h4 className="font-semibold text-foreground mb-1">
                                 {language === 'de' ? article.title : (article.titleEn || article.title)}
                               </h4>
-                              <p className="text-sm text-gray-600 mb-2">
+                              <p className="text-sm text-muted-foreground mb-2">
                                 {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
                               </p>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-muted-foreground">
                                 {article.author} • {new Date(article.publishedAt).toLocaleDateString('de-DE')} • {article.viewCount || 0} Aufrufe
                               </div>
                             </div>
@@ -704,8 +704,8 @@ const Search = () => {
                 {/* No Results */}
                 {searchResults.profiles.length === 0 && searchResults.articles.length === 0 && (
                   <div className="text-center py-8">
-                    <p className="text-gray-600">Keine Ergebnisse für "{searchQuery}" gefunden.</p>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-muted-foreground">Keine Ergebnisse für "{searchQuery}" gefunden.</p>
+                    <p className="text-sm text-muted-foreground/70 mt-2">
                       Versuchen Sie andere Suchbegriffe oder schauen Sie sich die verfügbaren Profile an.
                     </p>
                   </div>

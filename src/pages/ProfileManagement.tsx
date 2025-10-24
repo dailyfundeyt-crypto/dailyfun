@@ -419,7 +419,7 @@ const ProfileManagement = () => {
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-red-accent" />
       </div>
     );
@@ -428,7 +428,7 @@ const ProfileManagement = () => {
   if (!isEditing) {
     // Profile View Mode
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-background">
         <InstallSidebar />
         
         <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -604,7 +604,7 @@ const ProfileManagement = () => {
 
   // Edit Mode
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <InstallSidebar />
       
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

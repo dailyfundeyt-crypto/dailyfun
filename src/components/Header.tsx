@@ -83,24 +83,24 @@ const Header = () => {
   return (
     <>
       <AlertDialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <AlertDialogContent className="max-w-md bg-white/95 backdrop-blur-xl border-0 shadow-2xl rounded-3xl p-0 overflow-hidden">
-          <div className="bg-gradient-to-br from-gray-50 to-white p-8">
+        <AlertDialogContent className="max-w-md bg-background/95 backdrop-blur-xl border shadow-2xl rounded-3xl p-0 overflow-hidden">
+          <div className="bg-gradient-to-br from-muted to-background p-8">
             <AlertDialogHeader className="space-y-4">
-              <AlertDialogTitle className="text-2xl font-semibold text-center text-gray-900 tracking-tight">
+              <AlertDialogTitle className="text-2xl font-semibold text-center text-foreground tracking-tight">
                 Anmeldung erforderlich
               </AlertDialogTitle>
-              <AlertDialogDescription className="text-center text-gray-600 text-base leading-relaxed">
+              <AlertDialogDescription className="text-center text-muted-foreground text-base leading-relaxed">
                 Sie müssen sich anmelden, um Connect zu nutzen und alle Funktionen freizuschalten.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="flex-col sm:flex-col gap-2 mt-6">
               <AlertDialogAction
                 onClick={handleAuthConfirm}
-                className="w-full bg-black hover:bg-gray-900 text-white font-medium py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl"
               >
                 Zur Anmeldung
               </AlertDialogAction>
-              <AlertDialogCancel className="w-full mt-0 border-0 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 rounded-xl transition-all duration-200">
+              <AlertDialogCancel className="w-full mt-0 border-0 bg-muted hover:bg-muted/80 text-foreground font-medium py-3 rounded-xl transition-all duration-200">
                 Abbrechen
               </AlertDialogCancel>
             </AlertDialogFooter>
@@ -108,14 +108,14 @@ const Header = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <header className="bg-white shadow-sm border-b border-gray-200 relative z-50">
+      <header className="bg-background shadow-sm border-b border-border relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Left side - Fun/Connect logo */}
             <div className="flex items-center">
               <button 
                 onClick={toggleLogo}
-                className={`text-2xl font-bold text-black hover:text-red-accent transition-all duration-500 cursor-pointer ${
+                className={`text-2xl font-bold text-foreground hover:text-red-accent transition-all duration-500 cursor-pointer ${
                   logoText === 'Connect' ? 'animate-glow-text' : ''
                 }`}
               >
