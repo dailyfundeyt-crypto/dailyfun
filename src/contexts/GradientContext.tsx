@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useTheme } from './ThemeContext';
 
 interface GradientSettings {
   enabled: boolean;
@@ -25,9 +26,21 @@ const defaultSettings: GradientSettings = {
   adjustButtonColors: true,
 };
 
+const themeColorMap: Record<string, string> = {
+  red: '#FF8080',
+  yellow: '#FFD700',
+  green: '#98FB98',
+  blue: '#ADD8E6',
+  pink: '#FFC0CB',
+  orange: '#FFA500',
+  dark: '#1A1A1A',
+  light: '#FFFFFF',
+};
+
 const GradientContext = createContext<GradientContextType | undefined>(undefined);
 
 export const GradientProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { theme } = useTheme();
   const [settings, setSettings] = useState<GradientSettings>(() => {
     try {
       const saved = localStorage.getItem('gradientSettings');
@@ -36,6 +49,17 @@ export const GradientProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return defaultSettings;
     }
   });
+
+  // Update gradient start color when theme changes
+  useEffect(() => {
+    if (theme in themeColorMap) {
+      setSettings(prev => ({
+        ...prev,
+        startColor: themeColorMap[theme],
+        enabled: theme !== 'light' && theme !== 'dark',
+      }));
+    }
+  }, [theme]);
 
   useEffect(() => {
     localStorage.setItem('gradientSettings', JSON.stringify(settings));
