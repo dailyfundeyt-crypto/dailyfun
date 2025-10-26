@@ -22,6 +22,7 @@ import { SecurityQuestionsModal } from '../components/SecurityQuestionsModal';
 import { NotificationSettings } from '../components/NotificationSettings';
 import { LocalStorageSettings } from '../components/LocalStorageSettings';
 import { ThemeSelector } from '../components/ThemeSelector';
+import { GradientSettings } from '../components/GradientSettings';
 
 interface UserProfile {
   id: string;
@@ -941,6 +942,7 @@ const ProfileManagement = () => {
             {/* Style Tab */}
             <TabsContent value="style" className="space-y-6">
               <ThemeSelector />
+              <GradientSettings />
             </TabsContent>
 
             {/* Analytics Tab */}

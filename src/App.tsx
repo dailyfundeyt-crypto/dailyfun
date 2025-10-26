@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { GradientProvider } from "./contexts/GradientContext";
 import Header from "./components/Header";
 import MobileBottomNav from "./components/MobileBottomNav";
 import Search from "./pages/Search";
@@ -51,7 +52,8 @@ const App = () => (
     <AuthProvider>
       <LanguageProvider>
         <ThemeProvider>
-          <TooltipProvider>
+          <GradientProvider>
+            <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -84,7 +86,8 @@ const App = () => (
             <MobileBottomNav />
           </div>
         </BrowserRouter>
-          </TooltipProvider>
+            </TooltipProvider>
+          </GradientProvider>
         </ThemeProvider>
       </LanguageProvider>
     </AuthProvider>

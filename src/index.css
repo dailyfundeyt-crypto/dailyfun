@@ -375,6 +375,32 @@
     position: relative;
     z-index: 1;
   }
+
+  /* Scroll Gradient Background */
+  .scroll-gradient-enabled body {
+    position: relative;
+    background: var(--gradient-start);
+    transition: background-color var(--gradient-transition, 0.8s) ease;
+  }
+
+  .scroll-gradient-enabled body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    background: var(--gradient-end);
+    opacity: var(--scroll-opacity, 0);
+    transition: opacity var(--gradient-transition, 0.8s) ease;
+  }
+
+  .scroll-gradient-enabled #root {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 /* Custom utility classes for the new color scheme */
