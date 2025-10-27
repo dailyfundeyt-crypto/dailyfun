@@ -446,6 +446,42 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_plans: {
+        Row: {
+          ai_credits: number
+          created_at: string | null
+          has_ad_free: boolean
+          has_video_player: boolean
+          id: string
+          image_upload_limit: number
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          ai_credits?: number
+          created_at?: string | null
+          has_ad_free?: boolean
+          has_video_player?: boolean
+          id?: string
+          image_upload_limit?: number
+          name: string
+          price?: number
+          updated_at?: string | null
+        }
+        Update: {
+          ai_credits?: number
+          created_at?: string | null
+          has_ad_free?: boolean
+          has_video_player?: boolean
+          id?: string
+          image_upload_limit?: number
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_articles: {
         Row: {
           author_name: string
@@ -509,6 +545,53 @@ export type Database = {
         }
         Relationships: []
       }
+      user_subscriptions: {
+        Row: {
+          activated_at: string | null
+          ai_credits_remaining: number
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          images_uploaded: number
+          is_active: boolean
+          plan_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          ai_credits_remaining?: number
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          images_uploaded?: number
+          is_active?: boolean
+          plan_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          ai_credits_remaining?: number
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          images_uploaded?: number
+          is_active?: boolean
+          plan_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       public_profiles: {
@@ -565,10 +648,11 @@ export type Database = {
         Args: { p_conversation_id: string; p_recipient_id: string }
         Returns: boolean
       }
-      generate_unique_alias: {
-        Args: Record<PropertyKey, never>
-        Returns: string
+      deduct_ai_credits: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: boolean
       }
+      generate_unique_alias: { Args: never; Returns: string }
       get_article_view_count: {
         Args: { p_article_id: string }
         Returns: number
@@ -620,6 +704,11 @@ export type Database = {
           profession: string
           website: string
         }[]
+      }
+      get_user_ai_credits: { Args: { p_user_id: string }; Returns: number }
+      has_active_pro_subscription: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       increment_article_view_count: {
         Args: { p_article_id: string }
