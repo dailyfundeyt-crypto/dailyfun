@@ -75,6 +75,9 @@ export const SubscriptionManager = () => {
               </span>
             </div>
             <Progress value={aiCreditsPercent} className="h-2" />
+            <p className="text-xs text-muted-foreground mt-1">
+              Für Daily Fun, Informationen zusammenfassen & Quiz
+            </p>
           </div>
 
           <div>
@@ -96,20 +99,32 @@ export const SubscriptionManager = () => {
       {!isProUser && proPlan && (
         <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
           <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Crown className="h-6 w-6 text-primary" />
-              <h3 className="text-2xl font-bold">Pro Plan</h3>
-              <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">UPGRADE</Badge>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Crown className="h-6 w-6 text-primary" />
+                <h3 className="text-2xl font-bold">Pro Plan</h3>
+                <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">UPGRADE</Badge>
+              </div>
+              <div className="text-right">
+                <p className="text-3xl font-bold text-primary">2,99€</p>
+                <p className="text-sm text-muted-foreground">pro Monat</p>
+              </div>
             </div>
             <p className="text-muted-foreground">Schalte alle Premium-Features frei</p>
           </div>
 
           <div className="grid gap-3 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+            <div className="flex items-start gap-3">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                 <Check className="h-4 w-4 text-primary" />
               </div>
-              <span className="font-medium">{proPlan.ai_credits} AI Credits pro Monat</span>
+              <div>
+                <span className="font-medium block">{proPlan.ai_credits} AI Credits pro Monat</span>
+                <span className="text-sm text-muted-foreground">
+                  = {proPlan.ai_credits} AI-Anfragen für Daily Fun (Article), Daily Fun (Internet Search), 
+                  Informationen zusammenfassen und Informations-Quiz
+                </span>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -137,7 +152,7 @@ export const SubscriptionManager = () => {
             size="lg"
           >
             <Crown className="h-5 w-5 mr-2" />
-            Jetzt Pro werden
+            Jetzt für 2,99€/Monat Pro werden
           </Button>
         </Card>
       )}
