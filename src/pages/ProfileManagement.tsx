@@ -23,6 +23,8 @@ import { NotificationSettings } from '../components/NotificationSettings';
 import { LocalStorageSettings } from '../components/LocalStorageSettings';
 import { ThemeSelector } from '../components/ThemeSelector';
 import { GradientSettings } from '../components/GradientSettings';
+import { SubscriptionManager } from '../components/SubscriptionManager';
+import { FocusTubePlayer } from '../components/FocusTubePlayer';
 
 interface UserProfile {
   id: string;
@@ -797,6 +799,30 @@ const ProfileManagement = () => {
 
             {/* Settings Tab */}
             <TabsContent value="settings" className="space-y-6">
+              {/* Pro Subscription */}
+              <Card className="bg-background border shadow-sm overflow-hidden">
+                <CardHeader className="pb-4 border-b bg-muted/30">
+                  <CardTitle className="text-lg font-semibold">
+                    Pro Abonnement
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <SubscriptionManager />
+                </CardContent>
+              </Card>
+
+              {/* Focus Tube Player */}
+              <Card className="bg-background border shadow-sm overflow-hidden">
+                <CardHeader className="pb-4 border-b bg-muted/30">
+                  <CardTitle className="text-lg font-semibold">
+                    Focus Tube Video Player
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <FocusTubePlayer />
+                </CardContent>
+              </Card>
+
               {/* Language Settings */}
               <Card className="bg-background border shadow-sm overflow-hidden">
                 <CardHeader className="pb-4 border-b bg-muted/30">
