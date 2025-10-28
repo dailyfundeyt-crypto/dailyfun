@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +8,8 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { GradientProvider } from "./contexts/GradientContext";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "./components/AppSidebar";
 import Header from "./components/Header";
 import MobileBottomNav from "./components/MobileBottomNav";
 import Search from "./pages/Search";
@@ -58,33 +59,41 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <ScrollToTop />
-          <div className="min-h-screen bg-background">
-            <Header />
-            <main className="pb-16 md:pb-0">
-              <Routes>
-                <Route path="/" element={<Search />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="/about" element={<AboutUs />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/social-media" element={<SocialMedia />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/ai" element={<AI />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/article/:id" element={<Article />} />
-                <Route path="/weird" element={<ProfileManagement />} />
-                <Route path="/profile/:userId" element={<Profile />} />
-                <Route path="/create-article" element={<CreateArticle />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/community" element={<Community />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <MobileBottomNav />
-          </div>
+          <SidebarProvider>
+            <div className="min-h-screen flex flex-col w-full bg-background">
+              <Header />
+              <div className="flex flex-1 w-full">
+                <AppSidebar />
+                <main className="flex-1 pb-16 md:pb-0">
+                  <div className="md:px-4 md:pt-4">
+                    <SidebarTrigger className="mb-4 hidden md:flex" />
+                    <Routes>
+                      <Route path="/" element={<Search />} />
+                      <Route path="/search" element={<Search />} />
+                      <Route path="/about" element={<AboutUs />} />
+                      <Route path="/products" element={<Products />} />
+                      <Route path="/contact" element={<Contact />} />
+                      <Route path="/social-media" element={<SocialMedia />} />
+                      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                      <Route path="/terms-of-service" element={<TermsOfService />} />
+                      <Route path="/ai" element={<AI />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/article/:id" element={<Article />} />
+                      <Route path="/weird" element={<ProfileManagement />} />
+                      <Route path="/profile/:userId" element={<Profile />} />
+                      <Route path="/create-article" element={<CreateArticle />} />
+                      <Route path="/messages" element={<Messages />} />
+                      <Route path="/analytics" element={<Analytics />} />
+                      <Route path="/community" element={<Community />} />
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </div>
+                </main>
+              </div>
+              <MobileBottomNav />
+            </div>
+          </SidebarProvider>
         </BrowserRouter>
             </TooltipProvider>
           </GradientProvider>
