@@ -1,4 +1,4 @@
-import { Home, MessageCircle, Globe, Eye } from 'lucide-react';
+import { Home, MessageCircle, Globe, Eye, Bot } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +21,7 @@ export function AppSidebar() {
 
   const navigation = [
     { icon: Home, href: '/search', label: language === 'en' ? 'Home' : 'Startseite' },
+    { icon: Bot, href: '/ai', label: language === 'en' ? 'AI Chat' : 'AI Chat' },
     { icon: MessageCircle, href: user ? '/messages' : '/auth', label: language === 'en' ? 'Messages' : 'Nachrichten' },
     { icon: Eye, href: '/weird', label: language === 'en' ? 'Preview' : 'Vorschau' },
   ];
@@ -34,42 +35,57 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={`${state === 'collapsed' ? 'w-[72px]' : 'w-60'} transition-all duration-300 border-r border-border hidden md:block`}
+      className={`${state === 'collapsed' ? 'w-[72px]' : 'w-64'} transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] border-r border-border/50 hidden md:block backdrop-blur-xl`}
       collapsible="icon"
     >
-      <SidebarContent className="bg-background pt-4">
+      <SidebarContent className="bg-background/80 backdrop-blur-2xl pt-6 px-3">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton asChild isActive={active}>
-                      <NavLink to={item.href} className="flex items-center gap-3 px-3 py-2.5 rounded-lg">
-                        <Icon className="h-5 w-5" />
-                        {state !== 'collapsed' && <span className="font-medium">{item.label}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
+                    <NavLink 
+                      to={item.href}
+                      className={`
+                        flex items-center gap-3.5 px-4 py-3 rounded-[14px] 
+                        transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
+                        ${active 
+                          ? 'bg-primary/10 text-primary shadow-lg shadow-primary/20 scale-[1.02]' 
+                          : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground hover:scale-[1.01]'
+                        }
+                        active:scale-[0.98]
+                      `}
+                    >
+                      <Icon className={`h-5 w-5 transition-all duration-300 ${active ? 'scale-110' : ''}`} />
+                      {state !== 'collapsed' && (
+                        <span className="font-medium tracking-tight">{item.label}</span>
+                      )}
+                    </NavLink>
                   </SidebarMenuItem>
                 );
               })}
               
               <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <button 
-                    onClick={toggleLanguage}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg w-full hover:bg-accent"
-                  >
-                    <Globe className="h-5 w-5" />
-                    {state !== 'collapsed' && (
-                      <span className="font-medium">
-                        {language === 'en' ? 'EN - Englisch' : 'DE - Deutsch'}
-                      </span>
-                    )}
-                  </button>
-                </SidebarMenuButton>
+                <button 
+                  onClick={toggleLanguage}
+                  className="
+                    flex items-center gap-3.5 px-4 py-3 rounded-[14px] w-full
+                    text-muted-foreground transition-all duration-300 
+                    ease-[cubic-bezier(0.32,0.72,0,1)]
+                    hover:bg-accent/50 hover:text-foreground hover:scale-[1.01]
+                    active:scale-[0.98]
+                  "
+                >
+                  <Globe className="h-5 w-5" />
+                  {state !== 'collapsed' && (
+                    <span className="font-medium tracking-tight">
+                      {language === 'en' ? 'EN - English' : 'DE - Deutsch'}
+                    </span>
+                  )}
+                </button>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>

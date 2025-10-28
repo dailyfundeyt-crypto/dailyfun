@@ -137,55 +137,6 @@ const Header = () => {
               animation: glow-text 2s ease-in-out infinite;
             }
           `}</style>
-
-          {/* Desktop Navigation - Right side */}
-          <div className="hidden md:flex items-center space-x-6 ml-auto">
-            <nav className="flex items-center space-x-6">
-            {navigation.map((item) => {
-              const Icon = item.icon;
-              const isActive = (item.href === '/search' && (location.pathname === '/' || location.pathname === '/search')) || (item.href !== '/search' && location.pathname === item.href);
-              
-              if (item.action === 'language') {
-                return (
-                  <button
-                    key={item.label}
-                    onClick={() => handleNavigation(item)}
-                    className={`apple-language-badge px-3 py-1.5 rounded-full text-xs font-semibold tracking-wider transition-all duration-300 ease-apple-spring ${
-                      isActive
-                        ? 'text-primary bg-primary/10 shadow-md'
-                        : 'text-muted-foreground hover:text-primary hover:bg-primary/5'
-                    }`}
-                    title={`${item.label} (${language === 'en' ? 'EN' : 'DE'})`}
-                  >
-                    {language === 'en' ? 'EN' : 'DE'}
-                  </button>
-                );
-              }
-              
-              return (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`apple-nav-item p-2.5 transition-all duration-300 ease-apple ${
-                    isActive
-                      ? 'active text-primary shadow-lg'
-                      : 'text-muted-foreground hover:text-primary'
-                  }`}
-                  title={item.label}
-                >
-                  <Icon className="h-5 w-5" />
-                </Link>
-              );
-            })}
-            </nav>
-
-            {/* Auth section removed - moved to My Page */}
-          </div>
-
-          {/* No mobile menu needed - using bottom nav */}
-          <div className="md:hidden">
-            {/* Empty div to maintain layout */}
-          </div>
           </div>
         </div>
       </header>
