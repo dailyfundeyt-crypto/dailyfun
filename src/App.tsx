@@ -60,13 +60,12 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <SidebarProvider>
-            <div className="min-h-screen flex flex-col w-full bg-background">
-              <Header />
-              <div className="flex flex-1 w-full">
-                <AppSidebar />
+            <div className="min-h-screen flex w-full bg-background">
+              <AppSidebar />
+              <div className="flex flex-col flex-1 w-full">
+                <Header />
                 <main className="flex-1 pb-16 md:pb-0">
-                  <div className="md:px-4 md:pt-4">
-                    <SidebarTrigger className="mb-4 hidden md:flex" />
+                  <SidebarTrigger className="m-4 hidden md:flex" />
                     <Routes>
                       <Route path="/" element={<Search />} />
                       <Route path="/search" element={<Search />} />
@@ -88,10 +87,9 @@ const App = () => (
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
-                  </div>
                 </main>
+                <MobileBottomNav />
               </div>
-              <MobileBottomNav />
             </div>
           </SidebarProvider>
         </BrowserRouter>
