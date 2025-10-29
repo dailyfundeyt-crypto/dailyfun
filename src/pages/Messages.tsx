@@ -30,11 +30,11 @@ const Messages = () => {
   const [selectedChat, setSelectedChat] = useState<{ recipientId: string; recipientName: string; recipientAvatar: string | null } | null>(null);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
+    if (user) {
+      fetchData();
+    } else {
+      setLoading(false);
     }
-    fetchData();
   }, [user]);
 
   const fetchData = async () => {
@@ -92,6 +92,147 @@ const Messages = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Show preview for non-authenticated users
+  if (!user) {
+    const demoConversations = [
+      {
+        id: '1',
+        display_name: 'Max Mustermann',
+        avatar_url: null,
+        last_message: 'Hey, hast du den neuen Artikel über die Katzen gelesen?',
+        last_message_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '2',
+        display_name: 'Anna Schmidt',
+        avatar_url: null,
+        last_message: 'Das Video war echt lustig! 😄',
+        last_message_time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      },
+      {
+        id: '3',
+        display_name: 'Tom Weber',
+        avatar_url: null,
+        last_message: 'Wollen wir morgen zusammen den Artikel besprechen?',
+        last_message_time: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+      },
+    ];
+
+    return (
+      <div className="min-h-screen bg-white py-8 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-black mb-2">Nachrichten</h1>
+            <p className="text-gray-600">Private Chats und Kommentare verwalten</p>
+          </div>
+
+          {/* Preview Banner */}
+          <Card className="mb-6 p-6 bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
+            <div className="text-center">
+              <MessageCircle className="h-12 w-12 text-primary mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-black mb-2">
+                Melde dich an, um diese Funktion zu nutzen
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Chatte privat mit anderen Nutzern und verwalte deine Kommentare
+              </p>
+              <Button 
+                onClick={() => navigate('/auth')}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Jetzt anmelden
+              </Button>
+            </div>
+          </Card>
+
+          {/* Demo Preview */}
+          <Tabs defaultValue="private" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-2xl p-1">
+              <TabsTrigger 
+                value="private" 
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-xl transition-all"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Nachrichten
+              </TabsTrigger>
+              <TabsTrigger 
+                value="comments" 
+                className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-xl transition-all"
+              >
+                <Reply className="h-4 w-4 mr-2" />
+                Kommentare
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="private" className="space-y-4 relative">
+              {/* Blur overlay */}
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 rounded-2xl flex items-center justify-center">
+                <Button 
+                  onClick={() => navigate('/auth')}
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 shadow-lg"
+                >
+                  Anmelden um Nachrichten zu sehen
+                </Button>
+              </div>
+              
+              <div className="space-y-3 opacity-50">
+                {demoConversations.map((conv, index) => (
+                  <div
+                    key={conv.id}
+                    className="bg-white rounded-2xl p-5 border border-gray-100"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <div className="flex items-start gap-4">
+                      <Avatar className="h-14 w-14 ring-2 ring-gray-100">
+                        <AvatarFallback className="bg-gray-200 text-gray-700 text-lg font-bold">
+                          {conv.display_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-bold text-black text-base truncate">
+                            {conv.display_name}
+                          </h3>
+                          <span className="text-xs text-gray-500">
+                            {formatDistanceToNow(new Date(conv.last_message_time), { 
+                              addSuffix: true, 
+                              locale: de 
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 truncate">
+                          {conv.last_message}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="comments" className="relative">
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 rounded-2xl flex items-center justify-center">
+                <Button 
+                  onClick={() => navigate('/auth')}
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 shadow-lg"
+                >
+                  Anmelden um Kommentare zu verwalten
+                </Button>
+              </div>
+              <div className="text-center py-16 opacity-50">
+                <Reply className="h-10 w-10 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">Deine Kommentare werden hier angezeigt</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     );
   }
