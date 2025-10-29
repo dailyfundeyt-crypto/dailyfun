@@ -111,32 +111,7 @@ const Header = () => {
       <header className="bg-background shadow-sm border-b border-border relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Left side - Fun/Connect logo */}
-            <div className="flex items-center">
-              <button 
-                onClick={toggleLogo}
-                className={`text-2xl font-bold text-foreground hover:text-red-accent transition-all duration-500 cursor-pointer ${
-                  logoText === 'Connect' ? 'animate-glow-text' : ''
-                }`}
-              >
-                {logoText}
-              </button>
-            </div>
-          
-          <style>{`
-            @keyframes glow-text {
-              0%, 100% {
-                text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(220, 220, 220, 0.6);
-              }
-              50% {
-                text-shadow: 0 0 20px rgba(255, 255, 255, 1), 0 0 40px rgba(220, 220, 220, 1), 0 0 60px rgba(255, 255, 255, 0.8);
-              }
-            }
-            
-            .animate-glow-text {
-              animation: glow-text 2s ease-in-out infinite;
-            }
-          `}</style>
+            {/* Header content - logo moved to sidebar */}
           </div>
         </div>
       </header>
