@@ -65,7 +65,6 @@ const App = () => (
               <div className="flex flex-col flex-1 w-full">
                 <Header />
                 <main className="flex-1 pb-16 md:pb-0">
-                  <SidebarTrigger className="m-4 hidden md:flex" />
                     <Routes>
                       <Route path="/" element={<Search />} />
                       <Route path="/search" element={<Search />} />

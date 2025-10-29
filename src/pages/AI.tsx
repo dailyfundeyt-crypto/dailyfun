@@ -3821,8 +3821,8 @@ ${additionalInfo}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">      
-      {/* Small Daily Fun AI title in upper corner */}
-      <div className="absolute top-24 left-4 z-10">
+      {/* Small Daily Fun AI title - positioned after sidebar */}
+      <div className="absolute top-24 left-4 md:left-72 z-10">
         <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           Daily Fun AI
         </h1>
