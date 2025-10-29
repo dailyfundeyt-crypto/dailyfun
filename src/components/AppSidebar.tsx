@@ -67,8 +67,8 @@ export function AppSidebar() {
   const navigation = [
     { icon: Home, href: '/search', label: language === 'en' ? 'Home' : 'Startseite' },
     { icon: Bot, href: '/ai', label: language === 'en' ? 'AI Chat' : 'AI Chat' },
+    { icon: Eye, href: '/weird', label: language === 'en' ? 'My Page' : 'Meine Seite' },
     { icon: MessageCircle, href: '/messages', label: language === 'en' ? 'Messages' : 'Nachrichten' },
-    { icon: Eye, href: '/auth', label: language === 'en' ? 'Preview' : 'Vorschau' },
   ];
 
   const isActive = (href: string) => {
