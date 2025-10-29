@@ -1,4 +1,4 @@
-import { Home, MessageCircle, Globe, Eye, Bot } from 'lucide-react';
+import { Home, MessageCircle, Globe, User, Bot } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -67,7 +67,7 @@ export function AppSidebar() {
   const navigation = [
     { icon: Home, href: '/search', label: language === 'en' ? 'Home' : 'Startseite' },
     { icon: Bot, href: '/ai', label: language === 'en' ? 'AI Chat' : 'AI Chat' },
-    { icon: Eye, href: '/weird', label: language === 'en' ? 'My Page' : 'Meine Seite' },
+    { icon: User, href: '/weird', label: language === 'en' ? 'My Page' : 'Meine Seite' },
     { icon: MessageCircle, href: '/messages', label: language === 'en' ? 'Messages' : 'Nachrichten' },
   ];
 
