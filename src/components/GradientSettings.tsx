@@ -3,9 +3,58 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Upload, X } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 export const GradientSettings = () => {
   const { settings, updateSettings } = useGradient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Datei zu groß. Maximum 5MB.');
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Bitte nur Bilddateien hochladen.');
+      return;
+    }
+
+    setUploading(true);
+    const reader = new FileReader();
+    
+    reader.onload = (event) => {
+      const imageUrl = event.target?.result as string;
+      updateSettings({ backgroundImage: imageUrl });
+      toast.success('Hintergrundbild hochgeladen!');
+      setUploading(false);
+    };
+
+    reader.onerror = () => {
+      toast.error('Fehler beim Hochladen des Bildes.');
+      setUploading(false);
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    updateSettings({ backgroundImage: undefined });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    toast.success('Hintergrundbild entfernt.');
+  };
 
   return (
     <Card className="border-border bg-card">
@@ -86,6 +135,56 @@ export const GradientSettings = () => {
               <p className="text-xs text-muted-foreground">
                 Legt fest, wie schnell der Farbwechsel beim Scrollen erfolgt.
               </p>
+            </div>
+
+            {/* Custom Background Image */}
+            <div className="space-y-3 pt-4 border-t border-border">
+              <Label className="text-foreground">Eigenes Hintergrundbild (Optional)</Label>
+              <p className="text-xs text-muted-foreground">
+                Lade ein Bild hoch, das als verschwommener Hintergrund mit leuchtenden Effekten verwendet wird.
+              </p>
+              
+              {settings.backgroundImage ? (
+                <div className="space-y-3">
+                  <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
+                    <img 
+                      src={settings.backgroundImage} 
+                      alt="Background preview" 
+                      className="w-full h-full object-cover"
+                      style={{ filter: 'blur(10px)' }}
+                    />
+                  </div>
+                  <Button 
+                    onClick={handleRemoveImage}
+                    variant="destructive"
+                    size="sm"
+                    className="w-full"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Hintergrundbild entfernen
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="background-image-upload"
+                  />
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    variant="outline"
+                    className="w-full"
+                    disabled={uploading}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {uploading ? 'Hochladen...' : 'Bild hochladen (max 5MB)'}
+                  </Button>
+                </>
+              )}
             </div>
           </>
         )}

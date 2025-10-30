@@ -10,6 +10,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { GradientProvider } from "./contexts/GradientContext";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
+import { AnimatedBackground } from "./components/AnimatedBackground";
 import Header from "./components/Header";
 import MobileBottomNav from "./components/MobileBottomNav";
 import Search from "./pages/Search";
@@ -60,9 +61,12 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <SidebarProvider>
-            <div className="min-h-screen flex w-full bg-background">
+            <div className="min-h-screen flex w-full bg-background relative">
+              {/* Animated Background Component */}
+              <AnimatedBackground />
+              
               <AppSidebar />
-              <div className="flex flex-col flex-1 w-full">
+              <div className="flex flex-col flex-1 w-full relative z-10">
                 <Header />
                 <main className="flex-1 pb-16 md:pb-0">
                     <Routes>
