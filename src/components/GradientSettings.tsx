@@ -58,42 +58,43 @@ export const GradientSettings = () => {
 
   return (
     <Card className="border-border bg-card">
-      <CardHeader>
-        <CardTitle className="text-foreground">Scroll-Verlauf Einstellungen</CardTitle>
-        <CardDescription className="text-muted-foreground">
+      <CardHeader className="px-4 py-4 sm:px-6 sm:py-6">
+        <CardTitle className="text-base sm:text-lg md:text-xl text-foreground">Scroll-Verlauf Einstellungen</CardTitle>
+        <CardDescription className="text-xs sm:text-sm text-muted-foreground">
           Feinabstimmung des Farbverlaufs (Die Hauptfarbe wird automatisch durch dein gewähltes Theme bestimmt)
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
         {/* Enable/Disable */}
-        <div className="flex items-center justify-between">
-          <Label htmlFor="gradient-enabled" className="text-foreground">
+        <div className="flex items-center justify-between gap-4">
+          <Label htmlFor="gradient-enabled" className="text-xs sm:text-sm md:text-base text-foreground flex-shrink-0">
             Scroll-Verlauf aktivieren
           </Label>
           <Switch
             id="gradient-enabled"
             checked={settings.enabled}
             onCheckedChange={(enabled) => updateSettings({ enabled })}
+            className="flex-shrink-0"
           />
         </div>
 
         {settings.enabled && (
           <>
             {/* End Color */}
-            <div className="space-y-3">
-              <Label className="text-foreground">Endfarbe beim Scrollen</Label>
+            <div className="space-y-2 sm:space-y-3">
+              <Label className="text-xs sm:text-sm md:text-base text-foreground">Endfarbe beim Scrollen</Label>
               <div className="flex items-center gap-2">
                 <input
                   type="color"
                   value={settings.endColor}
                   onChange={(e) => updateSettings({ endColor: e.target.value })}
-                  className="h-10 w-20 rounded border border-border bg-background cursor-pointer"
+                  className="h-9 w-16 sm:h-10 sm:w-20 rounded border border-border bg-background cursor-pointer flex-shrink-0"
                 />
                 <input
                   type="text"
                   value={settings.endColor}
                   onChange={(e) => updateSettings({ endColor: e.target.value })}
-                  className="flex-1 h-10 px-3 rounded-md border border-input bg-background text-foreground"
+                  className="flex-1 min-w-0 h-9 sm:h-10 px-2 sm:px-3 rounded-md border border-input bg-background text-foreground text-xs sm:text-sm"
                   placeholder="#000000"
                 />
               </div>
@@ -101,9 +102,9 @@ export const GradientSettings = () => {
 
             {/* Scroll Trigger Point */}
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <Label className="text-foreground">Scroll-Trigger-Punkt</Label>
-                <span className="text-sm text-muted-foreground">{settings.scrollTriggerPoint}%</span>
+              <div className="flex justify-between gap-2">
+                <Label className="text-xs sm:text-sm md:text-base text-foreground flex-shrink-0">Scroll-Trigger-Punkt</Label>
+                <span className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">{settings.scrollTriggerPoint}%</span>
               </div>
               <Slider
                 value={[settings.scrollTriggerPoint]}
@@ -113,16 +114,16 @@ export const GradientSettings = () => {
                 step={5}
                 className="w-full"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 Definiert, wie weit du scrollen musst, bis der Hintergrund vollständig zur Endfarbe übergeblendet ist.
               </p>
             </div>
 
             {/* Transition Speed */}
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <Label className="text-foreground">Übergangsgeschwindigkeit</Label>
-                <span className="text-sm text-muted-foreground">{settings.transitionSpeed.toFixed(1)}s</span>
+              <div className="flex justify-between gap-2">
+                <Label className="text-xs sm:text-sm md:text-base text-foreground flex-shrink-0">Übergangsgeschwindigkeit</Label>
+                <span className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">{settings.transitionSpeed.toFixed(1)}s</span>
               </div>
               <Slider
                 value={[settings.transitionSpeed * 10]}
@@ -132,21 +133,21 @@ export const GradientSettings = () => {
                 step={1}
                 className="w-full"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 Legt fest, wie schnell der Farbwechsel beim Scrollen erfolgt.
               </p>
             </div>
 
             {/* Custom Background Image */}
-            <div className="space-y-3 pt-4 border-t border-border">
-              <Label className="text-foreground">Eigenes Hintergrundbild (Optional)</Label>
-              <p className="text-xs text-muted-foreground">
+            <div className="space-y-2 sm:space-y-3 pt-3 sm:pt-4 border-t border-border">
+              <Label className="text-xs sm:text-sm md:text-base text-foreground">Eigenes Hintergrundbild (Optional)</Label>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
                 Lade ein Bild hoch, das als verschwommener Hintergrund mit leuchtenden Effekten verwendet wird.
               </p>
               
               {settings.backgroundImage ? (
-                <div className="space-y-3">
-                  <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="relative w-full h-24 sm:h-32 rounded-lg overflow-hidden border border-border">
                     <img 
                       src={settings.backgroundImage} 
                       alt="Background preview" 
@@ -158,9 +159,9 @@ export const GradientSettings = () => {
                     onClick={handleRemoveImage}
                     variant="destructive"
                     size="sm"
-                    className="w-full"
+                    className="w-full h-8 sm:h-9 text-xs sm:text-sm"
                   >
-                    <X className="w-4 h-4 mr-2" />
+                    <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     Hintergrundbild entfernen
                   </Button>
                 </div>
@@ -177,10 +178,10 @@ export const GradientSettings = () => {
                   <Button
                     onClick={() => fileInputRef.current?.click()}
                     variant="outline"
-                    className="w-full"
+                    className="w-full h-8 sm:h-9 text-xs sm:text-sm"
                     disabled={uploading}
                   >
-                    <Upload className="w-4 h-4 mr-2" />
+                    <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     {uploading ? 'Hochladen...' : 'Bild hochladen (max 5MB)'}
                   </Button>
                 </>
