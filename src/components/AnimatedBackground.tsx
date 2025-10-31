@@ -1,12 +1,10 @@
 import { useGradient } from '@/contexts/GradientContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useEffect, useState } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 export const AnimatedBackground = () => {
   const { settings } = useGradient();
   const { theme } = useTheme();
-  const isMobile = useIsMobile();
   const [bubbles, setBubbles] = useState<Array<{id: number, size: number, left: number, delay: number, duration: number}>>([]);
 
   useEffect(() => {
@@ -33,16 +31,14 @@ export const AnimatedBackground = () => {
     return settings.startColor + '99'; // default with transparency
   };
 
-  const currentBackgroundImage = isMobile ? settings.backgroundImageMobile : settings.backgroundImageDesktop;
-
   return (
     <>
       {/* Custom background image if provided */}
-      {currentBackgroundImage && (
+      {settings.backgroundImage && (
         <div 
           className="fixed inset-0 z-0 pointer-events-none"
           style={{
-            backgroundImage: `url(${currentBackgroundImage})`,
+            backgroundImage: `url(${settings.backgroundImage})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
