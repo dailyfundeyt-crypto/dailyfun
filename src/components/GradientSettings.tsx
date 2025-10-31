@@ -5,16 +5,18 @@ import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Monitor, Smartphone } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 export const GradientSettings = () => {
   const { settings, updateSettings } = useGradient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+  const desktopFileInputRef = useRef<HTMLInputElement>(null);
+  const mobileFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingDesktop, setUploadingDesktop] = useState(false);
+  const [uploadingMobile, setUploadingMobile] = useState(false);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'desktop' | 'mobile') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -30,13 +32,19 @@ export const GradientSettings = () => {
       return;
     }
 
+    const setUploading = type === 'desktop' ? setUploadingDesktop : setUploadingMobile;
     setUploading(true);
+    
     const reader = new FileReader();
     
     reader.onload = (event) => {
       const imageUrl = event.target?.result as string;
-      updateSettings({ backgroundImage: imageUrl });
-      toast.success('Hintergrundbild hochgeladen!');
+      if (type === 'desktop') {
+        updateSettings({ backgroundImageDesktop: imageUrl });
+      } else {
+        updateSettings({ backgroundImageMobile: imageUrl });
+      }
+      toast.success(`${type === 'desktop' ? 'Desktop' : 'Mobile'}-Hintergrundbild hochgeladen!`);
       setUploading(false);
     };
 
@@ -48,12 +56,19 @@ export const GradientSettings = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveImage = () => {
-    updateSettings({ backgroundImage: undefined });
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  const handleRemoveImage = (type: 'desktop' | 'mobile') => {
+    if (type === 'desktop') {
+      updateSettings({ backgroundImageDesktop: undefined });
+      if (desktopFileInputRef.current) {
+        desktopFileInputRef.current.value = '';
+      }
+    } else {
+      updateSettings({ backgroundImageMobile: undefined });
+      if (mobileFileInputRef.current) {
+        mobileFileInputRef.current.value = '';
+      }
     }
-    toast.success('Hintergrundbild entfernt.');
+    toast.success(`${type === 'desktop' ? 'Desktop' : 'Mobile'}-Hintergrundbild entfernt.`);
   };
 
   return (
@@ -138,51 +153,107 @@ export const GradientSettings = () => {
               </p>
             </div>
 
-            {/* Custom Background Image */}
+            {/* Desktop Background Image */}
             <div className="space-y-2 sm:space-y-3 pt-3 sm:pt-4 border-t border-border">
-              <Label className="text-xs sm:text-sm md:text-base text-foreground">Eigenes Hintergrundbild (Optional)</Label>
+              <Label className="text-xs sm:text-sm md:text-base text-foreground flex items-center gap-2">
+                <Monitor className="w-4 h-4" />
+                Desktop-Hintergrundbild (Optional)
+              </Label>
               <p className="text-[10px] sm:text-xs text-muted-foreground">
-                Lade ein Bild hoch, das als verschwommener Hintergrund mit leuchtenden Effekten verwendet wird.
+                Lade ein Bild hoch, das als verschwommener Hintergrund auf Desktop-Geräten angezeigt wird.
               </p>
               
-              {settings.backgroundImage ? (
+              {settings.backgroundImageDesktop ? (
                 <div className="space-y-2 sm:space-y-3">
                   <div className="relative w-full h-24 sm:h-32 rounded-lg overflow-hidden border border-border">
                     <img 
-                      src={settings.backgroundImage} 
-                      alt="Background preview" 
+                      src={settings.backgroundImageDesktop} 
+                      alt="Desktop background preview" 
                       className="w-full h-full object-cover"
                       style={{ filter: 'blur(10px)' }}
                     />
                   </div>
                   <Button 
-                    onClick={handleRemoveImage}
+                    onClick={() => handleRemoveImage('desktop')}
                     variant="destructive"
                     size="sm"
                     className="w-full h-8 sm:h-9 text-xs sm:text-sm"
                   >
                     <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Hintergrundbild entfernen
+                    Desktop-Hintergrundbild entfernen
                   </Button>
                 </div>
               ) : (
                 <>
                   <Input
-                    ref={fileInputRef}
+                    ref={desktopFileInputRef}
                     type="file"
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={(e) => handleImageUpload(e, 'desktop')}
                     className="hidden"
-                    id="background-image-upload"
+                    id="desktop-background-upload"
                   />
                   <Button
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => desktopFileInputRef.current?.click()}
                     variant="outline"
                     className="w-full h-8 sm:h-9 text-xs sm:text-sm"
-                    disabled={uploading}
+                    disabled={uploadingDesktop}
                   >
                     <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    {uploading ? 'Hochladen...' : 'Bild hochladen (max 5MB)'}
+                    {uploadingDesktop ? 'Hochladen...' : 'Desktop-Bild hochladen (max 5MB)'}
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {/* Mobile Background Image */}
+            <div className="space-y-2 sm:space-y-3 pt-3 sm:pt-4 border-t border-border">
+              <Label className="text-xs sm:text-sm md:text-base text-foreground flex items-center gap-2">
+                <Smartphone className="w-4 h-4" />
+                Mobile-Hintergrundbild (Optional)
+              </Label>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">
+                Lade ein Bild hoch, das als verschwommener Hintergrund auf mobilen Geräten angezeigt wird.
+              </p>
+              
+              {settings.backgroundImageMobile ? (
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="relative w-full h-24 sm:h-32 rounded-lg overflow-hidden border border-border">
+                    <img 
+                      src={settings.backgroundImageMobile} 
+                      alt="Mobile background preview" 
+                      className="w-full h-full object-cover"
+                      style={{ filter: 'blur(10px)' }}
+                    />
+                  </div>
+                  <Button 
+                    onClick={() => handleRemoveImage('mobile')}
+                    variant="destructive"
+                    size="sm"
+                    className="w-full h-8 sm:h-9 text-xs sm:text-sm"
+                  >
+                    <X className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Mobile-Hintergrundbild entfernen
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Input
+                    ref={mobileFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e, 'mobile')}
+                    className="hidden"
+                    id="mobile-background-upload"
+                  />
+                  <Button
+                    onClick={() => mobileFileInputRef.current?.click()}
+                    variant="outline"
+                    className="w-full h-8 sm:h-9 text-xs sm:text-sm"
+                    disabled={uploadingMobile}
+                  >
+                    <Upload className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    {uploadingMobile ? 'Hochladen...' : 'Mobile-Bild hochladen (max 5MB)'}
                   </Button>
                 </>
               )}

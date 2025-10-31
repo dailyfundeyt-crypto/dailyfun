@@ -9,7 +9,8 @@ interface GradientSettings {
   scrollTriggerPoint: number;
   transitionSpeed: number;
   adjustButtonColors: boolean;
-  backgroundImage?: string;
+  backgroundImageDesktop?: string;
+  backgroundImageMobile?: string;
 }
 
 interface GradientContextType {
@@ -25,7 +26,8 @@ const defaultSettings: GradientSettings = {
   scrollTriggerPoint: 50,
   transitionSpeed: 0.8,
   adjustButtonColors: true,
-  backgroundImage: undefined,
+  backgroundImageDesktop: undefined,
+  backgroundImageMobile: undefined,
 };
 
 const themeColorMap: Record<string, string> = {
