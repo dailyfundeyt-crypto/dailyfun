@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, ThumbsUp, MoreVertical } from 'lucide-react';
+import { SEO } from '@/components/SEO';
 import ChatInterface from '@/components/ChatInterface';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -161,6 +162,11 @@ const Community = () => {
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
+      <SEO 
+        title="Community - Daily Fun"
+        description="Treten Sie der Daily Fun Community bei. Tauschen Sie sich mit anderen Nutzern aus und bleiben Sie verbunden."
+        canonical="https://www.daily-fun.org/community"
+      />
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Community</h1>
 

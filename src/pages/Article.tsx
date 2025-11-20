@@ -9,6 +9,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import ArticleShareButton from '../components/ArticleShareButton';
 import AuthorFollowButton from '../components/AuthorFollowButton';
 import AnimatedParagraph from '../components/AnimatedParagraph';
+import { SEO } from '../components/SEO';
 import { useLanguage } from '../contexts/LanguageContext';
 import { articles } from '../data/articles';
 import { incrementViews } from '../utils/viewTracker';
@@ -148,6 +149,12 @@ const Article = () => {
 
   return (
     <div className="min-h-screen bg-white text-black relative">
+      <SEO 
+        title={article ? translatedTitle : 'Artikel nicht gefunden'}
+        description={article ? translatedExcerpt : 'Der gesuchte Artikel konnte nicht gefunden werden.'}
+        canonical={article ? `https://www.daily-fun.org/article/${article.id}` : undefined}
+        noindex={!article}
+      />
       <InstallSidebar />
       
       
