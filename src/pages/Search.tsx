@@ -4,6 +4,7 @@ import { Link, useSearchParams, useLocation, useNavigate } from 'react-router-do
 import ArticleCard from '../components/ArticleCard';
 import InstallSidebar from '../components/InstallSidebar';
 import ProfileShareMenu from '../components/ProfileShareMenu';
+import { SEO } from '../components/SEO';
 import { articles } from '../data/articles';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -498,6 +499,11 @@ const Search = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEO 
+        title="Daily Fun - Neuigkeiten, AI & Unterhaltung"
+        description="Ihre Quelle für aktuelle Nachrichten, AI-Insights und unterhaltsame Inhalte. Bleiben Sie informiert und unterhalten mit unseren kuratierten Artikeln."
+        canonical="https://www.daily-fun.org/"
+      />
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

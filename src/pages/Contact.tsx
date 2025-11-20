@@ -4,12 +4,18 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 import { useLanguage } from '../contexts/LanguageContext';
+import { SEO } from '../components/SEO';
 
 const Contact = () => {
   const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-white text-black">
+      <SEO 
+        title={t('contact.title')}
+        description="Kontaktieren Sie uns bei Daily Fun. Wir freuen uns auf Ihre Nachricht."
+        canonical="https://www.daily-fun.org/contact"
+      />
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

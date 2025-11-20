@@ -3,6 +3,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
+import { SEO } from '../components/SEO';
 import InstallSidebar from '../components/InstallSidebar';
 import OptimizedImage from '../components/OptimizedImage';
 
@@ -20,6 +21,11 @@ const AboutUs = () => {
 
   return (
     <div className="min-h-screen bg-white text-black">
+      <SEO 
+        title={t('about.main.title')}
+        description="Erfahren Sie mehr über Daily Fun - Ihr vertrauenswürdiges Portal für Nachrichten, AI und Unterhaltung."
+        canonical="https://www.daily-fun.org/about"
+      />
       <InstallSidebar />
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

@@ -3,6 +3,7 @@ import { Send, Home, Globe, Search, X, ArrowLeft, QrCode, MessageCircle, Copy, D
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { SEO } from '@/components/SEO';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { articles } from '@/data/articles';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -3820,7 +3821,12 @@ ${additionalInfo}
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">      
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col">
+      <SEO 
+        title="Daily Fun AI - Intelligenter Assistent"
+        description="Chatten Sie mit Daily Fun AI. Stellen Sie Fragen, suchen Sie Artikel, erstellen Sie Quizze und mehr mit unserem intelligenten AI-Assistenten."
+        canonical="https://www.daily-fun.org/ai"
+      />      
       {/* Small Daily Fun AI title - positioned after sidebar */}
       <div className="absolute top-24 left-4 md:left-72 z-10">
         <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
