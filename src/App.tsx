@@ -30,6 +30,7 @@ import CreateArticle from "./pages/CreateArticle";
 import Messages from "./pages/Messages";
 import Analytics from "./pages/Analytics";
 import Community from "./pages/Community";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -87,6 +88,7 @@ const App = () => (
                       <Route path="/messages" element={<Messages />} />
                       <Route path="/analytics" element={<Analytics />} />
                       <Route path="/community" element={<Community />} />
+                      <Route path="/admin" element={<Admin />} />
                       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>

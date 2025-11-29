@@ -1,4 +1,4 @@
-import { Home, MessageCircle, Globe, User, Bot } from 'lucide-react';
+import { Home, MessageCircle, Globe, User, Bot, Shield } from 'lucide-react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -64,11 +64,15 @@ export function AppSidebar() {
     navigate('/auth');
   }, [navigate]);
 
+  const isAdmin = Boolean(user?.user_metadata?.is_admin || (user as any)?.role === 'admin');
+
   const navigation = [
     { icon: Home, href: '/search', label: language === 'en' ? 'Home' : 'Startseite' },
     { icon: Bot, href: '/ai', label: language === 'en' ? 'AI Chat' : 'AI Chat' },
     { icon: User, href: '/weird', label: language === 'en' ? 'My Page' : 'Meine Seite' },
     { icon: MessageCircle, href: '/messages', label: language === 'en' ? 'Messages' : 'Nachrichten' },
+    // Admin link visible only to admin users
+    ...(isAdmin ? [{ icon: Shield, href: '/admin', label: language === 'en' ? 'Admin' : 'Admin' }] : []),
   ];
 
   const isActive = (href: string) => {
