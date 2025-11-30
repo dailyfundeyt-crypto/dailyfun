@@ -8,7 +8,7 @@ import { LanguageProvider } from "./contexts/LanguageContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { GradientProvider } from "./contexts/GradientContext";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./components/AppSidebar";
 import { AnimatedBackground } from "./components/AnimatedBackground";
 import Header from "./components/Header";
@@ -30,7 +30,6 @@ import CreateArticle from "./pages/CreateArticle";
 import Messages from "./pages/Messages";
 import Analytics from "./pages/Analytics";
 import Community from "./pages/Community";
-import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,14 +38,14 @@ const queryClient = new QueryClient();
 const ScrollToTop = () => {
   const location = useLocation();
   const navigationType = useNavigationType();
-  
+
   useEffect(() => {
     const shouldRestore = (location.state as any)?.restoreScroll;
     if (navigationType === 'PUSH' && !shouldRestore) {
       window.scrollTo(0, 0);
     }
   }, [location, navigationType]);
-  
+
   return null;
 };
 
@@ -57,47 +56,46 @@ const App = () => (
         <ThemeProvider>
           <GradientProvider>
             <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <SidebarProvider>
-            <div className="min-h-screen flex w-full bg-background relative">
-              {/* Animated Background Component */}
-              <AnimatedBackground />
-              
-              <AppSidebar />
-              <div className="flex flex-col flex-1 w-full relative z-10">
-                <Header />
-                <main className="flex-1 pb-16 md:pb-0">
-                    <Routes>
-                      <Route path="/" element={<Search />} />
-                      <Route path="/search" element={<Search />} />
-                      <Route path="/about" element={<AboutUs />} />
-                      <Route path="/products" element={<Products />} />
-                      <Route path="/contact" element={<Contact />} />
-                      <Route path="/social-media" element={<SocialMedia />} />
-                      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                      <Route path="/terms-of-service" element={<TermsOfService />} />
-                      <Route path="/ai" element={<AI />} />
-                      <Route path="/auth" element={<Auth />} />
-                      <Route path="/article/:id" element={<Article />} />
-                      <Route path="/weird" element={<ProfileManagement />} />
-                      <Route path="/profile/:userId" element={<Profile />} />
-                      <Route path="/create-article" element={<CreateArticle />} />
-                      <Route path="/messages" element={<Messages />} />
-                      <Route path="/analytics" element={<Analytics />} />
-                      <Route path="/community" element={<Community />} />
-                      <Route path="/admin" element={<Admin />} />
-                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                </main>
-                <MobileBottomNav />
-              </div>
-            </div>
-          </SidebarProvider>
-        </BrowserRouter>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <ScrollToTop />
+                <SidebarProvider>
+                  <div className="min-h-screen flex w-full bg-background relative">
+                    {/* Animated Background Component */}
+                    <AnimatedBackground />
+
+                    <AppSidebar />
+                    <div className="flex flex-col flex-1 w-full relative z-10">
+                      <Header />
+                      <main className="flex-1 pb-16 md:pb-0">
+                        <Routes>
+                          <Route path="/" element={<Search />} />
+                          <Route path="/search" element={<Search />} />
+                          <Route path="/about" element={<AboutUs />} />
+                          <Route path="/products" element={<Products />} />
+                          <Route path="/contact" element={<Contact />} />
+                          <Route path="/social-media" element={<SocialMedia />} />
+                          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                          <Route path="/terms-of-service" element={<TermsOfService />} />
+                          <Route path="/ai" element={<AI />} />
+                          <Route path="/auth" element={<Auth />} />
+                          <Route path="/article/:id" element={<Article />} />
+                          <Route path="/weird" element={<ProfileManagement />} />
+                          <Route path="/profile/:userId" element={<Profile />} />
+                          <Route path="/create-article" element={<CreateArticle />} />
+                          <Route path="/messages" element={<Messages />} />
+                          <Route path="/analytics" element={<Analytics />} />
+                          <Route path="/community" element={<Community />} />
+                          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </main>
+                      <MobileBottomNav />
+                    </div>
+                  </div>
+                </SidebarProvider>
+              </BrowserRouter>
             </TooltipProvider>
           </GradientProvider>
         </ThemeProvider>
