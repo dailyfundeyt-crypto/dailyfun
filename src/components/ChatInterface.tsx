@@ -22,7 +22,7 @@ interface Message {
   is_read: boolean;
   created_at: string;
   is_encrypted?: boolean;
-  message_type?: 'text' | 'image' | 'pdf' | 'article';
+  message_type?: 'text' | 'image' | 'pdf' | 'file' | 'article';
   attachment_url?: string | null;
   article_data?: {
     id: string;
@@ -209,16 +209,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return;
     }
 
-    // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Nur Bilder (JPG, PNG, GIF, WEBP) und PDFs sind erlaubt');
-      return;
-    }
-
-    // Validate file size (10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Datei zu groß. Maximal 10MB erlaubt');
+    // Validate file size (50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('Datei zu groß. Maximal 50MB erlaubt');
       return;
     }
 
@@ -237,8 +230,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         .from('message-attachments')
         .getPublicUrl(fileName);
 
-      const messageType = file.type.startsWith('image/') ? 'image' : 'pdf';
-      const content = messageType === 'image' ? '📷 Bild' : '📄 PDF-Dokument';
+      const messageType = file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : 'file';
+      const content = messageType === 'image' ? '📷 Bild' : messageType === 'pdf' ? '📄 PDF-Dokument' : `📎 ${file.name}`;
 
       const { data: messageData, error: messageError } = await supabase.from('messages').insert({
         conversation_id: conversationId,
@@ -443,12 +436,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       );
     }
 
-    if (message.message_type === 'pdf' && message.attachment_url) {
+    if ((message.message_type === 'pdf' || message.message_type === 'file') && message.attachment_url) {
       return (
         <MessageAttachment
           url={message.attachment_url}
-          type="pdf"
+          type="file"
           isOwn={isOwn}
+          fileName={message.content}
         />
       );
     }
@@ -565,7 +559,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+            accept="*/*"
             onChange={handleFileSelect}
             className="hidden"
           />
@@ -603,7 +597,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         </div>
         {!canSendMedia && (
           <p className="text-xs text-gray-500 mt-2 text-center">
-            Bilder & PDFs werden freigeschaltet, sobald {recipientName} dir 3 Nachrichten gesendet hat
+            Dateien werden freigeschaltet, sobald {recipientName} dir 3 Nachrichten gesendet hat
           </p>
         )}
       </div>
