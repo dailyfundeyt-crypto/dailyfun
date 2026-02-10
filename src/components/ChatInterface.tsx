@@ -9,11 +9,11 @@ import { PassphraseRestoreDialog } from './PassphraseRestoreDialog';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, X, ExternalLink, Lock, Trash2 } from 'lucide-react';
+import { ArrowLeft, Send, Paperclip, Image as ImageIcon, FileText, FolderUp, X, ExternalLink, Lock, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveFileToLocalDirectory, readFileFromLocalDirectory, hasDirectoryAccess } from '@/utils/fileSystemStorage';
 import MessageAttachment from './MessageAttachment';
-
+import JSZip from 'jszip';
 interface Message {
   id: string;
   conversation_id: string;
@@ -22,7 +22,7 @@ interface Message {
   is_read: boolean;
   created_at: string;
   is_encrypted?: boolean;
-  message_type?: 'text' | 'image' | 'pdf' | 'file' | 'article';
+  message_type?: 'text' | 'image' | 'pdf' | 'file' | 'folder' | 'article';
   attachment_url?: string | null;
   article_data?: {
     id: string;
@@ -58,6 +58,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [selectedMessage, setSelectedMessage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+  const [showAttachMenu, setShowAttachMenu] = useState(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -209,11 +211,70 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return;
     }
 
-    // Validate file size (50MB)
     if (file.size > 50 * 1024 * 1024) {
       toast.error('Datei zu groß. Maximal 50MB erlaubt');
       return;
     }
+
+    setShowAttachMenu(false);
+    await uploadAndSendFile(file);
+  };
+
+  const handleFolderSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0 || !conversationId || !user) return;
+
+    if (!canSendMedia) {
+      toast.error('Der andere muss dir erst 3 Nachrichten senden, bevor du Dateien teilen kannst');
+      return;
+    }
+
+    setShowAttachMenu(false);
+    setUploading(true);
+
+    try {
+      // Get folder name from the first file's webkitRelativePath
+      const firstPath = (files[0] as any).webkitRelativePath || files[0].name;
+      const folderName = firstPath.split('/')[0] || 'Ordner';
+
+      // Create ZIP from all files
+      const zip = new JSZip();
+      let totalSize = 0;
+
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const relativePath = (f as any).webkitRelativePath || f.name;
+        totalSize += f.size;
+        zip.file(relativePath, f);
+      }
+
+      if (totalSize > 100 * 1024 * 1024) {
+        toast.error('Ordner zu groß. Maximal 100MB erlaubt');
+        setUploading(false);
+        return;
+      }
+
+      toast.info(`Ordner "${folderName}" wird gepackt (${files.length} Dateien)...`);
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const zipFile = new File([zipBlob], `${folderName}.zip`, { type: 'application/zip' });
+
+      await uploadAndSendFile(zipFile, 'folder', `📁 ${folderName} (${files.length} Dateien)`);
+    } catch (error) {
+      console.error('Error creating folder zip:', error);
+      toast.error('Fehler beim Packen des Ordners');
+    } finally {
+      setUploading(false);
+      if (folderInputRef.current) folderInputRef.current.value = '';
+    }
+  };
+
+  const uploadAndSendFile = async (
+    file: File,
+    overrideType?: string,
+    overrideContent?: string
+  ) => {
+    if (!conversationId || !user) return;
 
     setUploading(true);
     try {
@@ -224,14 +285,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         .from('message-attachments')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw new Error(uploadError.message || 'Upload fehlgeschlagen');
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('message-attachments')
         .getPublicUrl(fileName);
 
-      const messageType = file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : 'file';
-      const content = messageType === 'image' ? '📷 Bild' : messageType === 'pdf' ? '📄 PDF-Dokument' : `📎 ${file.name}`;
+      const messageType = overrideType || (file.type.startsWith('image/') ? 'image' : file.type === 'application/pdf' ? 'pdf' : 'file');
+      const content = overrideContent || (messageType === 'image' ? '📷 Bild' : messageType === 'pdf' ? '📄 PDF-Dokument' : `📎 ${file.name}`);
 
       const { data: messageData, error: messageError } = await supabase.from('messages').insert({
         conversation_id: conversationId,
@@ -243,34 +307,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
       if (messageError) throw messageError;
 
-      // Save own message locally (including attachment info)
       await saveOwnMessageLocally(messageData as any, content);
 
-      // Mirror to local directory (attachment + message JSON)
       try {
         const canSave = await hasDirectoryAccess();
         if (canSave) {
           const localName = publicUrl.split('/').pop() || `${Date.now()}.${fileExt}`;
           await saveFileToLocalDirectory(localName, file, ['Chats', conversationId]);
-
-          const record = {
-            id: (messageData as any).id,
-            conversation_id: conversationId,
-            sender_id: user.id,
-            content,
-            message_type: messageType,
-            attachment_url: publicUrl,
-            created_at: (messageData as any).created_at,
-            is_read: false,
-          };
-          const jsonBlob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' });
-          await saveFileToLocalDirectory(`msg-${(messageData as any).id}.json`, jsonBlob, ['Chats', conversationId]);
         }
       } catch (e) {
         console.warn('Local mirror for sent attachment failed:', e);
       }
 
-      // Send push notification in background
       supabase.functions.invoke('notify-new-message', {
         body: {
           message: {
@@ -284,14 +332,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }).catch(err => console.error('Push notification error:', err));
 
       toast.success('Datei gesendet!');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading file:', error);
-      toast.error('Fehler beim Hochladen der Datei');
+      toast.error(`Fehler beim Hochladen: ${error?.message || 'Unbekannter Fehler'}`);
     } finally {
       setUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -436,11 +482,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       );
     }
 
-    if ((message.message_type === 'pdf' || message.message_type === 'file') && message.attachment_url) {
+    if ((message.message_type === 'pdf' || message.message_type === 'file' || message.message_type === 'folder') && message.attachment_url) {
       return (
         <MessageAttachment
           url={message.attachment_url}
-          type="file"
+          type={message.message_type === 'folder' ? 'folder' : 'file'}
           isOwn={isOwn}
           fileName={message.content}
         />
@@ -563,16 +609,43 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             onChange={handleFileSelect}
             className="hidden"
           />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={!canSendMedia || uploading}
-            className="rounded-full p-2 hover:bg-gray-100"
-            title={canSendMedia ? 'Datei anhängen' : '3 Nachrichten vom Empfänger nötig'}
-          >
-            <Paperclip className="h-5 w-5 text-gray-600" />
-          </Button>
+          <input
+            ref={folderInputRef}
+            type="file"
+            onChange={handleFolderSelect}
+            className="hidden"
+            {...({ webkitdirectory: '', directory: '', multiple: true } as any)}
+          />
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAttachMenu(!showAttachMenu)}
+              disabled={!canSendMedia || uploading}
+              className="rounded-full p-2 hover:bg-muted"
+              title={canSendMedia ? 'Datei anhängen' : '3 Nachrichten vom Empfänger nötig'}
+            >
+              <Paperclip className="h-5 w-5 text-muted-foreground" />
+            </Button>
+            {showAttachMenu && (
+              <div className="absolute bottom-12 left-0 bg-card border border-border rounded-xl shadow-lg p-2 min-w-[160px] z-50">
+                <button
+                  onClick={() => { fileInputRef.current?.click(); }}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-muted text-sm text-foreground"
+                >
+                  <FileText className="h-4 w-4" />
+                  Datei
+                </button>
+                <button
+                  onClick={() => { folderInputRef.current?.click(); }}
+                  className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-muted text-sm text-foreground"
+                >
+                  <FolderUp className="h-4 w-4" />
+                  Ordner
+                </button>
+              </div>
+            )}
+          </div>
           <div className="flex-1 relative">
             <Input
               value={newMessage}

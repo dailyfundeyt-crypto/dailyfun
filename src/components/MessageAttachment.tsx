@@ -1,12 +1,12 @@
 import React from 'react';
 import { useMessageSync } from '@/hooks/useMessageSync';
 import { hasDirectoryAccess, readFileFromLocalDirectory } from '@/utils/fileSystemStorage';
-import { FileText, ExternalLink, Download } from 'lucide-react';
+import { FileText, FolderArchive, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface MessageAttachmentProps {
   url: string;
-  type: 'image' | 'pdf' | 'file';
+  type: 'image' | 'pdf' | 'file' | 'folder';
   isOwn?: boolean;
   className?: string;
   fileName?: string;
@@ -91,8 +91,10 @@ const MessageAttachment: React.FC<MessageAttachmentProps> = ({
     );
   }
 
-  // File / PDF
-  const displayName = fileName?.replace(/^📎\s?|^📄\s?/, '') || 'Datei';
+  // File / PDF / Folder
+  const displayName = fileName?.replace(/^📎\s?|^📄\s?|^📁\s?/, '') || 'Datei';
+  const isFolder = type === 'folder';
+  const Icon = isFolder ? FolderArchive : FileText;
 
   return (
     <div
@@ -102,7 +104,7 @@ const MessageAttachment: React.FC<MessageAttachmentProps> = ({
           : 'bg-card text-card-foreground border border-border'
       }`}
     >
-      <FileText className="h-10 w-10 flex-shrink-0" />
+      <Icon className="h-10 w-10 flex-shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="font-medium text-sm truncate">{displayName}</p>
         <Button
@@ -113,7 +115,7 @@ const MessageAttachment: React.FC<MessageAttachmentProps> = ({
           disabled={loading}
         >
           <Download className="h-3 w-3" />
-          {loading ? 'Lädt...' : 'Öffnen'}
+          {loading ? 'Lädt...' : isFolder ? 'Herunterladen' : 'Öffnen'}
         </Button>
       </div>
     </div>
