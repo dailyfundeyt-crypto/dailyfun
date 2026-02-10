@@ -1,21 +1,23 @@
 import React from 'react';
 import { useMessageSync } from '@/hooks/useMessageSync';
 import { hasDirectoryAccess, readFileFromLocalDirectory } from '@/utils/fileSystemStorage';
-import { FileText, ExternalLink } from 'lucide-react';
+import { FileText, ExternalLink, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface MessageAttachmentProps {
   url: string;
-  type: 'image' | 'pdf';
+  type: 'image' | 'pdf' | 'file';
   isOwn?: boolean;
   className?: string;
+  fileName?: string;
 }
 
 const MessageAttachment: React.FC<MessageAttachmentProps> = ({ 
   url, 
   type, 
   isOwn = false,
-  className 
+  className,
+  fileName
 }) => {
   const { getAttachmentUrl } = useMessageSync();
   const [displayUrl, setDisplayUrl] = React.useState<string>(url);
@@ -28,20 +30,16 @@ const MessageAttachment: React.FC<MessageAttachmentProps> = ({
       try {
         setLoading(true);
         
-        // Try local directory first if available
         const hasAccess = await hasDirectoryAccess();
-        console.log('Loading attachment, hasAccess:', hasAccess);
         
         if (hasAccess) {
-          const fileName = url.split('/').pop();
-          if (fileName) {
+          const fName = url.split('/').pop();
+          if (fName) {
             try {
-              console.log('Trying to read from local directory:', fileName);
-              const localFile = await readFileFromLocalDirectory(fileName);
+              const localFile = await readFileFromLocalDirectory(fName);
               if (localFile) {
                 objectUrl = URL.createObjectURL(localFile);
                 setDisplayUrl(objectUrl);
-                console.log('✓ Loaded from local directory:', fileName);
                 setLoading(false);
                 return;
               }
@@ -51,13 +49,10 @@ const MessageAttachment: React.FC<MessageAttachmentProps> = ({
           }
         }
 
-        // Try IndexedDB next
         try {
-          console.log('Trying IndexedDB...');
           const idbUrl = await getAttachmentUrl(url);
           if (idbUrl && idbUrl !== url) {
             setDisplayUrl(idbUrl);
-            console.log('✓ Loaded from IndexedDB');
             setLoading(false);
             return;
           }
@@ -65,8 +60,6 @@ const MessageAttachment: React.FC<MessageAttachmentProps> = ({
           console.warn('Failed to load from IndexedDB:', e);
         }
 
-        // Fallback to original URL
-        console.log('Using original URL as fallback');
         setDisplayUrl(url);
         setLoading(false);
       } catch (e) {
@@ -98,18 +91,20 @@ const MessageAttachment: React.FC<MessageAttachmentProps> = ({
     );
   }
 
-  // PDF
+  // File / PDF
+  const displayName = fileName?.replace(/^📎\s?|^📄\s?/, '') || 'Datei';
+
   return (
     <div
       className={`max-w-[75%] rounded-2xl px-4 py-3 shadow-sm flex items-center gap-3 ${
         isOwn
-          ? 'bg-primary text-white'
-          : 'bg-white text-black border border-gray-100'
+          ? 'bg-primary text-primary-foreground'
+          : 'bg-card text-card-foreground border border-border'
       }`}
     >
       <FileText className="h-10 w-10 flex-shrink-0" />
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate">PDF-Dokument</p>
+        <p className="font-medium text-sm truncate">{displayName}</p>
         <Button
           size="sm"
           variant={isOwn ? 'secondary' : 'default'}
@@ -117,7 +112,7 @@ const MessageAttachment: React.FC<MessageAttachmentProps> = ({
           className="mt-2 gap-2"
           disabled={loading}
         >
-          <ExternalLink className="h-3 w-3" />
+          <Download className="h-3 w-3" />
           {loading ? 'Lädt...' : 'Öffnen'}
         </Button>
       </div>
