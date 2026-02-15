@@ -91,17 +91,17 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
         </div>
         
         <div className={`p-6 ${featured ? 'md:w-1/2 flex flex-col justify-center' : ''}`}>
-          <h3 className={`font-bold text-gray-900 dark:text-gray-100 mb-3 hover:text-primary transition-all duration-300 ease-apple font-serif ${
+          <h3 className={`font-bold text-foreground mb-3 hover:text-primary transition-all duration-300 ease-apple font-serif ${
             featured ? 'text-xl md:text-2xl' : 'text-lg'
           }`}>
             {translatedTitle}
           </h3>
           
-          <p className="text-gray-700 dark:text-gray-200 mb-4 line-clamp-3 font-serif leading-relaxed">
+          <p className="text-muted-foreground mb-4 line-clamp-3 font-serif leading-relaxed">
             {language === 'de' ? article.excerpt : (article.excerptEn || article.excerpt)}
           </p>
           
-          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-300">
+          <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div className="flex items-center">
               {employee && (
                 <Avatar className="h-6 w-6 mr-2 ring-2 ring-primary/20 transition-all duration-300 ease-apple hover:ring-primary/40">
@@ -111,15 +111,15 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
               )}
               <button 
                 onClick={handleAuthorClick}
-                className="font-medium text-gray-900 dark:text-gray-100 hover:text-primary transition-all duration-300 ease-apple cursor-pointer"
+                className="font-medium text-foreground hover:text-primary transition-all duration-300 ease-apple cursor-pointer"
               >
                 {article.author}
               </button>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-gray-600 dark:text-gray-300">{new Date(article.publishedAt).toLocaleDateString()}</span>
+              <span>{new Date(article.publishedAt).toLocaleDateString()}</span>
               {article.views > 0 && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-muted-foreground/70">
                   {article.views.toLocaleString()} {language === 'de' ? 'Aufrufe' : 'views'}
                 </span>
               )}

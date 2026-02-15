@@ -54,17 +54,17 @@
     --icon-default: 26 26% 10%;
     --icon-hover: 177 88% 50%;
 
-    /* Liquid Glass tokens */
-    --glass-bg: 0 0% 100% / 0.12;
-    --glass-bg-strong: 0 0% 100% / 0.25;
-    --glass-border: 0 0% 100% / 0.25;
-    --glass-border-strong: 0 0% 100% / 0.4;
-    --glass-highlight: 0 0% 100% / 0.5;
+    /* Liquid Glass tokens - light mode uses tinted glass for visibility */
+    --glass-bg: 220 20% 96% / 0.6;
+    --glass-bg-strong: 220 20% 94% / 0.75;
+    --glass-border: 220 10% 80% / 0.4;
+    --glass-border-strong: 220 10% 70% / 0.5;
+    --glass-highlight: 0 0% 100% / 0.7;
     --glass-blur: 20px;
     --glass-blur-strong: 40px;
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    --glass-shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.12);
-    --glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 8px rgba(0, 0, 0, 0.04);
+    --glass-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
+    --glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), inset 0 -1px 0 rgba(0, 0, 0, 0.03);
   }
 
   .dark {
