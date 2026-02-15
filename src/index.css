@@ -51,8 +51,20 @@
     --blue-accent: #007BFF;
     
     /* Custom icon navigation colors */
-    --icon-default: 26 26% 10%; /* #1A1A1A */
-    --icon-hover: 177 88% 50%; /* #2EEAE0 */
+    --icon-default: 26 26% 10%;
+    --icon-hover: 177 88% 50%;
+
+    /* Liquid Glass tokens */
+    --glass-bg: 0 0% 100% / 0.12;
+    --glass-bg-strong: 0 0% 100% / 0.25;
+    --glass-border: 0 0% 100% / 0.25;
+    --glass-border-strong: 0 0% 100% / 0.4;
+    --glass-highlight: 0 0% 100% / 0.5;
+    --glass-blur: 20px;
+    --glass-blur-strong: 40px;
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --glass-shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.12);
+    --glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3);
   }
 
   .dark {
@@ -83,6 +95,16 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 20%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Liquid Glass dark mode */
+    --glass-bg: 0 0% 100% / 0.06;
+    --glass-bg-strong: 0 0% 100% / 0.12;
+    --glass-border: 0 0% 100% / 0.12;
+    --glass-border-strong: 0 0% 100% / 0.2;
+    --glass-highlight: 0 0% 100% / 0.15;
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    --glass-shadow-hover: 0 16px 48px rgba(0, 0, 0, 0.4);
+    --glass-inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   .light {
@@ -477,25 +499,79 @@
     color: rgba(26, 26, 26, 0.95);
   }
 
+  /* Liquid Glass utility classes */
+  .glass {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--glass-shadow), var(--glass-inner-shadow);
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .glass:hover {
+    background: hsl(var(--glass-bg-strong));
+    border-color: hsl(var(--glass-border-strong));
+    box-shadow: var(--glass-shadow-hover), var(--glass-inner-shadow);
+  }
+
+  .glass-strong {
+    background: hsl(var(--glass-bg-strong));
+    backdrop-filter: blur(var(--glass-blur-strong));
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+    border: 1px solid hsl(var(--glass-border-strong));
+    box-shadow: var(--glass-shadow), var(--glass-inner-shadow);
+  }
+
+  .glass-button {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--glass-inner-shadow);
+    transition: all 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .glass-button:hover {
+    background: hsl(var(--glass-bg-strong));
+    border-color: hsl(var(--glass-border-strong));
+    box-shadow: var(--glass-shadow), var(--glass-inner-shadow);
+    transform: translateY(-1px);
+  }
+
+  .glass-button:active {
+    transform: scale(0.97) translateY(0);
+    box-shadow: var(--glass-inner-shadow);
+  }
+
+  .glass-nav {
+    background: hsl(var(--glass-bg-strong));
+    backdrop-filter: blur(var(--glass-blur-strong));
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--glass-shadow), var(--glass-inner-shadow);
+  }
+
+  .glass-card {
+    background: hsl(var(--glass-bg));
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--glass-shadow), var(--glass-inner-shadow);
+    transition: all 0.35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  .glass-card:hover {
+    background: hsl(var(--glass-bg-strong));
+    border-color: hsl(var(--glass-border-strong));
+    box-shadow: var(--glass-shadow-hover), var(--glass-inner-shadow);
+    transform: translateY(-2px);
+  }
+
   /* Apple-style animations and interactions */
   .apple-button {
     @apply transition-all duration-200 ease-apple;
     @apply active:scale-95 active:transition-all active:duration-75;
-    @apply hover:shadow-lg hover:shadow-primary/20;
-    @apply focus:ring-2 focus:ring-primary/30 focus:ring-offset-2;
-    transform-origin: center;
-  }
-  
-  .apple-button:active {
-    transform: scale(0.95) translateY(1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: all 75ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  }
-  
-  .apple-toggle {
-    @apply transition-all duration-300 ease-apple-spring;
-    @apply hover:scale-105 hover:shadow-md;
-    @apply active:scale-95 active:transition-all active:duration-100;
     transform-origin: center;
   }
   
