@@ -109,10 +109,10 @@ export function AppSidebar() {
       </AlertDialog>
 
       <Sidebar
-        className={`${state === 'collapsed' ? 'w-[72px]' : 'w-64'} transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] border-r border-border/50 hidden md:block backdrop-blur-xl`}
+        className={`${state === 'collapsed' ? 'w-[72px]' : 'w-64'} transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] border-r-0 hidden md:block`}
         collapsible="icon"
       >
-        <SidebarContent className="bg-background/80 backdrop-blur-2xl pt-6 px-3">
+        <SidebarContent className="glass-nav rounded-r-2xl pt-6 px-3 border-r border-border/20">
           {/* Fun/Connect Logo */}
           <div className="px-4 mb-6">
             <button
@@ -149,11 +149,11 @@ export function AppSidebar() {
                       <NavLink
                         to={item.href}
                         className={`
-                        flex items-center gap-3.5 px-4 py-3 rounded-[14px] 
+                        flex items-center gap-3.5 px-4 py-3 rounded-2xl 
                         transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
                         ${active
-                            ? 'bg-primary/10 text-primary shadow-lg shadow-primary/20 scale-[1.02]'
-                            : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground hover:scale-[1.01]'
+                            ? 'glass-strong text-primary shadow-lg shadow-primary/10 scale-[1.02]'
+                            : 'text-muted-foreground hover:glass hover:text-foreground hover:scale-[1.01]'
                           }
                         active:scale-[0.98]
                       `}
@@ -171,10 +171,10 @@ export function AppSidebar() {
                   <button
                     onClick={toggleLanguage}
                     className="
-                    flex items-center gap-3.5 px-4 py-3 rounded-[14px] w-full
+                    flex items-center gap-3.5 px-4 py-3 rounded-2xl w-full
                     text-muted-foreground transition-all duration-300 
                     ease-[cubic-bezier(0.32,0.72,0,1)]
-                    hover:bg-accent/50 hover:text-foreground hover:scale-[1.01]
+                    hover:glass hover:text-foreground hover:scale-[1.01]
                     active:scale-[0.98]
                   "
                   >

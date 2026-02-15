@@ -65,7 +65,7 @@ const ArticleCard = memo(({ article, featured = false }: ArticleCardProps) => {
         sessionStorage.setItem(`scroll:${location.pathname}${location.search}`, String(window.scrollY));
       }}
     >
-      <article className={`apple-popup-animation bg-white/40 dark:bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 overflow-hidden transition-all duration-300 ease-apple cursor-pointer hover:shadow-2xl hover:shadow-primary/10 hover:border-white/40 hover:scale-[1.02] active:scale-[0.98] ${featured ? 'md:flex' : ''}`}>
+      <article className={`apple-popup-animation glass-card rounded-2xl overflow-hidden cursor-pointer hover:scale-[1.02] active:scale-[0.98] ${featured ? 'md:flex' : ''}`}>
         <div className={`relative overflow-hidden rounded-t-2xl ${featured ? 'md:w-1/2 md:rounded-l-2xl md:rounded-tr-none' : ''}`}>
           <div className="aspect-video bg-muted overflow-hidden">
             <OptimizedImage
